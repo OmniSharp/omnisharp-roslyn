@@ -1,8 +1,10 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CodeFixes;
 using OmniSharp.Roslyn.CSharp.Services.Refactoring.V2;
 using OmniSharp.Roslyn.CSharp.Workers.Diagnostics;
 using OmniSharp.Services;
@@ -24,15 +26,24 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
             _providers = providers;
         }
 
-        public async Task<ImmutableArray<AvailableFixAllDiagnosticProvider>> GetAvailableCodeFixes(ProjectId projectId)
+        public Task<ImmutableArray<AvailableFixAllDiagnosticProvider>> GetAvailableCodeFixes(ProjectId projectId)
         {
-            var diagnostics = await _diagnosticWorker.GetAllDiagnosticsAsync();
+            throw new NotImplementedException();
+            // var diagnostics = await _diagnosticWorker.GetAllDiagnosticsAsync();
 
+            // return
+            //     _providers.SelectMany(provider => provider.CodeFixProviders)
+            //         .Concat(_codeFixProvider.GetAllCodeFixesForProject(projectId))
+            //         .Select(x => AvailableFixAllDiagnosticProvider.CreateOrDefault(x, diagnostics))
+            //         .Where(x => x != default)
+            //         .ToImmutableArray();
+        }
+
+        public ImmutableArray<CodeFixProvider> GetAvailableCodeFixes2(ProjectId projectId)
+        {
             return
                 _providers.SelectMany(provider => provider.CodeFixProviders)
                     .Concat(_codeFixProvider.GetAllCodeFixesForProject(projectId))
-                    .Select(x => AvailableFixAllDiagnosticProvider.CreateOrDefault(x, diagnostics))
-                    .Where(x => x != default)
                     .ToImmutableArray();
         }
     }

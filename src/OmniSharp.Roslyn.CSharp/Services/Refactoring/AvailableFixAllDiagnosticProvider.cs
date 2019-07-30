@@ -11,57 +11,66 @@ using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
 namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
 {
 
-    public class AvailableFixAllDiagnosticProvider : FixAllContext.DiagnosticProvider
+    public class AvailableFixAllDiagnosticProvider // : FixAllContext.DiagnosticProvider
     {
-        private ImmutableArray<(DocumentId documentId, ProjectId projectId, Diagnostic diagnostic)> _fixableDiagnostics;
+        private readonly DocumentDiagnostics _documentDiagnostics;
 
-        protected AvailableFixAllDiagnosticProvider(CodeFixProvider provider, IEnumerable<DocumentDiagnostics> diagnostics)
+        protected AvailableFixAllDiagnosticProvider(CodeFixProvider provider, DocumentDiagnostics documentDiagnostics)
         {
             CodeFixProvider = provider;
+            _documentDiagnostics = documentDiagnostics;
             FixAllProvider = provider.GetFixAllProvider();
-            _fixableDiagnostics = diagnostics
-                .SelectMany(x => x.Diagnostics, (parent, child) => (parent.DocumentId, parent.ProjectId, diagnostic: child))
-                .Where(x => HasFix(provider, x.diagnostic.Id))
-                .ToImmutableArray();
         }
-
 
         public CodeFixProvider CodeFixProvider { get; }
         public FixAllProvider FixAllProvider { get; }
 
-        public ImmutableArray<(string id, string message)> GetAvailableFixableDiagnostics() => _fixableDiagnostics.Select(x => (x.diagnostic.Id, x.diagnostic.GetMessage())).ToImmutableArray();
+        public ImmutableArray<(string id, string message)> GetAvailableFixableDiagnostics() => _documentDiagnostics.Diagnostics.Where(x => HasFix(CodeFixProvider, x.Id)).Select(x => (x.Id, x.GetMessage())).ToImmutableArray();
 
-        public override Task<IEnumerable<Diagnostic>> GetAllDiagnosticsAsync(Project project, CancellationToken cancellationToken)
-        {
-            return Task.FromResult(_fixableDiagnostics.Where(x => x.projectId == project.Id).Select(x => x.diagnostic));
-        }
+        // public override Task<IEnumerable<Diagnostic>> GetAllDiagnosticsAsync(Project project, CancellationToken cancellationToken)
+        // {
+        //     return Task.FromResult<IEnumerable<Diagnostic>>(_documentDiagnostics.Diagnostics);
+        // }
 
-        public override Task<IEnumerable<Diagnostic>> GetDocumentDiagnosticsAsync(Document document, CancellationToken cancellationToken)
-        {
-            return Task.FromResult(_fixableDiagnostics.Where(x => x.documentId == document.Id).Select(x => x.diagnostic));
-        }
+        // public override Task<IEnumerable<Diagnostic>> GetDocumentDiagnosticsAsync(Document document, CancellationToken cancellationToken)
+        // {
+        //     if(document.Id != _documentDiagnostics.DocumentId)
+        //     {
+        //     }
 
-        public override Task<IEnumerable<Diagnostic>> GetProjectDiagnosticsAsync(Project project, CancellationToken cancellationToken)
-        {
-            return Task.FromResult(_fixableDiagnostics.Where(x => x.projectId == project.Id).Select(x => x.diagnostic));
-        }
+        //     return Task.FromResult(_documentDiagnostics.Diagnostics.Where(x => x.documentId == document.Id).Select(x => x.diagnostic));
+        // }
+
+        // public override Task<IEnumerable<Diagnostic>> GetProjectDiagnosticsAsync(Project project, CancellationToken cancellationToken)
+        // {
+        //     throw new NotImplementedException();
+        // }
 
         private static bool HasFix(CodeFixProvider codeFixProvider, string diagnosticId)
         {
             return codeFixProvider.FixableDiagnosticIds.Any(id => id == diagnosticId);
         }
 
-        public static AvailableFixAllDiagnosticProvider CreateOrDefault(CodeFixProvider provider, IEnumerable<DocumentDiagnostics> diagnostics)
+        public static AvailableFixAllDiagnosticProvider CreateOrDefault(CodeFixProvider provider, DocumentDiagnostics diagnostics)
         {
             if(provider.GetFixAllProvider() == default)
                 return null;
 
             var result = new AvailableFixAllDiagnosticProvider(provider, diagnostics);
 
-            if(!result._fixableDiagnostics.Any())
+            if(!result.GetAvailableFixableDiagnostics().Any())
                 return null;
 
             return result;
+        }
+
+        public static ImmutableArray<AvailableFixAllDiagnosticProvider> Create(ImmutableArray<CodeFixProvider> providers, DocumentDiagnostics documentDiagnostics)
+        {
+            return
+                providers
+                    .Select(x => CreateOrDefault(x, documentDiagnostics))
+                    .Where(x => x != default)
+                    .ToImmutableArray();
         }
     }
 }
