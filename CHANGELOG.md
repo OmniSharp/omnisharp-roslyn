@@ -3,6 +3,7 @@ All changes to the project will be documented in this file.
 
 ## [1.34.1] - not yet released
 * Fixed a regression introduced in 1.32.20 which caused `AllowUnsafeCode` in csproj to also enable `TreatWarningsAsErrors` behavior ([#1565](https://github.com/OmniSharp/omnisharp-roslyn/issues/1565), PR: [#1567](https://github.com/OmniSharp/omnisharp-roslyn/pull/1567))
+* Added support for reading C# 8.0 `Nullable` setting from csproj files (and dropped support for `NullableContextOptions` - based on the LDM decision to [rename the MSBuild property](https://github.com/dotnet/roslyn/issues/35432) ([#1573](https://github.com/OmniSharp/omnisharp-roslyn/pull/1573))
 
 ## [1.34.0] - 2019-07-15
 * Added support for Roslyn code actions that normally need UI - they used to be explicitly sipped by OmniSharp, now it surfaces them with predefined defaults instead. ([#1220](https://github.com/OmniSharp/omnisharp-roslyn/issues/1220), PR: [#1406](https://github.com/OmniSharp/omnisharp-roslyn/pull/1406)) These are:
