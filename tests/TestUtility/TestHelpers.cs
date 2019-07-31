@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -136,6 +137,13 @@ namespace TestUtility
             if (waitTask != await Task.WhenAny(waitTask,
                     Task.Delay(timeout)))
                 throw new TimeoutException();
+        }
+
+        public static void SetDefaultCulture()
+        {
+            CultureInfo ci = new CultureInfo("en-US");
+            CultureInfo.DefaultThreadCurrentCulture = ci;
+            CultureInfo.DefaultThreadCurrentUICulture = ci;
         }
     }
 }

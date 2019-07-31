@@ -154,8 +154,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 "Extract Method",
                 "Introduce local for 'Console.Write(\"should be using System;\")'"
             };
-
-            Assert.Equal(expected, refactorings);
+            Assert.Equal(expected.OrderBy(x => x), refactorings.OrderBy(x => x));
         }
 
         [Theory]
