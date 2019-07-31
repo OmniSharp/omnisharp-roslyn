@@ -77,7 +77,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Signatures
                 }
                 else if (invocation.Receiver is SimpleNameSyntax && invocation.IsInStaticContext)
                 {
-                    methodGroup = methodGroup.Where(m => m.IsStatic);
+                    methodGroup = methodGroup.Where(m => m.IsStatic || m.MethodKind == MethodKind.LocalFunction);
                 }
 
                 foreach (var methodOverload in methodGroup)

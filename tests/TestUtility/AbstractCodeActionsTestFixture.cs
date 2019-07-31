@@ -20,7 +20,7 @@ namespace TestUtility
 
         protected ITestOutputHelper TestOutput { get; }
 
-        private string BufferPath => $"{Path.DirectorySeparatorChar}somepath{Path.DirectorySeparatorChar}buffer{_fileTypeExtension}";
+        private string BufferPath => $"{Directory.GetCurrentDirectory()}{Path.DirectorySeparatorChar}somepath{Path.DirectorySeparatorChar}buffer{_fileTypeExtension}";
 
         protected AbstractCodeActionsTestFixture(ITestOutputHelper output, string fileTypeExtension = ".cs")
         {
