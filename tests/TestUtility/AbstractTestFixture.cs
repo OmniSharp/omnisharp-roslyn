@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Composition.Hosting.Core;
 using Microsoft.Extensions.Logging;
 using TestUtility.Logging;
