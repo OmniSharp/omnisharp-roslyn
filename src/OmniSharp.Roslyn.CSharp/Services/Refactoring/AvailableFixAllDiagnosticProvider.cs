@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
+﻿using System.Collections.Immutable;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeFixes;
 using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
@@ -11,11 +7,11 @@ using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
 namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
 {
 
-    public class AvailableFixAllDiagnosticProvider // : FixAllContext.DiagnosticProvider
+    public class AvailableFixAllDiagnosticProvider
     {
         private readonly DocumentDiagnostics _documentDiagnostics;
 
-        protected AvailableFixAllDiagnosticProvider(CodeFixProvider provider, DocumentDiagnostics documentDiagnostics)
+        private AvailableFixAllDiagnosticProvider(CodeFixProvider provider, DocumentDiagnostics documentDiagnostics)
         {
             CodeFixProvider = provider;
             _documentDiagnostics = documentDiagnostics;
@@ -27,31 +23,12 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
 
         public ImmutableArray<(string id, string message)> GetAvailableFixableDiagnostics() => _documentDiagnostics.Diagnostics.Where(x => HasFix(CodeFixProvider, x.Id)).Select(x => (x.Id, x.GetMessage())).ToImmutableArray();
 
-        // public override Task<IEnumerable<Diagnostic>> GetAllDiagnosticsAsync(Project project, CancellationToken cancellationToken)
-        // {
-        //     return Task.FromResult<IEnumerable<Diagnostic>>(_documentDiagnostics.Diagnostics);
-        // }
-
-        // public override Task<IEnumerable<Diagnostic>> GetDocumentDiagnosticsAsync(Document document, CancellationToken cancellationToken)
-        // {
-        //     if(document.Id != _documentDiagnostics.DocumentId)
-        //     {
-        //     }
-
-        //     return Task.FromResult(_documentDiagnostics.Diagnostics.Where(x => x.documentId == document.Id).Select(x => x.diagnostic));
-        // }
-
-        // public override Task<IEnumerable<Diagnostic>> GetProjectDiagnosticsAsync(Project project, CancellationToken cancellationToken)
-        // {
-        //     throw new NotImplementedException();
-        // }
-
         private static bool HasFix(CodeFixProvider codeFixProvider, string diagnosticId)
         {
             return codeFixProvider.FixableDiagnosticIds.Any(id => id == diagnosticId);
         }
 
-        public static AvailableFixAllDiagnosticProvider CreateOrDefault(CodeFixProvider provider, DocumentDiagnostics diagnostics)
+        private static AvailableFixAllDiagnosticProvider CreateOrDefault(CodeFixProvider provider, DocumentDiagnostics diagnostics)
         {
             if(provider.GetFixAllProvider() == default)
                 return null;

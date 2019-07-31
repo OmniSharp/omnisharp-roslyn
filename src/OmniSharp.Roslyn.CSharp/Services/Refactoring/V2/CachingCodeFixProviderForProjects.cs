@@ -9,6 +9,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.Extensions.Logging;
+using OmniSharp.Services;
 using OmniSharp.Utilities;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
@@ -17,16 +18,17 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
     [Export(typeof(CachingCodeFixProviderForProjects))]
     public class CachingCodeFixProviderForProjects
     {
-        private readonly ConcurrentDictionary<ProjectId, IEnumerable<CodeFixProvider>> _cache = new ConcurrentDictionary<ProjectId, IEnumerable<CodeFixProvider>>();
+        private readonly ConcurrentDictionary<ProjectId, ImmutableArray<CodeFixProvider>> _cache = new ConcurrentDictionary<ProjectId, ImmutableArray<CodeFixProvider>>();
         private readonly ILogger<CachingCodeFixProviderForProjects> _logger;
         private readonly OmniSharpWorkspace _workspace;
+        private readonly IEnumerable<ICodeActionProvider> _providers;
 
         [ImportingConstructor]
-        public CachingCodeFixProviderForProjects(ILoggerFactory loggerFactory, OmniSharpWorkspace workspace)
+        public CachingCodeFixProviderForProjects(ILoggerFactory loggerFactory, OmniSharpWorkspace workspace, [ImportMany] IEnumerable<ICodeActionProvider> providers)
         {
             _logger = loggerFactory.CreateLogger<CachingCodeFixProviderForProjects>();
             _workspace = workspace;
-
+            _providers = providers;
             _workspace.WorkspaceChanged += (__, workspaceEvent) =>
             {
                 if (workspaceEvent.Kind == WorkspaceChangeKind.ProjectAdded ||
@@ -39,7 +41,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             };
         }
 
-        public IEnumerable<CodeFixProvider> GetAllCodeFixesForProject(ProjectId projectId)
+        public ImmutableArray<CodeFixProvider> GetAllCodeFixesForProject(ProjectId projectId)
         {
             if (_cache.ContainsKey(projectId))
                 return _cache[projectId];
@@ -49,7 +51,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             if (project == null)
             {
                 _cache.TryRemove(projectId, out _);
-                return Enumerable.Empty<CodeFixProvider>();
+                return ImmutableArray<CodeFixProvider>.Empty;
             }
 
             return LoadFrom(project);
@@ -57,7 +59,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
         private ImmutableArray<CodeFixProvider> LoadFrom(Project project)
         {
-            var codeFixes = project.AnalyzerReferences
+            var codeFixesFromProjectReferences = project.AnalyzerReferences
                 .OfType<AnalyzerFileReference>()
                 .SelectMany(analyzerFileReference => analyzerFileReference.GetAssembly().DefinedTypes)
                 .Where(x => x.IsSubclassOf(typeof(CodeFixProvider)))
@@ -83,12 +85,15 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
                         return null;
                     }
                 })
-                .Where(x => x != null)
-                .ToImmutableArray();
+                .Where(x => x != null);
 
-            _cache.AddOrUpdate(project.Id, codeFixes, (_, __) => codeFixes);
+            var builtInCodeFixes = _providers.SelectMany(provider => provider.CodeFixProviders);
 
-            return codeFixes;
+            var allCodeFixes = builtInCodeFixes.Concat(codeFixesFromProjectReferences).ToImmutableArray();
+
+            _cache.AddOrUpdate(project.Id, allCodeFixes, (_, __) => allCodeFixes);
+
+            return allCodeFixes;
         }
     }
 }

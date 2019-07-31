@@ -1,13 +1,10 @@
-using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CodeFixes;
+using OmniSharp.Abstractions.Models.V1.FixAll;
 using OmniSharp.Roslyn.CSharp.Services.Refactoring.V2;
 using OmniSharp.Roslyn.CSharp.Workers.Diagnostics;
-using OmniSharp.Services;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
 {
@@ -16,35 +13,38 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
         private readonly ICsDiagnosticWorker _diagnosticWorker;
         private readonly CachingCodeFixProviderForProjects _codeFixProvider;
         protected OmniSharpWorkspace Workspace;
-        private readonly IEnumerable<ICodeActionProvider> _providers;
 
-        public FixAllCodeActionBase(ICsDiagnosticWorker diagnosticWorker, CachingCodeFixProviderForProjects codeFixProvider, OmniSharpWorkspace workspace, IEnumerable<ICodeActionProvider> providers)
+        public FixAllCodeActionBase(ICsDiagnosticWorker diagnosticWorker, CachingCodeFixProviderForProjects codeFixProvider, OmniSharpWorkspace workspace)
         {
             _diagnosticWorker = diagnosticWorker;
             _codeFixProvider = codeFixProvider;
             Workspace = workspace;
-            _providers = providers;
         }
 
-        public Task<ImmutableArray<AvailableFixAllDiagnosticProvider>> GetAvailableCodeFixes(ProjectId projectId)
+        protected async Task<IEnumerable<(Diagnostics.DocumentDiagnostics diagnosticsInDocument, AvailableFixAllDiagnosticProvider provider)>> GetDiagnosticsMappedWithFixAllProviders(IEnumerable<ProjectId> projectIds)
         {
-            throw new NotImplementedException();
-            // var diagnostics = await _diagnosticWorker.GetAllDiagnosticsAsync();
+            var availableCodeFixesLookup = projectIds.ToDictionary(projectId => projectId, projectId => _codeFixProvider.GetAllCodeFixesForProject(projectId));
 
-            // return
-            //     _providers.SelectMany(provider => provider.CodeFixProviders)
-            //         .Concat(_codeFixProvider.GetAllCodeFixesForProject(projectId))
-            //         .Select(x => AvailableFixAllDiagnosticProvider.CreateOrDefault(x, diagnostics))
-            //         .Where(x => x != default)
-            //         .ToImmutableArray();
+            var allDiagnostics = await _diagnosticWorker.GetAllDiagnosticsAsync();
+
+            var mappedProvidersWithDiagnostics = allDiagnostics
+                .SelectMany(diagnosticsInDocument =>
+                    AvailableFixAllDiagnosticProvider.Create(availableCodeFixesLookup[diagnosticsInDocument.ProjectId], diagnosticsInDocument),
+                    (parent, child) => (diagnosticsInDocument: parent, provider: child));
+
+            return mappedProvidersWithDiagnostics;
         }
 
-        public ImmutableArray<CodeFixProvider> GetAvailableCodeFixes2(ProjectId projectId)
+        protected IEnumerable<ProjectId> GetProjectIdsInScope(FixAllScope scope, string fileNameIfAny)
         {
-            return
-                _providers.SelectMany(provider => provider.CodeFixProviders)
-                    .Concat(_codeFixProvider.GetAllCodeFixesForProject(projectId))
-                    .ToImmutableArray();
+            var currentSolution = Workspace.CurrentSolution;
+
+            if(scope == FixAllScope.Solution)
+                return currentSolution.Projects.Select(x => x.Id);
+
+            return currentSolution
+                .GetDocumentIdsWithFilePath(fileNameIfAny)
+                .Select(x => x.ProjectId);
         }
     }
 }

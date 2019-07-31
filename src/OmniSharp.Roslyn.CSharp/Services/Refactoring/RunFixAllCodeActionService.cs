@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
+using Microsoft.Extensions.Logging;
 using OmniSharp.Abstractions.Models.V1.FixAll;
 using OmniSharp.Mef;
 using OmniSharp.Models;
@@ -22,14 +23,14 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
     [OmniSharpHandler(OmniSharpEndpoints.RunFixAll, LanguageNames.CSharp)]
     public class RunFixAllCodeActionService : FixAllCodeActionBase, IRequestHandler<RunFixAllRequest, RunFixAllResponse>
     {
-        private readonly ICsDiagnosticWorker diagnosticWorker;
-        private readonly OmniSharpWorkspace workspace;
+        private readonly ILogger<RunFixAllCodeActionService> _logger;
+        private readonly FixAllDiagnosticProvider _fixAllDiagnosticProvider;
 
         [ImportingConstructor]
-        public RunFixAllCodeActionService(ICsDiagnosticWorker diagnosticWorker, CachingCodeFixProviderForProjects codeFixProvider, OmniSharpWorkspace workspace, [ImportMany] IEnumerable<ICodeActionProvider> providers) : base(diagnosticWorker, codeFixProvider, workspace, providers)
+        public RunFixAllCodeActionService(ICsDiagnosticWorker diagnosticWorker, CachingCodeFixProviderForProjects codeFixProvider, OmniSharpWorkspace workspace, ILoggerFactory loggerFactory) : base(diagnosticWorker, codeFixProvider, workspace)
         {
-            this.diagnosticWorker = diagnosticWorker;
-            this.workspace = workspace;
+            _logger = loggerFactory.CreateLogger<RunFixAllCodeActionService>();
+            _fixAllDiagnosticProvider = new FixAllDiagnosticProvider(diagnosticWorker);
         }
 
         public async Task<RunFixAllResponse> FixAll()
@@ -37,20 +38,13 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
             var solutionBeforeChanges = Workspace.CurrentSolution;
             var projectIds = solutionBeforeChanges.Projects.Select(x => x.Id);
 
-            var availableCodeFixesLookup = projectIds.Select(x => (projectId: x, fixes: GetAvailableCodeFixes2(x))).ToDictionary(x => x.projectId, x => x.fixes);
-
-            var allDiagnostics = await diagnosticWorker.GetAllDiagnosticsAsync();
-
-            var mappedProvidersWithDiagnostics = allDiagnostics
-                .SelectMany(diagnosticsInDocument =>
-                    AvailableFixAllDiagnosticProvider.Create(availableCodeFixesLookup[diagnosticsInDocument.ProjectId], diagnosticsInDocument),
-                    (parent, child) => (diagnosticsInDocument: parent, provider: child));
+            var mappedProvidersWithDiagnostics = await GetDiagnosticsMappedWithFixAllProviders(projectIds);
 
             foreach (var (diagnosticsInDocument, provider) in mappedProvidersWithDiagnostics)
             {
                 try
                 {
-                    var document = workspace.CurrentSolution.GetDocument(diagnosticsInDocument.DocumentId);
+                    var document = Workspace.CurrentSolution.GetDocument(diagnosticsInDocument.DocumentId);
 
                     var fixableIds = provider.GetAvailableFixableDiagnostics().Select(x => x.id);
 
@@ -60,7 +54,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
                         Microsoft.CodeAnalysis.CodeFixes.FixAllScope.Document,
                         string.Join("_", fixableIds),
                         fixableIds,
-                        new FixAllDiagnosticProvider(diagnosticWorker),
+                        _fixAllDiagnosticProvider,
                         CancellationToken.None
                     );
 
@@ -68,9 +62,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
 
                     if (fixes == default)
                         continue;
-
-                    // if (provider.FixAllProvider.GetSupportedFixAllScopes().All(x => x != Microsoft.CodeAnalysis.CodeFixes.FixAllScope.Document))
-                    //     throw new InvalidOperationException($"Not supported? {provider.FixAllProvider}");
 
                     var operations = await fixes.GetOperationsAsync(CancellationToken.None);
 
@@ -84,7 +75,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine(ex);
+                    _logger.LogError($"Running fix all action {provider} in document {diagnosticsInDocument.DocumentPath} prevented by error: {ex}");
                 }
             }
 

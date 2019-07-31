@@ -157,11 +157,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
         private List<CodeFixProvider> GetSortedCodeFixProviders(Document document)
         {
-            var providerList =
-                this.Providers.SelectMany(provider => provider.CodeFixProviders)
-                    .Concat(codeFixesForProject.GetAllCodeFixesForProject(document.Project.Id));
-
-            return ExtensionOrderer.GetOrderedOrUnorderedList<CodeFixProvider, ExportCodeFixProviderAttribute>(providerList, attribute => attribute.Name).ToList();
+            return ExtensionOrderer.GetOrderedOrUnorderedList<CodeFixProvider, ExportCodeFixProviderAttribute>(codeFixesForProject.GetAllCodeFixesForProject(document.Project.Id), attribute => attribute.Name).ToList();
         }
 
         private List<CodeRefactoringProvider> GetSortedCodeRefactoringProviders()
