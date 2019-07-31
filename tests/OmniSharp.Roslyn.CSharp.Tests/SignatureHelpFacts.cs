@@ -880,12 +880,38 @@ class Program
         [Theory]
         [InlineData("dummy.cs")]
         [InlineData("dummy.csx")]
-        public async Task GivesHelpForLocalFunctions(string filename)
+        public async Task GivesHelpForLocalFunctionsInStaticContext(string filename)
         {
             const string source =
 @"class Program
 {
     public static void Main()
+    {
+        var flag = LocalFunction($$);
+        bool LocalFunction(int i)
+        {
+            return i > 0;
+        }
+    }
+}";
+            var actual = await GetSignatureHelp(filename, source);
+            Assert.Single(actual.Signatures);
+
+            var signature = actual.Signatures.ElementAt(0);
+            Assert.Single(signature.Parameters);
+            Assert.Equal("i", signature.Parameters.ElementAt(0).Name);
+            Assert.Equal("int i", signature.Parameters.ElementAt(0).Label);
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task GivesHelpForLocalFunctionsInNonStaticContext(string filename)
+        {
+            const string source =
+@"class Program
+{
+    public void Main()
     {
         var flag = LocalFunction($$);
         bool LocalFunction(int i)
