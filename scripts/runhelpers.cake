@@ -134,6 +134,8 @@ ExitStatus Run(string command, string arguments, RunOptions runOptions)
     Context.Log.Write(Verbosity.Diagnostic, LogLevel.Debug, "  Command: {0}", command);
     Context.Log.Write(Verbosity.Diagnostic, LogLevel.Debug, "  Arguments: {0}", arguments);
     Context.Log.Write(Verbosity.Diagnostic, LogLevel.Debug, "  CWD: {0}", workingDirectory);
+    Context.Log.Write(Verbosity.Diagnostic, LogLevel.Debug, "  Environment: {0}", (runOptions.Environment != null) ? string.Join(";", runOptions.Environment.Select(x => x.Key + "=" + x.Value).ToArray()) : "[empty]");
+
 
     var startInfo = new ProcessStartInfo(command, arguments)
     {
@@ -146,7 +148,14 @@ ExitStatus Run(string command, string arguments, RunOptions runOptions)
     {
         foreach (var item in runOptions.Environment)
         {
-            startInfo.EnvironmentVariables.Add(item.Key, item.Value);
+            if (startInfo.EnvironmentVariables.ContainsKey(item.Key))
+            {
+                startInfo.EnvironmentVariables[item.Key] = item.Value;
+            } 
+            else 
+            {
+                startInfo.EnvironmentVariables.Add(item.Key, item.Value);
+            }
         }
     }
 

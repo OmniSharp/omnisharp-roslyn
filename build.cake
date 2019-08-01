@@ -106,6 +106,11 @@ void InstallDotNetSdk(BuildEnvironment env, BuildPlan plan, string version, stri
         argList.Add("-NoPath");
     }
 
+    if (Context.Log.Verbosity == Verbosity.Verbose || Context.Log.Verbosity == Verbosity.Diagnostic)
+    {
+        argList.Add("-Verbose");
+    }
+
     Run(env.ShellCommand, $"{env.ShellArgument} {scriptFilePath} {string.Join(" ", argList)}").ExceptionOnError($"Failed to Install .NET Core SDK {version}");
 }
 
