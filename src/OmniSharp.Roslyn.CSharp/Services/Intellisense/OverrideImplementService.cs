@@ -76,7 +76,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.OverrideImplement
             }
             catch (System.Exception ex)
             {
-                _logger.LogError(ex.ToString());
+                _logger.LogError($"An error occurred in override implementation. {ex.ToString()}");
             }
             return new OverrideImplementResponce()
             {
@@ -90,7 +90,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.OverrideImplement
             var usings = parents.Select(x => x.GetUsings());
 
             var currentNamespace = classNode.GetNamespace();
-            var usingNames = usings.SelectMany(x => x.Select(y => y.Name.ToString())).ToHashSet();
+            var usingNames = new HashSet<string>(usings.SelectMany(x => x.Select(y => y.Name.ToString())));
 
             usingNames.Add(currentNamespace);
 
