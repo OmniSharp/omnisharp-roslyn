@@ -37,83 +37,83 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
             foreach (var document in documents)
             {
                 var sourceText = await document.GetTextAsync();
-                var position = sourceText.Lines.GetPosition(new LinePosition(request.Line, request.Column));
-                var service = CompletionService.GetService(document);
-                var completionList = await service.GetCompletionsAsync(document, position);
+                    var position = sourceText.Lines.GetPosition(new LinePosition(request.Line, request.Column));
+                    var service = CompletionService.GetService(document);
+                    var completionList = await service.GetCompletionsAsync(document, position);
 
-                if (completionList != null)
-                {
-                    // Only trigger on space if Roslyn has object creation items
-                    if (request.TriggerCharacter == " " && !completionList.Items.Any(i => i.IsObjectCreationCompletionItem()))
+                    if (completionList != null)
                     {
-                        return completions;
-                    }
-
-                    // get recommended symbols to match them up later with SymbolCompletionProvider
-                    var semanticModel = await document.GetSemanticModelAsync();
-                    var recommendedSymbols = await Recommender.GetRecommendedSymbolsAtPositionAsync(semanticModel, position, _workspace);
-
-                    var isSuggestionMode = completionList.SuggestionModeItem != null;
-                    foreach (var item in completionList.Items)
-                    {
-                        var completionText = item.DisplayText;
-                        var preselect = item.Rules.MatchPriority == MatchPriority.Preselect;
-                        if (completionText.IsValidCompletionFor(wordToComplete))
+                        // Only trigger on space if Roslyn has object creation items
+                        if (request.TriggerCharacter == " " && !completionList.Items.Any(i => i.IsObjectCreationCompletionItem()))
                         {
-                            var symbols = await item.GetCompletionSymbolsAsync(recommendedSymbols, document);
-                            if (symbols.Any())
-                            {
-                                foreach (var symbol in symbols)
-                                {
-                                    if (item.UseDisplayTextAsCompletionText())
-                                    {
-                                        completionText = item.DisplayText;
-                                    }
-                                    else if (item.TryGetInsertionText(out var insertionText))
-                                    {
-                                        completionText = insertionText;
-                                    }
-                                    else
-                                    {
-                                        completionText = symbol.Name;
-                                    }
+                            return completions;
+                        }
 
-                                    if (symbol != null)
+                        // get recommended symbols to match them up later with SymbolCompletionProvider
+                        var semanticModel = await document.GetSemanticModelAsync();
+                        var recommendedSymbols = await Recommender.GetRecommendedSymbolsAtPositionAsync(semanticModel, position, _workspace);
+
+                        var isSuggestionMode = completionList.SuggestionModeItem != null;
+                        foreach (var item in completionList.Items)
+                        {
+                            var completionText = item.DisplayText;
+                            var preselect = item.Rules.MatchPriority == MatchPriority.Preselect;
+                            if (completionText.IsValidCompletionFor(wordToComplete))
+                            {
+                                var symbols = await item.GetCompletionSymbolsAsync(recommendedSymbols, document);
+                                if (symbols.Any())
+                                {
+                                    foreach (var symbol in symbols)
                                     {
-                                        if (request.WantSnippet)
+                                        if (item.UseDisplayTextAsCompletionText())
                                         {
-                                            foreach (var completion in MakeSnippetedResponses(request, symbol, completionText, preselect, isSuggestionMode))
-                                            {
-                                                completions.Add(completion);
-                                            }
+                                            completionText = item.DisplayText;
+                                        }
+                                        else if (item.TryGetInsertionText(out var insertionText))
+                                        {
+                                            completionText = insertionText;
                                         }
                                         else
                                         {
-                                            completions.Add(MakeAutoCompleteResponse(request, symbol, completionText, preselect, isSuggestionMode));
+                                            completionText = symbol.Name;
+                                        }
+
+                                        if (symbol != null)
+                                        {
+                                            if (request.WantSnippet)
+                                            {
+                                                foreach (var completion in MakeSnippetedResponses(request, symbol, completionText, preselect, isSuggestionMode))
+                                                {
+                                                    completions.Add(completion);
+                                                }
+                                            }
+                                            else
+                                            {
+                                                completions.Add(MakeAutoCompleteResponse(request, symbol, completionText, preselect, isSuggestionMode));
+                                            }
                                         }
                                     }
+
+                                    // if we had any symbols from the completion, we can continue, otherwise it means
+                                    // the completion didn't have an associated symbol so we'll add it manually
+                                    continue;
                                 }
 
-                                // if we had any symbols from the completion, we can continue, otherwise it means
-                                // the completion didn't have an associated symbol so we'll add it manually
-                                continue;
+                                // for other completions, i.e. keywords, create a simple AutoCompleteResponse
+                                // we'll just assume that the completion text is the same
+                                // as the display text.
+                                var response = new AutoCompleteResponse()
+                                {
+                                    CompletionText = item.DisplayText,
+                                    DisplayText = item.DisplayText,
+                                    Snippet = item.DisplayText,
+                                    Kind = request.WantKind ? item.Tags.First() : null,
+                                    IsSuggestionMode = isSuggestionMode,
+                                    Preselect = preselect
+                                };
+
+                                completions.Add(response);
                             }
-
-                            // for other completions, i.e. keywords, create a simple AutoCompleteResponse
-                            // we'll just assume that the completion text is the same
-                            // as the display text.
-                            var response = new AutoCompleteResponse()
-                            {
-                                CompletionText = item.DisplayText,
-                                DisplayText = item.DisplayText,
-                                Snippet = item.DisplayText,
-                                Kind = request.WantKind ? item.Tags.First() : null,
-                                IsSuggestionMode = isSuggestionMode,
-                                Preselect = preselect
-                            };
-
-                            completions.Add(response);
-                        }
                     }
                 }
             }
@@ -216,7 +216,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
             }
 
             response.Preselect = preselect;
-
+            response.OverrideTarget = symbol.ToDisplayString();
             return response;
         }
     }

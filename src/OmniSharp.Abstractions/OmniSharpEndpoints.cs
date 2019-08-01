@@ -45,6 +45,8 @@ namespace OmniSharp
 
         public const string ReAnalyze = "/reanalyze";
 
+        public const string OverrideImplement = "/overrideImplement";
+
         public static class V2
         {
             public const string GetCodeActions = "/v2/getcodeactions";

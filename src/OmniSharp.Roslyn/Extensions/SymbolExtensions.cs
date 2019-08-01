@@ -215,5 +215,20 @@ namespace OmniSharp.Extensions
 
             return (INamedTypeSymbol)topLevelNamedType;
         }
+
+        public static string ToMinimalDisplayString(this ISymbol symbol)
+        {
+            return symbol.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
+        }
+
+        internal static IEnumerable<INamedTypeSymbol> GetBaseTypes(this ITypeSymbol type)
+        {
+            var current = type.BaseType;
+            while (current != null)
+            {
+                yield return current;
+                current = current.BaseType;
+            }
+        }
     }
 }
