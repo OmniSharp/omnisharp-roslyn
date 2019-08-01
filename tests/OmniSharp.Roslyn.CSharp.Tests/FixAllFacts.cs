@@ -39,7 +39,6 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 ";
 
                 host.AddFilesToWorkspace(new TestFile("a.cs", originalText));
-                await host.RequestCodeCheckAsync("a.cs");
 
                 var handler = host.GetRequestHandler<RunFixAllCodeActionService>(OmniSharpEndpoints.RunFixAll);
 
@@ -49,9 +48,9 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 });
 
                 var docAfterUpdate = host.Workspace.CurrentSolution.Projects.SelectMany(x => x.Documents).First(x => x.FilePath.EndsWith("a.cs"));
-                var text = await docAfterUpdate.GetTextAsync();
+                var textAfterFix = await docAfterUpdate.GetTextAsync();
 
-                AssertUtils.AssertIgnoringIndent(originalText, expectedText);
+                AssertUtils.AssertIgnoringIndent(textAfterFix.ToString(), expectedText);
             }
         }
 

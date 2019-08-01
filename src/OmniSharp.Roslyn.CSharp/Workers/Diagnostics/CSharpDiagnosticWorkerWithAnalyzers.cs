@@ -35,7 +35,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
         // Currently roslyn doesn't expose official way to use IDE analyzers during analysis.
         // This options gives certain IDE analysis access for services that are not yet publicly available.
         private readonly ConstructorInfo _workspaceAnalyzerOptionsConstructor;
-        private bool _initialSolutionAnalysisInvoked = false;
 
         public CSharpDiagnosticWorkerWithAnalyzers(
             OmniSharpWorkspace workspace,
@@ -68,13 +67,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
         private void InitializeWithWorkspaceDocumentsIfNotYetDone()
         {
-            if (_initialSolutionAnalysisInvoked)
-                return;
-
             var documentIds = QueueDocumentsForDiagnostics();
             _logger.LogInformation($"Solution initialized -> queue all documents for code analysis. Initial document count: {documentIds.Length}.");
-
-            _initialSolutionAnalysisInvoked = true;
         }
 
         public async Task<ImmutableArray<DocumentDiagnostics>> GetDiagnostics(ImmutableArray<string> documentPaths)
