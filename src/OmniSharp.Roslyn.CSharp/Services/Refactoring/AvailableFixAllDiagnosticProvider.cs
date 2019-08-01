@@ -7,11 +7,11 @@ using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
 namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
 {
 
-    public class AvailableFixAllDiagnosticProvider
+    public class DocumentWithFixAll
     {
         private readonly DocumentDiagnostics _documentDiagnostics;
 
-        private AvailableFixAllDiagnosticProvider(CodeFixProvider provider, DocumentDiagnostics documentDiagnostics)
+        private DocumentWithFixAll(CodeFixProvider provider, DocumentDiagnostics documentDiagnostics)
         {
             CodeFixProvider = provider;
             _documentDiagnostics = documentDiagnostics;
@@ -20,6 +20,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
 
         public CodeFixProvider CodeFixProvider { get; }
         public FixAllProvider FixAllProvider { get; }
+        public DocumentId DocumentId => _documentDiagnostics.DocumentId;
+        public ProjectId ProjectId => _documentDiagnostics.ProjectId;
+        public string DocumentPath => _documentDiagnostics.DocumentPath;
 
         public ImmutableArray<(string id, string message)> GetAvailableFixableDiagnostics() => _documentDiagnostics.Diagnostics.Where(x => HasFix(CodeFixProvider, x.Id)).Select(x => (x.Id, x.GetMessage())).ToImmutableArray();
 
@@ -28,25 +31,13 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
             return codeFixProvider.FixableDiagnosticIds.Any(id => id == diagnosticId);
         }
 
-        private static AvailableFixAllDiagnosticProvider CreateOrDefault(CodeFixProvider provider, DocumentDiagnostics diagnostics)
-        {
-            if(provider.GetFixAllProvider() == default)
-                return null;
-
-            var result = new AvailableFixAllDiagnosticProvider(provider, diagnostics);
-
-            if(!result.GetAvailableFixableDiagnostics().Any())
-                return null;
-
-            return result;
-        }
-
-        public static ImmutableArray<AvailableFixAllDiagnosticProvider> Create(ImmutableArray<CodeFixProvider> providers, DocumentDiagnostics documentDiagnostics)
+        public static ImmutableArray<DocumentWithFixAll> CreateWithMatchingProviders(ImmutableArray<CodeFixProvider> providers, DocumentDiagnostics documentDiagnostics)
         {
             return
                 providers
-                    .Select(x => CreateOrDefault(x, documentDiagnostics))
-                    .Where(x => x != default)
+                    .Where(provider => provider.GetFixAllProvider() != null)
+                    .Select(provider => new DocumentWithFixAll(provider, documentDiagnostics))
+                    .Where(x => x.GetAvailableFixableDiagnostics().Any())
                     .ToImmutableArray();
         }
     }

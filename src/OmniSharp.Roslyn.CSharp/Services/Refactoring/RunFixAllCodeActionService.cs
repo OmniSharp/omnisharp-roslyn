@@ -15,7 +15,6 @@ using OmniSharp.Models;
 using OmniSharp.Roslyn.CSharp.Services.Refactoring.V2;
 using OmniSharp.Roslyn.CSharp.Workers.Diagnostics;
 using OmniSharp.Roslyn.Utilities;
-using OmniSharp.Services;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
 {
@@ -40,17 +39,17 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
 
             var mappedProvidersWithDiagnostics = await GetDiagnosticsMappedWithFixAllProviders(projectIds);
 
-            foreach (var (diagnosticsInDocument, provider) in mappedProvidersWithDiagnostics)
+            foreach (var diagnosticsInDocument in mappedProvidersWithDiagnostics)
             {
                 try
                 {
                     var document = Workspace.CurrentSolution.GetDocument(diagnosticsInDocument.DocumentId);
 
-                    var fixableIds = provider.GetAvailableFixableDiagnostics().Select(x => x.id);
+                    var fixableIds = diagnosticsInDocument.GetAvailableFixableDiagnostics().Select(x => x.id);
 
                     var fixAllContext = new FixAllContext(
                         document,
-                        provider.CodeFixProvider,
+                        diagnosticsInDocument.CodeFixProvider,
                         Microsoft.CodeAnalysis.CodeFixes.FixAllScope.Document,
                         string.Join("_", fixableIds),
                         fixableIds,
@@ -58,7 +57,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
                         CancellationToken.None
                     );
 
-                    var fixes = await provider.FixAllProvider.GetFixAsync(fixAllContext);
+                    var fixes = await diagnosticsInDocument.FixAllProvider.GetFixAsync(fixAllContext);
 
                     if (fixes == default)
                         continue;
@@ -75,7 +74,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError($"Running fix all action {provider} in document {diagnosticsInDocument.DocumentPath} prevented by error: {ex}");
+                    _logger.LogError($"Running fix all action {diagnosticsInDocument} in document {diagnosticsInDocument.DocumentPath} prevented by error: {ex}");
                 }
             }
 

@@ -24,7 +24,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
             var availableFixes = await GetDiagnosticsMappedWithFixAllProviders(projectIdsInScope);
 
             var distinctDiagnosticsThatCanBeFixed = availableFixes
-                .SelectMany(x => x.provider.GetAvailableFixableDiagnostics())
+                .SelectMany(x => x.GetAvailableFixableDiagnostics())
                 .GroupBy(x => x.id)
                 .Select(x => x.First())
                 .Select(x => new FixAllItem(x.message, x.message))

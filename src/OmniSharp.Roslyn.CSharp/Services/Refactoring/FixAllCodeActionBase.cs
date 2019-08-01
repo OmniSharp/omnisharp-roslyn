@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
@@ -21,7 +22,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
             Workspace = workspace;
         }
 
-        protected async Task<IEnumerable<(Diagnostics.DocumentDiagnostics diagnosticsInDocument, AvailableFixAllDiagnosticProvider provider)>> GetDiagnosticsMappedWithFixAllProviders(IEnumerable<ProjectId> projectIds)
+        protected async Task<ImmutableArray<DocumentWithFixAll>> GetDiagnosticsMappedWithFixAllProviders(IEnumerable<ProjectId> projectIds)
         {
             var availableCodeFixesLookup = projectIds.ToDictionary(projectId => projectId, projectId => _codeFixProvider.GetAllCodeFixesForProject(projectId));
 
@@ -29,10 +30,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
 
             var mappedProvidersWithDiagnostics = allDiagnostics
                 .SelectMany(diagnosticsInDocument =>
-                    AvailableFixAllDiagnosticProvider.Create(availableCodeFixesLookup[diagnosticsInDocument.ProjectId], diagnosticsInDocument),
-                    (parent, child) => (diagnosticsInDocument: parent, provider: child));
+                    DocumentWithFixAll.CreateWithMatchingProviders(availableCodeFixesLookup[diagnosticsInDocument.ProjectId], diagnosticsInDocument));
 
-            return mappedProvidersWithDiagnostics;
+            return mappedProvidersWithDiagnostics.ToImmutableArray();
         }
 
         protected IEnumerable<ProjectId> GetProjectIdsInScope(FixAllScope scope, string fileNameIfAny)
