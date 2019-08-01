@@ -58,8 +58,10 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             }
         }
 
-        [Fact]
-        public async Task WhenFixAllIsScopedToDocument_ThenOnlyFixDocumentInsteadOfEverything()
+        [Theory]
+        [InlineData(FixAllScope.Document)]
+        [InlineData(FixAllScope.Project)]
+        public async Task WhenFixAllIsScopedToDocumentAndProject_ThenOnlyFixInScopeInsteadOfEverything(FixAllScope scope)
         {
             using (var host = GetHost(true))
             {
@@ -86,7 +88,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
                 await handler.Handle(new RunFixAllRequest
                 {
-                    Scope = FixAllScope.Document,
+                    Scope = scope,
                     FileName = ide0055File
                 });
 
@@ -94,7 +96,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 string textAfterFixIde0040 = await GetContentOfDocumentFromWorkspace(host, ide0040File);
 
                 AssertUtils.AssertIgnoringIndent(expectedIde0055TextWithFixedFormat, textAfterFixIde0055);
-                AssertUtils.AssertIgnoringIndent(originalId0040Text, textAfterFixIde0040 );
+                AssertUtils.AssertIgnoringIndent(originalId0040Text, textAfterFixIde0040);
             }
         }
 
@@ -108,23 +110,34 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                         internal class InvalidFormatIDE0055ExpectedHere{}
                     ");
 
+                var resultFromDocument = await GetFixAllTargets(host, ide0055File, FixAllScope.Solution);
+
+                Assert.Contains(resultFromDocument.Items, x => x.Id == "IDE0055");
+                Assert.DoesNotContain(resultFromDocument.Items, x => x.Id == "IDE0040");
+            }
+        }
+
+        [Theory]
+        [InlineData(FixAllScope.Document)]
+        [InlineData(FixAllScope.Project)]
+        public async Task WhenGetActionIsScoped_ThenReturnOnlyItemsFromCorrectScope(FixAllScope scope)
+        {
+            using (var host = GetHost(true))
+            {
+                var ide0055File = CreateTestProjectWithDocument(host,
+                    @"
+                        internal class InvalidFormatIDE0055ExpectedHere{}
+                    ");
+
                 var ide0040File = CreateTestProjectWithDocument(host,
                     @"
                         class NonInternalIDEIDE0040 { }
                     ");
 
-                var resultFromDocument = await GetFixAllTargets(host, ide0055File, FixAllScope.Document);
-                var resultFromProject = await GetFixAllTargets(host, ide0055File, FixAllScope.Project);
-                var resultFromSolution = await GetFixAllTargets(host, ide0055File, FixAllScope.Solution);
+                var resultFromDocument = await GetFixAllTargets(host, ide0055File, scope);
 
                 Assert.Contains(resultFromDocument.Items, x => x.Id == "IDE0055");
                 Assert.DoesNotContain(resultFromDocument.Items, x => x.Id == "IDE0040");
-
-                Assert.Contains(resultFromProject.Items, x => x.Id == "IDE0055");
-                Assert.DoesNotContain(resultFromProject.Items, x => x.Id == "IDE0040");
-
-                Assert.Contains(resultFromSolution.Items, x => x.Id == "IDE0055");
-                Assert.Contains(resultFromSolution.Items, x => x.Id == "IDE0040");
             }
         }
 
