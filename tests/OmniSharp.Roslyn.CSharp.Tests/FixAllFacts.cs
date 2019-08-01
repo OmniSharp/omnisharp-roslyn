@@ -41,14 +41,20 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
                 var handler = host.GetRequestHandler<RunFixAllCodeActionService>(OmniSharpEndpoints.RunFixAll);
 
-                await handler.Handle(new RunFixAllRequest
+                var response = await handler.Handle(new RunFixAllRequest
                 {
                     Scope = FixAllScope.Solution
                 });
 
                 string textAfterFix = await GetContentOfDocumentFromWorkspace(host, testFilePath);
+                var changesFromOnlyDocument = response.Changes.Single().Changes.Single();
 
                 AssertUtils.AssertIgnoringIndent(textAfterFix, expectedText);
+                Assert.Equal("\ninternal class C { }\n", changesFromOnlyDocument.NewText);
+                Assert.Equal(0, changesFromOnlyDocument.StartLine);
+                Assert.Equal(0, changesFromOnlyDocument.StartColumn);
+                Assert.Equal(2, changesFromOnlyDocument.EndLine);
+                Assert.Equal(16, changesFromOnlyDocument.EndColumn);
             }
         }
 
