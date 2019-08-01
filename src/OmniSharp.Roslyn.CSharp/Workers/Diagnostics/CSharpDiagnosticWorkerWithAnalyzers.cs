@@ -62,30 +62,22 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
             Task.Factory.StartNew(() => Worker(AnalyzerWorkType.Foreground), TaskCreationOptions.LongRunning);
             Task.Factory.StartNew(() => Worker(AnalyzerWorkType.Background), TaskCreationOptions.LongRunning);
+
+            InitializeWithWorkspaceDocumentsIfNotYetDone();
         }
 
-        private Task InitializeWithWorkspaceDocumentsIfNotYetDone()
+        private void InitializeWithWorkspaceDocumentsIfNotYetDone()
         {
             if (_initialSolutionAnalysisInvoked)
-                return Task.CompletedTask;
+                return;
 
-            _initialSolutionAnalysisInvoked = true;
-
-            return Task.Run(async () =>
-            {
-                while (!_workspace.Initialized || _workspace.CurrentSolution.Projects.Count() == 0) await Task.Delay(50);
-            })
-            .ContinueWith(_ => Task.Delay(50))
-            .ContinueWith(_ =>
-            {
-                var documentIds = QueueDocumentsForDiagnostics();
-                _logger.LogInformation($"Solution initialized -> queue all documents for code analysis. Initial document count: {documentIds.Length}.");
-            });
+            var documentIds = QueueDocumentsForDiagnostics();
+            _logger.LogInformation($"Solution initialized -> queue all documents for code analysis. Initial document count: {documentIds.Length}.");
         }
 
         public async Task<ImmutableArray<DocumentDiagnostics>> GetDiagnostics(ImmutableArray<string> documentPaths)
         {
-            await InitializeWithWorkspaceDocumentsIfNotYetDone();
+            InitializeWithWorkspaceDocumentsIfNotYetDone();
 
             var documentIds = GetDocumentIdsFromPaths(documentPaths);
 
@@ -306,7 +298,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
         public async Task<ImmutableArray<DocumentDiagnostics>> GetAllDiagnosticsAsync()
         {
-            await InitializeWithWorkspaceDocumentsIfNotYetDone();
+            InitializeWithWorkspaceDocumentsIfNotYetDone();
             var allDocumentsIds = _workspace.CurrentSolution.Projects.SelectMany(x => x.DocumentIds).ToImmutableArray();
             return await GetDiagnosticsByDocumentIds(allDocumentsIds);
         }

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using OmniSharp.Abstractions.Models.V1.FixAll;
+using OmniSharp.Models.Events;
 using OmniSharp.Roslyn.CSharp.Services.Refactoring;
 using TestUtility;
 using Xunit;
@@ -14,10 +15,12 @@ namespace OmniSharp.Roslyn.CSharp.Tests
     public class FixAllFacts
     {
         private readonly ITestOutputHelper _testOutput;
+        private readonly TestEventEmitter<ProjectDiagnosticStatusMessage> _analysisEventListener;
 
         public FixAllFacts(ITestOutputHelper testOutput)
         {
             _testOutput = testOutput;
+            _analysisEventListener = new TestEventEmitter<ProjectDiagnosticStatusMessage>();
         }
 
         [Fact]
@@ -36,10 +39,14 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 ";
 
                 host.AddFilesToWorkspace(new TestFile("a.cs", originalText));
+                await host.RequestCodeCheckAsync("a.cs");
 
                 var handler = host.GetRequestHandler<RunFixAllCodeActionService>(OmniSharpEndpoints.RunFixAll);
 
-                await handler.Handle(new RunFixAllRequest());
+                await handler.Handle(new RunFixAllRequest
+                {
+                    Scope = FixAllScope.Solution
+                });
 
                 var docAfterUpdate = host.Workspace.CurrentSolution.Projects.SelectMany(x => x.Documents).First(x => x.FilePath.EndsWith("a.cs"));
                 var text = await docAfterUpdate.GetTextAsync();
@@ -69,13 +76,6 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     class NonInternalIDEIDE0040 { }
                 ")).First();
 
-                // TODO fix this workaround.
-                var quickFixResponse = await host.RequestCodeCheckAsync("InvalidFormatIDE0055ExpectedHere.cs");
-                var quickFixResponse2 = await host.RequestCodeCheckAsync("NonInternalIDEIDE0040.cs");
-
-                Assert.NotEmpty(quickFixResponse.QuickFixes);
-                Assert.NotEmpty(quickFixResponse2.QuickFixes);
-
                 var resultFromDocument = await GetFixAllTargets(host, ide0055Project, FixAllScope.Document);
                 var resultFromProject = await GetFixAllTargets(host, ide0055Project, FixAllScope.Project);
                 var resultFromSolution = await GetFixAllTargets(host, ide0055Project, FixAllScope.Solution);
@@ -86,8 +86,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 Assert.Contains(resultFromProject.Items, x => x.Id == "IDE0055");
                 Assert.DoesNotContain(resultFromProject.Items, x => x.Id == "IDE0040");
 
-                Assert.Contains(resultFromProject.Items, x => x.Id == "IDE0055");
-                Assert.Contains(resultFromProject.Items, x => x.Id == "IDE0040");
+                Assert.Contains(resultFromSolution.Items, x => x.Id == "IDE0055");
+                Assert.Contains(resultFromSolution.Items, x => x.Id == "IDE0040");
             }
         }
 
@@ -127,7 +127,11 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
         private OmniSharpTestHost GetHost(bool roslynAnalyzersEnabled)
         {
-            return OmniSharpTestHost.Create(testOutput: _testOutput, configurationData: new Dictionary<string, string>() { { "RoslynExtensionsOptions:EnableAnalyzersSupport", roslynAnalyzersEnabled.ToString() } });
+            return OmniSharpTestHost.Create(
+                testOutput: _testOutput,
+                configurationData: new Dictionary<string, string>() { { "RoslynExtensionsOptions:EnableAnalyzersSupport", roslynAnalyzersEnabled.ToString() } },
+                eventEmitter: _analysisEventListener
+            );
         }
     }
 }

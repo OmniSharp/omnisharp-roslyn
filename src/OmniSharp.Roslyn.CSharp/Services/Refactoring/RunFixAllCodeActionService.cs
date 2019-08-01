@@ -35,9 +35,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
         public async Task<RunFixAllResponse> FixAll()
         {
             var solutionBeforeChanges = Workspace.CurrentSolution;
-            var projectIds = solutionBeforeChanges.Projects.Select(x => x.Id);
 
-            var mappedProvidersWithDiagnostics = await GetDiagnosticsMappedWithFixAllProviders(projectIds);
+            var mappedProvidersWithDiagnostics = await GetDiagnosticsMappedWithFixAllProviders();
 
             foreach (var diagnosticsInDocument in mappedProvidersWithDiagnostics)
             {

@@ -22,15 +22,13 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
             Workspace = workspace;
         }
 
-        protected async Task<ImmutableArray<DocumentWithFixAll>> GetDiagnosticsMappedWithFixAllProviders(IEnumerable<ProjectId> projectIds)
+        protected async Task<ImmutableArray<DocumentWithFixAll>> GetDiagnosticsMappedWithFixAllProviders()
         {
-            var availableCodeFixesLookup = projectIds.ToDictionary(projectId => projectId, projectId => _codeFixProvider.GetAllCodeFixesForProject(projectId));
-
             var allDiagnostics = await _diagnosticWorker.GetAllDiagnosticsAsync();
 
             var mappedProvidersWithDiagnostics = allDiagnostics
                 .SelectMany(diagnosticsInDocument =>
-                    DocumentWithFixAll.CreateWithMatchingProviders(availableCodeFixesLookup[diagnosticsInDocument.ProjectId], diagnosticsInDocument));
+                    DocumentWithFixAll.CreateWithMatchingProviders(_codeFixProvider.GetAllCodeFixesForProject(diagnosticsInDocument.ProjectId), diagnosticsInDocument));
 
             return mappedProvidersWithDiagnostics.ToImmutableArray();
         }
