@@ -32,13 +32,15 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
             _fixAllDiagnosticProvider = new FixAllDiagnosticProvider(diagnosticWorker);
         }
 
-        public async Task<RunFixAllResponse> FixAll()
+        public async Task<RunFixAllResponse> Handle(RunFixAllRequest request)
         {
             var solutionBeforeChanges = Workspace.CurrentSolution;
 
             var mappedProvidersWithDiagnostics = await GetDiagnosticsMappedWithFixAllProviders();
 
-            foreach (var diagnosticsInDocument in mappedProvidersWithDiagnostics)
+            var scopedProvidersWithDiagnostics = mappedProvidersWithDiagnostics.Where(x => IsFixOnScope(x, request.Scope, request.FileName));
+
+            foreach (var diagnosticsInDocument in scopedProvidersWithDiagnostics)
             {
                 try
                 {
@@ -88,11 +90,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
             {
                 Changes = changes.Select(x => new ModifiedFileResponse(x.document.FilePath) { Changes = x.changes.ToList() }).ToList()
             };
-        }
-
-        public async Task<RunFixAllResponse> Handle(RunFixAllRequest request)
-        {
-            return await FixAll();
         }
 
         private class FixAllDiagnosticProvider : FixAllContext.DiagnosticProvider

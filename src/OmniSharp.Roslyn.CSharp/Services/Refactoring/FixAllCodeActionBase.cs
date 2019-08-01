@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -43,6 +44,23 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
             return currentSolution
                 .GetDocumentIdsWithFilePath(fileNameIfAny)
                 .Select(x => x.ProjectId);
+        }
+
+        protected bool IsFixOnScope(DocumentWithFixAll documentWithFixAll, FixAllScope scope, string contextDocumentPath)
+        {
+            var currentSolution = Workspace.CurrentSolution;
+
+            switch(scope)
+            {
+                case FixAllScope.Solution:
+                    return true;
+                case FixAllScope.Project:
+                    return currentSolution.GetDocumentIdsWithFilePath(contextDocumentPath).Any(x => x.ProjectId == documentWithFixAll.ProjectId);
+                case FixAllScope.Document:
+                    return documentWithFixAll.DocumentPath == contextDocumentPath;
+                default:
+                    throw new NotImplementedException();
+            }
         }
     }
 }
