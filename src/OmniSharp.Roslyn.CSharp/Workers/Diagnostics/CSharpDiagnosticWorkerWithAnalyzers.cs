@@ -73,12 +73,12 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
             var documentIds = QueueDocumentsForDiagnostics();
             _logger.LogInformation($"Solution initialized -> queue all documents for code analysis. Initial document count: {documentIds.Length}.");
+
+            _initialSolutionAnalysisInvoked = true;
         }
 
         public async Task<ImmutableArray<DocumentDiagnostics>> GetDiagnostics(ImmutableArray<string> documentPaths)
         {
-            InitializeWithWorkspaceDocumentsIfNotYetDone();
-
             var documentIds = GetDocumentIdsFromPaths(documentPaths);
 
             return await GetDiagnosticsByDocumentIds(documentIds);
@@ -298,7 +298,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
         public async Task<ImmutableArray<DocumentDiagnostics>> GetAllDiagnosticsAsync()
         {
-            InitializeWithWorkspaceDocumentsIfNotYetDone();
             var allDocumentsIds = _workspace.CurrentSolution.Projects.SelectMany(x => x.DocumentIds).ToImmutableArray();
             return await GetDiagnosticsByDocumentIds(allDocumentsIds);
         }
