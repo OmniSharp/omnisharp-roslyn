@@ -100,6 +100,35 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             }
         }
 
+        [Fact(Skip="TODO? Something prevents this fix to execute.")]
+        public async Task WhenTextContainsUnusedImports_ThenTheyCanBeAutomaticallyFixed()
+        {
+            using (var host = GetHost(true))
+            {
+                var originalText =
+                @"
+                    using System.IO;
+                ";
+
+                var expectedText =
+                @"
+                ";
+
+                var testFilePath = CreateTestProjectWithDocument(host, originalText);
+
+                var handler = host.GetRequestHandler<RunFixAllCodeActionService>(OmniSharpEndpoints.RunFixAll);
+
+                var response = await handler.Handle(new RunFixAllRequest
+                {
+                    Scope = FixAllScope.Solution
+                });
+
+                string textAfterFix = await GetContentOfDocumentFromWorkspace(host, testFilePath);
+
+                AssertUtils.AssertIgnoringIndent(textAfterFix, expectedText);
+            }
+        }
+
         [Fact]
         public async Task WhenAvailableFixAllActionsAreRequested_ThenReturnThemAtResponse()
         {
@@ -148,7 +177,6 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             {
                 host.AddFilesToWorkspace(new TestFile("a.cs",
                 @"
-                    using System.IO;
                     class C {}
                 "));
 
