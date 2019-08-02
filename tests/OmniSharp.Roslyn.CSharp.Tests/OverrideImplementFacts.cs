@@ -32,7 +32,7 @@ public class Test
         return base.Equals(obj);
     }";
             var expected = CreateExpect(source, newText);
-            var actual = await OverrideImplementAsync("dummy.cs", source, "object.Equals(object)");
+            var actual = await OverrideImplementAsync("dummy.cs", source, "Equals(object obj)");
             Assert.Equal(expected.Changes, actual.Changes);
         }
 
@@ -60,7 +60,7 @@ public class Test : Base
         return base.VirtualMethod();
     }";
             var expected = CreateExpect(source, newText);
-            var actual = await OverrideImplementAsync("dummy.cs", source, "Base.VirtualMethod()");
+            var actual = await OverrideImplementAsync("dummy.cs", source, "VirtualMethod()");
             Assert.Equal(expected.Changes, actual.Changes);
         }
 
@@ -88,7 +88,7 @@ public class Test : Base
         throw new System.NotImplementedException();
     }";
             var expected = CreateExpect(source, newText);
-            var actual = await OverrideImplementAsync("dummy.cs", source, "Base.AbstractMethod()");
+            var actual = await OverrideImplementAsync("dummy.cs", source, "AbstractMethod()");
             Assert.Equal(expected.Changes, actual.Changes);
         }
 
@@ -127,7 +127,7 @@ namespace Namespace1
     }";
             var expected = CreateExpect(0, 0, 1, 21, @using);
             expected.Add(CreateChange(source, text));
-            var actual = await OverrideImplementAsync("dummy.cs", source, "Namespace1.Base.GetFileInfoList()");
+            var actual = await OverrideImplementAsync("dummy.cs", source, "GetFileInfoList()");
             Assert.Equal(expected.Changes, actual.Changes);
         }
 
@@ -156,7 +156,7 @@ public class Test : Base
         set { base.VirtualProperty = value; }
     }";
             var expected = CreateExpect(source, newText);
-            var actual = await OverrideImplementAsync("dummy.cs", source, "Base.VirtualProperty");
+            var actual = await OverrideImplementAsync("dummy.cs", source, "VirtualProperty");
             Assert.Equal(expected.Changes, actual.Changes);
         }
 
@@ -185,7 +185,7 @@ public class Test : Base
         set { throw new System.NotImplementedException(); }
     }";
             var expected = CreateExpect(source, newText);
-            var actual = await OverrideImplementAsync("dummy.cs", source, "Base.AbstractProperty");
+            var actual = await OverrideImplementAsync("dummy.cs", source, "AbstractProperty");
             Assert.Equal(expected.Changes, actual.Changes);
         }
 

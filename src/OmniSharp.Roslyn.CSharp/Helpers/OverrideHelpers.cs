@@ -17,7 +17,7 @@ namespace OmniSharp.Roslyn.CSharp.Helpers
             {
                 foreach (var member in type.GetMembers())
                 {
-                    if (member.IsOverridable() && target.Equals(member.ToDisplayString()))
+                    if (member.IsOverridable() && target.Equals(GetDisplayText(member)))
                     {
                         return member;
                     }
@@ -129,6 +129,29 @@ namespace OmniSharp.Roslyn.CSharp.Helpers
         private static string ToMinimalDisplayString(this ISymbol symbol)
         {
             return symbol.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
+        }
+
+        private static string GetDisplayText(ISymbol symbol)
+        {
+            string text = string.Empty;
+            switch (symbol.Kind)
+            {
+                case SymbolKind.Method:
+                    var method = (IMethodSymbol)symbol;
+                    var parameters = string.Join(", ", method.Parameters.Select(x => $"{x.Type.ToMinimalDisplayString()} {x.Name}"));
+                    var typeParameters = string.Join(", ", method.TypeParameters);
+                    if (!string.IsNullOrEmpty(typeParameters))
+                    {
+                        typeParameters = $"<{typeParameters}>";
+                    }
+                    text = $"{method.Name}{typeParameters}({parameters})";
+                    break;
+                case SymbolKind.Property:
+                    var property = (IPropertySymbol)symbol;
+                    text = $"{property.Name}";
+                    break;
+            }
+            return text;
         }
     }
 }

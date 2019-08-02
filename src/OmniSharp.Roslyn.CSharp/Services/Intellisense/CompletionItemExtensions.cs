@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -49,10 +49,13 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
 
         public static async Task<IEnumerable<ISymbol>> GetCompletionSymbolsAsync(this CompletionItem completionItem, IEnumerable<ISymbol> recommendedSymbols, Document document)
         {
-            var decodedSymbolsTask = _getSymbolsAsync.InvokeStatic<Task<ImmutableArray<ISymbol>>>(new object[] { completionItem, document, default(CancellationToken) });
-            if (decodedSymbolsTask != null)
+            if (completionItem.GetType() == _symbolCompletionItemType)
             {
-                return await decodedSymbolsTask;
+                var decodedSymbolsTask = _getSymbolsAsync.InvokeStatic<Task<ImmutableArray<ISymbol>>>(new object[] { completionItem, document, default(CancellationToken) });
+                if (decodedSymbolsTask != null)
+                {
+                    return await decodedSymbolsTask;
+                }
             }
 
             var properties = completionItem.Properties;

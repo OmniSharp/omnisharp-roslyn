@@ -10,6 +10,7 @@ using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Extensions;
 using OmniSharp.Mef;
 using OmniSharp.Models.AutoComplete;
+using OmniSharp.Models.V2;
 using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Services.Documentation;
 
@@ -99,6 +100,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
                                     continue;
                                 }
 
+                                var kind = item.Tags.FirstOrDefault();
                                 // for other completions, i.e. keywords, create a simple AutoCompleteResponse
                                 // we'll just assume that the completion text is the same
                                 // as the display text.
@@ -107,11 +109,14 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
                                     CompletionText = item.DisplayText,
                                     DisplayText = item.DisplayText,
                                     Snippet = item.DisplayText,
-                                    Kind = request.WantKind ? item.Tags.First() : null,
+                                    Kind = request.WantKind ? kind : null,
                                     IsSuggestionMode = isSuggestionMode,
-                                    Preselect = preselect
+                                    Preselect = preselect,
                                 };
-
+                                if (string.Compare(kind, SymbolKinds.Method, true) == 0 || string.Compare(kind, SymbolKinds.Property, true) == 0)
+                                {
+                                    response.OverrideTarget = item.DisplayText;
+                                }
                                 completions.Add(response);
                             }
                     }
@@ -216,7 +221,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
             }
 
             response.Preselect = preselect;
-            response.OverrideTarget = symbol.ToDisplayString();
+            if (symbol.Kind == SymbolKind.Method || symbol.Kind == SymbolKind.Property)
+            {
+                response.OverrideTarget = completionText;
+            }
             return response;
         }
     }
