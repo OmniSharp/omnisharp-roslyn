@@ -38,9 +38,17 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
 
             var mappedProvidersWithDiagnostics = await GetDiagnosticsMappedWithFixAllProviders();
 
-            var scopedProvidersWithDiagnostics = mappedProvidersWithDiagnostics.Where(x => IsFixOnScope(x, request.Scope, request.FileName));
+            var filteredDiagnosticsWithFix = mappedProvidersWithDiagnostics
+                .Where(x => IsFixOnScope(x, request.Scope, request.FileName))
+                .Where(diagWithFix =>
+                {
+                    if(request.ItemsToFix == default)
+                        return true;
 
-            foreach (var diagnosticsInDocument in scopedProvidersWithDiagnostics)
+                    return ContainsMatching(diagWithFix.GetAvailableFixableDiagnostics().Select(x => x.id), request.ItemsToFix.Select(x => x.Id));
+                });
+
+            foreach (var diagnosticsInDocument in filteredDiagnosticsWithFix)
             {
                 try
                 {
@@ -90,6 +98,11 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
             {
                 Changes = changes.Select(x => new ModifiedFileResponse(x.document.FilePath) { Changes = x.changes.ToList() }).ToList()
             };
+        }
+
+        public static bool ContainsMatching(IEnumerable<string> listA, IEnumerable<string> listB)
+        {
+            return listA.Any(x => listB.Contains(x));
         }
 
         private class FixAllDiagnosticProvider : FixAllContext.DiagnosticProvider

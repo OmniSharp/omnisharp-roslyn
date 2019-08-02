@@ -58,6 +58,38 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             }
         }
 
+        [Fact]
+        public async Task WhenFixAllItemsAreDefined_ThenFixOnlyDefinedItems()
+        {
+            using (var host = GetHost(true))
+            {
+                var originalText =
+                @"
+                    class C{}
+                ";
+
+                var expectedText =
+                @"
+                    internal class C{}
+                ";
+
+                var testFilePath = CreateTestProjectWithDocument(host, originalText);
+
+                var handler = host.GetRequestHandler<RunFixAllCodeActionService>(OmniSharpEndpoints.RunFixAll);
+
+                var response = await handler.Handle(new RunFixAllRequest
+                {
+                    Scope = FixAllScope.Solution,
+                    ItemsToFix = new [] { new FixAllItem("IDE0040", "This really doesn't matter. Works as description. Fix internal etc.") }
+                });
+
+                string textAfterFix = await GetContentOfDocumentFromWorkspace(host, testFilePath);
+                var changesFromOnlyDocument = response.Changes.Single().Changes.Single();
+
+                AssertUtils.AssertIgnoringIndent(textAfterFix, expectedText);
+            }
+        }
+
         [Theory]
         [InlineData(FixAllScope.Document)]
         [InlineData(FixAllScope.Project)]
