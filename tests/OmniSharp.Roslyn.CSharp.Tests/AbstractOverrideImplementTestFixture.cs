@@ -26,7 +26,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var testFile = new TestFile(filename, source);
             SharedOmniSharpTestHost.AddFilesToWorkspace(testFile);
             var options = SharedOmniSharpTestHost.Workspace.Options;
-            SharedOmniSharpTestHost.Workspace.Options = options.WithChangedOption(FormattingOptions.NewLine, LanguageNames.CSharp, "\r\n");
+            SharedOmniSharpTestHost.Workspace.Options = options.WithChangedOption(FormattingOptions.NewLine, LanguageNames.CSharp, System.Environment.NewLine);
             var point = testFile.Content.GetPointFromPosition();
 
             var request = new OverrideImplementRequest
