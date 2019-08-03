@@ -23,7 +23,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
         {
             CodeFixProvider = provider;
             _documentDiagnostics = documentDiagnostics;
-            FixAllProvider = provider.GetFixAllProvider() ?? WellKnownFixAllProviders.BatchFixer;
+            FixAllProvider = provider.GetFixAllProvider();
         }
 
 
@@ -50,6 +50,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
                 providers
                     .Select(provider => new DocumentWithFixAll(provider, documentDiagnostics))
                     .Where(x => x.GetAvailableFixableDiagnostics().Any())
+                    .Where(x => x.FixAllProvider != default)
                     .ToImmutableArray();
         }
     }

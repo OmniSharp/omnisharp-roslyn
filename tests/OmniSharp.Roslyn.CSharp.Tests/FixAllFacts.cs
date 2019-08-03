@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using OmniSharp.Abstractions.Models.V1.FixAll;
 using OmniSharp.Models.Events;
@@ -144,6 +145,37 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
                 var expectedText =
                 @"
+                ";
+
+                var testFilePath = CreateTestProjectWithDocument(host, originalText);
+
+                var handler = host.GetRequestHandler<RunFixAllCodeActionService>(OmniSharpEndpoints.RunFixAll);
+
+                var response = await handler.Handle(new RunFixAllRequest
+                {
+                    Scope = FixAllScope.Solution
+                });
+
+                string textAfterFix = await GetContentOfDocumentFromWorkspace(host, testFilePath);
+
+                AssertUtils.AssertIgnoringIndent(textAfterFix, expectedText);
+            }
+        }
+
+        [Fact()]
+        public async Task WhenIssueThatCannotBeAutomaticallyFixedIsAvailable_ThenDontTryToFixIt()
+        {
+            using (var host = GetHost(true))
+            {
+                var originalText =
+                @"
+                    invalidSyntaxThatCannotBeFixedHere
+                ";
+
+                var expectedText =
+                @"
+                    invalidSyntaxThatCannotBeFixedHere
+
                 ";
 
                 var testFilePath = CreateTestProjectWithDocument(host, originalText);
