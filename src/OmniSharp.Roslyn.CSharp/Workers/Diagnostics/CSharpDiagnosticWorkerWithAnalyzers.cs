@@ -75,17 +75,20 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
         {
             var documentIds = GetDocumentIdsFromPaths(documentPaths);
 
-            return await GetDiagnosticsByDocumentIds(documentIds);
+            return await GetDiagnosticsByDocumentIds(documentIds, waitForDocuments: true);
         }
 
-        private async Task<ImmutableArray<DocumentDiagnostics>> GetDiagnosticsByDocumentIds(ImmutableArray<DocumentId> documentIds)
+        private async Task<ImmutableArray<DocumentDiagnostics>> GetDiagnosticsByDocumentIds(ImmutableArray<DocumentId> documentIds, bool waitForDocuments)
         {
-            foreach(var documentId in documentIds)
+            if (waitForDocuments)
             {
-                _workQueue.TryPromote(documentId);
-            }
+                foreach (var documentId in documentIds)
+                {
+                    _workQueue.TryPromote(documentId);
+                }
 
-            await _workQueue.WaitForegroundWorkComplete();
+                await _workQueue.WaitForegroundWorkComplete();
+            }
 
             return documentIds
                 .Where(x => _currentDiagnosticResultLookup.ContainsKey(x))
@@ -129,7 +132,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
                     _workQueue.WorkComplete(workType);
 
-                        await Task.Delay(50);
+                    await Task.Delay(50);
                 }
                 catch (Exception ex)
                 {
@@ -151,7 +154,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
         private void OnWorkspaceChanged(object sender, WorkspaceChangeEventArgs changeEvent)
         {
-            switch(changeEvent.Kind)
+            switch (changeEvent.Kind)
             {
                 case WorkspaceChangeKind.DocumentChanged:
                 case WorkspaceChangeKind.DocumentAdded:
@@ -160,7 +163,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                     QueueForAnalysis(ImmutableArray.Create(changeEvent.DocumentId), AnalyzerWorkType.Foreground);
                     break;
                 case WorkspaceChangeKind.DocumentRemoved:
-                    if(!_currentDiagnosticResultLookup.TryRemove(changeEvent.DocumentId, out _))
+                    if (!_currentDiagnosticResultLookup.TryRemove(changeEvent.DocumentId, out _))
                     {
                         _logger.LogDebug($"Tried to remove non existent document from analysis, document: {changeEvent.DocumentId}");
                     };
@@ -293,7 +296,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
         public async Task<ImmutableArray<DocumentDiagnostics>> GetAllDiagnosticsAsync()
         {
             var allDocumentsIds = _workspace.CurrentSolution.Projects.SelectMany(x => x.DocumentIds).ToImmutableArray();
-            return await GetDiagnosticsByDocumentIds(allDocumentsIds);
+            return await GetDiagnosticsByDocumentIds(allDocumentsIds, waitForDocuments: false);
         }
 
         public ImmutableArray<DocumentId> QueueDocumentsForDiagnostics(ImmutableArray<ProjectId> projectIds)
