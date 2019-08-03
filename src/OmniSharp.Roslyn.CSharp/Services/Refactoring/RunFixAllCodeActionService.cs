@@ -42,10 +42,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
                 .Where(x => IsFixOnScope(x, request.Scope, request.FileName))
                 .Where(diagWithFix =>
                 {
-                    if(request.ItemsToFix == default)
+                    if(request.FixAllFilter == default)
                         return true;
 
-                    return ContainsMatching(diagWithFix.GetAvailableFixableDiagnostics().Select(x => x.id), request.ItemsToFix.Select(x => x.Id));
+                    return ContainsMatching(diagWithFix.GetAvailableFixableDiagnostics().Select(x => x.id), request.FixAllFilter.Select(x => x.Id));
                 });
 
             foreach (var diagnosticsInDocument in filteredDiagnosticsWithFix)

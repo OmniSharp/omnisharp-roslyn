@@ -2,6 +2,7 @@ namespace OmniSharp.Abstractions.Models.V1.FixAll
 {
     public class FixAllItem
     {
+        public FixAllItem() {}
         public FixAllItem(string id, string message)
         {
             Id = id;

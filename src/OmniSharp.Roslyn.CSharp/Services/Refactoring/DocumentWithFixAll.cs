@@ -12,6 +12,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
     {
         private readonly DocumentDiagnostics _documentDiagnostics;
 
+        // http://source.roslyn.io/#Microsoft.VisualStudio.LanguageServices.CSharp/LanguageService/CSharpCodeCleanupFixer.cs,d9a375db0f1e430e,references
         // CS8019 isn't directly used (via roslyn) but has an analyzer that report different diagnostic based on CS8019 to improve user experience.
         private static readonly Dictionary<string, string> _customDiagVsFixMap = new Dictionary<string, string>
         {
@@ -35,12 +36,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
         public ImmutableArray<(string id, string message)> GetAvailableFixableDiagnostics() => _documentDiagnostics.Diagnostics
                 .Where(x => HasFix(CodeFixProvider, x.Id))
                 .Select(x => (x.Id, x.GetMessage()))
-                .Select(x =>
-                {
-                    if (_customDiagVsFixMap.ContainsKey(x.Id))
-                        return (_customDiagVsFixMap[x.Id], _customDiagVsFixMap[x.Id]);
-                    return x;
-                }).ToImmutableArray();
+                .ToImmutableArray();
 
         private static bool HasFix(CodeFixProvider codeFixProvider, string diagnosticId)
         {

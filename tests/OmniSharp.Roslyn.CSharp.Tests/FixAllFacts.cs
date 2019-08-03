@@ -80,7 +80,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 var response = await handler.Handle(new RunFixAllRequest
                 {
                     Scope = FixAllScope.Solution,
-                    ItemsToFix = new [] { new FixAllItem("IDE0040", "This really doesn't matter. Works as description. Fix internal etc.") }
+                    FixAllFilter = new [] { new FixAllItem("IDE0040", "This really doesn't matter. Works as description. Fix internal etc.") }
                 });
 
                 string textAfterFix = await GetContentOfDocumentFromWorkspace(host, testFilePath);
