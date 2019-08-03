@@ -8,6 +8,11 @@ namespace TestUtility
         {
         }
 
+        static SharedOmniSharpHostFixture()
+        {
+            TestHelpers.SetDefaultCulture();
+        }
+
         public void Dispose()
         {
             OmniSharpTestHost?.Dispose();

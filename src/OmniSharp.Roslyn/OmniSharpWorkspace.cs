@@ -5,6 +5,7 @@ using System.Collections.Immutable;
 using System.Composition;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,6 +13,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.Extensions.Logging;
+using OmniSharp.FileSystem;
 using OmniSharp.FileWatching;
 using OmniSharp.Roslyn;
 using OmniSharp.Roslyn.Utilities;
@@ -93,16 +95,6 @@ namespace OmniSharp
             OnMetadataReferenceRemoved(projectId, metadataReference);
         }
 
-        public void AddDocument(DocumentInfo documentInfo)
-        {
-            // if the file has already been added as a misc file,
-            // because of a possible race condition between the updates of the project systems,
-            // remove the misc file and add the document as required
-            TryRemoveMiscellaneousDocument(documentInfo.FilePath);
-
-            OnDocumentAdded(documentInfo);
-        }
-
         public DocumentId TryAddMiscellaneousDocument(string filePath, string language)
         {
             if (GetDocument(filePath) != null)
@@ -180,19 +172,74 @@ namespace OmniSharp
             return projectInfo;
         }
 
-        public DocumentId AddDocument(ProjectId projectId, string filePath, SourceCodeKind sourceCodeKind = SourceCodeKind.Regular)
+        public void AddDocument(DocumentInfo documentInfo)
         {
-            var documentId = DocumentId.CreateNewId(projectId);
-            this.AddDocument(documentId, projectId, filePath, sourceCodeKind);
-            return documentId;
+            // if the file has already been added as a misc file,
+            // because of a possible race condition between the updates of the project systems,
+            // remove the misc file and add the document as required
+            TryRemoveMiscellaneousDocument(documentInfo.FilePath);
+
+            OnDocumentAdded(documentInfo);
         }
 
-        public DocumentId AddDocument(DocumentId documentId, ProjectId projectId, string filePath, SourceCodeKind sourceCodeKind = SourceCodeKind.Regular)
+        public DocumentId AddDocument(ProjectId projectId, string filePath, SourceCodeKind sourceCodeKind = SourceCodeKind.Regular)
         {
-            var loader = new OmniSharpTextLoader(filePath);
-            var documentInfo = DocumentInfo.Create(documentId, Path.GetFileName(filePath), filePath: filePath, loader: loader, sourceCodeKind: sourceCodeKind);
+            var project = this.CurrentSolution.GetProject(projectId);
+            return AddDocument(project, filePath, sourceCodeKind);
+        }
 
-            this.AddDocument(documentInfo);
+        public DocumentId AddDocument(ProjectId projectId, string filePath, TextLoader loader, SourceCodeKind sourceCodeKind = SourceCodeKind.Regular)
+        {
+            var documentId = DocumentId.CreateNewId(projectId);
+            var project = this.CurrentSolution.GetProject(projectId);
+            return AddDocument(documentId, project, filePath, loader, sourceCodeKind);
+        }
+
+        public DocumentId AddDocument(Project project, string filePath, SourceCodeKind sourceCodeKind = SourceCodeKind.Regular)
+        {
+            var documentId = DocumentId.CreateNewId(project.Id);
+            return AddDocument(documentId, project, filePath, sourceCodeKind);
+        }
+
+        public DocumentId AddDocument(DocumentId documentId, Project project, string filePath, SourceCodeKind sourceCodeKind = SourceCodeKind.Regular)
+        {
+            return AddDocument(documentId, project, filePath, new OmniSharpTextLoader(filePath), sourceCodeKind);
+        }
+
+        internal DocumentId AddDocument(DocumentId documentId, ProjectId projectId, string filePath, TextLoader loader, SourceCodeKind sourceCodeKind = SourceCodeKind.Regular)
+        {
+            var project = this.CurrentSolution.GetProject(projectId);
+            return AddDocument(documentId, project, filePath, loader, sourceCodeKind);
+        }
+
+        internal DocumentId AddDocument(DocumentId documentId, Project project, string filePath, TextLoader loader, SourceCodeKind sourceCodeKind = SourceCodeKind.Regular)
+        {
+            var basePath = Path.GetDirectoryName(project.FilePath);
+            var fullPath = Path.GetDirectoryName(filePath);
+
+            IEnumerable<string> folders = null;
+
+            // folder computation is best effort. in case of exceptions, we back out because it's not essential for core features
+            try
+            {
+                // find the relative path from project file to our document 
+                var relativeDocumentPath = FileSystemHelper.GetRelativePath(fullPath, basePath);
+
+                // only set document's folders if
+                // 1. relative path was computed
+                // 2. path is not pointing any level up
+                if (relativeDocumentPath != null && !relativeDocumentPath.StartsWith(".."))
+                {
+                    folders = relativeDocumentPath?.Split(new[] { Path.DirectorySeparatorChar });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, $"An error occurred when computing a relative path from {basePath} to {fullPath}. Document at {filePath} will be processed without folder structure.");
+            }
+
+            var documentInfo = DocumentInfo.Create(documentId, Path.GetFileName(filePath), folders: folders, filePath: filePath, loader: loader, sourceCodeKind: sourceCodeKind);
+            AddDocument(documentInfo);
 
             return documentId;
         }
@@ -426,6 +473,22 @@ namespace OmniSharp
         public void RemoveAdditionalDocument(DocumentId documentId)
         {
             OnAdditionalDocumentRemoved(documentId);
+        }
+
+        protected override void ApplyProjectChanges(ProjectChanges projectChanges)
+        {
+            // since Roslyn currently doesn't handle DefaultNamespace changes via ApplyProjectChanges
+            // and OnDefaultNamespaceChanged is internal, we use reflection for now
+            if (projectChanges.NewProject.DefaultNamespace != projectChanges.OldProject.DefaultNamespace)
+            {
+                var onDefaultNamespaceChanged = this.GetType().GetMethod("OnDefaultNamespaceChanged", BindingFlags.Instance | BindingFlags.NonPublic);
+                if (onDefaultNamespaceChanged != null)
+                {
+                    onDefaultNamespaceChanged.Invoke(this, new object[] { projectChanges.ProjectId, projectChanges.NewProject.DefaultNamespace });
+                }
+            }
+
+            base.ApplyProjectChanges(projectChanges);
         }
     }
 }
