@@ -1,6 +1,9 @@
 # Changelog
 All changes to the project will be documented in this file.
 
+## [1.35.0] - not yet released
+* Updated LSP libraries to 0.13 which fixes problems with clients not supporting dynamic registrations. ([#1505](https://github.com/OmniSharp/omnisharp-roslyn/issues/1505), [#1525](https://github.com/OmniSharp/omnisharp-roslyn/issues/1525), PR: [#1562](https://github.com/OmniSharp/omnisharp-roslyn/pull/1562))
+
 ## [1.34.1] - 2019-07-31
 * Fixed a regression introduced in 1.32.20 which caused `AllowUnsafeCode` in csproj to also enable `TreatWarningsAsErrors` behavior ([#1565](https://github.com/OmniSharp/omnisharp-roslyn/issues/1565), PR: [#1567](https://github.com/OmniSharp/omnisharp-roslyn/pull/1567))
 * Update to Roslyn `3.3.0-beta2-19376-02` (PR: [#1574](https://github.com/OmniSharp/omnisharp-roslyn/pull/1574))
