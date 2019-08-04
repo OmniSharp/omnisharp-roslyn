@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Composition.Hosting.Core;
 using Microsoft.Extensions.Logging;
 using TestUtility.Logging;
@@ -65,7 +65,7 @@ namespace TestUtility
 
             if (testFiles.Length > 0)
             {
-                host.AddFilesToWorkspace(testFiles);
+                host.AddFilesToWorkspace(path, testFiles);
             }
 
             return host;
