@@ -1,6 +1,9 @@
 # Changelog
 All changes to the project will be documented in this file.
 
+## [1.34.2] - not yet released
+* Update to Roslyn `3.3.0-beta2-19401-05` which fixes a 1.34.1 regression resulting in StackOverflowException on code analysis of partial classes (PR: [#1579](https://github.com/OmniSharp/omnisharp-roslyn/pull/1579))
+
 ## [1.34.1] - 2019-07-31
 * Added support for "sync namespace" refactoring ([#1475](https://github.com/OmniSharp/omnisharp-roslyn/issues/1475), PR: [#1563](https://github.com/OmniSharp/omnisharp-roslyn/pull/1563))
 * Fixed a regression introduced in 1.32.20 which caused `AllowUnsafeCode` in csproj to also enable `TreatWarningsAsErrors` behavior ([#1565](https://github.com/OmniSharp/omnisharp-roslyn/issues/1565), PR: [#1567](https://github.com/OmniSharp/omnisharp-roslyn/pull/1567))
