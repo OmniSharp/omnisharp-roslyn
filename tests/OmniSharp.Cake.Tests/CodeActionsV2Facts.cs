@@ -64,7 +64,8 @@ namespace OmniSharp.Cake.Tests
             {
                 "using System.Text.RegularExpressions;",
                 "System.Text.RegularExpressions.Regex",
-                "Extract Method"
+                "Extract Method",
+                "Introduce local for 'Regex.Match(\"foo\", \"bar\")'"
             };
             Assert.Equal(expected, refactorings);
         }

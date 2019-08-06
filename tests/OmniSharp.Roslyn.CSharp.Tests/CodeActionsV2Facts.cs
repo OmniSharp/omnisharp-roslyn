@@ -137,7 +137,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 "Generate type 'Console' -> Generate class 'Console' in new file",
                 "Generate type 'Console' -> Generate class 'Console'",
                 "Generate type 'Console' -> Generate nested class 'Console'",
-                "Extract Method"
+                "Extract Method",
+                "Introduce local for 'Console.Write(\"should be using System;\")'"
             } : new List<string>
             {
                 "using System;",
@@ -150,7 +151,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 "Generate type 'Console' -> Generate class 'Console' in new file",
                 "Generate type 'Console' -> Generate class 'Console'",
                 "Generate type 'Console' -> Generate nested class 'Console'",
-                "Extract Method"
+                "Extract Method",
+                "Introduce local for 'Console.Write(\"should be using System;\")'"
             };
             Assert.Equal(expected.OrderBy(x => x), refactorings.OrderBy(x => x));
         }

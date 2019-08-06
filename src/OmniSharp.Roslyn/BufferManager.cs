@@ -151,29 +151,26 @@ namespace OmniSharp.Roslyn
             }
             else
             {
+                var projectAndDocumentIds = new List<(ProjectId ProjectId, DocumentId DocumentId)>();
                 var sourceText = SourceText.From(fileContent);
-                var documentInfos = new List<DocumentInfo>();
+
                 foreach (var project in projects)
                 {
-                    var id = DocumentId.CreateNewId(project.Id);
-                    var version = VersionStamp.Create();
-                    var documentInfo = DocumentInfo.Create(
-                        id, fileName, filePath: fileName,
-                        loader: TextLoader.From(TextAndVersion.Create(sourceText, version)));
-
-                    documentInfos.Add(documentInfo);
+                    var documentId = DocumentId.CreateNewId(project.Id);
+                    projectAndDocumentIds.Add((project.Id, documentId));
                 }
 
                 lock (_lock)
                 {
-                    var documentIds = documentInfos.Select(document => document.Id);
+                    var documentIds = projectAndDocumentIds.Select(x => x.DocumentId);
                     _transientDocuments[fileName] = documentIds;
                     _transientDocumentIds.UnionWith(documentIds);
                 }
 
-                foreach (var documentInfo in documentInfos)
+                foreach (var projectAndDocumentId in projectAndDocumentIds)
                 {
-                    _workspace.AddDocument(documentInfo);
+                    var version = VersionStamp.Create();
+                    _workspace.AddDocument(projectAndDocumentId.DocumentId, projectAndDocumentId.ProjectId, fileName, TextLoader.From(TextAndVersion.Create(sourceText, version)));
                 }
             }
 

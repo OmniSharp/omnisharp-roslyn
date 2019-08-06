@@ -434,20 +434,37 @@ namespace OmniSharp.MSBuild
             UpdateParseOptions(project, projectFileInfo.LanguageVersion, projectFileInfo.PreprocessorSymbolNames, !string.IsNullOrWhiteSpace(projectFileInfo.DocumentationFile));
             UpdateProjectReferences(project, projectFileInfo.ProjectReferences);
             UpdateReferences(project, projectFileInfo.ProjectReferences, projectFileInfo.References);
-            UpdateAnalyzerReferences(projectFileInfo, project);
+            UpdateAnalyzerReferences(project, projectFileInfo);
             UpdateAdditionalFiles(project, projectFileInfo.AdditionalFiles);
+            UpdateProjectProperties(project, projectFileInfo);
 
             _workspace.TryPromoteMiscellaneousDocumentsToProject(project);
             _workspace.UpdateDiagnosticOptionsForProject(project.Id, projectFileInfo.GetDiagnosticOptions());
         }
 
-        private void UpdateAnalyzerReferences(ProjectFileInfo projectFileInfo, Project project)
+        private void UpdateAnalyzerReferences(Project project, ProjectFileInfo projectFileInfo)
         {
             var analyzerFileReferences = projectFileInfo.Analyzers
                 .Select(analyzerReferencePath => new AnalyzerFileReference(analyzerReferencePath, _analyzerAssemblyLoader))
                 .ToImmutableArray();
 
             _workspace.SetAnalyzerReferences(project.Id, analyzerFileReferences);
+        }
+
+        private void UpdateProjectProperties(Project project, ProjectFileInfo projectFileInfo)
+        {
+            if (projectFileInfo.DefaultNamespace != project.DefaultNamespace)
+            {
+                var newSolution = _workspace.CurrentSolution.WithProjectDefaultNamespace(project.Id, projectFileInfo.DefaultNamespace);
+                if (_workspace.TryApplyChanges(newSolution))
+                {
+                    _logger.LogDebug($"Updated default namespace from {project.DefaultNamespace} to {projectFileInfo.DefaultNamespace} on {project.FilePath} project.");
+                }
+                else
+                {
+                    _logger.LogWarning($"Couldn't update default namespace from {project.DefaultNamespace} to {projectFileInfo.DefaultNamespace} on {project.FilePath} project.");
+                }
+            }
         }
 
         private void UpdateAdditionalFiles(Project project, IList<string> additionalFiles)
@@ -490,7 +507,7 @@ namespace OmniSharp.MSBuild
                     continue;
                 }
 
-                _workspace.AddDocument(project.Id, sourceFile);
+                _workspace.AddDocument(project, sourceFile);
             }
 
             // Removing any remaining documents from the project.

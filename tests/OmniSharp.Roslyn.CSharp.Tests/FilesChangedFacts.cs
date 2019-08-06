@@ -32,7 +32,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 var handler = GetRequestHandler(host);
                 await handler.Handle(new[] { new FilesChangedRequest() { FileName = filePath, ChangeType = FileChangeType.Create } });
 
-                Assert.Contains(host.Workspace.CurrentSolution.Projects.First().Documents, d => d.Name == filePath);
+                Assert.Contains(host.Workspace.CurrentSolution.Projects.First().Documents, d => d.FilePath == filePath && d.Name == "FileName.cs");
             }
         }
 
@@ -51,7 +51,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 var handler = GetRequestHandler(host);
                 await handler.Handle(new[] { new FilesChangedRequest() { FileName = filePath, ChangeType = FileChangeType.Create } });
 
-                Assert.Contains(host.Workspace.CurrentSolution.Projects.First().Documents, d => d.Name == filePath);
+                Assert.Contains(host.Workspace.CurrentSolution.Projects.First().Documents, d => d.FilePath == filePath && d.Name == "FileName.cs");
 
                 var nestedDirectory = Path.Combine(projectDirectory, "Nested");
                 Directory.CreateDirectory(nestedDirectory);
@@ -62,8 +62,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 await handler.Handle(new[] { new FilesChangedRequest() { FileName = filePath, ChangeType = FileChangeType.Delete } });
                 await handler.Handle(new[] { new FilesChangedRequest() { FileName = destinationPath, ChangeType = FileChangeType.Create } });
 
-                Assert.Contains(host.Workspace.CurrentSolution.Projects.First().Documents, d => d.Name == destinationPath);
-                Assert.DoesNotContain(host.Workspace.CurrentSolution.Projects.First().Documents, d => d.Name == filePath);
+                Assert.Contains(host.Workspace.CurrentSolution.Projects.First().Documents, d => d.FilePath == destinationPath && d.Name == "FileName.cs");
+                Assert.DoesNotContain(host.Workspace.CurrentSolution.Projects.First().Documents, d => d.FilePath == filePath && d.Name == "FileName.cs");
             }
         }
 

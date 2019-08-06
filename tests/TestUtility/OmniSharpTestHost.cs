@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Composition.Hosting;
 using System.Composition.Hosting.Core;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -128,10 +129,14 @@ namespace TestUtility
         }
 
         public IEnumerable<ProjectId> AddFilesToWorkspace(params TestFile[] testFiles)
+            => AddFilesToWorkspace(Directory.GetCurrentDirectory(), testFiles);
+
+        public IEnumerable<ProjectId> AddFilesToWorkspace(string folderPath, params TestFile[] testFiles)
         {
+            folderPath = folderPath ?? Directory.GetCurrentDirectory();
             var projects = TestHelpers.AddProjectToWorkspace(
-                this.Workspace,
-                "project.csproj",
+                Workspace,
+                Path.Combine(folderPath, "project.csproj"),
                 new[] { "net472" },
                 testFiles.Where(f => f.FileName.EndsWith(".cs", StringComparison.OrdinalIgnoreCase)).ToArray());
 

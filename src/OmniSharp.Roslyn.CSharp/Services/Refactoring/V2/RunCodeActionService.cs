@@ -148,7 +148,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
                             }
                         }
 
-                        this.Workspace.AddDocument(documentId, projectChange.ProjectId, newFilePath, newDocument.SourceCodeKind);
+                        this.Workspace.AddDocument(documentId, projectChange.NewProject, newFilePath, newDocument.SourceCodeKind);
                         solution = this.Workspace.CurrentSolution;
                     }
                     else
