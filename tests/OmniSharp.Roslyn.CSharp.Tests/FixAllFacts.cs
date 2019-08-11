@@ -81,7 +81,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 var response = await handler.Handle(new RunFixAllRequest
                 {
                     Scope = FixAllScope.Solution,
-                    FixAllFilter = new [] { new FixAllItem("IDE0040", "This really doesn't matter. Works as description. Fix internal etc.") }
+                    FixAllFilter = new [] { new FixAllItem("IDE0040", message: "This really doesn't matter. Works as description. Fix internal etc.") }
                 });
 
                 string textAfterFix = await GetContentOfDocumentFromWorkspace(host, testFilePath);
@@ -111,9 +111,9 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 var ide0055File = CreateTestProjectWithDocument(host, originalIde0055Text);
 
                 var originalId0040Text =
-                    @"
-                        class NonInternalIDEIDE0040 { }
-                    ";
+                @"
+                    class NonInternalIDEIDE0040 { }
+                ";
 
                 var ide0040File = CreateTestProjectWithDocument(host, originalId0040Text);
 

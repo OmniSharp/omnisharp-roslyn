@@ -75,6 +75,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
 
                     foreach (var o in operations)
                     {
+                        _logger.LogInformation($"Applying operation {o.ToString()} from fix all with fix provider {diagnosticsInDocument.CodeFixProvider} to workspace document {document.FilePath}.");
+
                         if (o is ApplyChangesOperation applyChangesOperation)
                         {
                             applyChangesOperation.Apply(Workspace, CancellationToken.None);
