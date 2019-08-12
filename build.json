@@ -39,6 +39,7 @@
     "SolutionWithSignedProject",
     "ProjectWithMultiTFMLib",
     "ExternAlias",
+    "ProjectWithAnalyzers",
     "ProjectWithComplexAnalyzers"
   ],
   "CakeTestAssets": [
