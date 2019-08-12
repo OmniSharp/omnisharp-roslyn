@@ -18,8 +18,6 @@ namespace OmniSharp.MSBuild.Tests
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithComplexAnalyzers"))
             using (var host = CreateMSBuildTestHost(testProject.Directory, configurationData: TestHelpers.GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled: true)))
             {
-                await host.RestoreProject(testProject);
-
                 var diagnostics = await host.RequestCodeCheckAsync(Path.Combine(testProject.Directory, "Program.cs"));
 
                 Assert.NotEmpty(diagnostics.QuickFixes);
