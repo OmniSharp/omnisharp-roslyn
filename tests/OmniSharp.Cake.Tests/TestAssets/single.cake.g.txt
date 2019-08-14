@@ -2533,7 +2533,7 @@ public void DotNetCoreBuild(System.String project)
 ///             <code>
 ///                 var settings = new DotNetCoreBuildSettings
 ///                 {
-///                     Framework = "netcoreapp2.1",
+///                     Framework = "netcoreapp1.0",
 ///                     Configuration = "Debug",
 ///                     OutputDirectory = "./artifacts/"
 ///                 };
@@ -2639,7 +2639,7 @@ public void DotNetCoreRun(System.String project, Cake.Core.IO.ProcessArgumentBui
 ///             <code>
 ///                 var settings = new DotNetCoreRunSettings
 ///                 {
-///                     Framework = "netcoreapp2.1",
+///                     Framework = "netcoreapp1.0",
 ///                     Configuration = "Release"
 ///                 };
 ///            
@@ -2676,7 +2676,7 @@ public void DotNetCorePublish(System.String project)
 ///             <code>
 ///                 var settings = new DotNetCorePublishSettings
 ///                 {
-///                     Framework = "netcoreapp2.1",
+///                     Framework = "netcoreapp1.0",
 ///                     Configuration = "Release",
 ///                     OutputDirectory = "./artifacts/"
 ///                 };
@@ -2809,7 +2809,7 @@ public void DotNetCoreClean(System.String project)
 ///             <code>
 ///                 var settings = new DotNetCoreCleanSettings
 ///                 {
-///                     Framework = "netcoreapp2.1",
+///                     Framework = "netcoreapp1.0",
 ///                     Configuration = "Debug",
 ///                     OutputDirectory = "./artifacts/"
 ///                 };
