@@ -118,14 +118,6 @@ Task("InstallDotNetCoreSdk")
             version: buildPlan.DotNetVersion,
             installFolder: env.Folders.DotNetSdk);
 
-        foreach (var runtimeVersion in buildPlan.DotNetSharedRuntimeVersions)
-        {
-            InstallDotNetSdk(env, buildPlan,
-                version: runtimeVersion,
-                installFolder: env.Folders.DotNetSdk,
-                sharedRuntime: true);
-        }
-
         // Add non-legacy .NET SDK to PATH
         var oldPath = Environment.GetEnvironmentVariable("PATH");
         var newPath = env.Folders.DotNetSdk + (string.IsNullOrEmpty(oldPath) ? "" : System.IO.Path.PathSeparator + oldPath);
