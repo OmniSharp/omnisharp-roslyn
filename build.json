@@ -35,7 +35,8 @@
     "ProjectWithMismatchedFileName",
     "SolutionWithSignedProject",
     "ProjectWithMultiTFMLib",
-    "ExternAlias"
+    "ExternAlias",
+    "ProjectWithComplexAnalyzers"
   ],
   "CakeTestAssets": [
     "CakeProject"
