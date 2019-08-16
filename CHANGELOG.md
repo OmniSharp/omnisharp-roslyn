@@ -1,7 +1,7 @@
 # Changelog
 All changes to the project will be documented in this file.
 
-## [1.34.2] - not yet released
+## [1.34.2] - 2019-08-16 
 * Update to Roslyn `3.3.0-beta2-19401-05` which fixes a 1.34.1 regression resulting in StackOverflowException on code analysis of partial classes (PR: [#1579](https://github.com/OmniSharp/omnisharp-roslyn/pull/1579))
 * Added support for reading C# 8.0 `Nullable` setting from csproj files (and dropped support for `NullableContextOptions` - based on the LDM decision to [rename the MSBuild property](https://github.com/dotnet/roslyn/issues/35432) ([#1573](https://github.com/OmniSharp/omnisharp-roslyn/pull/1573))
 
