@@ -64,6 +64,7 @@ namespace OmniSharp.MSBuild.Tests
 
                 var compilationOptions = projectFileInfo.CreateCompilationOptions();
                 Assert.Equal(ReportDiagnostic.Error, compilationOptions.GeneralDiagnosticOption);
+                Assert.True(compilationOptions.CheckOverflow);
             }
         }
 
@@ -86,6 +87,10 @@ namespace OmniSharp.MSBuild.Tests
                 Assert.Equal(3, projectFileInfo.SourceFiles.Length); // Program.cs, AssemblyInfo.cs, AssemblyAttributes.cs
                 Assert.Equal("Debug", projectFileInfo.Configuration);
                 Assert.Equal("AnyCPU", projectFileInfo.Platform);
+
+                var compilationOptions = projectFileInfo.CreateCompilationOptions();
+                Assert.Equal(ReportDiagnostic.Default, compilationOptions.GeneralDiagnosticOption);
+                Assert.False(compilationOptions.CheckOverflow);
             }
         }
 

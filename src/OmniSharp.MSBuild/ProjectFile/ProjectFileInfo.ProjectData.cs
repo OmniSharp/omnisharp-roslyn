@@ -187,7 +187,7 @@ namespace OmniSharp.MSBuild.ProjectFile
 
                 var languageVersion = PropertyConverter.ToLanguageVersion(project.GetPropertyValue(PropertyNames.LangVersion));
                 var allowUnsafeCode = PropertyConverter.ToBoolean(project.GetPropertyValue(PropertyNames.AllowUnsafeBlocks), defaultValue: false);
-                var checkForOverflowUnderflow = PropertyConverter.ToBoolean(project.GetPropertyValue(PropertyNames.AllowUnsafeBlocks), defaultValue: false);
+                var checkForOverflowUnderflow = PropertyConverter.ToBoolean(project.GetPropertyValue(PropertyNames.CheckForOverflowUnderflow), defaultValue: false);
                 var outputKind = PropertyConverter.ToOutputKind(project.GetPropertyValue(PropertyNames.OutputType));
                 var nullableContextOptions = PropertyConverter.ToNullableContextOptions(project.GetPropertyValue(PropertyNames.Nullable));
                 var documentationFile = project.GetPropertyValue(PropertyNames.DocumentationFile);
@@ -228,7 +228,7 @@ namespace OmniSharp.MSBuild.ProjectFile
 
                 var languageVersion = PropertyConverter.ToLanguageVersion(projectInstance.GetPropertyValue(PropertyNames.LangVersion));
                 var allowUnsafeCode = PropertyConverter.ToBoolean(projectInstance.GetPropertyValue(PropertyNames.AllowUnsafeBlocks), defaultValue: false);
-                var checkForOverflowUnderflow = PropertyConverter.ToBoolean(project.GetPropertyValue(PropertyNames.AllowUnsafeBlocks), defaultValue: false);
+                var checkForOverflowUnderflow = PropertyConverter.ToBoolean(projectInstance.GetPropertyValue(PropertyNames.CheckForOverflowUnderflow), defaultValue: false);
                 var outputKind = PropertyConverter.ToOutputKind(projectInstance.GetPropertyValue(PropertyNames.OutputType));
                 var nullableContextOptions = PropertyConverter.ToNullableContextOptions(projectInstance.GetPropertyValue(PropertyNames.Nullable));
                 var documentationFile = projectInstance.GetPropertyValue(PropertyNames.DocumentationFile);
