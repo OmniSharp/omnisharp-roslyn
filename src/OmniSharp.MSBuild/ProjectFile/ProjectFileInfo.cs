@@ -37,6 +37,7 @@ namespace OmniSharp.MSBuild.ProjectFile
         public LanguageVersion LanguageVersion => _data.LanguageVersion;
         public NullableContextOptions NullableContextOptions => _data.NullableContextOptions;
         public bool AllowUnsafeCode => _data.AllowUnsafeCode;
+        public bool CheckForOverflowUnderflow => _data.CheckForOverflowUnderflow;
         public string DocumentationFile => _data.DocumentationFile;
         public ImmutableArray<string> PreprocessorSymbolNames => _data.PreprocessorSymbolNames;
         public ImmutableArray<string> SuppressedDiagnosticIds => _data.SuppressedDiagnosticIds;
