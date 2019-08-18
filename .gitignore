@@ -57,3 +57,4 @@ launchSettings.json
 
 # Rider
 .idea/
+test-assets/**/nugets
