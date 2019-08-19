@@ -12,7 +12,7 @@ namespace OmniSharp.MSBuild.Tests
         {
         }
 
-        [Fact]
+        [Fact(Skip = "Possible thread starvation on Linux.")]
         public async Task CanLoadComplexAnalyzers()
         {
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithComplexAnalyzers"))
