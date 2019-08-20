@@ -15,7 +15,7 @@ using OmniSharp.Models.MembersTree;
 
 namespace OmniSharp.LanguageServerProtocol.Handlers
 {
-    internal sealed class CodeLensHandler : ICodeLensHandler, ICodeLensResolveHandler
+    internal sealed class OmniSharpCodeLensHandler : CodeLensHandler
     {
         public static IEnumerable<IJsonRpcHandler> Enumerate(RequestHandlers handlers)
         {
@@ -24,26 +24,28 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                     Mef.IRequestHandler<MembersTreeRequest, FileMemberTree>,
                     Mef.IRequestHandler<FindUsagesRequest, QuickFixResponse>>())
             {
-                yield return new CodeLensHandler(membersAsTreeHandler, findUsagesHandler, selector);
+                yield return new OmniSharpCodeLensHandler(membersAsTreeHandler, findUsagesHandler, selector);
             }
         }
 
-        private CodeLensCapability _capability;
         private readonly Mef.IRequestHandler<MembersTreeRequest, FileMemberTree> _membersAsTreeHandler;
         private readonly Mef.IRequestHandler<FindUsagesRequest, QuickFixResponse> _findUsagesHandler;
-        private readonly DocumentSelector _documentSelector;
 
-        public CodeLensHandler(
+        public OmniSharpCodeLensHandler(
             Mef.IRequestHandler<MembersTreeRequest, FileMemberTree> membersAsTreeHandler,
             Mef.IRequestHandler<FindUsagesRequest, QuickFixResponse> findUsagesHandler,
             DocumentSelector documentSelector)
+            : base(new CodeLensRegistrationOptions()
+            {
+                DocumentSelector = documentSelector,
+                ResolveProvider = true
+            })
         {
             _membersAsTreeHandler = membersAsTreeHandler;
             _findUsagesHandler = findUsagesHandler;
-            _documentSelector = documentSelector;
         }
 
-        public async Task<CodeLensContainer> Handle(CodeLensParams request, CancellationToken token)
+        public async override Task<CodeLensContainer> Handle(CodeLensParams request, CancellationToken token)
         {
             var omnisharpRequest = new MembersTreeRequest()
             {
@@ -61,13 +63,13 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             return codeLenseContainer;
         }
 
-        public async Task<CodeLens> Handle(CodeLens request, CancellationToken token)
+        public async override Task<CodeLens> Handle(CodeLens request, CancellationToken token)
         {
             var omnisharpRequest = new FindUsagesRequest
             {
                 FileName = Helpers.FromUri(request.Data.ToObject<Uri>()),
-                Column = (int) request.Range.Start.Character,
-                Line = (int) request.Range.Start.Line,
+                Column = (int)request.Range.Start.Character,
+                Line = (int)request.Range.Start.Line,
                 OnlyThisFile = false,
                 ExcludeDefinition = true
             };
@@ -83,21 +85,6 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             };
 
             return request;
-        }
-
-
-        public CodeLensRegistrationOptions GetRegistrationOptions()
-        {
-            return new CodeLensRegistrationOptions()
-            {
-                DocumentSelector = _documentSelector,
-                ResolveProvider = true
-            };
-        }
-
-        public void SetCapability(CodeLensCapability capability)
-        {
-            _capability = capability;
         }
 
         private static void ToCodeLens(TextDocumentIdentifier textDocument, FileMemberElement node, List<CodeLens> codeLensContainer)
@@ -121,12 +108,12 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             }
         }
 
-        public bool CanResolve(CodeLens value)
+        public override bool CanResolve(CodeLens value)
         {
             var textDocumentUri = value.Data.ToObject<Uri>();
 
             return textDocumentUri != null &&
-                _documentSelector.IsMatch(new TextDocumentAttributes(textDocumentUri, string.Empty));
+                GetRegistrationOptions().DocumentSelector.IsMatch(new TextDocumentAttributes(textDocumentUri, string.Empty));
         }
     }
 }

@@ -12,7 +12,8 @@ namespace OmniSharp.MSBuild.Tests
         {
         }
 
-        [Fact]
+        // possible thread starvation on Linux when running in Azure DevOps
+        [ConditionalFact(typeof(NotOnLinux))]
         public async Task CanLoadComplexAnalyzers()
         {
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithComplexAnalyzers"))

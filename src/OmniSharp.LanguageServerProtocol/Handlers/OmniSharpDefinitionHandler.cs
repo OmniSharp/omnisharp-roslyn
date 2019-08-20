@@ -11,34 +11,27 @@ using static OmniSharp.LanguageServerProtocol.Helpers;
 
 namespace OmniSharp.LanguageServerProtocol.Handlers
 {
-    class DefinitionHandler : IDefinitionHandler
+    class OmniSharpDefinitionHandler : DefinitionHandler
     {
         public static IEnumerable<IJsonRpcHandler> Enumerate(RequestHandlers handlers)
         {
             foreach (var (selector, handler) in handlers.OfType<Mef.IRequestHandler<GotoDefinitionRequest, GotoDefinitionResponse>>())
                 if (handler != null)
-                    yield return new DefinitionHandler(handler, selector);
+                    yield return new OmniSharpDefinitionHandler(handler, selector);
         }
 
-        private DefinitionCapability _capability;
         private readonly Mef.IRequestHandler<GotoDefinitionRequest, GotoDefinitionResponse> _definitionHandler;
-        private readonly DocumentSelector _documentSelector;
 
-        public DefinitionHandler(Mef.IRequestHandler<GotoDefinitionRequest, GotoDefinitionResponse> definitionHandler, DocumentSelector documentSelector)
+        public OmniSharpDefinitionHandler(Mef.IRequestHandler<GotoDefinitionRequest, GotoDefinitionResponse> definitionHandler, DocumentSelector documentSelector)
+            : base(new TextDocumentRegistrationOptions()
+            {
+                DocumentSelector = documentSelector
+            })
         {
             _definitionHandler = definitionHandler;
-            _documentSelector = documentSelector;
         }
 
-        public TextDocumentRegistrationOptions GetRegistrationOptions()
-        {
-            return new TextDocumentRegistrationOptions()
-            {
-                DocumentSelector = _documentSelector
-            };
-        }
-
-        public async Task<LocationOrLocationLinks> Handle(DefinitionParams request, CancellationToken token)
+        public async override Task<LocationOrLocationLinks> Handle(DefinitionParams request, CancellationToken token)
         {
             var omnisharpRequest = new GotoDefinitionRequest()
             {
@@ -59,11 +52,6 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                 Uri = ToUri(omnisharpResponse.FileName),
                 Range = ToRange((omnisharpResponse.Column, omnisharpResponse.Line))
             });
-        }
-
-        public void SetCapability(DefinitionCapability capability)
-        {
-            _capability = capability;
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.InteropServices;
 using OmniSharp.Utilities;
 using Xunit;
 
@@ -52,5 +53,11 @@ namespace TestUtility
     {
         public override bool ShouldSkip => !PlatformHelper.IsWindows;
         public override string SkipReason => "Can only be run on Windows";
+    }
+
+    public class NotOnLinux : SkipCondition
+    {
+        public override bool ShouldSkip => RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
+        public override string SkipReason => "Cannot be run on Linux";
     }
 }
