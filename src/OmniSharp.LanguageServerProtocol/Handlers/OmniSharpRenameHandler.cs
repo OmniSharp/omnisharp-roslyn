@@ -11,16 +11,18 @@ using OmniSharp.Models.Rename;
 
 namespace OmniSharp.LanguageServerProtocol.Handlers
 {
-    internal class RenameHandler : IRenameHandler
+    internal class OmniSharpRenameHandler : RenameHandler
     {
         private readonly Mef.IRequestHandler<RenameRequest, RenameResponse> _renameHandler;
-        private readonly DocumentSelector _documentSelector;
-        private RenameCapability _capability;
 
-        public RenameHandler(Mef.IRequestHandler<RenameRequest, RenameResponse> renameHandler, DocumentSelector documentSelector)
+        public OmniSharpRenameHandler(Mef.IRequestHandler<RenameRequest, RenameResponse> renameHandler, DocumentSelector documentSelector)
+            : base(new RenameRegistrationOptions()
+            {
+                DocumentSelector = documentSelector,
+                PrepareProvider = false
+            })
         {
             _renameHandler = renameHandler;
-            _documentSelector = documentSelector;
         }
 
         public static IEnumerable<IJsonRpcHandler> Enumerate(RequestHandlers handlers)
@@ -28,10 +30,10 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             foreach (var (selector, handler) in handlers
                 .OfType<Mef.IRequestHandler<RenameRequest, RenameResponse>>())
                 if (handler != null)
-                    yield return new RenameHandler(handler, selector);
+                    yield return new OmniSharpRenameHandler(handler, selector);
         }
 
-        public async Task<WorkspaceEdit> Handle(RenameParams request, CancellationToken token)
+        public async override Task<WorkspaceEdit> Handle(RenameParams request, CancellationToken token)
         {
             var omnisharpRequest = new RenameRequest
             {
@@ -51,7 +53,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                 return new WorkspaceEdit();
             }
 
-            var changes = omnisharpResponse.Changes.ToDictionary(change => 
+            var changes = omnisharpResponse.Changes.ToDictionary(change =>
                 Helpers.ToUri(change.FileName),
                 x => x.Changes.Select(edit => new TextEdit
                 {
@@ -63,19 +65,6 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             {
                 Changes = changes
             };
-        }
-
-        public RenameRegistrationOptions GetRegistrationOptions()
-        {
-            return new RenameRegistrationOptions
-            {
-                DocumentSelector = _documentSelector
-            };
-        }
-
-        public void SetCapability(RenameCapability capability)
-        {
-            _capability = capability;
         }
     }
 }

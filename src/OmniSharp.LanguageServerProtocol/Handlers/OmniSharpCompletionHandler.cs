@@ -10,7 +10,7 @@ using OmniSharp.Models.AutoComplete;
 
 namespace OmniSharp.LanguageServerProtocol.Handlers
 {
-    class CompletionHandler : ICompletionHandler
+    class OmniSharpCompletionHandler : CompletionHandler
     {
         public static IEnumerable<IJsonRpcHandler> Enumerate(RequestHandlers handlers)
         {
@@ -18,12 +18,10 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             foreach (var (selector, handler) in handlers
                 .OfType<Mef.IRequestHandler<AutoCompleteRequest, IEnumerable<AutoCompleteResponse>>>())
                 if (handler != null)
-                    yield return new CompletionHandler(handler, selector);
+                    yield return new OmniSharpCompletionHandler(handler, selector);
         }
 
-        private CompletionCapability _capability;
         private readonly Mef.IRequestHandler<AutoCompleteRequest, IEnumerable<AutoCompleteResponse>> _autoCompleteHandler;
-        private readonly DocumentSelector _documentSelector;
 
         private static readonly IDictionary<string, CompletionItemKind> _kind = new Dictionary<string, CompletionItemKind>{
             // types
@@ -58,20 +56,26 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             {
                 return CompletionItemKind.Property;
             }
-            if(_kind.TryGetValue(key, out var completionItemKind))
+            if (_kind.TryGetValue(key, out var completionItemKind))
             {
                 return completionItemKind;
             }
             return CompletionItemKind.Property;
         }
 
-        public CompletionHandler(Mef.IRequestHandler<AutoCompleteRequest, IEnumerable<AutoCompleteResponse>> autoCompleteHandler, DocumentSelector documentSelector)
+        public OmniSharpCompletionHandler(Mef.IRequestHandler<AutoCompleteRequest, IEnumerable<AutoCompleteResponse>> autoCompleteHandler, DocumentSelector documentSelector)
+            : base(new CompletionRegistrationOptions()
+            {
+                DocumentSelector = documentSelector,
+                // TODO: Come along and add a service for getting autocompletion details after the fact.
+                ResolveProvider = false,
+                TriggerCharacters = new[] { ".", },
+            })
         {
             _autoCompleteHandler = autoCompleteHandler;
-            _documentSelector = documentSelector;
         }
 
-        public async Task<CompletionList> Handle(CompletionParams request, CancellationToken token)
+        public async override Task<CompletionList> Handle(CompletionParams request, CancellationToken token)
         {
             var omnisharpRequest = new AutoCompleteRequest()
             {
@@ -81,7 +85,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                 WantKind = true,
                 WantDocumentationForEveryCompletionResult = true,
                 WantReturnType = true,
-                WantSnippet =_capability.CompletionItem?.SnippetSupport ?? false
+                WantSnippet = Capability.CompletionItem?.SnippetSupport ?? false
             };
 
             var omnisharpResponse = await _autoCompleteHandler.Handle(omnisharpRequest);
@@ -89,11 +93,12 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             var completions = new Dictionary<string, List<CompletionItem>>();
             foreach (var response in omnisharpResponse)
             {
-                var isSnippet  = !string.IsNullOrEmpty(response.Snippet);
-                var text       = isSnippet ? response.Snippet : response.CompletionText;
+                var isSnippet = !string.IsNullOrEmpty(response.Snippet);
+                var text = isSnippet ? response.Snippet : response.CompletionText;
                 var textFormat = isSnippet ? InsertTextFormat.Snippet : InsertTextFormat.PlainText;
 
-                var completionItem = new CompletionItem {
+                var completionItem = new CompletionItem
+                {
                     Label = response.CompletionText,
                     Detail = !string.IsNullOrEmpty(response.ReturnType) ?
                             response.DisplayText :
@@ -104,7 +109,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                     InsertTextFormat = textFormat,
                 };
 
-                if(!completions.ContainsKey(completionItem.Label))
+                if (!completions.ContainsKey(completionItem.Label))
                 {
                     completions[completionItem.Label] = new List<CompletionItem>();
                 }
@@ -129,18 +134,14 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             return new CompletionList(result);
         }
 
-        public CompletionRegistrationOptions GetRegistrationOptions()
+        public override Task<CompletionItem> Handle(CompletionItem request, CancellationToken cancellationToken)
         {
-            return new CompletionRegistrationOptions()
-            {
-                DocumentSelector = _documentSelector,
-                TriggerCharacters = new[] { "." },
-            };
+            throw new NotImplementedException();
         }
 
-        public void SetCapability(CompletionCapability capability)
+        public override bool CanResolve(CompletionItem value)
         {
-            _capability = capability;
+            return false;
         }
     }
 }
