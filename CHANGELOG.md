@@ -1,7 +1,8 @@
 # Changelog
 All changes to the project will be documented in this file.
 
-## [1.34.3] - 2019-08-21
+## [1.34.3] - 2018-08-21
+* Updated LSP libraries to 0.13 which fixes problems with clients not supporting dynamic registrations. ([#1505](https://github.com/OmniSharp/omnisharp-roslyn/issues/1505), [#1525](https://github.com/OmniSharp/omnisharp-roslyn/issues/1525), PR: [#1562](https://github.com/OmniSharp/omnisharp-roslyn/pull/1562))
 * Update to Roslyn `3.4.0-beta1-19420-02`. (PR:[#1588](https://github.com/OmniSharp/omnisharp-roslyn/pull/1588))
 
 ## [1.34.2] - 2019-08-16 
