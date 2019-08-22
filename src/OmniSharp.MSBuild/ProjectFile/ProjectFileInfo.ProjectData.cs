@@ -35,6 +35,7 @@ namespace OmniSharp.MSBuild.ProjectFile
             public LanguageVersion LanguageVersion { get; }
             public NullableContextOptions NullableContextOptions { get; }
             public bool AllowUnsafeCode { get; }
+            public bool CheckForOverflowUnderflow { get; }
             public string DocumentationFile { get; }
             public ImmutableArray<string> PreprocessorSymbolNames { get; }
             public ImmutableArray<string> SuppressedDiagnosticIds { get; }
@@ -80,6 +81,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 LanguageVersion languageVersion,
                 NullableContextOptions nullableContextOptions,
                 bool allowUnsafeCode,
+                bool checkForOverflowUnderflow,
                 string documentationFile,
                 ImmutableArray<string> preprocessorSymbolNames,
                 ImmutableArray<string> suppressedDiagnosticIds,
@@ -108,6 +110,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 LanguageVersion = languageVersion;
                 NullableContextOptions = nullableContextOptions;
                 AllowUnsafeCode = allowUnsafeCode;
+                CheckForOverflowUnderflow = checkForOverflowUnderflow;
                 DocumentationFile = documentationFile;
                 PreprocessorSymbolNames = preprocessorSymbolNames.EmptyIfDefault();
                 SuppressedDiagnosticIds = suppressedDiagnosticIds.EmptyIfDefault();
@@ -130,6 +133,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 LanguageVersion languageVersion,
                 NullableContextOptions nullableContextOptions,
                 bool allowUnsafeCode,
+                bool checkForOverflowUnderflow,
                 string documentationFile,
                 ImmutableArray<string> preprocessorSymbolNames,
                 ImmutableArray<string> suppressedDiagnosticIds,
@@ -146,7 +150,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 RuleSet ruleset,
                 ImmutableDictionary<string, string> referenceAliases)
                 : this(guid, name, assemblyName, targetPath, outputPath, intermediateOutputPath, projectAssetsFile,
-                      configuration, platform, targetFramework, targetFrameworks, outputKind, languageVersion, nullableContextOptions, allowUnsafeCode,
+                      configuration, platform, targetFramework, targetFrameworks, outputKind, languageVersion, nullableContextOptions, allowUnsafeCode, checkForOverflowUnderflow,
                       documentationFile, preprocessorSymbolNames, suppressedDiagnosticIds, signAssembly, assemblyOriginatorKeyFile, treatWarningsAsErrors, defaultNamespace, ruleset)
             {
                 SourceFiles = sourceFiles.EmptyIfDefault();
@@ -183,6 +187,7 @@ namespace OmniSharp.MSBuild.ProjectFile
 
                 var languageVersion = PropertyConverter.ToLanguageVersion(project.GetPropertyValue(PropertyNames.LangVersion));
                 var allowUnsafeCode = PropertyConverter.ToBoolean(project.GetPropertyValue(PropertyNames.AllowUnsafeBlocks), defaultValue: false);
+                var checkForOverflowUnderflow = PropertyConverter.ToBoolean(project.GetPropertyValue(PropertyNames.CheckForOverflowUnderflow), defaultValue: false);
                 var outputKind = PropertyConverter.ToOutputKind(project.GetPropertyValue(PropertyNames.OutputType));
                 var nullableContextOptions = PropertyConverter.ToNullableContextOptions(project.GetPropertyValue(PropertyNames.Nullable));
                 var documentationFile = project.GetPropertyValue(PropertyNames.DocumentationFile);
@@ -194,7 +199,7 @@ namespace OmniSharp.MSBuild.ProjectFile
 
                 return new ProjectData(
                     guid, name, assemblyName, targetPath, outputPath, intermediateOutputPath, projectAssetsFile,
-                    configuration, platform, targetFramework, targetFrameworks, outputKind, languageVersion, nullableContextOptions, allowUnsafeCode,
+                    configuration, platform, targetFramework, targetFrameworks, outputKind, languageVersion, nullableContextOptions, allowUnsafeCode, checkForOverflowUnderflow,
                     documentationFile, preprocessorSymbolNames, suppressedDiagnosticIds, signAssembly, assemblyOriginatorKeyFile, treatWarningsAsErrors, defaultNamespace, ruleset: null);
             }
 
@@ -223,6 +228,7 @@ namespace OmniSharp.MSBuild.ProjectFile
 
                 var languageVersion = PropertyConverter.ToLanguageVersion(projectInstance.GetPropertyValue(PropertyNames.LangVersion));
                 var allowUnsafeCode = PropertyConverter.ToBoolean(projectInstance.GetPropertyValue(PropertyNames.AllowUnsafeBlocks), defaultValue: false);
+                var checkForOverflowUnderflow = PropertyConverter.ToBoolean(projectInstance.GetPropertyValue(PropertyNames.CheckForOverflowUnderflow), defaultValue: false);
                 var outputKind = PropertyConverter.ToOutputKind(projectInstance.GetPropertyValue(PropertyNames.OutputType));
                 var nullableContextOptions = PropertyConverter.ToNullableContextOptions(projectInstance.GetPropertyValue(PropertyNames.Nullable));
                 var documentationFile = projectInstance.GetPropertyValue(PropertyNames.DocumentationFile);
@@ -281,7 +287,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 return new ProjectData(guid, name,
                     assemblyName, targetPath, outputPath, intermediateOutputPath, projectAssetsFile,
                     configuration, platform, targetFramework, targetFrameworks,
-                    outputKind, languageVersion, nullableContextOptions, allowUnsafeCode, documentationFile, preprocessorSymbolNames, suppressedDiagnosticIds,
+                    outputKind, languageVersion, nullableContextOptions, allowUnsafeCode, checkForOverflowUnderflow, documentationFile, preprocessorSymbolNames, suppressedDiagnosticIds,
                     signAssembly, assemblyOriginatorKeyFile,
                     sourceFiles, projectReferences, references.ToImmutable(), packageReferences, analyzers, additionalFiles, treatWarningsAsErrors, defaultNamespace, ruleset, referenceAliases.ToImmutableDictionary());
             }
