@@ -154,23 +154,36 @@ namespace OmniSharp.Endpoint
 
         private async Task<IAggregateResponse> AggregateResponsesFromLanguageHandlers(ExportHandler<TRequest, TResponse>[] handlers, TRequest request)
         {
-            IAggregateResponse aggregateResponse = null;
-
-            var responses = new List<Task<TResponse>>();
-            foreach (var handler in handlers)
+            if (!_canBeAggregated)
             {
-                responses.Add(handler.Handle(request));
+                throw new NotSupportedException($"Must be able to aggregate responses from all handlers for {EndpointName}");
             }
 
-            foreach (IAggregateResponse response in await Task.WhenAll(responses))
+            IAggregateResponse aggregateResponse = null;
+
+            if (handlers.Length == 1)
             {
-                if (aggregateResponse != null)
+                var response = handlers[0].Handle(request);
+                return (IAggregateResponse)await response;
+            }
+            else
+            {
+                var responses = new List<Task<TResponse>>();
+                foreach (var handler in handlers)
                 {
-                    aggregateResponse = aggregateResponse.Merge(response);
+                    responses.Add(handler.Handle(request));
                 }
-                else
+
+                foreach (IAggregateResponse response in await Task.WhenAll(responses))
                 {
-                    aggregateResponse = response;
+                    if (aggregateResponse != null)
+                    {
+                        aggregateResponse = aggregateResponse.Merge(response);
+                    }
+                    else
+                    {
+                        aggregateResponse = response;
+                    }
                 }
             }
 
