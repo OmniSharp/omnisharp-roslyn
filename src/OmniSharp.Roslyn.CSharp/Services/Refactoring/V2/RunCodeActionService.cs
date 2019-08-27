@@ -158,11 +158,15 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
                     }
                 }
 
+                var changedDocumentIds = new List<(DocumentType documentType, DocumentId documentId)>();
+                changedDocumentIds.AddRange(projectChange.GetChangedDocuments().Select(docId => (DocumentType.Regular, docId)));
+                changedDocumentIds.AddRange(projectChange.GetChangedAdditionalDocuments().Select(docId => (DocumentType.Additional, docId)));
+
                 // Handle changed documents
-                foreach (var documentId in projectChange.GetChangedDocuments())
+                foreach (var document in changedDocumentIds)
                 {
-                    var newDocument = newSolution.GetDocument(documentId);
-                    var oldDocument = oldSolution.GetDocument(documentId);
+                    var newDocument = document.documentType == DocumentType.Regular ? newSolution.GetDocument(document.documentId) : newSolution.GetAdditionalDocument(document.documentId);
+                    var oldDocument = document.documentType == DocumentType.Regular ? oldSolution.GetDocument(document.documentId) : oldSolution.GetAdditionalDocument(document.documentId);
                     var filePath = newDocument.FilePath;
 
                     // file rename
@@ -172,8 +176,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
                         {
                             var newFilePath = GetNewFilePath(newDocument.Name, oldDocument.FilePath);
                             var text = await oldDocument.GetTextAsync();
-                            var temp = solution.RemoveDocument(documentId);
-                            solution = temp.AddDocument(DocumentId.CreateNewId(oldDocument.Project.Id, newDocument.Name), newDocument.Name, text, oldDocument.Folders, newFilePath);
+                            var temp = document.documentType == DocumentType.Regular ? solution.RemoveDocument(document.documentId) : solution.RemoveAdditionalDocument(document.documentId);
+                            solution = document.documentType == DocumentType.Regular
+                                ? temp.AddDocument(DocumentId.CreateNewId(oldDocument.Project.Id, newDocument.Name), newDocument.Name, text, oldDocument.Folders, newFilePath)
+                                : temp.AddAdditionalDocument(DocumentId.CreateNewId(oldDocument.Project.Id, newDocument.Name), newDocument.Name, text, oldDocument.Folders, newFilePath);
 
                             filePathToResponseMap[filePath] = new RenamedFileResponse(oldDocument.FilePath, newFilePath);
                             filePathToResponseMap[newFilePath] = new OpenFileResponse(newFilePath);
@@ -213,6 +219,12 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
         {
             var directory = Path.GetDirectoryName(currentFilePath);
             return Path.Combine(directory, newFileName);
+        }
+
+        private enum DocumentType
+        {
+            Regular,
+            Additional
         }
     }
 }
