@@ -385,6 +385,19 @@ namespace OmniSharp.MSBuild
                 });
             }
 
+            // at the moment the BufferManager does not support non-source files
+            // since we reload AdditionalFiles on project update, we can watch them for changes too
+            if (projectFileInfo.AdditionalFiles.Any())
+            {
+                foreach (var additionalFile in projectFileInfo.AdditionalFiles)
+                {
+                    _fileSystemWatcher.Watch(additionalFile, (file, changeType) =>
+                    {
+                        QueueProjectUpdate(projectFileInfo.FilePath, allowAutoRestore: false, projectFileInfo.ProjectIdInfo);
+                    });
+                }
+            }
+
             if (!string.IsNullOrEmpty(projectFileInfo.ProjectAssetsFile))
             {
                 _fileSystemWatcher.Watch(projectFileInfo.ProjectAssetsFile, (file, changeType) =>
