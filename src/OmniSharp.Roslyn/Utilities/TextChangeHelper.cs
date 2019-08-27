@@ -9,10 +9,21 @@ namespace OmniSharp.Roslyn.Utilities
 {
     internal static class TextChanges
     {
-        public static async Task<IEnumerable<LinePositionSpanTextChange>> GetAsync(Document document, Document oldDocument)
+        public static async Task<IEnumerable<LinePositionSpanTextChange>> GetAsync(TextDocument document, TextDocument oldDocument)
         {
-            var changes = await document.GetTextChangesAsync(oldDocument);
             var oldText = await oldDocument.GetTextAsync();
+            IEnumerable<TextChange> changes = null;
+
+            if (document is Document documentAsDocument && oldDocument is Document oldDocumentAsDocument)
+            {
+                changes = await documentAsDocument.GetTextChangesAsync(oldDocumentAsDocument);
+            }
+            else
+            {
+                // due to a Roslyn bug, we replace all content in Documents
+                var text = await document.GetTextAsync();
+                changes = new TextChange[] { new TextChange(new TextSpan(0, oldText.Length), text.ToString()) };
+            }
 
             return Convert(oldText, changes);
         }
