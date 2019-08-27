@@ -9,6 +9,7 @@
         public const string BuildProjectReferences = nameof(BuildProjectReferences);
         public const string BuildingInsideVisualStudio = nameof(BuildingInsideVisualStudio);
         public const string BypassFrameworkInstallChecks = nameof(BypassFrameworkInstallChecks);
+        public const string CheckForOverflowUnderflow = nameof(CheckForOverflowUnderflow);
         public const string Configuration = nameof(Configuration);
         public const string CscToolExe = nameof(CscToolExe);
         public const string CscToolPath = nameof(CscToolPath);
