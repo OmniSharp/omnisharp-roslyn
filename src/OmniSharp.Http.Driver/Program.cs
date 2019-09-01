@@ -14,7 +14,8 @@ namespace OmniSharp.Http.Driver
                 Configuration.ZeroBasedIndices = application.ZeroBasedIndices;
 
                 var writer = new SharedTextWriter(Console.Out);
-                var plugins = application.CreatePluginAssemblies();
+                var configuration = new ConfigurationBuilder(environment).Build();
+                var plugins = application.CreatePluginAssemblies(configuration, environment);
 
                 var host = new Host(environment, writer, plugins, application.Port, application.Interface);
                 host.Start();

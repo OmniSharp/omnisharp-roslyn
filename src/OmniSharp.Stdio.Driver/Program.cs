@@ -49,15 +49,15 @@ namespace OmniSharp.Stdio.Driver
 
                     var environment = application.CreateEnvironment();
                     Configuration.ZeroBasedIndices = application.ZeroBasedIndices;
-                    var configuration = new ConfigurationBuilder(environment).Build();
                     var writer = new SharedTextWriter(output);
+                    var configuration = new ConfigurationBuilder(environment).Build();
                     var serviceProvider = CompositionHostBuilder.CreateDefaultServiceProvider(environment, configuration, new StdioEventEmitter(writer),
                         configureLogging: builder => builder.AddStdio(writer));
 
                     var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
                     var assemblyLoader = serviceProvider.GetRequiredService<IAssemblyLoader>();
 
-                    var plugins = application.CreatePluginAssemblies();
+                    var plugins = application.CreatePluginAssemblies(configuration, environment);
 
                     var compositionHostBuilder = new CompositionHostBuilder(serviceProvider)
                         .WithOmniSharpAssemblies()

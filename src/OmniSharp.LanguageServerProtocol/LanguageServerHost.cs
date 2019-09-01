@@ -91,7 +91,7 @@ namespace OmniSharp.LanguageServerProtocol
             _eventEmitter = new LanguageServerEventEmitter();
             _serviceProvider = CompositionHostBuilder.CreateDefaultServiceProvider(_environment, configurationRoot, _eventEmitter, _services);
 
-            var plugins = _application.CreatePluginAssemblies();
+            var plugins = _application.CreatePluginAssemblies(configurationRoot, _environment);
 
             var assemblyLoader = _serviceProvider.GetRequiredService<IAssemblyLoader>();
             var compositionHostBuilder = new CompositionHostBuilder(_serviceProvider)
