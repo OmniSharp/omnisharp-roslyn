@@ -54,7 +54,11 @@ msbuild_libraries=(
     "Microsoft.Build.dll"
     "Microsoft.Build.Framework.dll"
     "Microsoft.Build.Tasks.Core.dll"
+    "Microsoft.Build.Tasks.v4.0.dll"
+    "Microsoft.Build.Tasks.v12.0.dll"
     "Microsoft.Build.Utilities.Core.dll"
+    "Microsoft.Build.Utilities.v4.0.dll"
+    "Microsoft.Build.Utilities.v12.0.dll"
 )
 
 msbuild_runtime=(
