@@ -73,7 +73,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
                             return x.AsType().CreateInstance<CodeFixProvider>();
                         }
 
-                        _logger.LogInformation($"Skipping code fix provider '{x.AsType()}' because it's language doesn't match '{project.Language}'.");
+                        _logger.LogInformation($"Skipping code fix provider '{x.AsType()}' because its language doesn't match '{project.Language}'.");
 
                         return null;
                     }

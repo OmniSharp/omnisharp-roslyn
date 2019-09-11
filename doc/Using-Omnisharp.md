@@ -27,7 +27,7 @@ The server will detect the project and start up the project systems for the type
 You can turn on verbose logging with the `-v` switch.
 
 ## Auto-shutdown
-OmniSharp supports the ability to shut it self down in the event it's host process dies.  If for example it crashed, or the user force killed the process.
+OmniSharp supports the ability to shut it self down in the event its host process dies.  If for example it crashed, or the user force killed the process.
 
     OmniSharp.exe --hostPID
 
@@ -38,7 +38,3 @@ For historical reasons OmniSharp defaults to using one-based indices.   That mea
 
 ## Plugins
 TODO: Plugins will be supported in the future
-
-
-
-
