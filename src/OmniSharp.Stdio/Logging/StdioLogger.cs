@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Logging;
 using OmniSharp.Logging;
-using OmniSharp.Stdio.Protocol;
-using OmniSharp.Stdio.Services;
+using OmniSharp.Protocol;
+using OmniSharp.Services;
 
 namespace OmniSharp.Stdio.Logging
 {
@@ -28,8 +28,7 @@ namespace OmniSharp.Stdio.Logging
                 }
             };
 
-            // don't block the logger
-            _writer.WriteLineAsync(packet);
+            _writer.WriteLine(packet);
         }
     }
 }

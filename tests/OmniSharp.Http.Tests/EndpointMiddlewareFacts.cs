@@ -78,6 +78,7 @@ namespace OmniSharp.Http.Tests
             public string Language { get; } = LanguageNames.CSharp;
             public IEnumerable<string> Extensions { get; } = new[] { ".cs" };
             public bool EnabledByDefault { get; } = true;
+            public bool Initialized { get; } = true;
 
             public Task<object> GetWorkspaceModelAsync(WorkspaceInformationRequest request)
             {

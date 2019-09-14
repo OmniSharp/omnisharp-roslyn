@@ -32,7 +32,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
 
         public async Task<CodeStructureResponse> Handle(CodeStructureRequest request)
         {
-            var document = _workspace.GetDocument(request.FileName);
+            // To provide complete code structure for the document wait until all projects are loaded.
+            var document = await _workspace.GetDocumentFromFullProjectModelAsync(request.FileName);
             if (document == null)
             {
                 return null;

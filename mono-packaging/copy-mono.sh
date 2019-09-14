@@ -63,8 +63,6 @@ mono_version=`mono --version | head -n 1 | sed 's/[^0-9.]*\([0-9.]*\).*/\1/'`
 
 gac_assemblies=(
     "Microsoft.Build.Engine/4.0.0.0__b03f5f7f11d50a3a/Microsoft.Build.Engine.dll"
-    "Microsoft.Build.Tasks.v4.0/4.0.0.0__b03f5f7f11d50a3a/Microsoft.Build.Tasks.v4.0.dll"
-    "Microsoft.Build.Utilities.v4.0/4.0.0.0__b03f5f7f11d50a3a/Microsoft.Build.Utilities.v4.0.dll"
     "Mono.Data.Tds/4.0.0.0__0738eb9f132ed756/Mono.Data.Tds.dll"
     "Mono.Posix/4.0.0.0__0738eb9f132ed756/Mono.Posix.dll"
     "Mono.Security/4.0.0.0__0738eb9f132ed756/Mono.Security.dll"
@@ -170,6 +168,9 @@ _copy_runtime_assets() {
     local mono_lib_path=""
     local mono_etc_path=""
     local libMonoPosixHelper_name=""
+    local libMonoBtlsShared_name=""
+    local libMonoSystemNative_name=""
+    local libMonoSystemNative_target_name=""
 
     if [ "$os" = "$OS_MAC" ]; then
         mono_base_path=/Library/Frameworks/Mono.framework/Versions/Current
@@ -178,19 +179,29 @@ _copy_runtime_assets() {
         mono_lib_path=$mono_base_path/lib
         mono_etc_path=$mono_base_path/etc/mono
         libMonoPosixHelper_name=libMonoPosixHelper.dylib
+        libMonoSystemNative_name=libmono-system-native.0.dylib
+        libMonoSystemNative_target_name=libmono-system-native.dylib
     else # Linux
         mono_runtime_path=/usr/bin/mono-sgen
         mono_lib_path=/usr/lib
         mono_etc_path=/etc/mono
         libMonoPosixHelper_name=libMonoPosixHelper.so
+        libMonoBtlsShared_name=libmono-btls-shared.so
+        libMonoSystemNative_name=libmono-system-native.so.0.0.0
+        libMonoSystemNative_target_name=libmono-system-native.so
     fi
 
+    local mono_libMonoSystemNative_path=$mono_lib_path/$libMonoSystemNative_name
     local mono_libMonoPosixHelper_path=$mono_lib_path/$libMonoPosixHelper_name
+    local mono_libMonoBtlsShared_path=$mono_lib_path/$libMonoBtlsShared_name
     local mono_config_path=$mono_etc_path/config
     local mono_machine_config_path=$mono_etc_path/4.5/machine.config
 
     _verify_file "$mono_runtime_path"
     _verify_file "$mono_libMonoPosixHelper_path"
+    _verify_file "$mono_libMonoSystemNative_path"
+
+    _verify_file "$mono_libMonoBtlsShared_path"
     _verify_file "$mono_config_path"
     _verify_file "$mono_machine_config_path"
 
@@ -209,11 +220,16 @@ _copy_runtime_assets() {
 
     target_runtime_path=$target_bin_path/mono
     target_libMonoPosixHelper_path=$target_lib_path/$libMonoPosixHelper_name
+    target_liblibMonoSystemNative_path=$target_lib_path/$libMonoSystemNative_target_name
+
+    target_libMonoBtlsShared_path=$target_lib_path/$libMonoBtlsShared_name
     target_config_path=$target_etc_path/config
     target_machine_config_path=$target_etc_path/mono/4.5/machine.config
 
     cp "$mono_runtime_path" "$target_runtime_path"
     cp "$mono_libMonoPosixHelper_path" "$target_libMonoPosixHelper_path"
+    cp "$mono_libMonoSystemNative_path" "$target_liblibMonoSystemNative_path"
+    cp "$mono_libMonoBtlsShared_path" "$target_libMonoBtlsShared_path"
     cp "$mono_config_path" "$target_config_path"
     cp "$mono_machine_config_path" "$target_machine_config_path"
 

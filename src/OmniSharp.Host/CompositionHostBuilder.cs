@@ -4,6 +4,7 @@ using System.Composition.Hosting;
 using System.Composition.Hosting.Core;
 using System.Linq;
 using System.Reflection;
+using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -11,7 +12,9 @@ using Microsoft.Extensions.DependencyModel;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using OmniSharp.Eventing;
+using OmniSharp.FileSystem;
 using OmniSharp.FileWatching;
+using OmniSharp.Host.Services;
 using OmniSharp.Mef;
 using OmniSharp.MSBuild.Discovery;
 using OmniSharp.Options;
@@ -42,6 +45,7 @@ namespace OmniSharp
             var memoryCache = _serviceProvider.GetRequiredService<IMemoryCache>();
             var loggerFactory = _serviceProvider.GetRequiredService<ILoggerFactory>();
             var assemblyLoader = _serviceProvider.GetRequiredService<IAssemblyLoader>();
+            var analyzerAssemblyLoader = _serviceProvider.GetRequiredService<IAnalyzerAssemblyLoader>();
             var environment = _serviceProvider.GetRequiredService<IOmniSharpEnvironment>();
             var eventEmitter = _serviceProvider.GetRequiredService<IEventEmitter>();
             var dotNetCliService = _serviceProvider.GetRequiredService<IDotNetCliService>();
@@ -73,6 +77,7 @@ namespace OmniSharp
                 .WithProvider(MefValueProvider.From(options.CurrentValue))
                 .WithProvider(MefValueProvider.From(options.CurrentValue.FormattingOptions))
                 .WithProvider(MefValueProvider.From(assemblyLoader))
+                .WithProvider(MefValueProvider.From(analyzerAssemblyLoader))
                 .WithProvider(MefValueProvider.From(dotNetCliService))
                 .WithProvider(MefValueProvider.From(metadataHelper))
                 .WithProvider(MefValueProvider.From(msbuildLocator))
@@ -84,7 +89,7 @@ namespace OmniSharp
             }
 
             var parts = _assemblies
-                .Concat(new[] { typeof(OmniSharpWorkspace).GetTypeInfo().Assembly, typeof(IRequest).GetTypeInfo().Assembly })
+                .Concat(new[] { typeof(OmniSharpWorkspace).GetTypeInfo().Assembly, typeof(IRequest).GetTypeInfo().Assembly, typeof(FileSystemHelper).GetTypeInfo().Assembly })
                 .Distinct()
                 .SelectMany(a => SafeGetTypes(a))
                 .ToArray();
@@ -121,6 +126,7 @@ namespace OmniSharp
             // Caching
             services.AddSingleton<IMemoryCache, MemoryCache>();
             services.AddSingleton<IAssemblyLoader, AssemblyLoader>();
+            services.AddSingleton<IAnalyzerAssemblyLoader, AnalyzerAssemblyLoader>();
             services.AddOptions();
 
             services.AddSingleton<IDotNetCliService, DotNetCliService>();
@@ -129,7 +135,9 @@ namespace OmniSharp
             services.AddSingleton<IMSBuildLocator>(sp =>
                 MSBuildLocator.CreateDefault(
                     loggerFactory: sp.GetService<ILoggerFactory>(),
-                    assemblyLoader: sp.GetService<IAssemblyLoader>()));
+                    assemblyLoader: sp.GetService<IAssemblyLoader>(),
+                    msbuildConfiguration: configuration.GetSection("msbuild")));
+
 
             // Setup the options from configuration
             services.Configure<OmniSharpOptions>(configuration);
@@ -209,6 +217,7 @@ namespace OmniSharp
             foreach (var dependency in runtimeLibrary.Dependencies)
             {
                 if (dependency.Name == "OmniSharp.Abstractions" ||
+                    dependency.Name == "OmniSharp.Shared" ||
                     dependency.Name == "OmniSharp.Roslyn")
                 {
                     return true;

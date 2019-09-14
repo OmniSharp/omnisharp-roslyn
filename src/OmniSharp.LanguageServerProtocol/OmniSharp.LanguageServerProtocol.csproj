@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net461</TargetFramework>
+        <TargetFramework>net472</TargetFramework>
         <PlatformTarget>AnyCPU</PlatformTarget>
         <AssemblyName>OmniSharp.LanguageServerProtocol</AssemblyName>
         <PreserveCompilationContext>true</PreserveCompilationContext>
@@ -9,11 +9,13 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="OmniSharp.Extensions.LanguageServerProtocol" Version="0.7.0" />
-        <!-- <ProjectReference Include="../../../csharp-language-server-protocol/src/Lsp/Lsp.csproj" /> -->
+        <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" PrivateAssets="All" />
+        <PackageReference Include="OmniSharp.Extensions.LanguageServer" />
+    </ItemGroup>
+
+    <ItemGroup>
         <ProjectReference Include="..\OmniSharp.Host\OmniSharp.Host.csproj" />
         <ProjectReference Include="..\OmniSharp.Roslyn.CSharp\OmniSharp.Roslyn.CSharp.csproj" />
-        <ProjectReference Include="..\OmniSharp.DotNet\OmniSharp.DotNet.csproj" />
         <ProjectReference Include="..\OmniSharp.DotNetTest\OmniSharp.DotNetTest.csproj" />
         <ProjectReference Include="..\OmniSharp.MSBuild\OmniSharp.MSBuild.csproj" />
         <ProjectReference Include="..\OmniSharp.Script\OmniSharp.Script.csproj" />

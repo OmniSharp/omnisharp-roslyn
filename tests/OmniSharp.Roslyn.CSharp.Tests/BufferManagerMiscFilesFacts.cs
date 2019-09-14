@@ -36,7 +36,7 @@ namespace OmniSharp.Tests
                     var request = new CodeCheckRequest() { FileName = filePath };
                     var actual = await host.GetResponse<CodeCheckRequest, QuickFixResponse>(OmniSharpEndpoints.CodeCheck, request);
                     Assert.Single(actual.QuickFixes);
-                    Assert.Equal("; expected", actual.QuickFixes.First().Text);
+                    Assert.Equal("; expected (CS1002)", actual.QuickFixes.First().Text);
                 }
             }
         }
@@ -52,27 +52,26 @@ namespace OmniSharp.Tests
     }
 }";
             var testfile = new TestFile("a.cs", source);
-            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("EmptyProject"))
-            {
-                using (var host = CreateOmniSharpHost(testProject.Directory))
-                {
-                    var filePath = await AddTestFile(host, testProject, testfile);
-                    var point = testfile.Content.GetPointFromPosition();
-                    var request = new SignatureHelpRequest()
-                    {
-                        FileName = filePath,
-                        Line = point.Line,
-                        Column = point.Offset,
-                        Buffer = testfile.Content.Code
-                    };
 
-                    var actual = await host.GetResponse<SignatureHelpRequest, SignatureHelpResponse>(OmniSharpEndpoints.SignatureHelp, request);
-                    Assert.Single(actual.Signatures);
-                    Assert.Equal(0, actual.ActiveParameter);
-                    Assert.Equal(0, actual.ActiveSignature);
-                    Assert.Equal("NewGuid", actual.Signatures.ElementAt(0).Name);
-                    Assert.Empty(actual.Signatures.ElementAt(0).Parameters);
-                }
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("EmptyProject"))
+            using (var host = CreateOmniSharpHost(testProject.Directory))
+            {
+                var filePath = await AddTestFile(host, testProject, testfile);
+                var point = testfile.Content.GetPointFromPosition();
+                var request = new SignatureHelpRequest()
+                {
+                    FileName = filePath,
+                    Line = point.Line,
+                    Column = point.Offset,
+                    Buffer = testfile.Content.Code
+                };
+
+                var actual = await host.GetResponse<SignatureHelpRequest, SignatureHelpResponse>(OmniSharpEndpoints.SignatureHelp, request);
+                Assert.Single(actual.Signatures);
+                Assert.Equal(0, actual.ActiveParameter);
+                Assert.Equal(0, actual.ActiveSignature);
+                Assert.Equal("NewGuid", actual.Signatures.ElementAt(0).Name);
+                Assert.Empty(actual.Signatures.ElementAt(0).Parameters);
             }
         }
 
@@ -87,24 +86,23 @@ namespace OmniSharp.Tests
                 }";
 
             var testfile = new TestFile("a.cs", source);
-            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("EmptyProject"))
-            {
-                using (var host = CreateOmniSharpHost(testProject.Directory))
-                {
-                    var filePath = await AddTestFile(host, testProject, testfile);
-                    var point = testfile.Content.GetPointFromPosition();
-                    var request = new FindImplementationsRequest()
-                    {
-                        FileName = filePath,
-                        Line = point.Line,
-                        Column = point.Offset,
-                        Buffer = testfile.Content.Code
-                    };
 
-                    var actual = await host.GetResponse<FindImplementationsRequest, QuickFixResponse>(OmniSharpEndpoints.FindImplementations, request);
-                    Assert.Single(actual.QuickFixes);
-                    Assert.Equal("public void Foo() {}", actual.QuickFixes.First().Text.Trim());
-                }
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("EmptyProject"))
+            using (var host = CreateOmniSharpHost(testProject.Directory))
+            {
+                var filePath = await AddTestFile(host, testProject, testfile);
+                var point = testfile.Content.GetPointFromPosition();
+                var request = new FindImplementationsRequest()
+                {
+                    FileName = filePath,
+                    Line = point.Line,
+                    Column = point.Offset,
+                    Buffer = testfile.Content.Code
+                };
+
+                var actual = await host.GetResponse<FindImplementationsRequest, QuickFixResponse>(OmniSharpEndpoints.FindImplementations, request);
+                Assert.Single(actual.QuickFixes);
+                Assert.Equal("public void Foo() {}", actual.QuickFixes.First().Text.Trim());
             }
         }
 
@@ -250,24 +248,24 @@ namespace OmniSharp
         public async Task Adds_Misc_Document_Which_Supports_TypeLookup()
         {
             const string code = @"class F$$oo {}";
-            var testfile = new TestFile("a.cs", code);
-            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("EmptyProject"))
-            {
-                using (var host = CreateOmniSharpHost(testProject.Directory))
-                {
-                    var filePath = await AddTestFile(host, testProject, testfile);
-                    var service = host.GetRequestHandler<TypeLookupService>(OmniSharpEndpoints.TypeLookup);
-                    var point = testfile.Content.GetPointFromPosition();
-                    var request = new TypeLookupRequest
-                    {
-                        FileName = filePath,
-                        Line = point.Line,
-                        Column = point.Offset,
-                    };
 
-                    var actual = await host.GetResponse<TypeLookupRequest, TypeLookupResponse>(OmniSharpEndpoints.TypeLookup, request);
-                    Assert.Equal("Foo", actual.Type);
-                }
+            var testfile = new TestFile("a.cs", code);
+
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("EmptyProject"))
+            using (var host = CreateOmniSharpHost(testProject.Directory))
+            {
+                var filePath = await AddTestFile(host, testProject, testfile);
+                var service = host.GetRequestHandler<TypeLookupService>(OmniSharpEndpoints.TypeLookup);
+                var point = testfile.Content.GetPointFromPosition();
+                var request = new TypeLookupRequest
+                {
+                    FileName = filePath,
+                    Line = point.Line,
+                    Column = point.Offset,
+                };
+
+                var actual = await host.GetResponse<TypeLookupRequest, TypeLookupResponse>(OmniSharpEndpoints.TypeLookup, request);
+                Assert.Equal("Foo", actual.Type);
             }
         }
 

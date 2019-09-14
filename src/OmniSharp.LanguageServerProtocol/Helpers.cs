@@ -1,5 +1,6 @@
 using System;
-using OmniSharp.Extensions.LanguageServer.Models;
+using System.Text.RegularExpressions;
+using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OmniSharp.Models;
 using OmniSharp.Models.Diagnostics;
 
@@ -16,6 +17,7 @@ namespace OmniSharp.LanguageServerProtocol
                 Message = location.Text,
                 Range = location.ToRange(),
                 Severity = ToDiagnosticSeverity(location.LogLevel),
+                Code = location.Id,
                 // TODO: We need to forward this type though if we add something like Vb Support
                 Source = "csharp",
             };
@@ -95,6 +97,11 @@ namespace OmniSharp.LanguageServerProtocol
             return new Position(location.line, location.column);
         }
 
+        public static Position ToPosition(OmniSharp.Models.V2.Point point)
+        {
+            return new Position(point.Line, point.Column);
+        }
+
         public static Range ToRange((int column, int line) start, (int column, int line) end)
         {
             return new Range()
@@ -102,6 +109,22 @@ namespace OmniSharp.LanguageServerProtocol
                 Start = new Position(start.line, start.column),
                 End = new Position(end.line, end.column)
             };
+        }
+
+        public static Range ToRange(OmniSharp.Models.V2.Range range)
+        {
+            return new Range()
+            {
+                Start = ToPosition(range.Start),
+                End = ToPosition(range.End)
+            };
+        }
+
+        public static string EscapeMarkdown(string markdown)
+        {
+            if (markdown == null)
+                return null;
+            return Regex.Replace(markdown, @"([\\`\*_\{\}\[\]\(\)#+\-\.!])", @"\$1");
         }
     }
 }

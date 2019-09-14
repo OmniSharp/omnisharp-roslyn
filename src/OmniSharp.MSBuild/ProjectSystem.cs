@@ -18,7 +18,10 @@ using OmniSharp.MSBuild.Notification;
 using OmniSharp.MSBuild.ProjectFile;
 using OmniSharp.MSBuild.SolutionParsing;
 using OmniSharp.Options;
+using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
+using OmniSharp.Roslyn.CSharp.Services.Refactoring.V2;
 using OmniSharp.Services;
+using System.Linq;
 
 namespace OmniSharp.MSBuild
 {
@@ -36,21 +39,18 @@ namespace OmniSharp.MSBuild
         private readonly FileSystemHelper _fileSystemHelper;
         private readonly ILoggerFactory _loggerFactory;
         private readonly ILogger _logger;
+        private readonly IAnalyzerAssemblyLoader _assemblyLoader;
         private readonly ImmutableArray<IMSBuildEventSink> _eventSinks;
-
-        private readonly object _gate = new object();
-        private readonly Queue<ProjectFileInfo> _projectsToProcess;
-
         private PackageDependencyChecker _packageDependencyChecker;
         private ProjectManager _manager;
         private ProjectLoader _loader;
         private MSBuildOptions _options;
         private string _solutionFileOrRootPath;
-
         public string Key { get; } = "MsBuild";
         public string Language { get; } = LanguageNames.CSharp;
         public IEnumerable<string> Extensions { get; } = new[] { ".cs" };
         public bool EnabledByDefault { get; } = true;
+        public bool Initialized { get; private set; }
 
         [ImportingConstructor]
         public ProjectSystem(
@@ -64,6 +64,8 @@ namespace OmniSharp.MSBuild
             IFileSystemWatcher fileSystemWatcher,
             FileSystemHelper fileSystemHelper,
             ILoggerFactory loggerFactory,
+            CachingCodeFixProviderForProjects codeFixesForProjects,
+            IAnalyzerAssemblyLoader assemblyLoader,
             [ImportMany] IEnumerable<IMSBuildEventSink> eventSinks)
         {
             _environment = environment;
@@ -77,13 +79,14 @@ namespace OmniSharp.MSBuild
             _fileSystemHelper = fileSystemHelper;
             _loggerFactory = loggerFactory;
             _eventSinks = eventSinks.ToImmutableArray();
-
-            _projectsToProcess = new Queue<ProjectFileInfo>();
             _logger = loggerFactory.CreateLogger<ProjectSystem>();
+            _assemblyLoader = assemblyLoader;
         }
 
         public void Initalize(IConfiguration configuration)
         {
+            if (Initialized) return;
+            
             _options = new MSBuildOptions();
             ConfigurationBinder.Bind(configuration, _options);
 
@@ -98,11 +101,19 @@ namespace OmniSharp.MSBuild
 
             _packageDependencyChecker = new PackageDependencyChecker(_loggerFactory, _eventEmitter, _dotNetCli, _options);
             _loader = new ProjectLoader(_options, _environment.TargetDirectory, _propertyOverrides, _loggerFactory, _sdksPathResolver);
-            _manager = new ProjectManager(_loggerFactory, _eventEmitter, _fileSystemWatcher, _metadataFileReferenceCache, _packageDependencyChecker, _loader, _workspace, _eventSinks);
 
-            var initialProjectPaths = GetInitialProjectPaths();
+            _manager = new ProjectManager(_loggerFactory, _options, _eventEmitter, _fileSystemWatcher, _metadataFileReferenceCache, _packageDependencyChecker, _loader, _workspace, _assemblyLoader, _eventSinks);
+            Initialized = true;
 
-            foreach (var projectFilePath in initialProjectPaths)
+            if (_options.LoadProjectsOnDemand)
+            {
+                _logger.LogInformation($"Skip loading projects listed in solution file or under target directory because {Key}:{nameof(MSBuildOptions.LoadProjectsOnDemand)} is true.");
+                return;
+            }
+
+            var initialProjectPathsAndIds = GetInitialProjectPathsAndIds();
+
+            foreach (var (projectFilePath, projectIdInfo) in initialProjectPathsAndIds)
             {
                 if (!File.Exists(projectFilePath))
                 {
@@ -110,17 +121,17 @@ namespace OmniSharp.MSBuild
                     continue;
                 }
 
-                _manager.QueueProjectUpdate(projectFilePath, allowAutoRestore: true);
+                _manager.QueueProjectUpdate(projectFilePath, allowAutoRestore: true, projectIdInfo);
             }
         }
 
-        private IEnumerable<string> GetInitialProjectPaths()
+        private IEnumerable<(string, ProjectIdInfo)> GetInitialProjectPathsAndIds()
         {
             // If a solution was provided, use it.
             if (!string.IsNullOrEmpty(_environment.SolutionFilePath))
             {
                 _solutionFileOrRootPath = _environment.SolutionFilePath;
-                return GetProjectPathsFromSolution(_environment.SolutionFilePath);
+                return GetProjectPathsAndIdsFromSolution(_environment.SolutionFilePath);
             }
 
             // Otherwise, assume that the path provided is a directory and look for a solution there.
@@ -128,22 +139,27 @@ namespace OmniSharp.MSBuild
             if (!string.IsNullOrEmpty(solutionFilePath))
             {
                 _solutionFileOrRootPath = solutionFilePath;
-                return GetProjectPathsFromSolution(solutionFilePath);
+                return GetProjectPathsAndIdsFromSolution(solutionFilePath);
             }
 
             // Finally, if there isn't a single solution immediately available,
             // Just process all of the projects beneath the root path.
             _solutionFileOrRootPath = _environment.TargetDirectory;
-            return _fileSystemHelper.GetFiles("**/*.csproj");
+            return _fileSystemHelper.GetFiles("**/*.csproj")
+                .Select(filepath =>
+            {
+                var projectIdInfo = new ProjectIdInfo(ProjectId.CreateNewId(debugName: filepath), isDefinedInSolution: false);
+                return (filepath, projectIdInfo);
+            });
         }
 
-        private IEnumerable<string> GetProjectPathsFromSolution(string solutionFilePath)
+        private IEnumerable<(string, ProjectIdInfo)> GetProjectPathsAndIdsFromSolution(string solutionFilePath)
         {
             _logger.LogInformation($"Detecting projects in '{solutionFilePath}'.");
 
             var solutionFile = SolutionFile.ParseFile(solutionFilePath);
             var processedProjects = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            var result = new List<string>();
+            var result = new List<(string, ProjectIdInfo)>();
 
             foreach (var project in solutionFile.Projects)
             {
@@ -165,7 +181,8 @@ namespace OmniSharp.MSBuild
 
                 if (string.Equals(Path.GetExtension(projectFilePath), ".csproj", StringComparison.OrdinalIgnoreCase))
                 {
-                    result.Add(projectFilePath);
+                    var projectIdInfo = new ProjectIdInfo(ProjectId.CreateFromSerialized(new Guid(project.ProjectGuid)), true);
+                    result.Add((projectFilePath, projectIdInfo));
                 }
 
                 processedProjects.Add(projectFilePath);
@@ -176,7 +193,10 @@ namespace OmniSharp.MSBuild
 
         private static string FindSolutionFilePath(string rootPath, ILogger logger)
         {
-            var solutionsFilePaths = Directory.GetFiles(rootPath, "*.sln");
+            // currently, Directory.GetFiles collects files that the file extension has 'sln' prefix.
+            // this causes collecting unexpected files like 'x.slnx', or 'x.slnproj'.
+            // see https://docs.microsoft.com/en-us/dotnet/api/system.io.directory.getfiles?view=netframework-4.7.2 ('Note' description)
+            var solutionsFilePaths = Directory.GetFiles(rootPath, "*.sln").Where(x => Path.GetExtension(x).Equals(".sln", StringComparison.OrdinalIgnoreCase)).ToArray();
             var result = SolutionSelector.Pick(solutionsFilePaths, rootPath);
 
             if (result.Message != null)

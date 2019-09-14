@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -30,8 +31,8 @@ namespace OmniSharp.MSBuild.Tests
                 var project = Assert.Single(workspaceInfo.Projects);
 
                 Assert.Equal("ProjectAndSolution", project.AssemblyName);
-                Assert.Equal("bin/Debug/netcoreapp1.1/", project.OutputPath.EnsureForwardSlashes());
-                Assert.Equal("obj/Debug/netcoreapp1.1/", project.IntermediateOutputPath.EnsureForwardSlashes());
+                Assert.Equal("bin/Debug/netcoreapp2.1/", project.OutputPath.EnsureForwardSlashes());
+                Assert.Equal("obj/Debug/netcoreapp2.1/", project.IntermediateOutputPath.EnsureForwardSlashes());
                 var expectedTargetPath = $"{testProject.Directory}/{project.OutputPath}ProjectAndSolution.dll".EnsureForwardSlashes();
                 Assert.Equal(expectedTargetPath, project.TargetPath.EnsureForwardSlashes());
                 Assert.Equal("Debug", project.Configuration);
@@ -39,9 +40,9 @@ namespace OmniSharp.MSBuild.Tests
                 Assert.True(project.IsExe);
                 Assert.False(project.IsUnityProject);
 
-                Assert.Equal(".NETCoreApp,Version=v1.1", project.TargetFramework);
+                Assert.Equal(".NETCoreApp,Version=v2.1", project.TargetFramework);
                 var targetFramework = Assert.Single(project.TargetFrameworks);
-                Assert.Equal("netcoreapp1.1", targetFramework.ShortName);
+                Assert.Equal("netcoreapp2.1", targetFramework.ShortName);
             }
         }
 
@@ -56,8 +57,8 @@ namespace OmniSharp.MSBuild.Tests
                 Assert.Equal("ProjectAndSolutionWithProjectSection.sln", Path.GetFileName(workspaceInfo.SolutionPath));
                 Assert.NotNull(workspaceInfo.Projects);
                 var project = Assert.Single(workspaceInfo.Projects);
-                Assert.Equal(".NETCoreApp,Version=v1.1", project.TargetFramework);
-                Assert.Equal("netcoreapp1.1", project.TargetFrameworks[0].ShortName);
+                Assert.Equal(".NETCoreApp,Version=v2.1", project.TargetFramework);
+                Assert.Equal("netcoreapp2.1", project.TargetFrameworks[0].ShortName);
             }
         }
 
@@ -75,8 +76,8 @@ namespace OmniSharp.MSBuild.Tests
 
                 var firstProject = workspaceInfo.Projects[0];
                 Assert.Equal("App.csproj", Path.GetFileName(firstProject.Path));
-                Assert.Equal(".NETCoreApp,Version=v1.1", firstProject.TargetFramework);
-                Assert.Equal("netcoreapp1.1", firstProject.TargetFrameworks[0].ShortName);
+                Assert.Equal(".NETCoreApp,Version=v2.1", firstProject.TargetFramework);
+                Assert.Equal("netcoreapp2.1", firstProject.TargetFrameworks[0].ShortName);
 
                 var secondProject = workspaceInfo.Projects[1];
                 Assert.Equal("Lib.csproj", Path.GetFileName(secondProject.Path));
@@ -224,6 +225,36 @@ namespace OmniSharp.MSBuild.Tests
                 Assert.Equal(6, project.SourceFiles.Count);
                 Assert.Contains(project.SourceFiles, fileName => fileName.EndsWith("GrammarParser.cs"));
             }    
+        }
+
+        [Fact]
+        public async Task ProjectWithWildcardPackageReference()
+        {
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithWildcardPackageReference"))
+            using (var host = CreateMSBuildTestHost(testProject.Directory))
+            {
+                var workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
+
+                Assert.NotNull(workspaceInfo.Projects);
+                var project = Assert.Single(workspaceInfo.Projects);
+
+                Assert.Equal("ProjectWithWildcardPackageReference.csproj", Path.GetFileName(project.Path));
+                Assert.Equal(3, project.SourceFiles.Count);
+            }
+        }
+
+        [Fact]
+        public async Task DoesntParticipateInWorkspaceInfoResponseWhenDisabled()
+        {
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectAndSolution"))
+            using (var host = CreateOmniSharpHost(testProject.Directory, configurationData: new Dictionary<string, string>
+            {
+                ["msbuild:enabled"] = "false"
+            }))
+            {
+                var workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
+                Assert.Null(workspaceInfo);
+            }
         }
     }
 }

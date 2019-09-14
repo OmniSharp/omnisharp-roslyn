@@ -14,8 +14,7 @@ using OmniSharp.Mef;
 using OmniSharp.Models.UpdateBuffer;
 using OmniSharp.Plugins;
 using OmniSharp.Services;
-using OmniSharp.Stdio.Protocol;
-using OmniSharp.Stdio.Services;
+using OmniSharp.Protocol;
 using OmniSharp.Utilities;
 
 namespace OmniSharp.Stdio

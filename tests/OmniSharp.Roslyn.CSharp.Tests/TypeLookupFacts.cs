@@ -147,11 +147,20 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     public IDictionary<string, IEnumerable<int>> SomeDict { get; }
 
                     public void Compute(int index = 2) { }
+
+                    private const int foo = 1;
                 }
             }
 
             namespace Bar2 {
                 class Foo2 {
+                }
+            }
+
+            namespace Bar3 {
+                enum Foo3 {
+                    Val1 = 1,
+                    Val2
                 }
             }
             ");
@@ -232,6 +241,20 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         {
             var response = await GetTypeLookUpResponse(line: 11, column: 38);
             Assert.Equal("Foo2 Foo._someField", response.Type);
+        }
+
+        [Fact]
+        public async Task DisplayFormatFor_FieldSymbol_WithConstantValue()
+        {
+            var response = await GetTypeLookUpResponse(line: 19, column: 41);
+            Assert.Equal("int Foo.foo = 1", response.Type);
+        }
+
+        [Fact]
+        public async Task DisplayFormatFor_EnumValue()
+        {
+            var response = await GetTypeLookUpResponse(line: 31, column: 23);
+            Assert.Equal("Foo3.Val2 = 2", response.Type);
         }
 
         [Fact]

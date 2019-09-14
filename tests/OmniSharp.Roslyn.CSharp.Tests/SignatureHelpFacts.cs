@@ -177,21 +177,21 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             const string source =
 @"using System;
 [MyTest($$)]
-public class TestClass 
+public class TestClass
 {
     public static void Main()
     {
     }
 }
-public class MyTestAttribute : Attribute 
+public class MyTestAttribute : Attribute
 {
     public MyTestAttribute(int value)
     {
     }
 }";
-            var actual = await GetSignatureHelp(filename, source);    
+            var actual = await GetSignatureHelp(filename, source);
             Assert.Equal(0, actual.ActiveParameter);
-       
+
             var signature = actual.Signatures.ElementAt(0);
             Assert.Single(signature.Parameters);
             Assert.Equal("value", signature.Parameters.ElementAt(0).Name);
@@ -206,13 +206,13 @@ public class MyTestAttribute : Attribute
             const string source =
 @"using System;
 [MyTest($$)]
-public class TestClass 
+public class TestClass
 {
     public static void Main()
     {
     }
 }
-public class MyTestAttribute : Attribute 
+public class MyTestAttribute : Attribute
 {
     public MyTestAttribute(int value1,double value2)
     {
@@ -238,13 +238,13 @@ public class MyTestAttribute : Attribute
             const string source =
 @"using System;
 [MyTest(2,$$)]
-public class TestClass 
+public class TestClass
 {
     public static void Main()
     {
     }
 }
-public class MyTestAttribute : Attribute 
+public class MyTestAttribute : Attribute
 {
     public MyTestAttribute(int value1,double value2)
     {
@@ -263,13 +263,13 @@ public class MyTestAttribute : Attribute
             const string source =
 @"using System;
 [MyTest($$)]
-public class TestClass 
+public class TestClass
 {
     public static void Main()
     {
     }
 }
-public class MyTestAttribute : Attribute 
+public class MyTestAttribute : Attribute
 {
     public MyTestAttribute()
     {
@@ -733,6 +733,40 @@ class B : A
             Assert.Equal(4, actual.Signatures.Count());
         }
 
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task LiteralContextMethod(string filename)
+        {
+            const string source =
+@"class A
+{
+    static void M()
+    {
+        string three = 3.ToString($$);
+    }
+}";
+            var actual = await GetSignatureHelp(filename, source);
+            Assert.Contains(actual.Signatures, signature => signature.Name == "ToString" && signature.Parameters.Count() == 0);
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task TypeOfContextMethod(string filename)
+        {
+            const string source =
+@"class A
+{
+    static void M()
+    {
+        var members = typeof(A).GetMembers($$);
+    }
+}";
+            var actual = await GetSignatureHelp(filename, source);
+            Assert.Contains(actual.Signatures, signature => signature.Name == "GetMembers" && signature.Parameters.Count() == 0);
+        }
+
         [Fact]
         public async Task OverloadedExtensionMethods1()
         {
@@ -759,7 +793,7 @@ class Program
             Assert.Single(actual.Signatures);
 
             var signature = actual.Signatures.ElementAt(0);
-            Assert.Equal("void string.MyMethod(int number)",signature.Label);
+            Assert.Equal("void string.MyMethod(int number)", signature.Label);
             Assert.Single(signature.Parameters);
             Assert.Equal("number", signature.Parameters.ElementAt(0).Name);
         }
@@ -846,12 +880,38 @@ class Program
         [Theory]
         [InlineData("dummy.cs")]
         [InlineData("dummy.csx")]
-        public async Task GivesHelpForLocalFunctions(string filename)
+        public async Task GivesHelpForLocalFunctionsInStaticContext(string filename)
         {
             const string source =
 @"class Program
 {
     public static void Main()
+    {
+        var flag = LocalFunction($$);
+        bool LocalFunction(int i)
+        {
+            return i > 0;
+        }
+    }
+}";
+            var actual = await GetSignatureHelp(filename, source);
+            Assert.Single(actual.Signatures);
+
+            var signature = actual.Signatures.ElementAt(0);
+            Assert.Single(signature.Parameters);
+            Assert.Equal("i", signature.Parameters.ElementAt(0).Name);
+            Assert.Equal("int i", signature.Parameters.ElementAt(0).Label);
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task GivesHelpForLocalFunctionsInNonStaticContext(string filename)
+        {
+            const string source =
+@"class Program
+{
+    public void Main()
     {
         var flag = LocalFunction($$);
         bool LocalFunction(int i)
@@ -882,7 +942,7 @@ class Program
         var flag = Compare($$);
     }
     ///<summary>Checks if object is tagged with the tag.</summary>
-    /// <param name=""gameObject"">The game object.</param> 
+    /// <param name=""gameObject"">The game object.</param>
     /// <param name=""tagName"">Name of the tag.</param>
     /// <returns>Returns <c> true</c> if object is tagged with tag.</returns>
     public static bool Compare(GameObject gameObject, string tagName)
@@ -914,7 +974,7 @@ class Program
         var flag = Compare($$);
     }
     ///<summary>Checks if object is tagged with the tag.</summary>
-    /// <param name=""gameObject"">The game object.</param> 
+    /// <param name=""gameObject"">The game object.</param>
     /// <param name=""tagName"">Name of the tag.It has the default value as <c>null</c></param>
     /// <returns>Returns <c> true</c> if object is tagged with tag.</returns>
     public static bool Compare(GameObject gameObject, string tagName = null)
@@ -943,7 +1003,7 @@ class Program
         var flag = Compare($$);
     }
     ///<summary>Checks if object is tagged with the tag.</summary>
-    /// <param name=""gameObject"">The game object.</param> 
+    /// <param name=""gameObject"">The game object.</param>
     /// <param name=""tagName"">Name of the tag.</param>
     /// <returns>Returns <c>true</c> if object is tagged with tag.</returns>
     public static bool Compare(GameObject gameObject, string tagName)
