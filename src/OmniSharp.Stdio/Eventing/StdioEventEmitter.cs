@@ -1,6 +1,6 @@
 using OmniSharp.Eventing;
-using OmniSharp.Stdio.Protocol;
-using OmniSharp.Stdio.Services;
+using OmniSharp.Protocol;
+using OmniSharp.Services;
 
 namespace OmniSharp.Stdio.Eventing
 {
@@ -21,7 +21,7 @@ namespace OmniSharp.Stdio.Eventing
                 Body = args
             };
 
-            _writer.WriteLineAsync(packet);
+            _writer.WriteLine(packet);
         }
     }
 }

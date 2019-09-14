@@ -1,45 +1,59 @@
 using System;
+using System.Collections.Concurrent;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
-using OmniSharp.Stdio.Services;
 using OmniSharp.Utilities;
 
 namespace OmniSharp.Services
 {
     public class SharedTextWriter : DisposableObject, ISharedTextWriter
     {
-        private readonly object _lock = new object();
         private readonly TextWriter _writer;
-        private Task _task = Task.CompletedTask;
+        private readonly Thread _thread;
+        private readonly BlockingCollection<object> _queue;
+        private readonly CancellationTokenSource _cancel;
 
         public SharedTextWriter(TextWriter writer)
         {
             _writer = writer ?? throw new ArgumentNullException(nameof(writer));
+            _queue = new BlockingCollection<object>();
+            _cancel = new CancellationTokenSource();
+            _thread = new Thread(ProcessWriteQueue) { IsBackground = true, Name = "ProcessWriteQueue" };
+            _thread.Start();
         }
 
         protected override void DisposeCore(bool disposing)
         {
             // Finish sending queued output to the writer.
-            _task.Wait();
+            _cancel.Cancel();
+            _thread.Join();
+            _cancel.Dispose();
         }
 
         public void WriteLine(object value)
         {
-            lock (_lock)
-            {
-                _writer.WriteLine(value);
-            }
+            _queue.Add(value);
         }
 
-        public Task WriteLineAsync(object value)
+        private void ProcessWriteQueue()
         {
-            lock (_lock)
+            var token = _cancel.Token;
+            try
             {
-                return _task = _task.ContinueWith(_ =>
+                while (true)
                 {
-                    WriteLine(value);
-                },
-                TaskScheduler.Default);
+                    if (_queue.TryTake(out var value, Timeout.Infinite, token))
+                    {
+                        _writer.WriteLine(value);
+                    }
+                }
+            }
+            catch (OperationCanceledException ex)
+            {
+                if (ex.CancellationToken != token)
+                    throw;
+                // else ignore. Exceptions: OperationCanceledException - The CancellationToken has been canceled.
             }
         }
     }

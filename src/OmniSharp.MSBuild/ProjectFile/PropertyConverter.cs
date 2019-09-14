@@ -28,28 +28,10 @@ namespace OmniSharp.MSBuild.ProjectFile
 
         public static LanguageVersion ToLanguageVersion(string propertyValue)
         {
-            if (string.IsNullOrWhiteSpace(propertyValue) ||
-                propertyValue.Equals("Default", StringComparison.OrdinalIgnoreCase))
-            {
-                return LanguageVersion.Default;
-            }
+            if (LanguageVersionFacts.TryParse(propertyValue, out var result))
+                return result;
 
-            // ISO-1, ISO-2, 3, 4, 5, 6, 7 or Default
-            switch (propertyValue.ToLower())
-            {
-                case "latest": return LanguageVersion.Latest;
-                case "iso-1": return LanguageVersion.CSharp1;
-                case "iso-2": return LanguageVersion.CSharp2;
-                case "3": return LanguageVersion.CSharp3;
-                case "4": return LanguageVersion.CSharp4;
-                case "5": return LanguageVersion.CSharp5;
-                case "6": return LanguageVersion.CSharp6;
-                case "7": return LanguageVersion.CSharp7;
-                case "7.1": return LanguageVersion.CSharp7_1;
-                case "7.2": return LanguageVersion.CSharp7_2;
-                case "7.3": return LanguageVersion.CSharp7_3;
-                default: return LanguageVersion.Default;
-            }
+            return LanguageVersion.Default;
         }
 
         public static ImmutableArray<string> SplitList(string propertyValue, char separator)
@@ -128,6 +110,17 @@ namespace OmniSharp.MSBuild.ProjectFile
                 case "WinExe": return OutputKind.WindowsApplication;
                 case "Exe": return OutputKind.ConsoleApplication;
                 default: return OutputKind.ConsoleApplication;
+            }
+        }
+
+        public static NullableContextOptions ToNullableContextOptions(string propertyValue)
+        {
+            switch (propertyValue?.ToLowerInvariant())
+            {
+                case "disable": return NullableContextOptions.Disable;
+                case "enable": return NullableContextOptions.Enable;
+                case "warnings": return NullableContextOptions.Warnings;
+                default: return NullableContextOptions.Disable;
             }
         }
 

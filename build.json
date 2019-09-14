@@ -1,18 +1,14 @@
 {
   "DotNetInstallScriptURL": "https://dot.net/v1",
   "DotNetChannel": "preview",
-  "DotNetVersion": "2.1.401",
-  "DotNetSharedRuntimeVersions": [
-    "2.1.3"
-  ],
-  "LegacyDotNetVersion": "1.0.0-preview2-1-003177",
-  "RequiredMonoVersion": "5.8.0.0",
-  "DownloadURL": "https://omnisharpdownload.blob.core.windows.net/ext",
-  "MonoRuntimeMacOS": "mono.macOS-5.12.0.301.zip",
-  "MonoRuntimeLinux32": "mono.linux-x86-5.12.0.301.zip",
-  "MonoRuntimeLinux64": "mono.linux-x86_64-5.12.0.301.zip",
-  "MonoMSBuildRuntime": "Microsoft.Build.Runtime.Mono-5.12.0.301.zip",
-  "MonoMSBuildLib": "Microsoft.Build.Lib.Mono-5.12.0.301.zip",
+  "DotNetVersion": "2.1.505",
+  "RequiredMonoVersion": "5.18.0.0",
+  "DownloadURL": "https://roslynomnisharp.blob.core.windows.net/ext",
+  "MonoRuntimeMacOS": "mono.macOS-5.18.1.0.zip",
+  "MonoRuntimeLinux32": "mono.linux-x86-5.18.1.0.zip",
+  "MonoRuntimeLinux64": "mono.linux-x86_64-5.18.1.0.zip",
+  "MonoMSBuildRuntime": "Microsoft.Build.Runtime.Mono-5.18.1.0.zip",
+  "MonoMSBuildLib": "Microsoft.Build.Lib.Mono-5.18.1.0.zip",
   "HostProjects": [
     "OmniSharp.Stdio.Driver",
     "OmniSharp.Http.Driver"
@@ -22,10 +18,10 @@
     "OmniSharp.Roslyn.CSharp.Tests",
     "OmniSharp.Http.Tests",
     "OmniSharp.Stdio.Tests",
-    "OmniSharp.DotNet.Tests",
     "OmniSharp.DotNetTest.Tests",
     "OmniSharp.Tests",
-    "OmniSharp.Cake.Tests"
+    "OmniSharp.Cake.Tests",
+    "OmniSharp.Script.Tests"
   ],
   "TestAssets": [
     "NUnitTestProject",
@@ -38,13 +34,9 @@
     "CSharpAndFSharp",
     "ProjectWithMismatchedFileName",
     "SolutionWithSignedProject",
-    "ProjectWithMultiTFMLib"
-  ],
-  "LegacyTestAssets": [
-    "LegacyNUnitTestProject",
-    "LegacyXunitTestProject",
-    "LegacyMSTestProject",
-    "LegacyProjectJsonApp"
+    "ProjectWithMultiTFMLib",
+    "ExternAlias",
+    "ProjectWithComplexAnalyzers"
   ],
   "CakeTestAssets": [
     "CakeProject"

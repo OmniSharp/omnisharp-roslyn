@@ -1,5 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
-using OmniSharp.Stdio.Services;
+using OmniSharp.Services;
 
 namespace OmniSharp.Stdio.Logging
 {

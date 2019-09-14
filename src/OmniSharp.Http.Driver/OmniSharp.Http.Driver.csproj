@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net461</TargetFramework>
+        <TargetFramework>net472</TargetFramework>
         <PlatformTarget>AnyCPU</PlatformTarget>
         <AssemblyName>OmniSharp</AssemblyName>
         <OutputType>Exe</OutputType>
@@ -13,4 +13,7 @@
         <ProjectReference Include="..\OmniSharp.Http\OmniSharp.Http.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+        <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" PrivateAssets="All" />
+    </ItemGroup>
 </Project>

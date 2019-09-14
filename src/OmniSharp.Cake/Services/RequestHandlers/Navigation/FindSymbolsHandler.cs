@@ -21,12 +21,13 @@ namespace OmniSharp.Cake.Services.RequestHandlers.Navigation
 
         public override Task<QuickFixResponse> Handle(FindSymbolsRequest request)
         {
-            Func<string, bool> isMatch =
-                candidate => request != null
-                ? candidate.IsValidCompletionFor(request.Filter)
-                : true;
+            if (request?.Filter?.Length < request?.MinFilterLength.GetValueOrDefault())
+            {
+                return Task.FromResult(new QuickFixResponse { QuickFixes = Array.Empty<QuickFix>() });
+            }
 
-            return Workspace.CurrentSolution.FindSymbols(isMatch, LanguageNames.Cake);
+            int maxItemsToReturn = (request?.MaxItemsToReturn).GetValueOrDefault();
+            return Workspace.CurrentSolution.FindSymbols(request?.Filter, LanguageNames.Cake, maxItemsToReturn);
         }
 
         protected override Task<QuickFixResponse> TranslateResponse(QuickFixResponse response, FindSymbolsRequest request)

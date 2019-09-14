@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System.IO;
+using Microsoft.Extensions.Logging;
 
 namespace OmniSharp.MSBuild.Discovery
 {
@@ -6,34 +7,21 @@ namespace OmniSharp.MSBuild.Discovery
     {
         public static void RegisterDefaultInstance(this IMSBuildLocator msbuildLocator, ILogger logger)
         {
-            MSBuildInstance instanceToRegister = null;
-            var invalidVSFound = false;
+            var bestInstanceFound = GetBestInstance(msbuildLocator, out var invalidVSFound);
 
-            foreach (var instance in msbuildLocator.GetInstances())
-            {
-                if (instance.IsInvalidVisualStudio())
-                {
-                    invalidVSFound = true;
-                }
-                else
-                {
-                    instanceToRegister = instance;
-                    break;
-                }
-            }
-
-
-            if (instanceToRegister != null)
+            if (bestInstanceFound != null)
             {
                 // Did we end up choosing the standalone MSBuild because there was an invalid Visual Studio?
                 // If so, provide a helpful message to the user.
-                if (invalidVSFound && instanceToRegister.DiscoveryType == DiscoveryType.StandAlone)
+                if (invalidVSFound && bestInstanceFound.DiscoveryType == DiscoveryType.StandAlone)
                 {
-                    logger.LogWarning(@"It looks like you have Visual Studio 2017 RTM installed.
-Try updating Visual Studio 2017 to the most recent release to enable better MSBuild support.");
+                    logger.LogWarning(
+                        @"It looks like you have Visual Studio 2017 RTM installed.
+ Try updating Visual Studio 2017 to the most recent release to enable better MSBuild support."
+                    );
                 }
 
-                msbuildLocator.RegisterInstance(instanceToRegister);
+                msbuildLocator.RegisterInstance(bestInstanceFound);
             }
             else
             {
@@ -41,12 +29,78 @@ Try updating Visual Studio 2017 to the most recent release to enable better MSBu
             }
         }
 
+        public static bool HasDotNetSdksResolvers(this MSBuildInstance instance)
+        {
+            const string dotnetSdkResolver = "Microsoft.DotNet.MSBuildSdkResolver";
 
+            return File.Exists(
+                Path.Combine(
+                    instance.MSBuildPath,
+                    "SdkResolvers",
+                    dotnetSdkResolver,
+                    dotnetSdkResolver + ".dll"
+                )
+            );
+        }
+
+        /// <summary>
+        /// Checks if it is MSBuild from Visual Studio 2017 RTM that cannot be used.
+        /// </summary>
         public static bool IsInvalidVisualStudio(this MSBuildInstance instance)
-            // MSBuild from Visual Studio 2017 RTM cannot be used.
             => instance.Version.Major == 15
-            && instance.Version.Minor == 0
-            && (instance.DiscoveryType == DiscoveryType.DeveloperConsole
-                || instance.DiscoveryType == DiscoveryType.VisualStudioSetup);
+                && instance.Version.Minor == 0
+                && (instance.DiscoveryType == DiscoveryType.DeveloperConsole
+                    || instance.DiscoveryType == DiscoveryType.VisualStudioSetup);
+
+        public static MSBuildInstance GetBestInstance(this IMSBuildLocator msbuildLocator, out bool invalidVSFound)
+        {
+            invalidVSFound = false;
+            MSBuildInstance bestMatchInstance = null;
+            var bestMatchScore = 0;
+
+            foreach (var instance in msbuildLocator.GetInstances())
+            {
+                var score = GetInstanceFeatureScore(instance);
+
+                invalidVSFound = invalidVSFound || instance.IsInvalidVisualStudio();
+
+                if (score > bestMatchScore
+                    || (score == bestMatchScore && instance.Version.Major > (bestMatchInstance?.Version.Major ?? 0)))
+                {
+                    bestMatchInstance = instance;
+                    bestMatchScore = score;
+                }
+            }
+
+            return bestMatchInstance;
+        }
+
+        private static int GetInstanceFeatureScore(MSBuildInstance i)
+        {
+            var score = 0;
+
+            // user override gets highest priority
+            if (i.DiscoveryType == DiscoveryType.UserOverride)
+                return int.MaxValue;
+
+            if (i.HasDotNetSdksResolvers())
+                score++;
+
+            if (i.IsInvalidVisualStudio())
+                return int.MinValue;
+            else
+                score++;
+
+            if (i.DiscoveryType == DiscoveryType.StandAlone)
+                score--;
+
+            // VS 2019 should be preferred
+            if (i.Version.Major >= 16)
+                score++;
+            else
+                score--;
+
+            return score;
+        }
     }
 }

@@ -1,12 +1,18 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Scripting.Hosting;
 using Microsoft.Extensions.Logging;
 using OmniSharp;
 using OmniSharp.FileWatching;
+using OmniSharp.MSBuild.Discovery;
 using OmniSharp.Script;
 using OmniSharp.Services;
 
@@ -24,7 +30,7 @@ namespace TestUtility
         public static void AddCsxProjectToWorkspace(OmniSharpWorkspace workspace, TestFile testFile)
         {
             var references = GetReferences();
-            var scriptHelper = new ScriptProjectProvider(new ScriptOptions(), new OmniSharpEnvironment(), new LoggerFactory(), true);            
+            var scriptHelper = new ScriptProjectProvider(new ScriptOptions(), new OmniSharpEnvironment(), new LoggerFactory(), true);
             var project = scriptHelper.CreateProject(testFile.FileName, references.Union(new[] { MetadataReference.CreateFromFile(typeof(CommandLineScriptGlobals).GetTypeInfo().Assembly.Location) }), testFile.FileName, typeof(CommandLineScriptGlobals), Enumerable.Empty<string>());
             workspace.AddProject(project);
 
@@ -37,11 +43,12 @@ namespace TestUtility
             workspace.AddDocument(documentInfo);
         }
 
-        public static void AddProjectToWorkspace(OmniSharpWorkspace workspace, string filePath, string[] frameworks, TestFile[] testFiles)
+        public static IEnumerable<ProjectId> AddProjectToWorkspace(OmniSharpWorkspace workspace, string filePath, string[] frameworks, TestFile[] testFiles, ImmutableArray<AnalyzerReference> analyzerRefs = default)
         {
             var versionStamp = VersionStamp.Create();
             var references = GetReferences();
             frameworks = frameworks ?? new[] { string.Empty };
+            var projectsIds = new List<ProjectId>();
 
             foreach (var framework in frameworks)
             {
@@ -52,22 +59,20 @@ namespace TestUtility
                     assemblyName: "AssemblyName",
                     language: LanguageNames.CSharp,
                     filePath: filePath,
-                    metadataReferences: references);
+                    metadataReferences: references,
+                    analyzerReferences: analyzerRefs).WithDefaultNamespace("OmniSharpTest");
 
                 workspace.AddProject(projectInfo);
 
                 foreach (var testFile in testFiles)
                 {
-                    var documentInfo = DocumentInfo.Create(
-                        id: DocumentId.CreateNewId(projectInfo.Id),
-                        name: testFile.FileName,
-                        sourceCodeKind: SourceCodeKind.Regular,
-                        loader: TextLoader.From(TextAndVersion.Create(testFile.Content.Text, versionStamp)),
-                        filePath: testFile.FileName);
-
-                    workspace.AddDocument(documentInfo);
+                    workspace.AddDocument(projectInfo.Id, testFile.FileName, TextLoader.From(TextAndVersion.Create(testFile.Content.Text, versionStamp)), SourceCodeKind.Regular);
                 }
+
+                projectsIds.Add(projectInfo.Id);
             }
+
+            return projectsIds;
         }
 
         private static IEnumerable<PortableExecutableReference> GetReferences()
@@ -90,6 +95,55 @@ namespace TestUtility
                 .Select(l => MetadataReference.CreateFromFile(l));
 
             return references;
+        }
+
+        public static MSBuildInstance AddDotNetCoreToFakeInstance(this MSBuildInstance instance)
+        {
+            const string dotnetSdkResolver = "Microsoft.DotNet.MSBuildSdkResolver";
+
+            var directory = Path.Combine(
+                instance.MSBuildPath,
+                "SdkResolvers",
+                dotnetSdkResolver
+            );
+
+            Directory.CreateDirectory(directory);
+
+            TestIO.TouchFakeFile(Path.Combine(directory, dotnetSdkResolver + ".dll"));
+
+            return instance;
+        }
+
+        public static Dictionary<string, string> GetConfigurationDataWithAnalyzerConfig(bool roslynAnalyzersEnabled = false, Dictionary<string, string> existingConfiguration = null)
+        {
+            if (existingConfiguration == null)
+            {
+                return new Dictionary<string, string>() { { "RoslynExtensionsOptions:EnableAnalyzersSupport", roslynAnalyzersEnabled.ToString() } };
+            }
+
+            var copyOfExistingConfigs = existingConfiguration.ToDictionary(x => x.Key, x => x.Value);
+            copyOfExistingConfigs.Add("RoslynExtensionsOptions:EnableAnalyzersSupport", roslynAnalyzersEnabled.ToString());
+
+            return copyOfExistingConfigs;
+        }
+
+        public static async Task WaitUntil(Func<Task<bool>> condition, int frequency = 25, int timeout = -1)
+        {
+            var waitTask = Task.Run(async () =>
+            {
+                while (!await condition()) await Task.Delay(frequency);
+            });
+
+            if (waitTask != await Task.WhenAny(waitTask,
+                    Task.Delay(timeout)))
+                throw new TimeoutException();
+        }
+
+        public static void SetDefaultCulture()
+        {
+            CultureInfo ci = new CultureInfo("en-US");
+            CultureInfo.DefaultThreadCurrentCulture = ci;
+            CultureInfo.DefaultThreadCurrentUICulture = ci;
         }
     }
 }

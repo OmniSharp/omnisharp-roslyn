@@ -54,7 +54,11 @@ msbuild_libraries=(
     "Microsoft.Build.dll"
     "Microsoft.Build.Framework.dll"
     "Microsoft.Build.Tasks.Core.dll"
+    "Microsoft.Build.Tasks.v4.0.dll"
+    "Microsoft.Build.Tasks.v12.0.dll"
     "Microsoft.Build.Utilities.Core.dll"
+    "Microsoft.Build.Utilities.v4.0.dll"
+    "Microsoft.Build.Utilities.v12.0.dll"
 )
 
 msbuild_runtime=(
@@ -82,6 +86,24 @@ msbuild_runtime=(
     "Microsoft.Xaml.targets"
     "MSBuild.dll"
     "MSBuild.dll.config"
+"System.Data.Common.dll"
+"System.Collections.Immutable.dll"
+"System.Diagnostics.StackTrace.dll"
+"System.Diagnostics.Tracing.dll"
+"System.Globalization.Extensions.dll"
+"System.IO.Compression.dll"
+"System.Net.Http.dll"
+"System.Net.Sockets.dll"
+"System.Reflection.Metadata.dll"
+"System.Runtime.Serialization.Primitives.dll"
+"System.Security.Cryptography.Algorithms.dll"
+"System.Security.SecureString.dll"
+"System.Threading.Overlapped.dll"
+"System.Threading.Tasks.Dataflow.dll"
+"System.Xml.XPath.XDocument.dll"
+    #"NuGet.targets"
+    #"Workflow.VisualBasic.targets"
+    #"Workflow.targets"
 )
 
 _verify_file() {

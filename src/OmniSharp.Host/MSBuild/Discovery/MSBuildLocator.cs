@@ -3,6 +3,7 @@ using System.Collections.Immutable;
 using System.IO;
 using System.Reflection;
 using System.Text;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using OmniSharp.MSBuild.Discovery.Providers;
 using OmniSharp.Services;
@@ -21,9 +22,8 @@ namespace OmniSharp.MSBuild.Discovery
         private readonly ILogger _logger;
         private readonly IAssemblyLoader _assemblyLoader;
         private readonly ImmutableArray<MSBuildInstanceProvider> _providers;
-        private MSBuildInstance _registeredInstance;
 
-        public MSBuildInstance RegisteredInstance => _registeredInstance;
+        public MSBuildInstance RegisteredInstance { get; private set; }
 
         private MSBuildLocator(ILoggerFactory loggerFactory, IAssemblyLoader assemblyLoader, ImmutableArray<MSBuildInstanceProvider> providers)
         {
@@ -34,20 +34,21 @@ namespace OmniSharp.MSBuild.Discovery
 
         protected override void DisposeCore(bool disposing)
         {
-            if (_registeredInstance != null)
+            if (RegisteredInstance != null)
             {
                 AppDomain.CurrentDomain.AssemblyResolve -= Resolve;
-                _registeredInstance = null;
+                RegisteredInstance = null;
             }
         }
 
-        public static MSBuildLocator CreateDefault(ILoggerFactory loggerFactory, IAssemblyLoader assemblyLoader)
+        public static MSBuildLocator CreateDefault(ILoggerFactory loggerFactory, IAssemblyLoader assemblyLoader, IConfiguration msbuildConfiguration)
             => new MSBuildLocator(loggerFactory, assemblyLoader,
                 ImmutableArray.Create<MSBuildInstanceProvider>(
                     new DevConsoleInstanceProvider(loggerFactory),
                     new VisualStudioInstanceProvider(loggerFactory),
                     new MonoInstanceProvider(loggerFactory),
-                    new StandAloneInstanceProvider(loggerFactory, allowMonoPaths: true)));
+                    new StandAloneInstanceProvider(loggerFactory, allowMonoPaths: true),
+                    new UserOverrideInstanceProvider(loggerFactory, msbuildConfiguration)));
 
         public static MSBuildLocator CreateStandAlone(ILoggerFactory loggerFactory, IAssemblyLoader assemblyLoader, bool allowMonoPaths)
             => new MSBuildLocator(loggerFactory, assemblyLoader,
@@ -56,12 +57,12 @@ namespace OmniSharp.MSBuild.Discovery
 
         public void RegisterInstance(MSBuildInstance instance)
         {
-            if (_registeredInstance != null)
+            if (RegisteredInstance != null)
             {
                 throw new InvalidOperationException("An MSBuild instance is already registered.");
             }
 
-            _registeredInstance = instance ?? throw new ArgumentNullException(nameof(instance));
+            RegisteredInstance = instance ?? throw new ArgumentNullException(nameof(instance));
 
             foreach (var assemblyName in s_msbuildAssemblies)
             {
@@ -120,7 +121,7 @@ namespace OmniSharp.MSBuild.Discovery
 
         private Assembly LoadAssemblyByNameOnly(string assemblyName)
         {
-            var assemblyPath = Path.Combine(_registeredInstance.MSBuildPath, assemblyName + ".dll");
+            var assemblyPath = Path.Combine(RegisteredInstance.MSBuildPath, assemblyName + ".dll");
             var result = File.Exists(assemblyPath)
                 ? _assemblyLoader.LoadFrom(assemblyPath)
                 : null;
@@ -135,7 +136,7 @@ namespace OmniSharp.MSBuild.Discovery
 
         private Assembly LoadAssemblyByFullName(AssemblyName assemblyName)
         {
-            var assemblyPath = Path.Combine(_registeredInstance.MSBuildPath, assemblyName.Name + ".dll");
+            var assemblyPath = Path.Combine(RegisteredInstance.MSBuildPath, assemblyName.Name + ".dll");
             if (!File.Exists(assemblyPath))
             {
                 _logger.LogDebug($"FAILURE: Could not locate '{assemblyPath}'.");

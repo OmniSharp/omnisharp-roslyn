@@ -95,7 +95,7 @@ namespace OmniSharp.Roslyn
                 var service = _csharpMetadataAsSourceService.CreateInstance(temporaryDocument.Project.LanguageServices);
                 var method = _csharpMetadataAsSourceService.GetMethod(AddSourceToAsync);
 
-                var documentTask = method.Invoke<Task<Document>>(service, new object[] { temporaryDocument, topLevelSymbol, default(CancellationToken) });
+                var documentTask = method.Invoke<Task<Document>>(service, new object[] { temporaryDocument, await metadataProject.GetCompilationAsync(), topLevelSymbol, default(CancellationToken) });
                 metadataDocument = await documentTask;
 
                 _metadataDocumentCache[fileName] = metadataDocument;
@@ -106,7 +106,7 @@ namespace OmniSharp.Roslyn
 
         public async Task<Location> GetSymbolLocationFromMetadata(ISymbol symbol, Document metadataDocument, CancellationToken cancellationToken = new CancellationToken())
         {
-            var symbolKeyCreateMethod = _symbolKey.GetMethod(Create, BindingFlags.Static | BindingFlags.Public);
+            var symbolKeyCreateMethod = _symbolKey.GetMethod(Create, BindingFlags.Static | BindingFlags.NonPublic);
             var symboldId = symbolKeyCreateMethod.InvokeStatic(new object[] { symbol, cancellationToken });
 
             return await _getLocationInGeneratedSourceAsync.InvokeStatic<Task<Location>>(new object[] { symboldId, metadataDocument, cancellationToken });

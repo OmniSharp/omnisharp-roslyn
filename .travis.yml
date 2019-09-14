@@ -1,6 +1,6 @@
 language: csharp
 sudo: required
-dist: trusty
+dist: xenial
 env:
   global:
   - secure: m2PtYwYOhaK0uFMZ19ZxApZwWZeAIq1dS//jx/5I3txpIWD+TfycQMAWYxycFJ/GJkeVF29P4Zz1uyS2XKKjPJpp2Pds98FNQyDv3OftpLAVa0drsjfhurVlBmSdrV7GH6ncKfvhd+h7KVK5vbZc+NeR4dH7eNvN/jraS//AMJg=
@@ -13,7 +13,7 @@ mono: latest
 os:
 - linux
 - osx
-osx_image: xcode9.2
+osx_image: xcode9.4
 script:
 - git fetch --unshallow
 - git fetch origin '+refs/heads/*:refs/heads/*'
@@ -48,26 +48,28 @@ install:
     sudo ldconfig
   elif [ "$TRAVIS_OS_NAME" == "osx" ]; then
     # On OSX, we install libuv via Homebrew
+    brew update
     brew install libuv
   fi
 - export PATH="$PWD/.dotnet:$PATH"
-after_success: |
-  if [[ "$TRAVIS_OS_NAME" == "linux" && $TRAVIS_BRANCH == "master" && $TRAVIS_PULL_REQUEST == "false" ]]; then
-    AZ_REPO=$(lsb_release -cs)
-    echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $AZ_REPO main" | \
-      sudo tee /etc/apt/sources.list.d/azure-cli.list
-    curl -L https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
-    sudo apt-get install apt-transport-https
-    sudo apt-get update && sudo apt-get install azure-cli
+# after_success: |
+#   if [[ "$TRAVIS_OS_NAME" == "linux" && $TRAVIS_BRANCH == "master" && $TRAVIS_PULL_REQUEST == "false" ]]; then
+#     AZ_REPO=$(lsb_release -cs)
+#     echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $AZ_REPO main" | \
+#       sudo tee /etc/apt/sources.list.d/azure-cli.list
+#     curl -L https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
+#     sudo apt-get install apt-transport-https
+#     sudo apt-get update && sudo apt-get install azure-cli
 
-    # Only update "latest" version if we have all of the builds
-    $deploymentDir = "artifacts/deployment"
-    if [ -e $deploymentDir/"omnisharp-osx.zip" ] && \
-       [ -e $deploymentDir/"omnisharp-linux-x86.zip" ] && \
-       [ -e $deploymentDir/"omnisharp-linux-x64.zip" ] then
-      
-      az storage blob upload-batch --destination "releases" --source artifacts/deployment --account-name roslynomnisharp --account-key $BLOB_KEY
-  fi
+#     # Only update "latest" version if we have all of the builds
+#     #deploymentDir="artifacts/deployment"
+#     #if [ -e $deploymentDir/"omnisharp-osx.zip" ] && \
+#     #   [ -e $deploymentDir/"omnisharp-linux-x86.zip" ] && \
+#     #   [ -e $deploymentDir/"omnisharp-linux-x64.zip" ]; then
+
+#       az storage blob upload-batch --destination "releases" --source artifacts/deployment --account-name roslynomnisharp --account-key $BLOB_KEY
+#     #fi
+#   fi
 notifications:
   slack:
     rooms:
@@ -80,22 +82,22 @@ before_deploy:
   # Only deploy OSX-specific OmniSharp from the OSX.
   # All other builds should be deployed by Linux CI.
   if [ "$TRAVIS_OS_NAME" == "linux" ]; then
-    rm artifacts/package/omnisharp-osx.tar.gz
-    rm artifacts/package/omnisharp-osx.zip
+    rm -f artifacts/package/omnisharp-osx.tar.gz
+    rm -f artifacts/package/omnisharp-osx.zip
   elif [ "$TRAVIS_OS_NAME" == "osx" ]; then
-    rm artifacts/package/mono.tar.gz
-    rm artifacts/package/mono.zip
-    rm artifacts/package/omnisharp-linux-x86.tar.gz
-    rm artifacts/package/omnisharp-linux-x64.tar.gz
-    rm artifacts/package/omnisharp-linux-x86.zip
-    rm artifacts/package/omnisharp-linux-x64.zip
+    rm -f artifacts/package/mono.tar.gz
+    rm -f artifacts/package/mono.zip
+    rm -f artifacts/package/omnisharp-linux-x86.tar.gz
+    rm -f artifacts/package/omnisharp-linux-x64.tar.gz
+    rm -f artifacts/package/omnisharp-linux-x86.zip
+    rm -f artifacts/package/omnisharp-linux-x64.zip
   fi
 deploy:
   provider: releases
   api_key:
     secure: EsRemh0XwJc3jhIjaxSuAhcm0AGjFwa3HO6oWzJOoupX0l+HV5CxrJqui//sqJ/jK4nnwNcTfMyMFTAz2t6nWCmuwuezTncty/uNTXE0Whe+3WWc/BakfEdBrCfnRhGhwQ5EW2Y6BasuF0f/hpjnucqpNxcKmKOZvThzv93bmSA=
   file_glob: true
-  file: 
+  file:
     - artifacts/package/*.tar.gz
     - artifacts/package/*.zip
   skip_cleanup: true

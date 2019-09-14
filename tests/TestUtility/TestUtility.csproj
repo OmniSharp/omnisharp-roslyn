@@ -1,21 +1,22 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net461</TargetFramework>
+    <TargetFramework>net472</TargetFramework>
     <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\OmniSharp.DotNetTest\OmniSharp.DotNetTest.csproj" />
-    <ProjectReference Include="..\..\src\OmniSharp.DotNet\OmniSharp.DotNet.csproj" />
     <ProjectReference Include="..\..\src\OmniSharp.Host\OmniSharp.Host.csproj" />
     <ProjectReference Include="..\..\src\OmniSharp.MSBuild\OmniSharp.MSBuild.csproj" />
     <ProjectReference Include="..\..\src\OmniSharp.Roslyn.CSharp\OmniSharp.Roslyn.CSharp.csproj" />
     <ProjectReference Include="..\..\src\OmniSharp.Script\OmniSharp.Script.csproj" />
     <ProjectReference Include="..\..\src\OmniSharp.Cake\OmniSharp.Cake.csproj" />
+    <ProjectReference Include="..\..\src\OmniSharp.Shared\OmniSharp.Shared.csproj" />
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" PrivateAssets="All" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" />
     <PackageReference Include="xunit" />

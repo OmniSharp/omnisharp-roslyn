@@ -2,12 +2,12 @@ using System;
 using System.Composition.Hosting;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Eventing;
 using OmniSharp.Http.Middleware;
-using OmniSharp.Stdio.Services;
+using OmniSharp.Roslyn;
+using OmniSharp.Services;
 using OmniSharp.Utilities;
 
 namespace OmniSharp.Http
@@ -32,9 +32,17 @@ namespace OmniSharp.Http
                 {
                     builder.AddConsole();
 
+                    var workspaceInformationServiceName = typeof(WorkspaceInformationService).FullName;
+                    var projectEventForwarder = typeof(ProjectEventForwarder).FullName;
                     var exceptionHandlerMiddlewareName = typeof(ExceptionHandlerMiddleware).FullName;
+
                     builder.AddFilter(
-                        (category, logLevel) => category.Equals(exceptionHandlerMiddlewareName, StringComparison.OrdinalIgnoreCase));
+                        (category, logLevel) =>
+                            category.Equals(exceptionHandlerMiddlewareName, StringComparison.OrdinalIgnoreCase) ||
+                            (_environment.LogLevel <= logLevel &&
+                                category.StartsWith("OmniSharp", StringComparison.OrdinalIgnoreCase) &&
+                                !category.Equals(workspaceInformationServiceName, StringComparison.OrdinalIgnoreCase) &&
+                                !category.Equals(projectEventForwarder, StringComparison.OrdinalIgnoreCase)));
                 });
 
             _compositionHost = new CompositionHostBuilder(serviceProvider)

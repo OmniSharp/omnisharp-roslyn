@@ -67,9 +67,9 @@ namespace OmniSharp.Script.Tests
                 Assert.Equal(typeof(CommandLineScriptGlobals), project.GlobalsType);
 
                 // should have RSP inherited settings
-                VerifyAssemblyReference(project, "system.web");
+                VerifyAssemblyReference(project, "system.xml");
                 var commonUsingStatement = Assert.Single(project.CommonUsings);
-                Assert.Equal("System.Web", commonUsingStatement);
+                Assert.Equal("System.Xml", commonUsingStatement);
             }
         }
 
@@ -186,6 +186,20 @@ namespace OmniSharp.Script.Tests
             }
         }
 
+        [Fact]
+        public async Task DoesntParticipateInWorkspaceInfoResponseWhenDisabled()
+        {
+            using (var testProject = TestAssets.Instance.GetTestScript("SingleCsiScript"))
+            using (var host = CreateOmniSharpHost(testProject.Directory, configurationData: new Dictionary<string, string>
+            {
+                ["script:enabled"] = "false"
+            }))
+            {
+                var workspaceInfo = await GetWorkspaceInfoAsync(host);
+                Assert.Null(workspaceInfo);
+            }
+        }
+
         private string GetMsCorlibPath() => Assembly.Load(new AssemblyName("mscorlib"))?.Location;
 
         private void VerifyCorLib(ScriptContextModel project, bool expected = true)
@@ -207,6 +221,8 @@ namespace OmniSharp.Script.Tests
             };
 
             var response = await service.Handle(request);
+
+            if (!response.ContainsKey("Script")) return null;
 
             return (ScriptContextModelCollection)response["Script"];
         }

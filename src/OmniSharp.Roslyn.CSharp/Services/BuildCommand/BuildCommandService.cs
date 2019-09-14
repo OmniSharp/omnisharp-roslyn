@@ -67,7 +67,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.BuildCommand
         {
             var document2 = _workspace.CurrentSolution.Projects.SelectMany(p => p.Documents)
                 .GroupBy(x => x.FilePath).Select(f => f.FirstOrDefault());
-            var document = _workspace.GetDocument(document2.Where(doc => Path.GetFileName(doc.Name).ToLower() == Path.GetFileName(request.FileName).ToLower()).FirstOrDefault().Name);
+            var document = _workspace.GetDocument(document2.Where(doc => Path.GetFileName(doc.Name).ToLower() == Path.GetFileName(request.FileName).ToLower()).FirstOrDefault().FilePath);
             ProjectFile = document.Project.FilePath;
             var semanticModel = await document.GetSemanticModelAsync();
             var quickFix = new List<QuickFix>();

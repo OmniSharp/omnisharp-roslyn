@@ -2,16 +2,17 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using OmniSharp;
 using OmniSharp.Eventing;
+using OmniSharp.Host.Services;
 using OmniSharp.MSBuild.Discovery;
 using OmniSharp.Options;
 using OmniSharp.Services;
-using OmniSharp.Stdio.Services;
 using OmniSharp.Utilities;
 using TestUtility.Logging;
 using Xunit.Abstractions;
@@ -27,6 +28,7 @@ namespace TestUtility
             IOmniSharpEnvironment environment,
             ILoggerFactory loggerFactory,
             IAssemblyLoader assemblyLoader,
+            IAnalyzerAssemblyLoader analyzerAssemblyLoader,
             IMemoryCache memoryCache,
             ISharedTextWriter sharedTextWriter,
             IMSBuildLocator msbuildLocator,
@@ -47,6 +49,7 @@ namespace TestUtility
             AddService(dotNetCliService);
             AddService(configuration);
             AddService(optionsMonitor);
+            AddService(analyzerAssemblyLoader);
         }
 
         public static IServiceProvider Create(
@@ -68,9 +71,10 @@ namespace TestUtility
             var msbuildLocator = CreateMSBuildLocator(loggerFactory, assemblyLoader);
             var optionsMonitor = CreateOptionsMonitor(configuration);
             var sharedTextWriter = CreateSharedTextWriter(testOutput);
+            var analyzerAssemblyLoader = new AnalyzerAssemblyLoader();
 
             return new TestServiceProvider(
-                environment, loggerFactory, assemblyLoader, memoryCache, sharedTextWriter,
+                environment, loggerFactory, assemblyLoader, analyzerAssemblyLoader, memoryCache, sharedTextWriter,
                 msbuildLocator, eventEmitter, dotNetCliService, configuration, optionsMonitor);
         }
 
@@ -79,6 +83,7 @@ namespace TestUtility
             IOmniSharpEnvironment environment,
             ILoggerFactory loggerFactory,
             IAssemblyLoader assemblyLoader,
+            IAnalyzerAssemblyLoader analyzerAssemblyLoader,
             IMSBuildLocator msbuildLocator,
             IEnumerable<KeyValuePair<string, string>> configurationData = null,
             DotNetCliVersion dotNetCliVersion = DotNetCliVersion.Current,
@@ -93,7 +98,7 @@ namespace TestUtility
             var sharedTextWriter = CreateSharedTextWriter(testOutput);
 
             return new TestServiceProvider(
-                environment, loggerFactory, assemblyLoader, memoryCache, sharedTextWriter,
+                environment, loggerFactory, assemblyLoader, analyzerAssemblyLoader, memoryCache, sharedTextWriter,
                 msbuildLocator, eventEmitter, dotNetCliService, configuration, optionsMonitor);
         }
 
@@ -111,7 +116,7 @@ namespace TestUtility
 
             // We need to set the "UseLegacySdkResolver" for tests because
             // MSBuild's SDK resolver will not be able to locate the .NET Core SDKs
-            // that we install locally in the ".dotnet" and ".dotnet-legacy" directories.
+            // that we install locally in the ".dotnet" directory.
             // This property will cause the MSBuild project loader to set the
             // MSBuildSDKsPath environment variable to the correct path "Sdks" folder
             // within the appropriate .NET Core SDK.

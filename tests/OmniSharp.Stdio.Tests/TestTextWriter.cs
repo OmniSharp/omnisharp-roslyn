@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using OmniSharp.Stdio.Services;
+using OmniSharp.Services;
 
 namespace OmniSharp.Stdio.Tests
 {

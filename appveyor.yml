@@ -18,17 +18,17 @@ deploy:
     artifact: /.*\.zip/
     on:
       appveyor_repo_tag: true
-  - provider: AzureBlob
-    storage_account_name: roslynomnisharp
-    storage_access_key:
-      secure: Je3/ykZyjxIqPv9GEVCYlgG9u5cJE6pmmoHWpy7I7XcQr2Qh+oaGYc9GKb0uGmyX2tA/NOm/wWZI9TWZFQST+mAscxyYdP9PrD9OADP3UZckW3hAf8OHvK9gZVMFO+bK
-    container: releases
-    folder: /$(GitVersion_SemVer)/
-    artifact: /.*\.zip/
-    unzip: false
-    set_content_type: false
-    on:
-      branch: master
+  # - provider: AzureBlob
+  #   storage_account_name: roslynomnisharp
+  #   storage_access_key:
+  #     secure: Je3/ykZyjxIqPv9GEVCYlgG9u5cJE6pmmoHWpy7I7XcQr2Qh+oaGYc9GKb0uGmyX2tA/NOm/wWZI9TWZFQST+mAscxyYdP9PrD9OADP3UZckW3hAf8OHvK9gZVMFO+bK
+  #   container: releases
+  #   folder: /$(GitVersion_SemVer)/
+  #   artifact: /.*\.zip/
+  #   unzip: false
+  #   set_content_type: false
+  #   on:
+  #     branch: master
 notifications:
   - provider: Slack
     auth_token:

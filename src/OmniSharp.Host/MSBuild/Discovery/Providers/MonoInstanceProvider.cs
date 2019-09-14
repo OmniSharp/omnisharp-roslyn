@@ -23,7 +23,7 @@ namespace OmniSharp.MSBuild.Discovery.Providers
 
             // Don't try to resolve to MSBuild assemblies under the installed Mono path unless OmniSharp
             // is actually running on the installed Mono runtime. The problem is that, when running standalone
-            // on its own embedded Mono runtime, OmniSharp carries it's own "GAC" of dependencies.
+            // on its own embedded Mono runtime, OmniSharp carries its own "GAC" of dependencies.
             // And, loading Microsoft.Build.* assemblies from the installed Mono location might have different
             // dependencies that aren't included in OmniSharp's GAC. This can result in strange failures during
             // design-time build that are difficult to diagnose. However, if OmniSharp is actually running on the
@@ -69,16 +69,16 @@ namespace OmniSharp.MSBuild.Discovery.Providers
                 return NoInstances;
             }
 
-            if (monoVersion < new Version("5.2.0"))
+            if (monoVersion < new Version("5.18.1"))
             {
-                Logger.LogDebug($"Found Mono MSBuild but it could not be used because it is version {monoVersion} and in needs to be >= 5.2.0");
+                Logger.LogDebug($"Found Mono MSBuild but it could not be used because it is version {monoVersion} and in needs to be >= 5.18.1");
                 return NoInstances;
             }
 
-            var toolsPath = Path.Combine(path, "15.0", "bin");
-            if (!Directory.Exists(toolsPath))
+            var toolsPath = FindMSBuildToolsPath(path);
+            if (toolsPath == null)
             {
-                Logger.LogDebug($"Mono MSBuild could not be used because '{toolsPath}' does not exist.");
+                Logger.LogDebug($"Mono MSBuild could not be used because an MSBuild tools path could not be found.");
                 return NoInstances;
             }
 
@@ -103,7 +103,7 @@ Try installing MSBuild into Mono (e.g. 'sudo apt-get install msbuild') to enable
             var localMSBuildPath = FindLocalMSBuildDirectory();
             if (localMSBuildPath != null)
             {
-                var localRoslynPath = Path.Combine(localMSBuildPath, "15.0", "Bin", "Roslyn");
+                var localRoslynPath = Path.Combine(localMSBuildPath, "Current", "Bin", "Roslyn");
                 propertyOverrides.Add("CscToolPath", localRoslynPath);
                 propertyOverrides.Add("CscToolExe", "csc.exe");
             }
@@ -112,7 +112,7 @@ Try installing MSBuild into Mono (e.g. 'sudo apt-get install msbuild') to enable
                 new MSBuildInstance(
                     nameof(DiscoveryType.Mono),
                     toolsPath,
-                    new Version(15, 0),
+                    new Version(16, 0),
                     DiscoveryType.Mono,
                     propertyOverrides.ToImmutable()));
         }
