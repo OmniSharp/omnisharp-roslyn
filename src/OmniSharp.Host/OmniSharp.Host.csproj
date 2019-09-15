@@ -12,7 +12,6 @@
   <ItemGroup>
     <ProjectReference Include="..\OmniSharp.Abstractions\OmniSharp.Abstractions.csproj" />
     <ProjectReference Include="..\OmniSharp.Configuration\OmniSharp.ConfigurationManager.csproj" />
-    <!--<ProjectReference Include="..\OmniSharp.Plugins\OmniSharp.Plugins.csproj" />-->
     <ProjectReference Include="..\OmniSharp.Roslyn\OmniSharp.Roslyn.csproj" />
     <ProjectReference Include="..\OmniSharp.Shared\OmniSharp.Shared.csproj" />
   </ItemGroup>
