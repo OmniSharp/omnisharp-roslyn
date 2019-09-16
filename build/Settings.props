@@ -9,7 +9,7 @@
     <SuppressNETCoreSdkPreviewMessage>true</SuppressNETCoreSdkPreviewMessage>
     <NoWarn>NU1701;NU5104</NoWarn>
     <IsPackable>false</IsPackable>
-    <Authors>OmniSharp contributors</Authors>
+    <Authors>OmniSharp Contributors</Authors>
     <PackageTags>omnisharp;lsp;csharp;roslyn;language</PackageTags>
     <PackageIconUrl>https://avatars0.githubusercontent.com/u/9420663</PackageIconUrl>
     <PackageProjectUrl>https://github.com/OmniSharp/omnisharp-roslyn</PackageProjectUrl>
