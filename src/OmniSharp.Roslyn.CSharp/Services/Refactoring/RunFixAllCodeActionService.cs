@@ -38,39 +38,42 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
 
             var mappedProvidersWithDiagnostics = await GetDiagnosticsMappedWithFixAllProviders();
 
-            var filteredDiagnosticsWithFix = mappedProvidersWithDiagnostics
+            var filteredProvidersWithFix = mappedProvidersWithDiagnostics
                 .Where(x => IsFixOnScope(x, request.Scope, request.FileName))
                 .Where(diagWithFix =>
                 {
-                    if(request.FixAllFilter == null)
+                    if (request.FixAllFilter == null)
                         return true;
 
-                    return ContainsMatching(diagWithFix.GetAvailableFixableDiagnostics().Select(x => x.id), request.FixAllFilter.Select(x => x.Id));
+                    return ContainsMatching(diagWithFix.Diagnostics.Select(x => x.Id), request.FixAllFilter.Select(x => x.Id));
                 });
 
-            foreach (var diagnosticsInDocument in filteredDiagnosticsWithFix)
+            foreach (var singleFixableProviderWithDocument in filteredProvidersWithFix)
             {
                 try
                 {
-                    var document = Workspace.CurrentSolution.GetDocument(diagnosticsInDocument.DocumentId);
+                    var document = Workspace.CurrentSolution.GetDocument(singleFixableProviderWithDocument.DocumentId);
 
-                    var fixer = diagnosticsInDocument.FixAllProvider;
+                    var fixer = singleFixableProviderWithDocument.FixAllProvider;
 
-                    var fix = await GetFixAsync(diagnosticsInDocument.Diagnostics.First(x => x.Id == "RCS1076"), diagnosticsInDocument.CodeFixProvider, document, CancellationToken.None);
+                    var action = await singleFixableProviderWithDocument.RegisterCodeFixesAndGetCorrespondingAction(document);
 
-                    var fixableIds = diagnosticsInDocument.GetAvailableFixableDiagnostics().Select(x => x.id).Distinct();
+                    if (action == null)
+                        continue;
+
+                    var fixableIds = singleFixableProviderWithDocument.Diagnostics.Select(x => x.Id).Distinct();
 
                     var fixAllContext = new FixAllContext(
                         document,
-                        diagnosticsInDocument.CodeFixProvider,
+                        singleFixableProviderWithDocument.CodeFixProvider,
                         Microsoft.CodeAnalysis.CodeFixes.FixAllScope.Project,
-                        fix.EquivalenceKey,
+                        action.EquivalenceKey,
                         fixableIds,
                         _fixAllDiagnosticProvider,
                         CancellationToken.None
                     );
 
-                    var fixes = await diagnosticsInDocument.FixAllProvider.GetFixAsync(fixAllContext);
+                    var fixes = await singleFixableProviderWithDocument.FixAllProvider.GetFixAsync(fixAllContext);
 
                     if (fixes == null)
                         continue;
@@ -79,7 +82,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
 
                     foreach (var o in operations)
                     {
-                        _logger.LogInformation($"Applying operation {o.ToString()} from fix all with fix provider {diagnosticsInDocument.CodeFixProvider} to workspace document {document.FilePath}.");
+                        _logger.LogInformation($"Applying operation {o.ToString()} from fix all with fix provider {singleFixableProviderWithDocument.CodeFixProvider} to workspace document {document.FilePath}.");
 
                         if (o is ApplyChangesOperation applyChangesOperation)
                         {
@@ -89,7 +92,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError($"Running fix all action {diagnosticsInDocument} in document {diagnosticsInDocument.DocumentPath} prevented by error: {ex}");
+                    _logger.LogError($"Running fix all action {singleFixableProviderWithDocument} in document {singleFixableProviderWithDocument.DocumentPath} prevented by error: {ex}");
                 }
             }
 
@@ -104,31 +107,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
             {
                 Changes = changes.Select(x => new ModifiedFileResponse(x.document.FilePath) { Changes = x.changes.ToList() }).ToList()
             };
-        }
-
-        private static async Task<CodeAction> GetFixAsync(
-            Diagnostic diagnostic,
-            CodeFixProvider fixer,
-            Document document,
-            CancellationToken cancellationToken)
-        {
-            CodeAction action = null;
-
-            var context = new CodeFixContext(
-                document,
-                diagnostic,
-                (a, _) =>
-                {
-                    if (action == null)
-                    {
-                        action = a;
-                    }
-                },
-                cancellationToken);
-
-            await fixer.RegisterCodeFixesAsync(context).ConfigureAwait(false);
-
-            return action;
         }
 
         public static bool ContainsMatching(IEnumerable<string> listA, IEnumerable<string> listB)
@@ -155,8 +133,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
             {
                 var documentDiagnostics = await _diagnosticWorker.GetDiagnostics(ImmutableArray.Create(document.FilePath));
 
-                if(!documentDiagnostics.Any())
-                    return new Diagnostic[] {};
+                if (!documentDiagnostics.Any())
+                    return new Diagnostic[] { };
 
                 return documentDiagnostics.First().Diagnostics;
             }
