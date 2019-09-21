@@ -18,7 +18,6 @@ using OmniSharp.Roslyn.Utilities;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
 {
-
     [OmniSharpHandler(OmniSharpEndpoints.RunFixAll, LanguageNames.CSharp)]
     public class RunFixAllCodeActionService : FixAllCodeActionBase, IRequestHandler<RunFixAllRequest, RunFixAllResponse>
     {

@@ -15,12 +15,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
     {
         private readonly DocumentDiagnostics _documentDiagnostics;
 
-        // http://source.roslyn.io/#Microsoft.VisualStudio.LanguageServices.CSharp/LanguageService/CSharpCodeCleanupFixer.cs,d9a375db0f1e430e,references
-        // CS8019 isn't directly used (via roslyn) but has an analyzer that report different diagnostic based on CS8019 to improve user experience.
-        private static readonly Dictionary<string, string> _customDiagVsFixMap = new Dictionary<string, string>
-        {
-            { "CS8019", "RemoveUnnecessaryImportsFixable" }
-        };
+        // There are few usability optimizations in built in analyzers that requieres custom filtering in actions.
+        // RemoveUnnecessaryImportsFixable is duplicate with CS8019 and both can be executed, selected CS8019 from these two.
+        private static readonly ImmutableHashSet<string> _blacklistedDiagnostics = ImmutableHashSet.Create("RemoveUnnecessaryImportsFixable");
 
         private DocumentWithFixProvidersAndMatchingDiagnostics(CodeFixProvider provider, DocumentDiagnostics documentDiagnostics)
         {
@@ -39,7 +36,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
         private static bool HasFix(CodeFixProvider codeFixProvider, string diagnosticId)
         {
             return codeFixProvider.FixableDiagnosticIds.Any(id => id == diagnosticId)
-                || (_customDiagVsFixMap.ContainsKey(diagnosticId) && codeFixProvider.FixableDiagnosticIds.Any(id => id == _customDiagVsFixMap[diagnosticId]));
+                && !_blacklistedDiagnostics.Contains(diagnosticId);
         }
 
         public static ImmutableArray<DocumentWithFixProvidersAndMatchingDiagnostics> CreateWithMatchingProviders(ImmutableArray<CodeFixProvider> providers, DocumentDiagnostics documentDiagnostics)
