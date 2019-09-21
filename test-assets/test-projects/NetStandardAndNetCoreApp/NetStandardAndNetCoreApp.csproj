@@ -1,21 +1,16 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>netcoreapp1.0;netstandard1.5</TargetFrameworks>
+    <TargetFrameworks>netcoreapp2.1;netstandard1.5</TargetFrameworks>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(TargetFramework)' == 'netcoreapp1.0'">
+  <PropertyGroup Condition="'$(TargetFramework)' == 'netcoreapp2.1'">
     <OutputType>exe</OutputType>
     <DefineConstants>NETCOREAPP;$(DefineConstants)</DefineConstants>
-    <PackageTargetFallback>dnxcore50</PackageTargetFallback>
-    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="**\*.cs" />
     <EmbeddedResource Include="**\*.resx" />
   </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp1.0'">
-    <PackageReference Include="Microsoft.NETCore.App">
-      <Version>1.0.1</Version>
-    </PackageReference>
+  <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp2.1'">
+    <PackageReference Include="Microsoft.NETCore.App"  />
     <PackageReference Include="Newtonsoft.Json">
       <Version>7.0.1</Version>
     </PackageReference>

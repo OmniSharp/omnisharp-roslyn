@@ -1,7 +1,12 @@
 # Changelog
 All changes to the project will be documented in this file.
 
-## [1.34.2] - not yet released
+## [1.34.3] - 2019-09-11
+* Added support for `CheckForOverflowUnderflow ` in csproj files (PR: [#1587](https://github.com/OmniSharp/omnisharp-roslyn/pull/1587))
+* Updated LSP libraries to 0.13 which fixes problems with clients not supporting dynamic registrations. ([#1505](https://github.com/OmniSharp/omnisharp-roslyn/issues/1505), [#1525](https://github.com/OmniSharp/omnisharp-roslyn/issues/1525), PR: [#1562](https://github.com/OmniSharp/omnisharp-roslyn/pull/1562))
+* Update to Roslyn `3.4.0-beta1-19460-02` to align with the upcoming .NET Core 3.1 preview 1 (PR:[#1597](https://github.com/OmniSharp/omnisharp-roslyn/pull/1597))
+ 
+## [1.34.2] - 2019-08-16 
 * Update to Roslyn `3.3.0-beta2-19401-05` which fixes a 1.34.1 regression resulting in StackOverflowException on code analysis of partial classes (PR: [#1579](https://github.com/OmniSharp/omnisharp-roslyn/pull/1579))
 * Added support for reading C# 8.0 `Nullable` setting from csproj files (and dropped support for `NullableContextOptions` - based on the LDM decision to [rename the MSBuild property](https://github.com/dotnet/roslyn/issues/35432) ([#1573](https://github.com/OmniSharp/omnisharp-roslyn/pull/1573))
 

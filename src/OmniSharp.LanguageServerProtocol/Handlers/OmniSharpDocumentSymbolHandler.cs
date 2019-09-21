@@ -12,19 +12,17 @@ using OmniSharp.Models.V2.CodeStructure;
 
 namespace OmniSharp.LanguageServerProtocol.Handlers
 {
-    internal sealed class DocumentSymbolHandler : IDocumentSymbolHandler
+    internal sealed class OmniSharpDocumentSymbolHandler : DocumentSymbolHandler
     {
         public static IEnumerable<IJsonRpcHandler> Enumerate(RequestHandlers handlers)
         {
             foreach (var (selector, handler) in handlers
                 .OfType<Mef.IRequestHandler<CodeStructureRequest, CodeStructureResponse>>())
                 if (handler != null)
-                    yield return new DocumentSymbolHandler(handler, selector);
+                    yield return new OmniSharpDocumentSymbolHandler(handler, selector);
         }
 
-        private DocumentSymbolCapability _capability;
         private readonly Mef.IRequestHandler<CodeStructureRequest, CodeStructureResponse> _codeStructureHandler;
-        private readonly DocumentSelector _documentSelector;
 
         private static readonly IDictionary<string, SymbolKind> Kinds = new Dictionary<string, SymbolKind>
         {
@@ -46,13 +44,16 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             { OmniSharp.Models.V2.SymbolKinds.Unknown, SymbolKind.Class },
         };
 
-        public DocumentSymbolHandler(Mef.IRequestHandler<CodeStructureRequest, CodeStructureResponse> codeStructureHandler, DocumentSelector documentSelector)
+        public OmniSharpDocumentSymbolHandler(Mef.IRequestHandler<CodeStructureRequest, CodeStructureResponse> codeStructureHandler, DocumentSelector documentSelector)
+            : base(new TextDocumentRegistrationOptions()
+            {
+                DocumentSelector = documentSelector
+            })
         {
             _codeStructureHandler = codeStructureHandler;
-            _documentSelector = documentSelector;
         }
 
-        public async Task<SymbolInformationOrDocumentSymbolContainer> Handle(DocumentSymbolParams request, CancellationToken token)
+        public async override Task<SymbolInformationOrDocumentSymbolContainer> Handle(DocumentSymbolParams request, CancellationToken token)
         {
             var omnisharpRequest = new CodeStructureRequest()
             {
@@ -63,19 +64,6 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
 
             return omnisharpResponse.Elements?.Select(ToDocumentSymbolInformationOrDocumentSymbol).ToArray() ??
                 Array.Empty<SymbolInformationOrDocumentSymbol>();
-        }
-
-        public TextDocumentRegistrationOptions GetRegistrationOptions()
-        {
-            return new TextDocumentRegistrationOptions()
-            {
-                DocumentSelector = _documentSelector
-            };
-        }
-
-        public void SetCapability(DocumentSymbolCapability capability)
-        {
-            _capability = capability;
         }
 
         private static SymbolInformationOrDocumentSymbol ToDocumentSymbolInformationOrDocumentSymbol(CodeElement node)

@@ -32,6 +32,8 @@ namespace OmniSharp.MSBuild.Tests
             {
                 await host.RestoreProject(testProject);
 
+                await Task.Delay(2000);
+
                 var diagnostics = await host.RequestCodeCheckAsync(Path.Combine(testProject.Directory, "Program.cs"));
 
                 Assert.NotEmpty(diagnostics.QuickFixes);

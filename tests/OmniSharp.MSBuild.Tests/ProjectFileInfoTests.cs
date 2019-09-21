@@ -64,6 +64,7 @@ namespace OmniSharp.MSBuild.Tests
 
                 var compilationOptions = projectFileInfo.CreateCompilationOptions();
                 Assert.Equal(ReportDiagnostic.Error, compilationOptions.GeneralDiagnosticOption);
+                Assert.True(compilationOptions.CheckOverflow);
             }
         }
 
@@ -80,12 +81,16 @@ namespace OmniSharp.MSBuild.Tests
                 Assert.NotNull(projectFileInfo);
                 Assert.Equal(projectFilePath, projectFileInfo.FilePath);
                 var targetFramework = Assert.Single(projectFileInfo.TargetFrameworks);
-                Assert.Equal("netcoreapp1.0", targetFramework);
-                Assert.Equal("bin/Debug/netcoreapp1.0/", projectFileInfo.OutputPath.EnsureForwardSlashes());
-                Assert.Equal("obj/Debug/netcoreapp1.0/", projectFileInfo.IntermediateOutputPath.EnsureForwardSlashes());
+                Assert.Equal("netcoreapp2.1", targetFramework);
+                Assert.Equal("bin/Debug/netcoreapp2.1/", projectFileInfo.OutputPath.EnsureForwardSlashes());
+                Assert.Equal("obj/Debug/netcoreapp2.1/", projectFileInfo.IntermediateOutputPath.EnsureForwardSlashes());
                 Assert.Equal(3, projectFileInfo.SourceFiles.Length); // Program.cs, AssemblyInfo.cs, AssemblyAttributes.cs
                 Assert.Equal("Debug", projectFileInfo.Configuration);
                 Assert.Equal("AnyCPU", projectFileInfo.Platform);
+
+                var compilationOptions = projectFileInfo.CreateCompilationOptions();
+                Assert.Equal(ReportDiagnostic.Default, compilationOptions.GeneralDiagnosticOption);
+                Assert.False(compilationOptions.CheckOverflow);
             }
         }
 
@@ -102,10 +107,10 @@ namespace OmniSharp.MSBuild.Tests
                 Assert.NotNull(projectFileInfo);
                 Assert.Equal(projectFilePath, projectFileInfo.FilePath);
                 Assert.Equal(2, projectFileInfo.TargetFrameworks.Length);
-                Assert.Equal("netcoreapp1.0", projectFileInfo.TargetFrameworks[0]);
+                Assert.Equal("netcoreapp2.1", projectFileInfo.TargetFrameworks[0]);
                 Assert.Equal("netstandard1.5", projectFileInfo.TargetFrameworks[1]);
-                Assert.Equal("bin/Debug/netcoreapp1.0/", projectFileInfo.OutputPath.EnsureForwardSlashes());
-                Assert.Equal("obj/Debug/netcoreapp1.0/", projectFileInfo.IntermediateOutputPath.EnsureForwardSlashes());
+                Assert.Equal("bin/Debug/netcoreapp2.1/", projectFileInfo.OutputPath.EnsureForwardSlashes());
+                Assert.Equal("obj/Debug/netcoreapp2.1/", projectFileInfo.IntermediateOutputPath.EnsureForwardSlashes());
                 Assert.Equal(3, projectFileInfo.SourceFiles.Length); // Program.cs, AssemblyInfo.cs, AssemblyAttributes.cs
                 Assert.Equal("Debug", projectFileInfo.Configuration);
                 Assert.Equal("AnyCPU", projectFileInfo.Platform);

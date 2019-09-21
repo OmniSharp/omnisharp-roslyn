@@ -153,15 +153,18 @@ namespace OmniSharp.LanguageServerProtocol
             var workspace = _compositionHost.GetExport<OmniSharpWorkspace>();
             _compositionHost.GetExport<DiagnosticEventForwarder>().IsEnabled = true;
 
-            foreach (var handler in TextDocumentSyncHandler.Enumerate(_handlers, workspace)
-                .Concat(DefinitionHandler.Enumerate(_handlers))
-                .Concat(HoverHandler.Enumerate(_handlers))
-                .Concat(CompletionHandler.Enumerate(_handlers))
-                .Concat(SignatureHelpHandler.Enumerate(_handlers))
-                .Concat(RenameHandler.Enumerate(_handlers))
-                .Concat(DocumentSymbolHandler.Enumerate(_handlers))
-                .Concat(ReferencesHandler.Enumerate(_handlers))
-                .Concat(CodeLensHandler.Enumerate(_handlers)))
+            foreach (var handler in OmniSharpTextDocumentSyncHandler.Enumerate(_handlers, workspace)
+                .Concat(OmniSharpDefinitionHandler.Enumerate(_handlers))
+                .Concat(OmniSharpHoverHandler.Enumerate(_handlers))
+                .Concat(OmniSharpCompletionHandler.Enumerate(_handlers))
+                .Concat(OmniSharpSignatureHelpHandler.Enumerate(_handlers))
+                .Concat(OmniSharpRenameHandler.Enumerate(_handlers))
+                .Concat(OmniSharpDocumentSymbolHandler.Enumerate(_handlers))
+                .Concat(OmniSharpReferencesHandler.Enumerate(_handlers))
+                .Concat(OmniSharpCodeLensHandler.Enumerate(_handlers))
+                .Concat(OmniSharpDocumentFormattingHandler.Enumerate(_handlers))
+                .Concat(OmniSharpDocumentFormatRangeHandler.Enumerate(_handlers))
+                .Concat(OmniSharpDocumentOnTypeFormatHandler.Enumerate(_handlers)))
             {
                 server.AddHandlers(handler);
             }

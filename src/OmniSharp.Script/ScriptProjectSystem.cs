@@ -75,7 +75,7 @@ namespace OmniSharp.Script
 
             _logger.LogInformation($"Found {allCsxFiles.Length} CSX files.");
 
-            // Each .CSX file becomes an entry point for it's own project
+            // Each .CSX file becomes an entry point for its own project
             // Every #loaded file will be part of the project too
             foreach (var csxPath in allCsxFiles)
             {

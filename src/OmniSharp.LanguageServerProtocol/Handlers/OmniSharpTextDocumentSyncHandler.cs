@@ -18,7 +18,7 @@ using OmniSharp.Models.UpdateBuffer;
 
 namespace OmniSharp.LanguageServerProtocol.Handlers
 {
-    class TextDocumentSyncHandler : ITextDocumentSyncHandler
+    class OmniSharpTextDocumentSyncHandler : TextDocumentSyncHandler
     {
         public static IEnumerable<IJsonRpcHandler> Enumerate(
             RequestHandlers handlers,
@@ -33,44 +33,43 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                 // TODO: Fix once cake has working support for incremental
                 var documentSyncKind = TextDocumentSyncKind.Incremental;
                 if (selector.ToString().IndexOf(".cake") > -1) documentSyncKind = TextDocumentSyncKind.Full;
-                yield return new TextDocumentSyncHandler(openHandler, closeHandler, bufferHandler, selector, documentSyncKind, workspace);
+                yield return new OmniSharpTextDocumentSyncHandler(openHandler, closeHandler, bufferHandler, selector, documentSyncKind, workspace);
             }
         }
 
         // TODO Make this configurable?
-        private readonly DocumentSelector _documentSelector;
-        private SynchronizationCapability _capability;
         private readonly Mef.IRequestHandler<FileOpenRequest, FileOpenResponse> _openHandler;
         private readonly Mef.IRequestHandler<FileCloseRequest, FileCloseResponse> _closeHandler;
         private readonly Mef.IRequestHandler<UpdateBufferRequest, object> _bufferHandler;
         private readonly OmniSharpWorkspace _workspace;
 
-        public TextDocumentSyncHandler(
+        public OmniSharpTextDocumentSyncHandler(
             Mef.IRequestHandler<FileOpenRequest, FileOpenResponse> openHandler,
             Mef.IRequestHandler<FileCloseRequest, FileCloseResponse> closeHandler,
             Mef.IRequestHandler<UpdateBufferRequest, object> bufferHandler,
             DocumentSelector documentSelector,
             TextDocumentSyncKind documentSyncKind,
             OmniSharpWorkspace workspace)
+            : base(documentSyncKind, new TextDocumentSaveRegistrationOptions()
+            {
+                DocumentSelector = documentSelector,
+                IncludeText = true,
+            })
         {
             _openHandler = openHandler;
             _closeHandler = closeHandler;
             _bufferHandler = bufferHandler;
             _workspace = workspace;
-            _documentSelector = documentSelector;
-            Change = documentSyncKind;
         }
 
-        public TextDocumentSyncKind Change { get; }
-
-        public TextDocumentAttributes GetTextDocumentAttributes(Uri uri)
+        public override TextDocumentAttributes GetTextDocumentAttributes(Uri uri)
         {
             var document = _workspace.GetDocument(Helpers.FromUri(uri));
             if (document == null) return new TextDocumentAttributes(uri, "");
             return new TextDocumentAttributes(uri, "");
         }
 
-        public async Task<Unit> Handle(DidChangeTextDocumentParams notification, CancellationToken cancellationToken)
+        public async override Task<Unit> Handle(DidChangeTextDocumentParams notification, CancellationToken cancellationToken)
         {
             var contentChanges = notification.ContentChanges.ToArray();
             if (contentChanges.Length == 1 && contentChanges[0].Range == null)
@@ -105,7 +104,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             return Unit.Value;
         }
 
-        public async Task<Unit> Handle(DidOpenTextDocumentParams notification, CancellationToken cancellationToken)
+        public async override Task<Unit> Handle(DidOpenTextDocumentParams notification, CancellationToken cancellationToken)
         {
             if (_openHandler != null)
             {
@@ -119,7 +118,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             return Unit.Value;
         }
 
-        public async Task<Unit> Handle(DidCloseTextDocumentParams notification, CancellationToken cancellationToken)
+        public async override Task<Unit> Handle(DidCloseTextDocumentParams notification, CancellationToken cancellationToken)
         {
             if (_closeHandler != null)
             {
@@ -132,9 +131,9 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             return Unit.Value;
         }
 
-        public async Task<Unit> Handle(DidSaveTextDocumentParams notification, CancellationToken cancellationToken)
+        public async override Task<Unit> Handle(DidSaveTextDocumentParams notification, CancellationToken cancellationToken)
         {
-            if (_capability?.DidSave == true)
+            if (Capability?.DidSave == true)
             {
                 await _bufferHandler.Handle(new UpdateBufferRequest()
                 {
@@ -143,37 +142,6 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                 });
             }
             return Unit.Value;
-        }
-
-        TextDocumentChangeRegistrationOptions IRegistration<TextDocumentChangeRegistrationOptions>.GetRegistrationOptions()
-        {
-            return new TextDocumentChangeRegistrationOptions()
-            {
-                DocumentSelector = _documentSelector,
-                SyncKind = Change
-            };
-        }
-
-        TextDocumentRegistrationOptions IRegistration<TextDocumentRegistrationOptions>.GetRegistrationOptions()
-        {
-            return new TextDocumentRegistrationOptions()
-            {
-                DocumentSelector = _documentSelector,
-            };
-        }
-
-        TextDocumentSaveRegistrationOptions IRegistration<TextDocumentSaveRegistrationOptions>.GetRegistrationOptions()
-        {
-            return new TextDocumentSaveRegistrationOptions()
-            {
-                DocumentSelector = _documentSelector,
-                IncludeText = true
-            };
-        }
-
-        public void SetCapability(SynchronizationCapability capability)
-        {
-            _capability = capability;
         }
     }
 }

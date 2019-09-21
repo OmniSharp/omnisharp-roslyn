@@ -16,8 +16,9 @@ namespace OmniSharp.MSBuild.ProjectFile
         {
             var compilationOptions = new CSharpCompilationOptions(projectFileInfo.OutputKind);
 
-            compilationOptions = compilationOptions.WithAssemblyIdentityComparer(DesktopAssemblyIdentityComparer.Default);
-            compilationOptions = compilationOptions.WithSpecificDiagnosticOptions(projectFileInfo.GetDiagnosticOptions());
+            compilationOptions = compilationOptions.WithAssemblyIdentityComparer(DesktopAssemblyIdentityComparer.Default)
+                                    .WithSpecificDiagnosticOptions(projectFileInfo.GetDiagnosticOptions())
+                                    .WithOverflowChecks(projectFileInfo.CheckForOverflowUnderflow);
 
             if (projectFileInfo.AllowUnsafeCode)
             {
