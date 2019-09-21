@@ -32,6 +32,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
         public DocumentId DocumentId => _documentDiagnostics.DocumentId;
         public ProjectId ProjectId => _documentDiagnostics.ProjectId;
         public string DocumentPath => _documentDiagnostics.DocumentPath;
+        public IEnumerable<Diagnostic> Diagnostics => _documentDiagnostics.Diagnostics;
 
         public ImmutableArray<(string id, string message)> GetAvailableFixableDiagnostics() => _documentDiagnostics.Diagnostics
                 .Where(x => HasFix(CodeFixProvider, x.Id))
@@ -50,7 +51,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
                 providers
                     .Select(provider => new DocumentWithFixAll(provider, documentDiagnostics))
                     .Where(x => x.GetAvailableFixableDiagnostics().Any())
-                    .Where(x => x.FixAllProvider != default)
+                    .Where(x => x.FixAllProvider != null)
                     .ToImmutableArray();
         }
     }
