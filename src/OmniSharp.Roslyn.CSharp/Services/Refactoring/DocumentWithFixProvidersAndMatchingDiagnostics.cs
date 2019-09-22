@@ -48,7 +48,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
 
         public bool HasFixForId(string diagnosticId)
         {
-            return CodeFixProvider.FixableDiagnosticIds.Any(id => id == diagnosticId)
+            return CodeFixProvider.FixableDiagnosticIds.Any(id => id == diagnosticId && !_customDiagVsFixMap.ContainsKey(diagnosticId))
                 || (_customDiagVsFixMap.ContainsKey(diagnosticId) && CodeFixProvider.FixableDiagnosticIds.Any(id => id == _customDiagVsFixMap[diagnosticId]));
         }
 
