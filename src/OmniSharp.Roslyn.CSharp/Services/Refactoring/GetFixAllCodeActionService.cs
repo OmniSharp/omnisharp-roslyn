@@ -20,12 +20,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
 
         public async Task<GetFixAllResponse> Handle(GetFixAllRequest request)
         {
-            var availableFixes = await GetDiagnosticsMappedWithFixAllProviders();
-
-            var projectIdsInScope = GetProjectIdsInScope(request.Scope, request.FileName);
+            var availableFixes = await GetDiagnosticsMappedWithFixAllProviders(request.Scope, request.FileName);
 
             var distinctDiagnosticsThatCanBeFixed = availableFixes
-                .Where(x => IsFixOnScope(x, request.Scope, request.FileName))
                 .SelectMany(x => x.FixableDiagnostics)
                 .Distinct()
                 .Select(x => new FixAllItem(x.id, x.messsage))

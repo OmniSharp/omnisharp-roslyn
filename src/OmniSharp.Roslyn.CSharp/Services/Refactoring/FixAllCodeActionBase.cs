@@ -1,10 +1,10 @@
 using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using OmniSharp.Abstractions.Models.V1.FixAll;
+using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
 using OmniSharp.Roslyn.CSharp.Services.Refactoring.V2;
 using OmniSharp.Roslyn.CSharp.Workers.Diagnostics;
 
@@ -25,9 +25,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
 
         // Mapping means: each mapped item has one document that has one code fix provider and it's corresponding diagnostics.
         // If same document has multiple codefixers (diagnostics with different fixers) will them be mapped as separate items.
-        protected async Task<ImmutableArray<DocumentWithFixProvidersAndMatchingDiagnostics>> GetDiagnosticsMappedWithFixAllProviders()
+        protected async Task<ImmutableArray<DocumentWithFixProvidersAndMatchingDiagnostics>> GetDiagnosticsMappedWithFixAllProviders(FixAllScope scope, string fileName)
         {
-            var allDiagnostics = await _diagnosticWorker.GetAllDiagnosticsAsync();
+            ImmutableArray<DocumentDiagnostics> allDiagnostics = await GetCorrectDiagnosticsInScope(scope, fileName);
 
             var mappedProvidersWithDiagnostics = allDiagnostics
                 .SelectMany(diagnosticsInDocument =>
@@ -36,19 +36,19 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
             return mappedProvidersWithDiagnostics.ToImmutableArray();
         }
 
-        protected IEnumerable<ProjectId> GetProjectIdsInScope(FixAllScope scope, string fileNameIfAny)
+        private async Task<ImmutableArray<DocumentDiagnostics>> GetCorrectDiagnosticsInScope(FixAllScope scope, string fileName)
         {
-            var currentSolution = Workspace.CurrentSolution;
+            if (scope == FixAllScope.Document)
+                return await _diagnosticWorker.GetDiagnostics(ImmutableArray.Create(fileName));
 
-            if(scope == FixAllScope.Solution)
-                return currentSolution.Projects.Select(x => x.Id);
+            var allDiagnostics = await _diagnosticWorker.GetAllDiagnosticsAsync();
 
-            return currentSolution
-                .GetDocumentIdsWithFilePath(fileNameIfAny)
-                .Select(x => x.ProjectId);
+            return allDiagnostics
+                .Where(x => IsDiagnosticOnScope(x, scope, fileName))
+                .ToImmutableArray();
         }
 
-        protected bool IsFixOnScope(DocumentWithFixProvidersAndMatchingDiagnostics documentWithFixAll, FixAllScope scope, string contextDocumentPath)
+        private bool IsDiagnosticOnScope(DocumentDiagnostics diagnostic, FixAllScope scope, string contextDocumentPath)
         {
             var currentSolution = Workspace.CurrentSolution;
 
@@ -57,9 +57,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
                 case FixAllScope.Solution:
                     return true;
                 case FixAllScope.Project:
-                    return currentSolution.GetDocumentIdsWithFilePath(contextDocumentPath).Any(x => x.ProjectId == documentWithFixAll.ProjectId);
-                case FixAllScope.Document:
-                    return documentWithFixAll.DocumentPath == contextDocumentPath;
+                    return currentSolution.GetDocumentIdsWithFilePath(contextDocumentPath).Any(x => x.ProjectId == diagnostic.ProjectId);
                 default:
                     throw new NotImplementedException();
             }

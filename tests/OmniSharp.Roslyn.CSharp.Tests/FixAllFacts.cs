@@ -44,7 +44,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
                 var response = await handler.Handle(new RunFixAllRequest
                 {
-                    Scope = FixAllScope.Solution
+                    Scope = FixAllScope.Document,
+                    FileName = testFilePath
                 });
 
                 string textAfterFix = await GetContentOfDocumentFromWorkspace(host, testFilePath);
@@ -203,7 +204,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                         internal class InvalidFormatIDE0055ExpectedHere{}
                     ");
 
-                var resultFromDocument = await GetFixAllTargets(host, ide0055File, FixAllScope.Solution);
+                var resultFromDocument = await GetFixAllTargets(host, ide0055File, FixAllScope.Document);
 
                 Assert.Contains(resultFromDocument.Items, x => x.Id == "IDE0055");
                 Assert.DoesNotContain(resultFromDocument.Items, x => x.Id == "IDE0040");

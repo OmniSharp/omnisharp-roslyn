@@ -35,10 +35,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
         {
             var solutionBeforeChanges = Workspace.CurrentSolution;
 
-            var mappedProvidersWithDiagnostics = await GetDiagnosticsMappedWithFixAllProviders();
+            var mappedProvidersWithDiagnostics = await GetDiagnosticsMappedWithFixAllProviders(request.Scope, request.FileName);
 
             var filteredProvidersWithFix = mappedProvidersWithDiagnostics
-                .Where(x => IsFixOnScope(x, request.Scope, request.FileName))
                 .Where(diagWithFix =>
                 {
                     if (request.FixAllFilter == null)
