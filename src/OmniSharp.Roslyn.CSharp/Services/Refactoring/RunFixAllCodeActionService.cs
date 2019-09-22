@@ -44,7 +44,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
                     if (request.FixAllFilter == null)
                         return true;
 
-                    return ContainsMatching(diagWithFix.Diagnostics.Select(x => x.Id), request.FixAllFilter.Select(x => x.Id));
+                    return request.FixAllFilter.Any(x => diagWithFix.HasFixForId(x.Id));
                 });
 
             foreach (var singleFixableProviderWithDocument in filteredProvidersWithFix)
@@ -60,7 +60,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
                     if (action == null)
                         continue;
 
-                    var fixableIds = singleFixableProviderWithDocument.Diagnostics.Select(x => x.Id).Distinct();
+                    var fixableIds = singleFixableProviderWithDocument.FixableDiagnostics.Select(x => x.id).Distinct();
 
                     var fixAllContext = new FixAllContext(
                         document,

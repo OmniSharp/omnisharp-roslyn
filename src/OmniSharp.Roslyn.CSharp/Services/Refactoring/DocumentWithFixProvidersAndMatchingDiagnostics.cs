@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
@@ -15,9 +16,12 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
     {
         private readonly DocumentDiagnostics _documentDiagnostics;
 
-        // There are few usability optimizations in built in analyzers that requieres custom filtering in actions.
-        // RemoveUnnecessaryImportsFixable is duplicate with CS8019 and both can be executed, selected CS8019 from these two.
-        private static readonly ImmutableHashSet<string> _blacklistedDiagnostics = ImmutableHashSet.Create("RemoveUnnecessaryImportsFixable");
+        // http://source.roslyn.io/#Microsoft.VisualStudio.LanguageServices.CSharp/LanguageService/CSharpCodeCleanupFixer.cs,d9a375db0f1e430e,references
+        // CS8019 isn't directly used (via roslyn) but has an analyzer that report different diagnostic based on CS8019 to improve user experience.
+        private static readonly Dictionary<string, string> _customDiagVsFixMap = new Dictionary<string, string>
+        {
+            { "CS8019", "RemoveUnnecessaryImportsFixable" }
+        };
 
         private DocumentWithFixProvidersAndMatchingDiagnostics(CodeFixProvider provider, DocumentDiagnostics documentDiagnostics)
         {
@@ -31,12 +35,21 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
         public DocumentId DocumentId => _documentDiagnostics.DocumentId;
         public ProjectId ProjectId => _documentDiagnostics.ProjectId;
         public string DocumentPath => _documentDiagnostics.DocumentPath;
-        public IEnumerable<Diagnostic> Diagnostics => _documentDiagnostics.Diagnostics.Where(x => HasFix(CodeFixProvider, x.Id));
 
-        private static bool HasFix(CodeFixProvider codeFixProvider, string diagnosticId)
+        public IEnumerable<(string id, string messsage)> FixableDiagnostics => _documentDiagnostics.Diagnostics
+            .Where(x => HasFixToShow(x.Id))
+            .Select(x => (x.Id, x.GetMessage()));
+
+        private bool HasFixToShow(string diagnosticId)
         {
-            return codeFixProvider.FixableDiagnosticIds.Any(id => id == diagnosticId)
-                && !_blacklistedDiagnostics.Contains(diagnosticId);
+            return CodeFixProvider.FixableDiagnosticIds.Any(id => id == diagnosticId) && !_customDiagVsFixMap.ContainsValue(diagnosticId)
+                || (_customDiagVsFixMap.ContainsKey(diagnosticId) && CodeFixProvider.FixableDiagnosticIds.Any(id => id == _customDiagVsFixMap[diagnosticId]));
+        }
+
+        public bool HasFixForId(string diagnosticId)
+        {
+            return CodeFixProvider.FixableDiagnosticIds.Any(id => id == diagnosticId)
+                || (_customDiagVsFixMap.ContainsKey(diagnosticId) && CodeFixProvider.FixableDiagnosticIds.Any(id => id == _customDiagVsFixMap[diagnosticId]));
         }
 
         public static ImmutableArray<DocumentWithFixProvidersAndMatchingDiagnostics> CreateWithMatchingProviders(ImmutableArray<CodeFixProvider> providers, DocumentDiagnostics documentDiagnostics)
@@ -44,7 +57,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
             return
                 providers
                     .Select(provider => new DocumentWithFixProvidersAndMatchingDiagnostics(provider, documentDiagnostics))
-                    .Where(x => x.Diagnostics.Any())
+                    .Where(x => x._documentDiagnostics.Diagnostics.Any(d => x.HasFixToShow(d.Id)) || x._documentDiagnostics.Diagnostics.Any(d => x.HasFixForId(d.Id)))
                     .Where(x => x.FixAllProvider != null)
                     .ToImmutableArray();
         }
@@ -53,7 +66,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
         {
             CodeAction action = null;
 
-            foreach (var diagnostic in Diagnostics)
+            foreach (var diagnostic in _documentDiagnostics.Diagnostics.Where(x => HasFixForId(x.Id)))
             {
                 var context = new CodeFixContext(
                 document,
