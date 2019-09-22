@@ -16,7 +16,14 @@ namespace TestUtility.Logging
 
         protected override void WriteMessage(LogLevel logLevel, string message)
         {
-            _output.WriteLine(message);
+            try
+            {
+                _output.WriteLine(message);
+            }
+            catch
+            {
+                // This often causes error on debugging during dispose.
+            }
         }
     }
 }

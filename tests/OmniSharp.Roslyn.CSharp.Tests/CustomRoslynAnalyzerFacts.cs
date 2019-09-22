@@ -129,7 +129,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
                 AddProjectWitFile(host, testFile);
 
-                var result = await host.RequestCodeCheckAsync();
+                var result = await host.RequestCodeCheckAsync(testFile.FileName);
 
                 Assert.Contains(result.QuickFixes.Where(x => x.FileName == testFile.FileName), f => f.Text.Contains("CS"));
             }
@@ -155,7 +155,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
                 host.Workspace.UpdateDiagnosticOptionsForProject(projectId, testRules.ToImmutableDictionary());
 
-                var result = await host.RequestCodeCheckAsync();
+                var result = await host.RequestCodeCheckAsync(testFile.FileName);
 
                 Assert.Contains(result.QuickFixes.OfType<DiagnosticLocation>(), f => f.Text.Contains("CS0162") && f.LogLevel == "Hidden");
             }

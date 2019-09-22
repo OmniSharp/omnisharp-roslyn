@@ -203,7 +203,6 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                         internal class InvalidFormatIDE0055ExpectedHere{}
                     ");
 
-                await Task.Delay(1500);
                 var resultFromDocument = await GetFixAllTargets(host, ide0055File, FixAllScope.Solution);
 
                 Assert.Contains(resultFromDocument.Items, x => x.Id == "IDE0055");

@@ -27,7 +27,7 @@ namespace OmniSharp.Http.Middleware
 
                 if (endpoint == OmniSharpEndpoints.CheckReadyStatus)
                 {
-                    httpContext.Response.WriteJson(_workspace.Initialized);
+                    httpContext.Response.WriteJson(_workspace.IsInitialized);
                     return;
                 }
             }

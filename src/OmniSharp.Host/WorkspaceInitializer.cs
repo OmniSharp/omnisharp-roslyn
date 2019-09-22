@@ -55,7 +55,7 @@ namespace OmniSharp
             ProvideWorkspaceOptions(compositionHost, workspace, options, logger, omnisharpEnvironment);
 
             // Mark the workspace as initialized
-            workspace.Initialized = true;
+            workspace.IsInitialized = true;
 
             // when configuration options change
             // run workspace options providers automatically

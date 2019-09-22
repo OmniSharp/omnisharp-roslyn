@@ -24,7 +24,18 @@ namespace OmniSharp
     [Export, Shared]
     public class OmniSharpWorkspace : Workspace
     {
-        public bool Initialized { get; set; }
+        public bool IsInitialized
+        {
+            get { return isInitialized; }
+            set
+            {
+                isInitialized = value;
+                Initialized(isInitialized);
+            }
+        }
+
+        public event Action<bool> Initialized = delegate { };
+
         public BufferManager BufferManager { get; private set; }
 
         private readonly ILogger<OmniSharpWorkspace> _logger;
@@ -32,6 +43,7 @@ namespace OmniSharp
         private readonly ConcurrentBag<Func<string, Task>> _waitForProjectModelReadyHandlers = new ConcurrentBag<Func<string, Task>>();
 
         private readonly ConcurrentDictionary<string, ProjectInfo> miscDocumentsProjectInfos = new ConcurrentDictionary<string, ProjectInfo>();
+        private bool isInitialized;
 
         [ImportingConstructor]
         public OmniSharpWorkspace(HostServicesAggregator aggregator, ILoggerFactory loggerFactory, IFileSystemWatcher fileSystemWatcher)
@@ -153,7 +165,7 @@ namespace OmniSharp
         public void UpdateDiagnosticOptionsForProject(ProjectId projectId, ImmutableDictionary<string, ReportDiagnostic> rules)
         {
             var project = this.CurrentSolution.GetProject(projectId);
-            OnCompilationOptionsChanged(projectId,  project.CompilationOptions.WithSpecificDiagnosticOptions(rules));
+            OnCompilationOptionsChanged(projectId, project.CompilationOptions.WithSpecificDiagnosticOptions(rules));
         }
 
         private ProjectInfo CreateMiscFilesProject(string language)
@@ -449,13 +461,13 @@ namespace OmniSharp
             var refsToAdd = analyzerReferences.Where(newRef => project.AnalyzerReferences.All(oldRef => oldRef.Display != newRef.Display));
             var refsToRemove = project.AnalyzerReferences.Where(newRef => analyzerReferences.All(oldRef => oldRef.Display != newRef.Display));
 
-            foreach(var toAdd in refsToAdd)
+            foreach (var toAdd in refsToAdd)
             {
                 _logger.LogInformation($"Adding analyzer reference: {toAdd.FullPath}");
                 base.OnAnalyzerReferenceAdded(id, toAdd);
             }
 
-            foreach(var toRemove in refsToRemove)
+            foreach (var toRemove in refsToRemove)
             {
                 _logger.LogInformation($"Removing analyzer reference: {toRemove.FullPath}");
                 base.OnAnalyzerReferenceRemoved(id, toRemove);

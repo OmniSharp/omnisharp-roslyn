@@ -185,7 +185,7 @@ class Foo
                 ["RoslynExtensionsOptions:EnableAnalyzersSupport"] = "true"
             }, TestAssets.Instance.TestFilesFolder))
             {
-                var result = await host.RequestCodeCheckAsync();
+                var result = await host.RequestCodeCheckAsync(testFile.FileName);
 
                 Assert.Contains(result.QuickFixes.Where(x => x.FileName == testFile.FileName), f => f.Text == "Use framework type (IDE0049)");
                 Assert.Contains(result.QuickFixes.Where(x => x.FileName == testFile.FileName), f => f.Text == "Use explicit type instead of 'var' (IDE0008)");
@@ -214,7 +214,7 @@ class Foo
                 ["RoslynExtensionsOptions:EnableAnalyzersSupport"] = "true"
             }, TestAssets.Instance.TestFilesFolder))
             {
-                var result = await host.RequestCodeCheckAsync();
+                var result = await host.RequestCodeCheckAsync(testFile.FileName);
 
                 Assert.Contains(result.QuickFixes.Where(x => x.FileName == testFile.FileName), f => f.Text == "Naming rule violation: Missing prefix: 'xxx_' (IDE1006)");
             }

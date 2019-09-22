@@ -62,13 +62,19 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             Task.Factory.StartNew(() => Worker(AnalyzerWorkType.Foreground), TaskCreationOptions.LongRunning);
             Task.Factory.StartNew(() => Worker(AnalyzerWorkType.Background), TaskCreationOptions.LongRunning);
 
-            InitializeWithWorkspaceDocumentsIfNotYetDone();
+            _workspace.Initialized += OnWorkspaceInitialized;
+
+            if (_workspace.IsInitialized)
+                OnWorkspaceInitialized(true);
         }
 
-        private void InitializeWithWorkspaceDocumentsIfNotYetDone()
+        public void OnWorkspaceInitialized(bool isInitialized)
         {
-            var documentIds = QueueDocumentsForDiagnostics();
-            _logger.LogInformation($"Solution initialized -> queue all documents for code analysis. Initial document count: {documentIds.Length}.");
+            if(isInitialized)
+            {
+                var documentIds = QueueDocumentsForDiagnostics();
+                _logger.LogInformation($"Solution initialized -> queue all documents for code analysis. Initial document count: {documentIds.Length}.");
+            }
         }
 
         public async Task<ImmutableArray<DocumentDiagnostics>> GetDiagnostics(ImmutableArray<string> documentPaths)
@@ -175,6 +181,12 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                     var projectDocumentIds = _workspace.CurrentSolution.GetProject(changeEvent.ProjectId).Documents.Select(x => x.Id).ToImmutableArray();
                     QueueForAnalysis(projectDocumentIds, AnalyzerWorkType.Background);
                     break;
+                case WorkspaceChangeKind.SolutionAdded:
+                case WorkspaceChangeKind.SolutionChanged:
+                case WorkspaceChangeKind.SolutionReloaded:
+                    QueueDocumentsForDiagnostics();
+                    break;
+
             }
         }
 
