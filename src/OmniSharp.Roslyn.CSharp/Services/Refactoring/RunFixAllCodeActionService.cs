@@ -55,19 +55,17 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
 
                     var fixer = singleFixableProviderWithDocument.FixAllProvider;
 
-                    var action = await singleFixableProviderWithDocument.RegisterCodeFixesAndGetCorrespondingAction(document);
+                    var (action, fixableDiagnosticIds) = await singleFixableProviderWithDocument.RegisterCodeFixesOrDefault(document);
 
                     if (action == null)
                         continue;
-
-                    var fixableIds = singleFixableProviderWithDocument.FixableDiagnostics.Select(x => x.id).Distinct();
 
                     var fixAllContext = new FixAllContext(
                         document,
                         singleFixableProviderWithDocument.CodeFixProvider,
                         Microsoft.CodeAnalysis.CodeFixes.FixAllScope.Project,
                         action.EquivalenceKey,
-                        fixableIds,
+                        fixableDiagnosticIds,
                         _fixAllDiagnosticProvider,
                         CancellationToken.None
                     );

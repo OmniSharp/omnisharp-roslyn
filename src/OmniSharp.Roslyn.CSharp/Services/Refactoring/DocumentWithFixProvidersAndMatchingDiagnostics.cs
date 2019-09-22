@@ -62,11 +62,16 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
                     .ToImmutableArray();
         }
 
-        public async Task<CodeAction> RegisterCodeFixesAndGetCorrespondingAction(Document document)
+        public async Task<(CodeAction action, ImmutableArray<string> idsToFix)> RegisterCodeFixesOrDefault(Document document)
         {
             CodeAction action = null;
 
-            foreach (var diagnostic in _documentDiagnostics.Diagnostics.Where(x => HasFixForId(x.Id)))
+            var fixableDiagnostics = _documentDiagnostics
+                .Diagnostics
+                .Where(x => HasFixForId(x.Id))
+                .ToImmutableArray();
+
+            foreach (var diagnostic in fixableDiagnostics)
             {
                 var context = new CodeFixContext(
                 document,
@@ -83,7 +88,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
                 await CodeFixProvider.RegisterCodeFixesAsync(context).ConfigureAwait(false);
             }
 
-            return action;
+            if(action == null)
+                return default;
+
+            return (action, fixableDiagnostics.Select(x => x.Id).Distinct().ToImmutableArray());
         }
     }
 }
