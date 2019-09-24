@@ -8,6 +8,7 @@ using Dotnet.Script.DependencyModel.Compilation;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Scripting.Hosting;
 using Microsoft.Extensions.Logging;
+using OmniSharp.FileSystem;
 using OmniSharp.Roslyn.Utilities;
 using OmniSharp.Services;
 using LogLevel = Dotnet.Script.DependencyModel.Logging.LogLevel;
@@ -23,21 +24,23 @@ namespace OmniSharp.Script
         private readonly CompilationDependencyResolver _compilationDependencyResolver;
         private readonly IOmniSharpEnvironment _env;
         private readonly MetadataFileReferenceCache _metadataFileReferenceCache;
+        private readonly FileSystemHelper _fileSystemHelper;
         private readonly ILogger _logger;
 
         [ImportingConstructor]
-        public ScriptContextProvider(ILoggerFactory loggerFactory, IOmniSharpEnvironment env, MetadataFileReferenceCache metadataFileReferenceCache)
+        public ScriptContextProvider(ILoggerFactory loggerFactory, IOmniSharpEnvironment env, MetadataFileReferenceCache metadataFileReferenceCache, FileSystemHelper fileSystemHelper)
         {
             _loggerFactory = loggerFactory;
             _env = env;
             _metadataFileReferenceCache = metadataFileReferenceCache;
+            _fileSystemHelper = fileSystemHelper;
             _logger = loggerFactory.CreateLogger<ScriptContextProvider>();
             _compilationDependencyResolver = new CompilationDependencyResolver(type =>
             {
                 // Prefix with "OmniSharp" so that we make it through the log filter.
                 var categoryName = $"OmniSharp.Script.{type.FullName}";
                 var dependencyResolverLogger = loggerFactory.CreateLogger(categoryName);
-                return ((level, message) =>
+                return ((level, message, exception) =>
                 {
                     if (level == LogLevel.Debug)
                     {
@@ -66,8 +69,9 @@ namespace OmniSharp.Script
             CompilationDependency[] compilationDependencies = null;
             try
             {
+                var allCsxFiles = _fileSystemHelper.GetFiles("**/*.csx").ToArray();
                 _logger.LogInformation($"Searching for compilation dependencies with the fallback framework of '{scriptOptions.DefaultTargetFramework}'.");
-                compilationDependencies = _compilationDependencyResolver.GetDependencies(_env.TargetDirectory, scriptOptions.IsNugetEnabled(), scriptOptions.DefaultTargetFramework).ToArray();
+                compilationDependencies = _compilationDependencyResolver.GetDependencies(_env.TargetDirectory, allCsxFiles, scriptOptions.IsNugetEnabled(), scriptOptions.DefaultTargetFramework).ToArray();
             }
             catch (Exception e)
             {
