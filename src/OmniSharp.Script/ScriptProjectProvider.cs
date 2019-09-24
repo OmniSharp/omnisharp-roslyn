@@ -73,7 +73,7 @@ namespace OmniSharp.Script
                         _isDesktopClr ? Path.GetDirectoryName(typeof(object).GetTypeInfo().Assembly.ManifestModule.FullyQualifiedName) : null);
                 }
             }
-            
+
             return null;
         }
 
@@ -100,6 +100,11 @@ namespace OmniSharp.Script
                 .WithAssemblyIdentityComparer(DesktopAssemblyIdentityComparer.Default)
                 .WithSpecificDiagnosticOptions(CompilationOptionsHelper.GetDefaultSuppressedDiagnosticOptions());
 
+            if (_scriptOptions.IsNugetEnabled())
+            {
+                compilationOptions = compilationOptions.WithSpecificDiagnosticOptions(_scriptOptions.NullableDiagnostics);
+            }
+
             var topLevelBinderFlagsProperty = typeof(CSharpCompilationOptions).GetProperty(TopLevelBinderFlagsProperty, BindingFlags.Instance | BindingFlags.NonPublic);
             var binderFlagsType = typeof(CSharpCompilationOptions).GetTypeInfo().Assembly.GetType(BinderFlagsType);
 
@@ -124,18 +129,18 @@ namespace OmniSharp.Script
             InjectXMLDocumentationProviderIntoRuntimeMetadataReferenceResolver(defaultResolver);
 
             var decoratedResolver = _scriptOptions.EnableScriptNuGetReferences
-                ? new CachingScriptMetadataResolver(new NuGetMetadataReferenceResolver(defaultResolver)) 
+                ? new CachingScriptMetadataResolver(new NuGetMetadataReferenceResolver(defaultResolver))
                 : new CachingScriptMetadataResolver(defaultResolver);
 
             return decoratedResolver;
         }
- 
+
         public ProjectInfo CreateProject(string csxFileName, IEnumerable<MetadataReference> references, string csxFilePath, Type globalsType, IEnumerable<string> namespaces = null)
         {
             var csharpCommandLineArguments = _commandLineArgs.Value;
 
             // if RSP file was used, include the metadata references from RSP merged with the provided set
-            // otherwise just use the provided metadata references 
+            // otherwise just use the provided metadata references
             if (csharpCommandLineArguments != null && csharpCommandLineArguments.MetadataReferences.Any())
             {
                 var resolvedRspReferences = csharpCommandLineArguments.ResolveMetadataReferences(_compilationOptions.Value.MetadataReferenceResolver);

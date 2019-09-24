@@ -1,9 +1,19 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
+using Microsoft.CodeAnalysis;
 
 namespace OmniSharp.Script
 {
     public class ScriptOptions
     {
+        public ScriptOptions()
+        {
+            for (var i = 8600; i <= 8655; i++)
+            {
+                NullableDiagnostics.Add($"CS{i}", ReportDiagnostic.Error);
+            }
+        }
+
         public bool EnableScriptNuGetReferences { get; set; }
 
         public string DefaultTargetFramework { get; set; } = "net461";
@@ -24,5 +34,7 @@ namespace OmniSharp.Script
                 ? RspFilePath
                 : Path.Combine(env.TargetDirectory, RspFilePath);
         }
+
+        public Dictionary<string, ReportDiagnostic> NullableDiagnostics { get; } = new Dictionary<string, ReportDiagnostic>();
     }
 }
