@@ -243,7 +243,7 @@ Task("CreateMSBuildFolder")
         foreach (var library in msbuildLibraries)
         {
             var libraryFileName = library + ".dll";
-            var librarySourcePath = CombinePaths(env.Folders.MonoMSBuildLib, libraryFileName);
+            var librarySourcePath = CombinePaths(env.Folders.Tools, library, "lib", "net472", libraryFileName);
             var libraryTargetPath = CombinePaths(msbuildCurrentBinTargetFolder, libraryFileName);
             FileHelper.Copy(librarySourcePath, libraryTargetPath);
         }
