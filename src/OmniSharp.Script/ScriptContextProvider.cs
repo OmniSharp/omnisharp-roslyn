@@ -42,6 +42,10 @@ namespace OmniSharp.Script
                 var dependencyResolverLogger = loggerFactory.CreateLogger(categoryName);
                 return ((level, message, exception) =>
                 {
+                    if (level == LogLevel.Trace)
+                    {
+                        dependencyResolverLogger.LogTrace(message);
+                    }
                     if (level == LogLevel.Debug)
                     {
                         dependencyResolverLogger.LogDebug(message);
@@ -49,6 +53,18 @@ namespace OmniSharp.Script
                     if (level == LogLevel.Info)
                     {
                         dependencyResolverLogger.LogInformation(message);
+                    }
+                    if (level == LogLevel.Warning)
+                    {
+                        dependencyResolverLogger.LogWarning(message);
+                    }
+                    if (level == LogLevel.Error)
+                    {
+                        dependencyResolverLogger.LogError(exception, message);
+                    }
+                    if (level == LogLevel.Critical)
+                    {
+                        dependencyResolverLogger.LogCritical(exception, message);
                     }
                 });
             });
