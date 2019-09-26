@@ -33,7 +33,7 @@ jobs:
       vmImage: "macOS-10.13"
     dependsOn: GitVersion
     variables:
-      MONO_VERSION: 6.0.0
+      MONO_VERSION: 6.4.0
     steps:
       - template: ./.pipelines/init.yml
         parameters:
