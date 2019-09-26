@@ -69,7 +69,7 @@ namespace OmniSharp.Script
             CompilationDependency[] compilationDependencies = null;
             try
             {
-                var allCsxFiles = _fileSystemHelper.GetFiles("**/*.csx").ToArray();
+                var allCsxFiles = scriptOptions.CsxFiles;
                 _logger.LogInformation($"Searching for compilation dependencies with the fallback framework of '{scriptOptions.DefaultTargetFramework}'.");
                 compilationDependencies = _compilationDependencyResolver.GetDependencies(_env.TargetDirectory, allCsxFiles, scriptOptions.IsNugetEnabled(), scriptOptions.DefaultTargetFramework).ToArray();
             }

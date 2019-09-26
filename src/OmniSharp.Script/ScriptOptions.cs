@@ -47,5 +47,7 @@ namespace OmniSharp.Script
         }
 
         public Dictionary<string, ReportDiagnostic> NullableDiagnostics => _nullableDiagnostics.Value;
+
+        public string[] CsxFiles { get; set; }
     }
 }
