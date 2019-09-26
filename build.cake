@@ -514,7 +514,7 @@ Task("Test")
             {
                 // Copy the Mono-built Microsoft.Build.* binaries to the test folder.
                 // This is necessary to work around a Mono bug that is exasperated by xUnit.
-                DirectoryHelper.Copy($"{env.Folders.MSBuild}/Current/bin", instanceFolder);
+                DirectoryHelper.Copy($"{env.Folders.MSBuild}/Current/Bin", instanceFolder);
 
                 var runScript = CombinePaths(env.Folders.Mono, "run");
 
