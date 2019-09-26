@@ -54,17 +54,16 @@ namespace OmniSharp.Script
         {
             if (Initialized) return;
 
+            _scriptOptions = new ScriptOptions();
+
+            ConfigurationBinder.Bind(configuration, _scriptOptions);
+
             _logger.LogInformation($"Detecting CSX files in '{_env.TargetDirectory}'.");
 
             // Nothing to do if there are no CSX files
             var allCsxFiles = _fileSystemHelper.GetFiles("**/*.csx").ToArray();
 
-            _scriptOptions = new ScriptOptions();
-            _scriptOptions.CsxFiles = allCsxFiles;
-
-            ConfigurationBinder.Bind(configuration, _scriptOptions);
-
-            _scriptContext = new Lazy<ScriptContext>(() => _scriptContextProvider.CreateScriptContext(_scriptOptions));
+            _scriptContext = new Lazy<ScriptContext>(() => _scriptContextProvider.CreateScriptContext(_scriptOptions, allCsxFiles));
 
             if (allCsxFiles.Length == 0)
             {

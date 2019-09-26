@@ -54,7 +54,7 @@ namespace OmniSharp.Script
             });
         }
 
-        public ScriptContext CreateScriptContext(ScriptOptions scriptOptions)
+        public ScriptContext CreateScriptContext(ScriptOptions scriptOptions, string[] allCsxFiles)
         {
             var currentDomainAssemblies = AppDomain.CurrentDomain.GetAssemblies();
 
@@ -69,7 +69,6 @@ namespace OmniSharp.Script
             CompilationDependency[] compilationDependencies = null;
             try
             {
-                var allCsxFiles = scriptOptions.CsxFiles;
                 _logger.LogInformation($"Searching for compilation dependencies with the fallback framework of '{scriptOptions.DefaultTargetFramework}'.");
                 compilationDependencies = _compilationDependencyResolver.GetDependencies(_env.TargetDirectory, allCsxFiles, scriptOptions.IsNugetEnabled(), scriptOptions.DefaultTargetFramework).ToArray();
             }
