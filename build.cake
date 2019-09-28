@@ -201,7 +201,11 @@ Task("CreateMSBuildFolder")
         "Microsoft.Build",
         "Microsoft.Build.Framework",
         "Microsoft.Build.Tasks.Core",
-        "Microsoft.Build.Utilities.Core"
+        "Microsoft.Build.Utilities.Core",
+        "Microsoft.Build.Tasks.v4.0",
+        "Microsoft.Build.Tasks.v12.0",
+        "Microsoft.Build.Utilities.v4.0",
+        "Microsoft.Build.Utilities.v12.0"
     };
 
     string sdkResolverTFM;
@@ -223,7 +227,10 @@ Task("CreateMSBuildFolder")
             var libraryFileName = library + ".dll";
             var librarySourcePath = CombinePaths(env.Folders.Tools, library, "lib", "net472", libraryFileName);
             var libraryTargetPath = CombinePaths(msbuildCurrentBinTargetFolder, libraryFileName);
-            FileHelper.Copy(librarySourcePath, libraryTargetPath);
+            if (FileHelper.Exists(librarySourcePath))
+            {
+                FileHelper.Copy(librarySourcePath, libraryTargetPath);
+            }
         }
 
         sdkResolverTFM = "net472";
@@ -243,9 +250,14 @@ Task("CreateMSBuildFolder")
         foreach (var library in msbuildLibraries)
         {
             var libraryFileName = library + ".dll";
-            var librarySourcePath = CombinePaths(env.Folders.MonoMSBuildLib, libraryFileName);
+
+            // copy MSBuild from current Mono (should be 6.4.0+)
+            var librarySourcePath = CombinePaths(Platform.Current.IsMacOS ? "/Library/Frameworks/Mono.framework/Versions/Current/lib/mono/msbuild/15.0/bin" : "/usr/lib/mono/msbuild/15.0/bin", libraryFileName);
             var libraryTargetPath = CombinePaths(msbuildCurrentBinTargetFolder, libraryFileName);
-            FileHelper.Copy(librarySourcePath, libraryTargetPath);
+            if (FileHelper.Exists(librarySourcePath))
+            {
+                FileHelper.Copy(librarySourcePath, libraryTargetPath);
+            }
         }
 
         sdkResolverTFM = "netstandard2.0";
@@ -512,7 +524,7 @@ Task("Test")
             {
                 // Copy the Mono-built Microsoft.Build.* binaries to the test folder.
                 // This is necessary to work around a Mono bug that is exasperated by xUnit.
-                DirectoryHelper.Copy($"{env.Folders.MonoMSBuildLib}", instanceFolder);
+                DirectoryHelper.Copy($"{env.Folders.MSBuild}/Current/Bin", instanceFolder);
 
                 var runScript = CombinePaths(env.Folders.Mono, "run");
 
