@@ -63,8 +63,6 @@ mono_version=`mono --version | head -n 1 | sed 's/[^0-9.]*\([0-9.]*\).*/\1/'`
 
 gac_assemblies=(
     "Microsoft.Build.Engine/4.0.0.0__b03f5f7f11d50a3a/Microsoft.Build.Engine.dll"
-    "Microsoft.Build.Tasks.v4.0/4.0.0.0__b03f5f7f11d50a3a/Microsoft.Build.Tasks.v4.0.dll"
-    "Microsoft.Build.Utilities.v4.0/4.0.0.0__b03f5f7f11d50a3a/Microsoft.Build.Utilities.v4.0.dll"
     "Mono.Data.Tds/4.0.0.0__0738eb9f132ed756/Mono.Data.Tds.dll"
     "Mono.Posix/4.0.0.0__0738eb9f132ed756/Mono.Posix.dll"
     "Mono.Security/4.0.0.0__0738eb9f132ed756/Mono.Security.dll"
