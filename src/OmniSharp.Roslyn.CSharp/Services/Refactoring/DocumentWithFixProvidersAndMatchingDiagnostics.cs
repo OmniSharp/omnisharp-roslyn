@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
@@ -40,16 +39,22 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
             .Where(x => HasFixToShow(x.Id))
             .Select(x => (x.Id, x.GetMessage()));
 
+        // Theres specific filterings between what is shown and what is fixed because of some custom mappings
+        // between diagnostics and their fixers. We dont want to show text 'RemoveUnnecessaryImportsFixable: ...'
+        // but instead 'CS8019: ...' where actual fixer is RemoveUnnecessaryImportsFixable behind the scenes.
         private bool HasFixToShow(string diagnosticId)
         {
-            return CodeFixProvider.FixableDiagnosticIds.Any(id => id == diagnosticId) && !_customDiagVsFixMap.ContainsValue(diagnosticId)
-                || (_customDiagVsFixMap.ContainsKey(diagnosticId) && CodeFixProvider.FixableDiagnosticIds.Any(id => id == _customDiagVsFixMap[diagnosticId]));
+            return CodeFixProvider.FixableDiagnosticIds.Any(id => id == diagnosticId) && !_customDiagVsFixMap.ContainsValue(diagnosticId) || HasMappedFixAvailable(diagnosticId);
         }
 
         public bool HasFixForId(string diagnosticId)
         {
-            return CodeFixProvider.FixableDiagnosticIds.Any(id => id == diagnosticId && !_customDiagVsFixMap.ContainsKey(diagnosticId))
-                || (_customDiagVsFixMap.ContainsKey(diagnosticId) && CodeFixProvider.FixableDiagnosticIds.Any(id => id == _customDiagVsFixMap[diagnosticId]));
+            return CodeFixProvider.FixableDiagnosticIds.Any(id => id == diagnosticId && !_customDiagVsFixMap.ContainsKey(diagnosticId)) || HasMappedFixAvailable(diagnosticId);
+        }
+
+        private bool HasMappedFixAvailable(string diagnosticId)
+        {
+            return (_customDiagVsFixMap.ContainsKey(diagnosticId) && CodeFixProvider.FixableDiagnosticIds.Any(id => id == _customDiagVsFixMap[diagnosticId]));
         }
 
         public static ImmutableArray<DocumentWithFixProvidersAndMatchingDiagnostics> CreateWithMatchingProviders(ImmutableArray<CodeFixProvider> providers, DocumentDiagnostics documentDiagnostics)
