@@ -48,7 +48,7 @@ namespace OmniSharp.Endpoint
     {
         private readonly CompositionHost _host;
         private readonly IPredicateHandler _languagePredicateHandler;
-        private readonly Lazy<Task<Dictionary<string, ExportHandler<TRequest, TResponse>>>> _exports;
+        private readonly Lazy<Task<Dictionary<string, ExportHandler<TRequest, TResponse>[]>>> _exports;
         private readonly OmniSharpWorkspace _workspace;
         private readonly bool _hasLanguageProperty;
         private readonly bool _hasFileNameProperty;
@@ -71,10 +71,10 @@ namespace OmniSharp.Endpoint
             _canBeAggregated = typeof(IAggregateResponse).IsAssignableFrom(metadata.ResponseType);
             _updateBufferHandler = updateBufferHandler;
 
-            _exports = new Lazy<Task<Dictionary<string, ExportHandler<TRequest, TResponse>>>>(() => LoadExportHandlers(handlers));
+            _exports = new Lazy<Task<Dictionary<string, ExportHandler<TRequest, TResponse>[]>>>(() => LoadExportHandlers(handlers));
         }
 
-        private Task<Dictionary<string, ExportHandler<TRequest, TResponse>>> LoadExportHandlers(IEnumerable<Lazy<IRequestHandler, OmniSharpRequestHandlerMetadata>> handlers)
+        private Task<Dictionary<string, ExportHandler<TRequest, TResponse>[]>> LoadExportHandlers(IEnumerable<Lazy<IRequestHandler, OmniSharpRequestHandlerMetadata>> handlers)
         {
             var interfaceHandlers = handlers
                 .Select(export => new RequestHandlerExportHandler<TRequest, TResponse>(export.Metadata.Language, (IRequestHandler<TRequest, TResponse>)export.Value))
@@ -84,9 +84,13 @@ namespace OmniSharp.Endpoint
                 .Select(plugin => new PluginExportHandler<TRequest, TResponse>(EndpointName, plugin))
                 .Cast<ExportHandler<TRequest, TResponse>>();
 
+            // Group handlers by language and sort each group for consistency
             return Task.FromResult(interfaceHandlers
-               .Concat(plugins)
-               .ToDictionary(export => export.Language));
+                .Concat(plugins)
+                .GroupBy(export => export.Language, StringComparer.OrdinalIgnoreCase)
+                .ToDictionary(
+                    group => group.Key,
+                    group => group.OrderBy(g => g).ToArray()));
         }
 
         public string EndpointName { get; }
@@ -142,18 +146,88 @@ namespace OmniSharp.Endpoint
         {
             if (!string.IsNullOrEmpty(language))
             {
-                return HandleSingleRequest(language, request, packet);
+                return HandleRequestForLanguage(language, request, packet);
             }
 
             return HandleAllRequest(request, packet);
         }
 
-        private async Task<object> HandleSingleRequest(string language, TRequest request, RequestPacket packet)
+        private async Task<IAggregateResponse> AggregateResponsesFromLanguageHandlers(ExportHandler<TRequest, TResponse>[] handlers, TRequest request)
+        {
+            if (!_canBeAggregated)
+            {
+                throw new NotSupportedException($"Must be able to aggregate responses from all handlers for {EndpointName}");
+            }
+
+            IAggregateResponse aggregateResponse = null;
+
+            if (handlers.Length == 1)
+            {
+                var response = handlers[0].Handle(request);
+                return (IAggregateResponse)await response;
+            }
+            else
+            {
+                var responses = new List<Task<TResponse>>();
+                foreach (var handler in handlers)
+                {
+                    responses.Add(handler.Handle(request));
+                }
+
+                foreach (IAggregateResponse response in await Task.WhenAll(responses))
+                {
+                    if (aggregateResponse != null)
+                    {
+                        aggregateResponse = aggregateResponse.Merge(response);
+                    }
+                    else
+                    {
+                        aggregateResponse = response;
+                    }
+                }
+            }
+
+            return aggregateResponse;
+        }
+
+        private async Task<object> GetFirstNotEmptyResponseFromHandlers(ExportHandler<TRequest, TResponse>[] handlers, TRequest request)
+        {
+            var responses = new List<Task<TResponse>>();
+            foreach (var handler in handlers)
+            {
+                responses.Add(handler.Handle(request));
+            }
+
+            foreach (object response in await Task.WhenAll(responses))
+            {
+                var canBeEmptyResponse = response as ICanBeEmptyResponse;
+                if (canBeEmptyResponse != null)
+                {
+                    if (!canBeEmptyResponse.IsEmpty)
+                    {
+                        return response;
+                    }
+                }
+                else if (response != null)
+                {
+                    return response;
+                }
+            }
+
+            return null;
+        }
+
+        private async Task<object> HandleRequestForLanguage(string language, TRequest request, RequestPacket packet)
         {
             var exports = await _exports.Value;
-            if (exports.TryGetValue(language, out var handler))
+            if (exports.TryGetValue(language, out var handlers))
             {
-                return await handler.Handle(request);
+                if (_canBeAggregated)
+                {
+                    return await AggregateResponsesFromLanguageHandlers(handlers, request);
+                }
+
+                return await GetFirstNotEmptyResponseFromHandlers(handlers, request);
             }
 
             throw new NotSupportedException($"{language} does not support {EndpointName}");
@@ -169,11 +243,10 @@ namespace OmniSharp.Endpoint
             var exports = await _exports.Value;
 
             IAggregateResponse aggregateResponse = null;
-
-            var responses = new List<Task<TResponse>>();
-            foreach (var handler in exports.Values)
+            var responses = new List<Task<IAggregateResponse>>();
+            foreach (var export in exports)
             {
-                responses.Add(handler.Handle(request));
+                responses.Add(AggregateResponsesFromLanguageHandlers(export.Value, request));
             }
 
             foreach (IAggregateResponse exportResponse in await Task.WhenAll(responses))

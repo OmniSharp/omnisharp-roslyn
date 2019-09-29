@@ -114,7 +114,8 @@ namespace OmniSharp.MSBuild.Tests
             }
         }
 
-        [Fact]
+        // Unstable with MSBuild 16.3 on *nix
+        [ConditionalFact(typeof(WindowsOnly))]
         public async Task WhenNewAnalyzerReferenceIsAdded_ThenAutomaticallyUseItWithoutRestart()
         {
             var emitter = new ProjectLoadTestEventEmitter();
