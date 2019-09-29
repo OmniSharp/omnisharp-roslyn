@@ -81,7 +81,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.TestCommands
                 //testCommand = testCommand.Replace("{{AssemblyPath}}", document.Project.OutputFilePath)
                 //    .Replace("{{TypeName}}", response.TestCommand);
                 testCommand = testCommand.Replace("{{AssemblyPath}}", document.Project.FilePath)
-                    .Replace("{{TypeName}}", response.TestCommand.Substring(0, response.TestCommand.IndexOf("(")));
+                    .Replace("{{TypeName}}", response.TestCommand.Contains("(")?response.TestCommand.Substring(0, response.TestCommand.IndexOf("(")):response.TestCommand);
                 //.Replace("{{MethodName}}", context.Symbol.OriginalDefinition.Locations.ToString());
 
                 response.TestCommand = testCommand;
