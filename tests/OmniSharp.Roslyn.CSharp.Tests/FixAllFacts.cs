@@ -81,7 +81,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
                 var response = await handler.Handle(new RunFixAllRequest
                 {
-                    Scope = FixAllScope.Solution,
+                    Scope = FixAllScope.Document,
+                    FileName = testFilePath,
                     FixAllFilter = new [] { new FixAllItem("IDE0040", message: "This really doesn't matter. Works as description. Fix internal etc.") }
                 });
 
@@ -109,32 +110,30 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     internal class InvalidFormatIDE0055ExpectedHere { }
                 ";
 
-                var ide0055File = CreateTestProjectWithDocument(host, originalIde0055Text);
+                var fileInScope = CreateTestProjectWithDocument(host, originalIde0055Text);
 
-                var originalId0040Text =
-                @"
-                    class NonInternalIDEIDE0040 { }
-                ";
-
-                var ide0040File = CreateTestProjectWithDocument(host, originalId0040Text);
+                var fileNotInScope = CreateTestProjectWithDocument(host, originalIde0055Text);
 
                 var handler = host.GetRequestHandler<RunFixAllCodeActionService>(OmniSharpEndpoints.RunFixAll);
+
+                await Task.Delay(2500);
 
                 await handler.Handle(new RunFixAllRequest
                 {
                     Scope = scope,
-                    FileName = ide0055File
+                    FileName = fileInScope,
+                    FixAllFilter = new[] { new FixAllItem("IDE0055", "Fix formatting") }
                 });
 
-                string textAfterFixIde0055 = await GetContentOfDocumentFromWorkspace(host, ide0055File);
-                string textAfterFixIde0040 = await GetContentOfDocumentFromWorkspace(host, ide0040File);
+                string textAfterFixInScope = await GetContentOfDocumentFromWorkspace(host, fileInScope);
+                string textAfterNotInScope = await GetContentOfDocumentFromWorkspace(host, fileNotInScope);
 
-                AssertUtils.AssertIgnoringIndent(expectedIde0055TextWithFixedFormat, textAfterFixIde0055);
-                AssertUtils.AssertIgnoringIndent(originalId0040Text, textAfterFixIde0040);
+                AssertUtils.AssertIgnoringIndent(expectedIde0055TextWithFixedFormat, textAfterFixInScope);
+                AssertUtils.AssertIgnoringIndent(originalIde0055Text, textAfterNotInScope);
             }
         }
 
-        [Fact(Skip="TODO? Something prevents this fix to execute.")]
+        [Fact()]
         public async Task WhenTextContainsUnusedImports_ThenTheyCanBeAutomaticallyFixed()
         {
             using (var host = GetHost(true))
@@ -144,9 +143,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     using System.IO;
                 ";
 
-                var expectedText =
-                @"
-                ";
+                var expectedText = @"";
 
                 var testFilePath = CreateTestProjectWithDocument(host, originalText);
 
@@ -154,12 +151,13 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
                 var response = await handler.Handle(new RunFixAllRequest
                 {
-                    Scope = FixAllScope.Solution
+                    Scope = FixAllScope.Document,
+                    FileName = testFilePath
                 });
 
                 string textAfterFix = await GetContentOfDocumentFromWorkspace(host, testFilePath);
 
-                AssertUtils.AssertIgnoringIndent(textAfterFix, expectedText);
+                AssertUtils.AssertIgnoringIndent(expectedText, textAfterFix);
             }
         }
 
@@ -176,7 +174,6 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 var expectedText =
                 @"
                     invalidSyntaxThatCannotBeFixedHere
-
                 ";
 
                 var testFilePath = CreateTestProjectWithDocument(host, originalText);
@@ -185,7 +182,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
                 var response = await handler.Handle(new RunFixAllRequest
                 {
-                    Scope = FixAllScope.Solution
+                    Scope = FixAllScope.Document,
+                    FileName = testFilePath
                 });
 
                 string textAfterFix = await GetContentOfDocumentFromWorkspace(host, testFilePath);
