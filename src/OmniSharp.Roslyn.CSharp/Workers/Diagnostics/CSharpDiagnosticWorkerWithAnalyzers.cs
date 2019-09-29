@@ -62,15 +62,14 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             Task.Factory.StartNew(() => Worker(AnalyzerWorkType.Foreground), TaskCreationOptions.LongRunning);
             Task.Factory.StartNew(() => Worker(AnalyzerWorkType.Background), TaskCreationOptions.LongRunning);
 
-            _workspace.Initialized += OnWorkspaceInitialized;
+            _workspace.Initialized += (isInitialized) => OnWorkspaceInitialized(isInitialized);
 
-            if (_workspace.IsInitialized)
-                OnWorkspaceInitialized(true);
+            OnWorkspaceInitialized(_workspace.IsInitialized);
         }
 
         public void OnWorkspaceInitialized(bool isInitialized)
         {
-            if(isInitialized)
+            if (isInitialized)
             {
                 var documentIds = QueueDocumentsForDiagnostics();
                 _logger.LogInformation($"Solution initialized -> queue all documents for code analysis. Initial document count: {documentIds.Length}.");

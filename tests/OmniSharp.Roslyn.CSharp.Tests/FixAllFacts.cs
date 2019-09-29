@@ -131,6 +131,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         }
 
         [Fact()]
+        // This is specifically tested because has custom mapping logic in it.
         public async Task WhenTextContainsUnusedImports_ThenTheyCanBeAutomaticallyFixed()
         {
             using (var host = GetHost(true))

@@ -29,6 +29,7 @@ namespace OmniSharp
             get { return isInitialized; }
             set
             {
+                if (isInitialized == value) return;
                 isInitialized = value;
                 Initialized(isInitialized);
             }
