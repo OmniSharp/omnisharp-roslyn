@@ -222,7 +222,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             // First iteration of work is done.
             queue.WorkComplete(AnalyzerWorkType.Foreground);
 
-            // Waiting call continues because it's iteration of work is done, even when theres next
+            // Waiting call continues because its iteration of work is done, even when theres next
             // already waiting.
             await waitingCall;
 

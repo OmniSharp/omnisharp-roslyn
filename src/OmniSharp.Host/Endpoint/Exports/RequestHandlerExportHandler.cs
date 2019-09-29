@@ -13,6 +13,17 @@ namespace OmniSharp.Endpoint.Exports
             _handler = handler;
         }
 
+        public override int CompareTo(ExportHandler<TRequest, TResponse> other)
+        {
+            var otherHandler = other as RequestHandlerExportHandler<TRequest, TResponse>;
+            if (otherHandler == null)
+            {
+                return 1;
+            }
+
+            return _handler.GetType().ToString().CompareTo(otherHandler._handler.GetType().ToString());
+        }
+
         public override Task<TResponse> Handle(TRequest request)
         {
             return _handler.Handle(request);
