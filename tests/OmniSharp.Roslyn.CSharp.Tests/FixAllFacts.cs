@@ -116,8 +116,6 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
                 var handler = host.GetRequestHandler<RunFixAllCodeActionService>(OmniSharpEndpoints.RunFixAll);
 
-                await Task.Delay(2500);
-
                 await handler.Handle(new RunFixAllRequest
                 {
                     Scope = scope,
@@ -230,6 +228,44 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
                 Assert.Contains(resultFromDocument.Items, x => x.Id == "IDE0055");
                 Assert.DoesNotContain(resultFromDocument.Items, x => x.Id == "IDE0040");
+            }
+        }
+
+        [Fact]
+        // Currently fix every problem in project or solution scope is not supported, only documents.
+        public async Task WhenProjectOrSolutionIsScopedWithFixEverything_ThenThrowNotImplementedException()
+        {
+            using (var host = GetHost(true))
+            {
+                var textWithFormattingProblem =
+                @"
+                    class C{}
+                ";
+
+                var testFilePath = CreateTestProjectWithDocument(host, textWithFormattingProblem);
+
+                var handler = host.GetRequestHandler<RunFixAllCodeActionService>(OmniSharpEndpoints.RunFixAll);
+
+                await handler.Handle(new RunFixAllRequest
+                {
+                    Scope = FixAllScope.Document,
+                    FileName = testFilePath,
+                    FixAllFilter = null // This means: try fix everything.
+                });
+
+                await Assert.ThrowsAsync<NotImplementedException>(async () => await handler.Handle(new RunFixAllRequest
+                {
+                    Scope = FixAllScope.Project,
+                    FileName = testFilePath,
+                    FixAllFilter = null // This means: try fix everything.
+                }));
+
+                await Assert.ThrowsAsync<NotImplementedException>(async () => await handler.Handle(new RunFixAllRequest
+                {
+                    Scope = FixAllScope.Solution,
+                    FileName = testFilePath,
+                    FixAllFilter = null
+                }));
             }
         }
 

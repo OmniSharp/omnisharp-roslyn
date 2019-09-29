@@ -7,6 +7,8 @@ namespace OmniSharp.Abstractions.Models.V1.FixAll
     public class RunFixAllRequest : SimpleFileRequest
     {
         public FixAllScope Scope { get; set; } = FixAllScope.Document;
+
+        // If this is null -> filter not set -> try to fix all issues in current defined scope.
         public FixAllItem[] FixAllFilter { get; set; }
     }
 }

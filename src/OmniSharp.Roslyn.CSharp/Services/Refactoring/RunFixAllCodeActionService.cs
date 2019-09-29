@@ -15,6 +15,7 @@ using OmniSharp.Models;
 using OmniSharp.Roslyn.CSharp.Services.Refactoring.V2;
 using OmniSharp.Roslyn.CSharp.Workers.Diagnostics;
 using OmniSharp.Roslyn.Utilities;
+using FixAllScope = OmniSharp.Abstractions.Models.V1.FixAll.FixAllScope;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
 {
@@ -33,6 +34,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
 
         public async Task<RunFixAllResponse> Handle(RunFixAllRequest request)
         {
+            if(request.Scope != FixAllScope.Document && request.FixAllFilter == null)
+                throw new NotImplementedException($"Only scope '{nameof(FixAllScope.Document)}' is currently supported when filter '{nameof(request.FixAllFilter)}' is not set.");
+
             var solutionBeforeChanges = Workspace.CurrentSolution;
 
             var mappedProvidersWithDiagnostics = await GetDiagnosticsMappedWithFixAllProviders(request.Scope, request.FileName);
