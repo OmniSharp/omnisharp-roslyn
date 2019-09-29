@@ -61,7 +61,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         }
 
         [Fact]
-        public async Task WhenFixAllItemsAreDefined_ThenFixOnlyDefinedItems()
+        public async Task WhenFixAllItemsAreDefinedByFilter_ThenFixOnlyFilteredItems()
         {
             using (var host = GetHost(true))
             {
@@ -230,28 +230,6 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
                 Assert.Contains(resultFromDocument.Items, x => x.Id == "IDE0055");
                 Assert.DoesNotContain(resultFromDocument.Items, x => x.Id == "IDE0040");
-            }
-        }
-
-        [Fact]
-        public async Task WhenScoped_ThenReturnOnlyFromCorrectScope()
-        {
-            using (var host = GetHost(true))
-            {
-                host.AddFilesToWorkspace(new TestFile("a.cs",
-                @"
-                    class C {}
-                "));
-
-                var handler = host.GetRequestHandler<GetFixAllCodeActionService>(OmniSharpEndpoints.GetFixAll);
-
-                var result = await handler.Handle(new GetFixAllRequest()
-                {
-                    Scope = FixAllScope.Solution
-                });
-
-                Assert.Contains(result.Items, x => x.Id == "IDE0055" && x.Message.Contains("Fix formatting"));
-                Assert.Contains(result.Items, x => x.Id == "IDE0040" && x.Message.Contains("Accessibility modifiers required"));
             }
         }
 
