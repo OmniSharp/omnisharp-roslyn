@@ -139,9 +139,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
                 return documentDiagnostics.First().Diagnostics;
             }
 
-            public override Task<IEnumerable<Diagnostic>> GetProjectDiagnosticsAsync(Project project, CancellationToken cancellationToken)
+            public override async Task<IEnumerable<Diagnostic>> GetProjectDiagnosticsAsync(Project project, CancellationToken cancellationToken)
             {
-                throw new NotImplementedException();
+                var diagnostics = await _diagnosticWorker.GetDiagnostics(project.Documents.Select(x => x.FilePath).ToImmutableArray());
+                return diagnostics.SelectMany(x => x.Diagnostics);
             }
         }
     }

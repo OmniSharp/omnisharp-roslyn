@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using OmniSharp.Abstractions.Models.V1.FixAll;
 using OmniSharp.Models.Events;
@@ -214,17 +213,17 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         {
             using (var host = GetHost(true))
             {
-                var ide0055File = CreateTestProjectWithDocument(host,
-                    @"
-                        internal class InvalidFormatIDE0055ExpectedHere{}
-                    ");
+                var inScopeFile = CreateTestProjectWithDocument(host,
+                @"
+                    internal class InvalidFormatIDE0055ExpectedHere{}
+                ");
 
-                var ide0040File = CreateTestProjectWithDocument(host,
-                    @"
-                        class NonInternalIDEIDE0040 { }
-                    ");
+                var notInScopeFile = CreateTestProjectWithDocument(host,
+                @"
+                    class NonInternalIDEIDE0040 { }
+                ");
 
-                var resultFromDocument = await GetFixAllTargets(host, ide0055File, scope);
+                var resultFromDocument = await GetFixAllTargets(host, inScopeFile, scope);
 
                 Assert.Contains(resultFromDocument.Items, x => x.Id == "IDE0055");
                 Assert.DoesNotContain(resultFromDocument.Items, x => x.Id == "IDE0040");

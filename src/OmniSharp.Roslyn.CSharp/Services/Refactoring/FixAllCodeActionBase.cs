@@ -38,26 +38,16 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
 
         private async Task<ImmutableArray<DocumentDiagnostics>> GetCorrectDiagnosticsInScope(FixAllScope scope, string fileName)
         {
-            if (scope == FixAllScope.Document)
-                return await _diagnosticWorker.GetDiagnostics(ImmutableArray.Create(fileName));
-
-            var allDiagnostics = await _diagnosticWorker.GetAllDiagnosticsAsync();
-
-            return allDiagnostics
-                .Where(x => IsDiagnosticOnScope(x, scope, fileName))
-                .ToImmutableArray();
-        }
-
-        private bool IsDiagnosticOnScope(DocumentDiagnostics diagnostic, FixAllScope scope, string contextDocumentPath)
-        {
-            var currentSolution = Workspace.CurrentSolution;
-
-            switch(scope)
+            switch (scope)
             {
                 case FixAllScope.Solution:
-                    return true;
+                    var documentsInSolution = Workspace.CurrentSolution.Projects.SelectMany(x => x.Documents).Select(x => x.FilePath).ToImmutableArray();
+                    return await _diagnosticWorker.GetDiagnostics(documentsInSolution);
                 case FixAllScope.Project:
-                    return currentSolution.GetDocumentIdsWithFilePath(contextDocumentPath).Any(x => x.ProjectId == diagnostic.ProjectId);
+                    var documentsInProject = Workspace.GetDocument(fileName).Project.Documents.Select(x => x.FilePath).ToImmutableArray();
+                    return await _diagnosticWorker.GetDiagnostics(documentsInProject);
+                case FixAllScope.Document:
+                    return await _diagnosticWorker.GetDiagnostics(ImmutableArray.Create(fileName));
                 default:
                     throw new NotImplementedException();
             }
