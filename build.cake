@@ -252,7 +252,7 @@ Task("CreateMSBuildFolder")
             var libraryFileName = library + ".dll";
 
             // copy MSBuild from current Mono (should be 6.4.0+)
-            var librarySourcePath = CombinePaths(Platform.Current.IsMacOS ? "/Library/Frameworks/Mono.framework/Versions/Current/lib/mono/msbuild/15.0/bin" : "/usr/lib/mono/msbuild/15.0/bin", libraryFileName);
+            var librarySourcePath = CombinePaths(Platform.Current.IsMacOS ? "/Library/Frameworks/Mono.framework/Versions/Current/lib/mono/msbuild/15.0/bin" : "/usr/lib/mono/msbuild/Current/bin", libraryFileName);
             var libraryTargetPath = CombinePaths(msbuildCurrentBinTargetFolder, libraryFileName);
             if (FileHelper.Exists(librarySourcePath))
             {
