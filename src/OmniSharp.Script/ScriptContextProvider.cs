@@ -111,7 +111,13 @@ namespace OmniSharp.Script
                 isDesktopClr = false;
                 HashSet<string> loadedFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-                foreach (var compilationAssembly in compilationDependencies.SelectMany(cd => cd.AssemblyPaths).Distinct())
+                // Pick the highest version
+                var resolvedAssemblyPaths = compilationDependencies.SelectMany(cd => cd.AssemblyPaths)
+                    .Select(path => new { AssemblyName = AssemblyName.GetAssemblyName(path), Path = path }).Distinct()
+                    .GroupBy(nameAndPath => nameAndPath.AssemblyName.Name, nameAndPath => nameAndPath)
+                    .Select(gr => gr.OrderBy(nameAndPath => nameAndPath.AssemblyName.Version).Last()).Select(nameAndPath => nameAndPath.Path);
+
+                foreach (var compilationAssembly in resolvedAssemblyPaths)
                 {
                     if (loadedFiles.Add(Path.GetFileName(compilationAssembly)))
                     {
