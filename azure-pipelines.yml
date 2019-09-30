@@ -62,7 +62,7 @@ jobs:
 
   - job: Linux
     pool:
-      vmImage: "Ubuntu-18.04"
+      vmImage: "Ubuntu-16.04"
     dependsOn: GitVersion
     variables:
       MONO_VERSION: 6.4.0
@@ -76,7 +76,7 @@ jobs:
       - script: |
           sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF
           sudo apt install apt-transport-https ca-certificates
-          echo "deb https://download.mono-project.com/repo/ubuntu stable-xenial/snapshots/6.4.0.198 main" | sudo tee /etc/apt/sources.list.d/mono-official-stable.list
+          echo "deb https://download.mono-project.com/repo/ubuntu vs-xenial/snapshots/6.4.0.198 main" | sudo tee /etc/apt/sources.list.d/mono-official-stable.list
           sudo apt update
           sudo apt install mono-devel
         displayName: Use Mono $(MONO_VERSION)
@@ -106,7 +106,7 @@ jobs:
           Artifacts: $(Artifacts)
   - job: Release
     pool:
-      vmImage: "Ubuntu-18.04"
+      vmImage: "Ubuntu-16.04"
     dependsOn:
       - macOS
       - Linux
