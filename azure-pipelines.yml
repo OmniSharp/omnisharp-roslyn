@@ -1,3 +1,17 @@
+
+trigger:
+  batch: true
+  branches:
+    include:
+      - master
+      - refs/tags/*
+
+pr:
+  autoCancel: true
+  branches:
+    include:
+      - master
+
 resources:
   repositories:
     - repository: rsg
