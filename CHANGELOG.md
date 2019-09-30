@@ -1,6 +1,10 @@
 # Changelog
 All changes to the project will be documented in this file.
 
+## [1.34.4] - not yet released
+* Upgraded to MSBuild 16.3 and Mono MSBuild 16.3 (from Mono 6.4.0) to support .NET Core 3.0 RTM (PR: [#1616](https://github.com/OmniSharp/omnisharp-roslyn/pull/1616), [#1612](https://github.com/OmniSharp/omnisharp-roslyn/pull/1612), [#1606](https://github.com/OmniSharp/omnisharp-roslyn/pull/1606))
+* Fixed behavior when there are multiple handlers are defined for a language for a given request (PR: [#1582](https://github.com/OmniSharp/omnisharp-roslyn/pull/1582))
+
 ## [1.34.3] - 2019-09-11
 * Added support for `CheckForOverflowUnderflow ` in csproj files (PR: [#1587](https://github.com/OmniSharp/omnisharp-roslyn/pull/1587))
 * Updated LSP libraries to 0.13 which fixes problems with clients not supporting dynamic registrations. ([#1505](https://github.com/OmniSharp/omnisharp-roslyn/issues/1505), [#1525](https://github.com/OmniSharp/omnisharp-roslyn/issues/1525), PR: [#1562](https://github.com/OmniSharp/omnisharp-roslyn/pull/1562))
