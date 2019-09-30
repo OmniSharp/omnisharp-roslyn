@@ -62,7 +62,7 @@ jobs:
 
   - job: Linux
     pool:
-      vmImage: "Ubuntu-16.04"
+      vmImage: "Ubuntu-18.04"
     dependsOn: GitVersion
     variables:
       MONO_VERSION: 6.4.0
@@ -106,7 +106,7 @@ jobs:
           Artifacts: $(Artifacts)
   - job: Release
     pool:
-      vmImage: "Ubuntu-16.04"
+      vmImage: "Ubuntu-18.04"
     dependsOn:
       - macOS
       - Linux
