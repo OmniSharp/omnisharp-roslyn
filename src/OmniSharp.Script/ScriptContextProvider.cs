@@ -8,6 +8,7 @@ using Dotnet.Script.DependencyModel.Compilation;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Scripting.Hosting;
 using Microsoft.Extensions.Logging;
+using OmniSharp.FileSystem;
 using OmniSharp.Roslyn.Utilities;
 using OmniSharp.Services;
 using LogLevel = Dotnet.Script.DependencyModel.Logging.LogLevel;
@@ -23,22 +24,28 @@ namespace OmniSharp.Script
         private readonly CompilationDependencyResolver _compilationDependencyResolver;
         private readonly IOmniSharpEnvironment _env;
         private readonly MetadataFileReferenceCache _metadataFileReferenceCache;
+        private readonly FileSystemHelper _fileSystemHelper;
         private readonly ILogger _logger;
 
         [ImportingConstructor]
-        public ScriptContextProvider(ILoggerFactory loggerFactory, IOmniSharpEnvironment env, MetadataFileReferenceCache metadataFileReferenceCache)
+        public ScriptContextProvider(ILoggerFactory loggerFactory, IOmniSharpEnvironment env, MetadataFileReferenceCache metadataFileReferenceCache, FileSystemHelper fileSystemHelper)
         {
             _loggerFactory = loggerFactory;
             _env = env;
             _metadataFileReferenceCache = metadataFileReferenceCache;
+            _fileSystemHelper = fileSystemHelper;
             _logger = loggerFactory.CreateLogger<ScriptContextProvider>();
             _compilationDependencyResolver = new CompilationDependencyResolver(type =>
             {
                 // Prefix with "OmniSharp" so that we make it through the log filter.
                 var categoryName = $"OmniSharp.Script.{type.FullName}";
                 var dependencyResolverLogger = loggerFactory.CreateLogger(categoryName);
-                return ((level, message) =>
+                return ((level, message, exception) =>
                 {
+                    if (level == LogLevel.Trace)
+                    {
+                        dependencyResolverLogger.LogTrace(message);
+                    }
                     if (level == LogLevel.Debug)
                     {
                         dependencyResolverLogger.LogDebug(message);
@@ -47,11 +54,23 @@ namespace OmniSharp.Script
                     {
                         dependencyResolverLogger.LogInformation(message);
                     }
+                    if (level == LogLevel.Warning)
+                    {
+                        dependencyResolverLogger.LogWarning(message);
+                    }
+                    if (level == LogLevel.Error)
+                    {
+                        dependencyResolverLogger.LogError(exception, message);
+                    }
+                    if (level == LogLevel.Critical)
+                    {
+                        dependencyResolverLogger.LogCritical(exception, message);
+                    }
                 });
             });
         }
 
-        public ScriptContext CreateScriptContext(ScriptOptions scriptOptions)
+        public ScriptContext CreateScriptContext(ScriptOptions scriptOptions, string[] allCsxFiles)
         {
             var currentDomainAssemblies = AppDomain.CurrentDomain.GetAssemblies();
 
@@ -67,7 +86,7 @@ namespace OmniSharp.Script
             try
             {
                 _logger.LogInformation($"Searching for compilation dependencies with the fallback framework of '{scriptOptions.DefaultTargetFramework}'.");
-                compilationDependencies = _compilationDependencyResolver.GetDependencies(_env.TargetDirectory, scriptOptions.IsNugetEnabled(), scriptOptions.DefaultTargetFramework).ToArray();
+                compilationDependencies = _compilationDependencyResolver.GetDependencies(_env.TargetDirectory, allCsxFiles, scriptOptions.IsNugetEnabled(), scriptOptions.DefaultTargetFramework).ToArray();
             }
             catch (Exception e)
             {
@@ -92,7 +111,13 @@ namespace OmniSharp.Script
                 isDesktopClr = false;
                 HashSet<string> loadedFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-                foreach (var compilationAssembly in compilationDependencies.SelectMany(cd => cd.AssemblyPaths).Distinct())
+                // Pick the highest version
+                var resolvedAssemblyPaths = compilationDependencies.SelectMany(cd => cd.AssemblyPaths)
+                    .Select(path => new { AssemblyName = AssemblyName.GetAssemblyName(path), Path = path }).Distinct()
+                    .GroupBy(nameAndPath => nameAndPath.AssemblyName.Name, nameAndPath => nameAndPath)
+                    .Select(gr => gr.OrderBy(nameAndPath => nameAndPath.AssemblyName.Version).Last()).Select(nameAndPath => nameAndPath.Path);
+
+                foreach (var compilationAssembly in resolvedAssemblyPaths)
                 {
                     if (loadedFiles.Add(Path.GetFileName(compilationAssembly)))
                     {

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using Dotnet.Script.DependencyModel.Compilation;
 using Microsoft.CodeAnalysis;
 
 namespace OmniSharp.Script
@@ -21,6 +20,6 @@ namespace OmniSharp.Script
 
         public CompilationDependency[] CompilationDependencies { get; }
 
-        public Type GlobalsType { get; } 
+        public Type GlobalsType { get; }
     }
 }
