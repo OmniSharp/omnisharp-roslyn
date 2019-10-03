@@ -35,5 +35,21 @@ namespace OmniSharp.Helpers
 
             return suppressedDiagnostics.ToImmutableDictionary();
         }
+
+        public static ImmutableDictionary<string, ReportDiagnostic> GetDefaultSuppressedDiagnosticOptions(Dictionary<string, ReportDiagnostic> otherDiagnostics)
+        {
+            if (otherDiagnostics == null || !otherDiagnostics.Any()) return GetDefaultSuppressedDiagnosticOptions();
+
+            var combinedDiagnostics = GetDefaultSuppressedDiagnosticOptions();
+            foreach (var diagnostic in otherDiagnostics)
+            {
+                if (!combinedDiagnostics.ContainsKey(diagnostic.Key))
+                {
+                    combinedDiagnostics.Add(diagnostic.Key, diagnostic.Value);
+                }
+            }
+
+            return combinedDiagnostics.ToImmutableDictionary();
+        }
     }
 }
