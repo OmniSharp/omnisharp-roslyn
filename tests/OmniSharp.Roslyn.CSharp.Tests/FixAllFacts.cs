@@ -44,12 +44,12 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 string textAfterFix = await GetContentOfDocumentFromWorkspace(host, testFilePath);
                 AssertUtils.AssertIgnoringIndent(textAfterFix, expectedText);
 
-                var internaalClassChange = response.Changes.Single().Changes.Single(x => x.NewText == "internal ");
+                var internalClassChange = response.Changes.Single().Changes.Single(x => x.NewText == "internal ");
 
-                Assert.Equal(0, internaalClassChange.StartLine);
-                Assert.Equal(0, internaalClassChange.StartColumn);
-                Assert.Equal(0, internaalClassChange.EndLine);
-                Assert.Equal(0, internaalClassChange.EndColumn);
+                Assert.Equal(0, internalClassChange.StartLine);
+                Assert.Equal(0, internalClassChange.StartColumn);
+                Assert.Equal(0, internalClassChange.EndLine);
+                Assert.Equal(0, internalClassChange.EndColumn);
 
                 var formatFix = response.Changes.Single().Changes.Single(x => x.NewText == " ");
 
