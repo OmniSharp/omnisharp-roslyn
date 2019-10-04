@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.Concurrent;
 using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
 
@@ -7,8 +7,8 @@ namespace OmniSharp.Script
     public class CachingScriptMetadataResolver : MetadataReferenceResolver
     {
         private readonly MetadataReferenceResolver _defaultReferenceResolver;
-        private static Dictionary<string, ImmutableArray<PortableExecutableReference>> DirectReferenceCache = new Dictionary<string, ImmutableArray<PortableExecutableReference>>();
-        private static Dictionary<string, PortableExecutableReference> MissingReferenceCache = new Dictionary<string, PortableExecutableReference>();
+        private static ConcurrentDictionary<string, ImmutableArray<PortableExecutableReference>> DirectReferenceCache = new ConcurrentDictionary<string, ImmutableArray<PortableExecutableReference>>();
+        private static ConcurrentDictionary<string, PortableExecutableReference> MissingReferenceCache = new ConcurrentDictionary<string, PortableExecutableReference>();
 
         public CachingScriptMetadataResolver(MetadataReferenceResolver defaultReferenceResolver)
         {
@@ -29,35 +29,13 @@ namespace OmniSharp.Script
 
         public override PortableExecutableReference ResolveMissingAssembly(MetadataReference definition, AssemblyIdentity referenceIdentity)
         {
-            if (MissingReferenceCache.ContainsKey(referenceIdentity.Name))
-            {
-                return MissingReferenceCache[referenceIdentity.Name];
-            }
-
-            var result = _defaultReferenceResolver.ResolveMissingAssembly(definition, referenceIdentity);
-            if (result != null)
-            {
-                MissingReferenceCache[referenceIdentity.Name] = result;
-            }
-
-            return result;
+            return MissingReferenceCache.GetOrAdd(referenceIdentity.Name, _ => _defaultReferenceResolver.ResolveMissingAssembly(definition, referenceIdentity));
         }
 
         public override ImmutableArray<PortableExecutableReference> ResolveReference(string reference, string baseFilePath, MetadataReferenceProperties properties)
         {
             var key = $"{reference}-{baseFilePath}";
-            if (DirectReferenceCache.ContainsKey(key))
-            {
-                return DirectReferenceCache[key];
-            }
-
-            var result = _defaultReferenceResolver.ResolveReference(reference, baseFilePath, properties);
-            if (result.Length > 0)
-            {
-                DirectReferenceCache[key] = result;
-            }
-
-            return result;
+            return DirectReferenceCache.GetOrAdd(key, _ => _defaultReferenceResolver.ResolveReference(reference, baseFilePath, properties));
         }
     }
 }
