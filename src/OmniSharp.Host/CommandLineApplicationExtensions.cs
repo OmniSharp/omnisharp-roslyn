@@ -1,5 +1,4 @@
 using System.Linq;
-using Microsoft.Extensions.Configuration;
 using OmniSharp.Options;
 using OmniSharp.Plugins;
 using OmniSharp.Services;
@@ -18,14 +17,10 @@ namespace OmniSharp
         }
 
         public static PluginAssemblies CreatePluginAssemblies(this CommandLineApplication application,
-            IConfigurationRoot configuration,
+            OmniSharpOptions options,
             OmniSharpEnvironment environment)
         {
-            var pluginsConfiguration = configuration.GetSection("Plugins");
-            var extensionsOptions = new OmniSharpExtensionsOptions();
-            ConfigurationBinder.Bind(pluginsConfiguration, extensionsOptions);
-
-            return new PluginAssemblies(application.Plugin.Concat(extensionsOptions.GetNormalizedLocationPaths(environment)));
+            return new PluginAssemblies(application.Plugin.Concat(options.Plugins.GetNormalizedLocationPaths(environment)));
         }
     }
 }
