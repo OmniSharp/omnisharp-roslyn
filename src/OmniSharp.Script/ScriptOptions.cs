@@ -1,9 +1,30 @@
-﻿using System.IO;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using Microsoft.CodeAnalysis;
 
 namespace OmniSharp.Script
 {
     public class ScriptOptions
     {
+        private Lazy<Dictionary<string, ReportDiagnostic>> _nullableDiagnostics;
+
+        public ScriptOptions()
+        {
+            _nullableDiagnostics = new Lazy<Dictionary<string, ReportDiagnostic>>(CreateNullableDiagnostics);
+        }
+
+        private Dictionary<string, ReportDiagnostic> CreateNullableDiagnostics()
+        {
+            var nullableDiagnostics = new Dictionary<string, ReportDiagnostic>();
+            for (var i = 8600; i <= 8655; i++)
+            {
+                nullableDiagnostics.Add($"CS{i}", ReportDiagnostic.Error);
+            }
+
+            return nullableDiagnostics;
+        }
+
         public bool EnableScriptNuGetReferences { get; set; }
 
         public string DefaultTargetFramework { get; set; } = "net461";
@@ -24,5 +45,7 @@ namespace OmniSharp.Script
                 ? RspFilePath
                 : Path.Combine(env.TargetDirectory, RspFilePath);
         }
+
+        public Dictionary<string, ReportDiagnostic> NullableDiagnostics => _nullableDiagnostics.Value;
     }
 }
