@@ -187,7 +187,7 @@ namespace OmniSharp.MSBuild.Tests
             return new MSBuildInstance(
                 "Stand Alone :(",
                 TestIO.GetRandomTempFolderPath(),
-                Version.Parse("16.0.0.0"),
+                Version.Parse("16.3.0.0"),
                 DiscoveryType.StandAlone
             );
         }
