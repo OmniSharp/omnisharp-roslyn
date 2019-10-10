@@ -1,6 +1,9 @@
 # Changelog
 All changes to the project will be documented in this file.
 
+## [1.34.6] - not yet released
+* Raised minimum Mono version to 6.4.0 to provide better .NET Core 3.0 support ([#1629](https://github.com/OmniSharp/omnisharp-roslyn/pull/1629))
+
 ## [1.34.5] - 2019-10-08
 * Fixed 1.34.4 regression that caused "go to metadata" to not work ([#1624](https://github.com/OmniSharp/omnisharp-roslyn/issues/1624), PR: [#1625](https://github.com/OmniSharp/omnisharp-roslyn/pull/1625))
 * Updated the Dotnet.Script.DependencyModel and Dotnet.Script.DependencyModel.NuGet packages to version 0.50.0 adding support for .NET Core 3.0 based scripts (PR: [#1609](https://github.com/OmniSharp/omnisharp-roslyn/pull/1609))
