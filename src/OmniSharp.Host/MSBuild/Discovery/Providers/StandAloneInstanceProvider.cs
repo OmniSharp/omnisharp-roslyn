@@ -65,7 +65,7 @@ namespace OmniSharp.MSBuild.Discovery.Providers
                 new MSBuildInstance(
                     nameof(DiscoveryType.StandAlone),
                     toolsPath,
-                    new Version(16, 0), // we now ship with embedded MsBuild 16.x
+                    new Version(16, 3), // we now ship with embedded MsBuild 16.3
                     DiscoveryType.StandAlone,
                     propertyOverrides.ToImmutable(),
                     setMSBuildExePathVariable: true));
