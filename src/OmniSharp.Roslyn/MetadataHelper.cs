@@ -95,7 +95,7 @@ namespace OmniSharp.Roslyn
                 var service = _csharpMetadataAsSourceService.CreateInstance(temporaryDocument.Project.LanguageServices);
                 var method = _csharpMetadataAsSourceService.GetMethod(AddSourceToAsync);
 
-                var documentTask = method.Invoke<Task<Document>>(service, new object[] { temporaryDocument, await metadataProject.GetCompilationAsync(), topLevelSymbol, default(CancellationToken) });
+                var documentTask = method.Invoke<Task<Document>>(service, new object[] { temporaryDocument, await metadataProject.GetCompilationAsync(), topLevelSymbol, cancellationToken });
                 metadataDocument = await documentTask;
 
                 _metadataDocumentCache[fileName] = metadataDocument;
