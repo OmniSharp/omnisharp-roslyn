@@ -27,15 +27,9 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         {
             using (var host = GetHost(true))
             {
-                var originalText =
-                @"
-                    class C{}
-                ";
+                var originalText = @"class C {}";
 
-                var expectedText =
-                @"
-                    internal class C { }
-                ";
+                var expectedText = @"internal class C { }";
 
                 var testFilePath = CreateTestProjectWithDocument(host, originalText);
 
@@ -48,14 +42,21 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 });
 
                 string textAfterFix = await GetContentOfDocumentFromWorkspace(host, testFilePath);
-                var changesFromOnlyDocument = response.Changes.Single().Changes.Single();
-
                 AssertUtils.AssertIgnoringIndent(textAfterFix, expectedText);
-                Assert.Equal("\ninternal class C { }\n", changesFromOnlyDocument.NewText);
-                Assert.Equal(0, changesFromOnlyDocument.StartLine);
-                Assert.Equal(0, changesFromOnlyDocument.StartColumn);
-                Assert.Equal(2, changesFromOnlyDocument.EndLine);
-                Assert.Equal(16, changesFromOnlyDocument.EndColumn);
+
+                var internalClassChange = response.Changes.Single().Changes.Single(x => x.NewText == "internal ");
+
+                Assert.Equal(0, internalClassChange.StartLine);
+                Assert.Equal(0, internalClassChange.StartColumn);
+                Assert.Equal(0, internalClassChange.EndLine);
+                Assert.Equal(0, internalClassChange.EndColumn);
+
+                var formatFix = response.Changes.Single().Changes.Single(x => x.NewText == " ");
+
+                Assert.Equal(0, formatFix.StartLine);
+                Assert.Equal(9, formatFix.StartColumn);
+                Assert.Equal(0, formatFix.EndLine);
+                Assert.Equal(9, formatFix.EndColumn);
             }
         }
 

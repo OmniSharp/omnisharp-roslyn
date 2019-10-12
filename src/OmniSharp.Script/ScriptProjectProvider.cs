@@ -73,7 +73,7 @@ namespace OmniSharp.Script
                         _isDesktopClr ? Path.GetDirectoryName(typeof(object).GetTypeInfo().Assembly.ManifestModule.FullyQualifiedName) : null);
                 }
             }
-            
+
             return null;
         }
 
@@ -98,7 +98,9 @@ namespace OmniSharp.Script
                 .WithMetadataReferenceResolver(CreateMetadataReferenceResolver())
                 .WithSourceReferenceResolver(ScriptSourceResolver.Default)
                 .WithAssemblyIdentityComparer(DesktopAssemblyIdentityComparer.Default)
-                .WithSpecificDiagnosticOptions(CompilationOptionsHelper.GetDefaultSuppressedDiagnosticOptions());
+                .WithSpecificDiagnosticOptions(!_scriptOptions.IsNugetEnabled()
+                    ? CompilationOptionsHelper.GetDefaultSuppressedDiagnosticOptions()
+                    : CompilationOptionsHelper.GetDefaultSuppressedDiagnosticOptions(_scriptOptions.NullableDiagnostics)); // for .NET Core 3.0 dotnet-script use extra nullable diagnostics
 
             var topLevelBinderFlagsProperty = typeof(CSharpCompilationOptions).GetProperty(TopLevelBinderFlagsProperty, BindingFlags.Instance | BindingFlags.NonPublic);
             var binderFlagsType = typeof(CSharpCompilationOptions).GetTypeInfo().Assembly.GetType(BinderFlagsType);
@@ -124,18 +126,18 @@ namespace OmniSharp.Script
             InjectXMLDocumentationProviderIntoRuntimeMetadataReferenceResolver(defaultResolver);
 
             var decoratedResolver = _scriptOptions.EnableScriptNuGetReferences
-                ? new CachingScriptMetadataResolver(new NuGetMetadataReferenceResolver(defaultResolver)) 
+                ? new CachingScriptMetadataResolver(new NuGetMetadataReferenceResolver(defaultResolver))
                 : new CachingScriptMetadataResolver(defaultResolver);
 
             return decoratedResolver;
         }
- 
+
         public ProjectInfo CreateProject(string csxFileName, IEnumerable<MetadataReference> references, string csxFilePath, Type globalsType, IEnumerable<string> namespaces = null)
         {
             var csharpCommandLineArguments = _commandLineArgs.Value;
 
             // if RSP file was used, include the metadata references from RSP merged with the provided set
-            // otherwise just use the provided metadata references 
+            // otherwise just use the provided metadata references
             if (csharpCommandLineArguments != null && csharpCommandLineArguments.MetadataReferences.Any())
             {
                 var resolvedRspReferences = csharpCommandLineArguments.ResolveMetadataReferences(_compilationOptions.Value.MetadataReferenceResolver);
