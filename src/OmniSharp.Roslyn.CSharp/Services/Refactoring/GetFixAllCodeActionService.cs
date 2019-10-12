@@ -1,5 +1,4 @@
-﻿using System;
-using System.Composition;
+﻿using System.Composition;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
@@ -24,8 +23,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
 
             var distinctDiagnosticsThatCanBeFixed = availableFixes
                 .SelectMany(x => x.FixableDiagnostics)
-                .Distinct()
+                .GroupBy(x => x.id) // Distinct isn't good fit here since theres cases where Id has multiple different messages based on location, just show one of them.
+                .Select(x => x.First())
                 .Select(x => new FixAllItem(x.id, x.messsage))
+                .OrderBy(x => x.Id)
                 .ToArray();
 
             return new GetFixAllResponse(distinctDiagnosticsThatCanBeFixed);
