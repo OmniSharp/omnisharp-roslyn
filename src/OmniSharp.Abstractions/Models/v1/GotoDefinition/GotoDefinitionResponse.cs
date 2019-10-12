@@ -11,6 +11,6 @@ namespace OmniSharp.Models.GotoDefinition
         [JsonConverter(typeof(ZeroBasedIndexConverter))]
         public int Column { get; set; }
         public MetadataSource MetadataSource { get; set; }
-        public bool IsEmpty => FileName == null || FileName == string.Empty;
+        public bool IsEmpty => string.IsNullOrWhiteSpace(FileName) && MetadataSource == null;
     }
 }

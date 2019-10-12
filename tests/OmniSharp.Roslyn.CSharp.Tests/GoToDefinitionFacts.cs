@@ -371,6 +371,7 @@ class Bar {
             var response = await GetResponseAsync(new[] { testFile }, wantMetadata: true);
 
             Assert.NotNull(response.MetadataSource);
+            Assert.False(response.IsEmpty);
             Assert.Equal(expectedAssemblyName, response.MetadataSource.AssemblyName);
             Assert.Equal(expectedTypeName, response.MetadataSource.TypeName);
 
