@@ -109,11 +109,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
             };
         }
 
-        public static bool ContainsMatching(IEnumerable<string> listA, IEnumerable<string> listB)
-        {
-            return listA.Any(x => listB.Contains(x));
-        }
-
         private class FixAllDiagnosticProvider : FixAllContext.DiagnosticProvider
         {
             private readonly ICsDiagnosticWorker _diagnosticWorker;
