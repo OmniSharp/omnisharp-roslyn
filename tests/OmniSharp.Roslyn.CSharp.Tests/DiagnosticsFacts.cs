@@ -29,7 +29,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 host.AddFilesToWorkspace(new TestFile("a.cs", "class C { int n = true; }"));
                 var quickFixes = await host.RequestCodeCheckAsync("a.cs");
 
-                Assert.Contains(quickFixes.QuickFixes.Select(x => x.ToString()), x => x.Contains("CS0029"));
+                Assert.Contains(quickFixes.QuickFixes.OfType<DiagnosticLocation>(), x => x.Id == "CS0029");
                 Assert.Equal("a.cs", quickFixes.QuickFixes.First().FileName);
             }
         }
@@ -50,8 +50,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
                 var quickFixes = await host.RequestCodeCheckAsync();
 
-                Assert.Contains(quickFixes.QuickFixes, x => x.Text.Contains("CS0029") && x.FileName == "a.cs");
-                Assert.Contains(quickFixes.QuickFixes, x => x.Text.Contains("CS0029") && x.FileName == "b.cs");
+                Assert.Contains(quickFixes.QuickFixes.OfType<DiagnosticLocation>(), x => x.Id == "CS0029" && x.FileName == "a.cs");
+                Assert.Contains(quickFixes.QuickFixes.OfType<DiagnosticLocation>(), x => x.Id == "CS0029" && x.FileName == "b.cs");
             }
         }
 
@@ -70,8 +70,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
                 var quickFixes = await host.RequestCodeCheckAsync();
 
-                Assert.Contains(quickFixes.QuickFixes, x => x.Text.Contains("CS0029") && x.FileName == "a.cs");
-                Assert.Contains(quickFixes.QuickFixes, x => x.Text.Contains("CS0029") && x.FileName == "b.cs");
+                Assert.Contains(quickFixes.QuickFixes.OfType<DiagnosticLocation>(), x => x.Id == "CS0029" && x.FileName == "a.cs");
+                Assert.Contains(quickFixes.QuickFixes.OfType<DiagnosticLocation>(), x => x.Id == "CS0029" && x.FileName == "b.cs");
             }
         }
 
@@ -93,7 +93,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
                 var quickFixes = await host.RequestCodeCheckAsync();
 
-                Assert.DoesNotContain(quickFixes.QuickFixes, x => x.Text.Contains("CS0029") && x.FileName == "a.cs");
+                Assert.DoesNotContain(quickFixes.QuickFixes.OfType<DiagnosticLocation>(), x => x.Id == "CS0029" && x.FileName == "a.cs");
             }
         }
 
@@ -106,7 +106,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     new TestFile("a.cs", "class C1 { int n = true; }"));
 
                 var quickFixes = await host.RequestCodeCheckAsync("a.cs");
-                Assert.Contains(quickFixes.QuickFixes, x => x.Text.Contains("IDE0044"));
+                Assert.Contains(quickFixes.QuickFixes.OfType<DiagnosticLocation>(), x => x.Id == "IDE0044");
             }
         }
 

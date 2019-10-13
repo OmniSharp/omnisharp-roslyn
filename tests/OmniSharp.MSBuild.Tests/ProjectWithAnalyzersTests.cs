@@ -7,6 +7,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Eventing;
 using OmniSharp.FileWatching;
+using OmniSharp.Models.Diagnostics;
 using OmniSharp.Models.FilesChanged;
 using OmniSharp.Services;
 using TestUtility;
@@ -36,7 +37,7 @@ namespace OmniSharp.MSBuild.Tests
                 var diagnostics = await host.RequestCodeCheckAsync(Path.Combine(testProject.Directory, "Program.cs"));
 
                 Assert.NotEmpty(diagnostics.QuickFixes);
-                Assert.Contains(diagnostics.QuickFixes, x => x.ToString().Contains("IDE0060")); // Unused args.
+                Assert.Contains(diagnostics.QuickFixes.OfType<DiagnosticLocation>(), x => x.Id == "IDE0060"); // Unused args.
             }
         }
 
@@ -139,7 +140,7 @@ namespace OmniSharp.MSBuild.Tests
 
                 var diagnostics = await host.RequestCodeCheckAsync(Path.Combine(testProject.Directory, "Program.cs"));
 
-                Assert.Contains(diagnostics.QuickFixes, x => x.Text.Contains("RCS1102")); // Analysis result from roslynator.
+                Assert.Contains(diagnostics.QuickFixes.OfType<DiagnosticLocation>(), x => x.Id == "RCS1102"); // Analysis result from roslynator.
             }
         }
 

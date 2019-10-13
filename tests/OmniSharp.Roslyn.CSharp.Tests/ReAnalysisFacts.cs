@@ -2,6 +2,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using OmniSharp.Abstractions.Models.V1.ReAnalyze;
 using OmniSharp.Models.ChangeBuffer;
+using OmniSharp.Models.Diagnostics;
 using OmniSharp.Models.Events;
 using OmniSharp.Roslyn.CSharp.Services.Buffer;
 using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
@@ -53,7 +54,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
                 // Reference to B is lost, a.cs should contain error about invalid reference to it.
                 // error CS0246: The type or namespace name 'B' could not be found
-                Assert.Contains(quickFixes.QuickFixes.Select(x => x.ToString()), x => x.Contains("CS0246"));
+                Assert.Contains(quickFixes.QuickFixes.OfType<DiagnosticLocation>(), x => x.Id == "CS0246");
             }
         }
 
