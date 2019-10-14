@@ -36,7 +36,8 @@
     "SolutionWithSignedProject",
     "ProjectWithMultiTFMLib",
     "ExternAlias",
-    "ProjectWithComplexAnalyzers"
+    "ProjectWithComplexAnalyzers",
+    "NetCore30Project"
   ],
   "CakeTestAssets": [
     "CakeProject"
