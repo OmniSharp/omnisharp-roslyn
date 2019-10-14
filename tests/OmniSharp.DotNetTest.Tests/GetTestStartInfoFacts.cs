@@ -20,7 +20,7 @@ namespace OmniSharp.DotNetTest.Tests
                 XunitTestProject,
                 methodName: "Main.Test.MainTest.Test",
                 testFramework: "xunit",
-                targetFrameworkVersion: ".NETCoreApp, Version=2.1");
+                targetFrameworkVersion: ".NETCoreApp,Version=v3.0");
         }
 
         // NUnit does not work with .NET CLI RTM yet. https://github.com/nunit/dotnet-test-nunit/issues/108
