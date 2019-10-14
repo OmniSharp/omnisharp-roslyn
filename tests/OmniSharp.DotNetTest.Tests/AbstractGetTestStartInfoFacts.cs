@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using OmniSharp.DotNetTest.Models;
 using OmniSharp.DotNetTest.Services;
 using OmniSharp.Services;
+using OmniSharp.Utilities;
 using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
@@ -40,7 +41,7 @@ namespace OmniSharp.DotNetTest.Tests
 
                 var dotNetCli = host.GetExport<IDotNetCliService>();
 
-                Assert.Equal(dotNetCli.DotNetPath, response.Executable);
+                Assert.Equal(dotNetCli.DotNetPath,  response.Executable);
             }
         }
     }
