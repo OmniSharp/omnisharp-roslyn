@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Threading.Tasks;
 using OmniSharp.DotNetTest.Models;
 using OmniSharp.DotNetTest.Services;
@@ -22,7 +23,7 @@ namespace OmniSharp.DotNetTest.Tests
             return host.GetRequestHandler<GetTestStartInfoService>(OmniSharpEndpoints.V2.GetTestStartInfo);
         }
 
-        protected async Task GetDotNetTestStartInfoAsync(string projectName, string methodName, string testFramework, string targetFrameworkVersion = null)
+        protected async Task GetDotNetTestStartInfoAsync(string projectName, string methodName, string testFramework, string targetFrameworkVersion = null, Action<GetTestStartInfoResponse, OmniSharpTestHost> assert = null)
         {
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync(projectName))
             using (var host = CreateOmniSharpHost(testProject.Directory, null, DotNetCliVersion))
@@ -39,9 +40,15 @@ namespace OmniSharp.DotNetTest.Tests
 
                 var response = await service.Handle(request);
 
-                var dotNetCli = host.GetExport<IDotNetCliService>();
-
-                Assert.Equal(dotNetCli.DotNetPath,  response.Executable);
+                if (assert != null)
+                {
+                    assert(response, host);
+                }
+                else
+                {
+                    var dotNetCli = host.GetExport<IDotNetCliService>();
+                    Assert.Equal(dotNetCli.DotNetPath, response.Executable);
+                }
             }
         }
     }
