@@ -1,7 +1,7 @@
 {
   "DotNetInstallScriptURL": "https://dot.net/v1",
-  "DotNetChannel": "preview",
-  "DotNetVersion": "2.1.505",
+  "DotNetChannel": "Current",
+  "DotNetVersion": "3.0.100",
   "RequiredMonoVersion": "6.4.0",
   "DownloadURL": "https://roslynomnisharp.blob.core.windows.net/ext",
   "MonoRuntimeMacOS": "mono.macOS-5.18.1.0.zip",
@@ -36,7 +36,8 @@
     "SolutionWithSignedProject",
     "ProjectWithMultiTFMLib",
     "ExternAlias",
-    "ProjectWithComplexAnalyzers"
+    "ProjectWithComplexAnalyzers",
+    "NetCore30Project"
   ],
   "CakeTestAssets": [
     "CakeProject"
