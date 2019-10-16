@@ -2,6 +2,7 @@
 All changes to the project will be documented in this file.
 
 ## [1.34.6] - not yet released
+* Update to Roslyn `3.4.0-beta3-19516-01` (PR:[#1634](https://github.com/OmniSharp/omnisharp-roslyn/pull/1634))
 * Raised minimum Mono version to 6.4.0 to provide better .NET Core 3.0 support ([#1629](https://github.com/OmniSharp/omnisharp-roslyn/pull/1629))
 * Fixed a concurrency bug in scripting/Cake support ([#1627](https://github.com/OmniSharp/omnisharp-roslyn/pull/1627))
 * Correctly respect request cancellation token in metadata service ([#1631](https://github.com/OmniSharp/omnisharp-roslyn/pull/1631))
