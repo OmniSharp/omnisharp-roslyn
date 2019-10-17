@@ -1,4 +1,7 @@
-﻿using System.Threading.Tasks;
+﻿using OmniSharp.DotNetTest.Models;
+using OmniSharp.Services;
+using OmniSharp.Utilities;
+using System.Threading.Tasks;
 using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
@@ -20,11 +23,9 @@ namespace OmniSharp.DotNetTest.Tests
                 XunitTestProject,
                 methodName: "Main.Test.MainTest.Test",
                 testFramework: "xunit",
-                targetFrameworkVersion: ".NETCoreApp, Version=2.1");
+                targetFrameworkVersion: ".NETCoreApp,Version=v3.0",
+                assert: AssertCorrectness);
         }
-
-        // NUnit does not work with .NET CLI RTM yet. https://github.com/nunit/dotnet-test-nunit/issues/108
-        // When it does, the NUnitTestProject should be updated and the tests below re-enabled.
 
         [Fact]
         public async Task RunNunitTest()
@@ -32,7 +33,9 @@ namespace OmniSharp.DotNetTest.Tests
             await GetDotNetTestStartInfoAsync(
                 NUnitTestProject,
                 methodName: "Main.Test.MainTest.Test",
-                testFramework: "nunit");
+                testFramework: "nunit",
+                targetFrameworkVersion: ".NETCoreApp,Version=v3.0",
+                assert: AssertCorrectness);
         }
 
         [Fact]
@@ -41,7 +44,23 @@ namespace OmniSharp.DotNetTest.Tests
             await GetDotNetTestStartInfoAsync(
                 MSTestProject,
                 methodName: "Main.Test.MainTest.Test",
-                testFramework: "mstest");
+                testFramework: "mstest",
+                targetFrameworkVersion: ".NETCoreApp,Version=v3.0",
+                assert: AssertCorrectness);
+        }
+
+        private static void AssertCorrectness(GetTestStartInfoResponse response, OmniSharpTestHost host)
+        {
+            // .NET Core 3.0 executable on Windows should be testhost.exe
+            if (Platform.Current.OperatingSystem == OperatingSystem.Windows)
+            {
+                Assert.EndsWith("testhost.exe", response.Executable);
+            }
+            else // elsewhere, dotnet.exe
+            {
+                var dotNetCli = host.GetExport<IDotNetCliService>();
+                Assert.Equal(dotNetCli.DotNetPath, response.Executable);
+            }
         }
     }
 }
