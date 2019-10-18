@@ -143,5 +143,20 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     .Tags);
             }
         }
+
+        [Fact]
+        // issue: https://github.com/OmniSharp/omnisharp-roslyn/issues/1619
+        public async Task DoesNotErroneouslyReportCS0019_WhenComparingToDefault()
+        {
+            using (var host = GetHost(roslynAnalyzersEnabled: true))
+            {
+                host.AddFilesToWorkspace(
+                    new TestFile("a.cs", "class C1 { bool Test(object input) => input == default; }"));
+
+                var quickFixes = await host.RequestCodeCheckAsync("a.cs");
+                var allDiagnostics = quickFixes.QuickFixes.OfType<DiagnosticLocation>().Where(x => x.Id == "CS0019");
+                Assert.Empty(allDiagnostics);
+            }
+        }
     }
 }
