@@ -86,21 +86,21 @@ msbuild_runtime=(
     "Microsoft.Xaml.targets"
     "MSBuild.dll"
     "MSBuild.dll.config"
-"System.Data.Common.dll"
+#"System.Data.Common.dll"
 "System.Collections.Immutable.dll"
-"System.Diagnostics.StackTrace.dll"
-"System.Diagnostics.Tracing.dll"
-"System.Globalization.Extensions.dll"
-"System.IO.Compression.dll"
-"System.Net.Http.dll"
-"System.Net.Sockets.dll"
+#"System.Diagnostics.StackTrace.dll"
+#"System.Diagnostics.Tracing.dll"
+#"System.Globalization.Extensions.dll"
+#"System.IO.Compression.dll"
+#"System.Net.Http.dll"
+#"System.Net.Sockets.dll"
 "System.Reflection.Metadata.dll"
-"System.Runtime.Serialization.Primitives.dll"
-"System.Security.Cryptography.Algorithms.dll"
-"System.Security.SecureString.dll"
-"System.Threading.Overlapped.dll"
+#"System.Runtime.Serialization.Primitives.dll"
+#"System.Security.Cryptography.Algorithms.dll"
+#"System.Security.SecureString.dll"
+#"System.Threading.Overlapped.dll"
 "System.Threading.Tasks.Dataflow.dll"
-"System.Xml.XPath.XDocument.dll"
+#"System.Xml.XPath.XDocument.dll"
     #"NuGet.targets"
     #"Workflow.VisualBasic.targets"
     #"Workflow.targets"
@@ -146,7 +146,7 @@ _copy_msbuild_library_assets() {
     fi
 
     for file in "${msbuild_libraries[@]}"; do
-        _copy_file "$mono_msbuild_path/15.0/bin/$file" "$target_path/$file"
+        _copy_file "$mono_msbuild_path/Current/bin/$file" "$target_path/$file"
     done
 }
 
@@ -164,10 +164,10 @@ _copy_msbuild_runtime_assets() {
         mono_xbuild_path=/usr/lib/mono/xbuild
     fi
 
-    _copy_file "$mono_xbuild_path/15.0/Microsoft.Common.props" "$target_path/15.0/Microsoft.Common.props"
+    _copy_file "$mono_xbuild_path/Current/Microsoft.Common.props" "$target_path/Current/Microsoft.Common.props"
 
     for file in "${msbuild_runtime[@]}"; do
-        _copy_file "$mono_msbuild_path/15.0/bin/$file" "$target_path/$file"
+        _copy_file "$mono_msbuild_path/Current/bin/$file" "$target_path/$file"
     done
 }
 

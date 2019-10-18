@@ -179,16 +179,16 @@ _copy_runtime_assets() {
         mono_lib_path=$mono_base_path/lib
         mono_etc_path=$mono_base_path/etc/mono
         libMonoPosixHelper_name=libMonoPosixHelper.dylib
-        libMonoSystemNative_name=libmono-system-native.0.dylib
-        libMonoSystemNative_target_name=libmono-system-native.dylib
+        libMonoSystemNative_name=libmono-native.0.dylib
+        libMonoSystemNative_target_name=libmono-native.dylib
     else # Linux
         mono_runtime_path=/usr/bin/mono-sgen
         mono_lib_path=/usr/lib
         mono_etc_path=/etc/mono
         libMonoPosixHelper_name=libMonoPosixHelper.so
         libMonoBtlsShared_name=libmono-btls-shared.so
-        libMonoSystemNative_name=libmono-system-native.so.0.0.0
-        libMonoSystemNative_target_name=libmono-system-native.so
+        libMonoSystemNative_name=libmono-native.so.0.0.0
+        libMonoSystemNative_target_name=libmono-native.so
     fi
 
     local mono_libMonoSystemNative_path=$mono_lib_path/$libMonoSystemNative_name
@@ -261,7 +261,7 @@ _copy_framework_assets() {
 
     mkdir -p "$target_gac_path"
     mkdir -p "$target_45_facades_path"
-    
+
     _copy_file "$mono_45_path/mscorlib.dll" "$target_45_path/mscorlib.dll"
 
     for file in "${gac_assemblies[@]}"; do
