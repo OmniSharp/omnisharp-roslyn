@@ -179,8 +179,9 @@ _copy_runtime_assets() {
         mono_lib_path=$mono_base_path/lib
         mono_etc_path=$mono_base_path/etc/mono
         libMonoPosixHelper_name=libMonoPosixHelper.dylib
-        libMonoSystemNative_name=libmono-native.0.dylib
-        libMonoSystemNative_target_name=libmono-native.dylib
+         libMonoBtlsShared_name=libmono-btls-shared.dylib
+       libMonoSystemNative_name=libmono-native-unified.0.dylib
+        libMonoSystemNative_target_name=libmono-native-unified.dylib
     else # Linux
         mono_runtime_path=/usr/bin/mono-sgen
         mono_lib_path=/usr/lib
