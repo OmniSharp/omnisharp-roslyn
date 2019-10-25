@@ -73,6 +73,7 @@ msbuild_runtime=(
     "Microsoft.CSharp.Mono.targets"
     "Microsoft.CSharp.targets"
     "Microsoft.Data.Entity.targets"
+    "Microsoft.Managed.targets"
     "Microsoft.NETFramework.CurrentVersion.props"
     "Microsoft.NETFramework.CurrentVersion.targets"
     "Microsoft.NETFramework.props"
@@ -146,7 +147,7 @@ _copy_msbuild_library_assets() {
     fi
 
     for file in "${msbuild_libraries[@]}"; do
-        _copy_file "$mono_msbuild_path/Current/bin/$file" "$target_path/$file"
+        _copy_file "$mono_msbuild_path/15.0/bin/$file" "$target_path/$file"
     done
 }
 
@@ -164,10 +165,10 @@ _copy_msbuild_runtime_assets() {
         mono_xbuild_path=/usr/lib/mono/xbuild
     fi
 
-    _copy_file "$mono_xbuild_path/Current/Microsoft.Common.props" "$target_path/Current/Microsoft.Common.props"
+    _copy_file "$mono_xbuild_path/15.0/Microsoft.Common.props" "$target_path/15.0/Microsoft.Common.props"
 
     for file in "${msbuild_runtime[@]}"; do
-        _copy_file "$mono_msbuild_path/Current/bin/$file" "$target_path/$file"
+        _copy_file "$mono_msbuild_path/15.0/bin/$file" "$target_path/$file"
     done
 }
 
