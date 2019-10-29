@@ -30,11 +30,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
 
             int maxItemsToReturn = (request?.MaxItemsToReturn).GetValueOrDefault();
             var csprojSymbols = await _workspace.CurrentSolution.FindSymbols(request?.Filter, ".csproj", maxItemsToReturn);
-            var projectJsonSymbols = await _workspace.CurrentSolution.FindSymbols(request?.Filter, ".json", maxItemsToReturn);
             var csxSymbols = await _workspace.CurrentSolution.FindSymbols(request?.Filter, ".csx", maxItemsToReturn);
             return new QuickFixResponse()
             {
-                QuickFixes = csprojSymbols.QuickFixes.Concat(projectJsonSymbols.QuickFixes).Concat(csxSymbols.QuickFixes)
+                QuickFixes = csprojSymbols.QuickFixes.Concat(csxSymbols.QuickFixes)
             };
         }
     }
