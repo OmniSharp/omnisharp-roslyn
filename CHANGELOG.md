@@ -1,6 +1,9 @@
 # Changelog
 All changes to the project will be documented in this file.
 
+## [1.34.7] - not yet released
+* Updated the embedded Mono to 6.4.0 (PR:[#1640](https://github.com/OmniSharp/omnisharp-roslyn/pull/1640))
+
 ## [1.34.6] - 2019-10-25
 * Update to Roslyn `3.4.0-beta3-19516-01` (PR:[#1634](https://github.com/OmniSharp/omnisharp-roslyn/pull/1634))
 * Fixed a bug that caused CS0019 diagnostic to be erroneously reported when comparing to `default` ([#1619](https://github.com/OmniSharp/omnisharp-roslyn/issues/1619), PR:[#1634](https://github.com/OmniSharp/omnisharp-roslyn/pull/1634))
