@@ -176,10 +176,17 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                         _logger.LogDebug($"Tried to remove non existent document from analysis, document: {changeEvent.DocumentId}");
                     };
                     break;
+                case WorkspaceChangeKind.AdditionalDocumentRemoved:
+                case WorkspaceChangeKind.AdditionalDocumentAdded:
+                case WorkspaceChangeKind.AdditionalDocumentChanged:
+                    _logger.LogDebug($"Additional document {changeEvent.DocumentId} updated ({changeEvent.Kind}), reanalyzing its project's diagnostics.");
+                    var additionalDocumentRelatedDocumentIds = _workspace.CurrentSolution.GetProject(changeEvent.ProjectId).Documents.Select(x => x.Id).ToImmutableArray();
+                    QueueForAnalysis(additionalDocumentRelatedDocumentIds, AnalyzerWorkType.Background);
+                    break;
                 case WorkspaceChangeKind.ProjectAdded:
                 case WorkspaceChangeKind.ProjectChanged:
                 case WorkspaceChangeKind.ProjectReloaded:
-                    _logger.LogDebug($"Project {changeEvent.ProjectId} updated, reanalyzing it's diagnostics.");
+                    _logger.LogDebug($"Project {changeEvent.ProjectId} updated, reanalyzing its diagnostics.");
                     var projectDocumentIds = _workspace.CurrentSolution.GetProject(changeEvent.ProjectId).Documents.Select(x => x.Id).ToImmutableArray();
                     QueueForAnalysis(projectDocumentIds, AnalyzerWorkType.Background);
                     break;

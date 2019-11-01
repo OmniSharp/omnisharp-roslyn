@@ -26,6 +26,7 @@ using OmniSharp.Services;
 using OmniSharp.Utilities;
 using System.Reflection;
 using Microsoft.CodeAnalysis.Diagnostics;
+using Microsoft.CodeAnalysis.Text;
 
 namespace OmniSharp.MSBuild
 {
@@ -176,7 +177,7 @@ namespace OmniSharp.MSBuild
                     await Task.Delay(LoopDelay, cancellationToken);
                     ProcessQueue(cancellationToken);
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     _logger.LogError($"Error occurred while processing project updates: {ex}");
                 }
@@ -393,7 +394,8 @@ namespace OmniSharp.MSBuild
                 {
                     _fileSystemWatcher.Watch(additionalFile, (file, changeType) =>
                     {
-                        QueueProjectUpdate(projectFileInfo.FilePath, allowAutoRestore: false, projectFileInfo.ProjectIdInfo);
+                        OnAdditionalFileChanged(file, changeType);
+                        //QueueProjectUpdate(projectFileInfo.FilePath, allowAutoRestore: false, projectFileInfo.ProjectIdInfo);
                     });
                 }
             }
@@ -482,18 +484,80 @@ namespace OmniSharp.MSBuild
 
         private void UpdateAdditionalFiles(Project project, IList<string> additionalFiles)
         {
-            var currentAdditionalDocuments = project.AdditionalDocuments;
-            foreach (var document in currentAdditionalDocuments)
+            var currentAdditionalDocuments = project.AdditionalDocuments.ToDictionary(d => d.FilePath, d => d.Id);
+
+            Solution solution = _workspace.CurrentSolution;
+            foreach (var filePath in additionalFiles)
             {
-                _workspace.RemoveAdditionalDocument(document.Id);
+                if (!currentAdditionalDocuments.ContainsKey(filePath) && File.Exists(filePath))
+                {
+                    _workspace.AddAdditionalDocument(project.Id, filePath);
+                    _fileSystemWatcher.Watch(filePath, (file, changeType) =>
+                    {
+                        OnAdditionalFileChanged(file, changeType);
+                    });
+                }
             }
 
-            foreach (var file in additionalFiles)
+            var removedDocs = currentAdditionalDocuments.Where(d => !additionalFiles.Contains(d.Key)).ToDictionary(p => p.Key, p => p.Value);
+            foreach (var removedDoc in removedDocs)
             {
-                 if (File.Exists(file))
-                 {
-                    _workspace.AddAdditionalDocument(project.Id, file);
-                 }
+                _workspace.RemoveAdditionalDocument(removedDoc.Value);
+            }
+        }
+
+        private void OnAdditionalFileChanged(string path, FileChangeType changeType)
+        {
+            // only update the content of the document if it is still part of any project
+            if (changeType == FileChangeType.Create && File.Exists(path))
+            {
+                // try find matching project
+                var additionalDocuments = _workspace.CurrentSolution.Projects.SelectMany(p => p.AdditionalDocuments);
+                var matchingAdditionalDocument = additionalDocuments.FirstOrDefault(d => d.FilePath == path);
+
+                if (matchingAdditionalDocument != null)
+                {
+                    var loader = new OmniSharpTextLoader(path);
+                    var newSolution = _workspace.CurrentSolution.WithAdditionalDocumentTextLoader(matchingAdditionalDocument.Id, loader, PreservationMode.PreserveValue);
+
+                    if (!_workspace.TryApplyChanges(newSolution))
+                    {
+                        _logger.LogError($"Failed to apply additional document change to workspace: '{path}'");
+                    }
+                }
+
+                return;
+            }
+
+            // do not really remove the document, just set its conent to empty
+            var additionalDocumentId = _workspace.GetDocumentId(path);
+            if (changeType == FileChangeType.Unspecified && !File.Exists(path) || changeType == FileChangeType.Delete)
+            {
+                var newSolution = _workspace.CurrentSolution.WithAdditionalDocumentText(additionalDocumentId, SourceText.From(string.Empty));
+
+                if (!_workspace.TryApplyChanges(newSolution))
+                {
+                    _logger.LogError($"Failed to apply additional document change to workspace: '{path}'");
+                }
+
+                return;
+            }
+
+            if (changeType == FileChangeType.Change)
+            {
+                var project = _workspace.CurrentSolution.GetAdditionalDocument(additionalDocumentId).Project;
+                var currentAdditionalDocuments = project.AdditionalDocuments.ToDictionary(d => d.FilePath, d => d.Id);
+
+                if (currentAdditionalDocuments.ContainsKey(path))
+                {
+                    var loader = new OmniSharpTextLoader(path);
+                    var newSolution = _workspace.CurrentSolution.WithAdditionalDocumentTextLoader(currentAdditionalDocuments[path], loader, PreservationMode.PreserveValue);
+
+                    if (!_workspace.TryApplyChanges(newSolution))
+                    {
+                        _logger.LogError($"Failed to apply additional document change to workspace: '{path}'");
+                    }
+                }
             }
         }
 
