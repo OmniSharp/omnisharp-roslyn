@@ -262,5 +262,35 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 Assert.Equal(FileModificationType.Opened, changes[1].ModificationType);
             }
         }
+
+        [Fact]
+        public async Task CanRunCodeFix_ThatModifiesAdditionalFile()
+        {
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithMismatchedFileName"))
+            using (var host = OmniSharpTestHost.Create(testProject.Directory, testOutput: TestOutput, new Dictionary<string, string>
+            {
+                ["FormattingOptions:EnableEditorConfigSupport"] = "true",
+                ["RoslynExtensionsOptions:EnableAnalyzersSupport"] = "true"
+            }))
+            {
+                var document = host.Workspace.CurrentSolution.Projects.First().Documents.First();
+                var buffer = await document.GetTextAsync();
+                var path = document.FilePath;
+                var runRequestHandler = host.GetRequestHandler<RunCodeActionService>(OmniSharpEndpoints.V2.RunCodeAction);
+                var runRequest = new RunCodeActionRequest
+                {
+                    Line = point.Line,
+                    Column = point.Offset,
+                    FileName = path,
+                    Identifier = "Add Foo to public API'",
+                    WantsTextChanges = false,
+                    WantsAllCodeActionOperations = true,
+                    Buffer = buffer.ToString()
+                };
+                var runResponse = await runRequestHandler.Handle(runRequest);
+
+                AssertIgnoringIndent(expected, ((ModifiedFileResponse)runResponse.Changes.First()).Buffer);
+            }
+        }
     }
 }

@@ -395,7 +395,6 @@ namespace OmniSharp.MSBuild
                     _fileSystemWatcher.Watch(additionalFile, (file, changeType) =>
                     {
                         OnAdditionalFileChanged(file, changeType);
-                        //QueueProjectUpdate(projectFileInfo.FilePath, allowAutoRestore: false, projectFileInfo.ProjectIdInfo);
                     });
                 }
             }
@@ -484,14 +483,18 @@ namespace OmniSharp.MSBuild
 
         private void UpdateAdditionalFiles(Project project, IList<string> additionalFiles)
         {
+            // find all currently available additional documents
             var currentAdditionalDocuments = project.AdditionalDocuments.ToDictionary(d => d.FilePath, d => d.Id);
 
             Solution solution = _workspace.CurrentSolution;
             foreach (var filePath in additionalFiles)
             {
+                // if currently available ones don't contain the newly submitted one, add it to workspace
                 if (!currentAdditionalDocuments.ContainsKey(filePath) && File.Exists(filePath))
                 {
                     _workspace.AddAdditionalDocument(project.Id, filePath);
+
+                    // start watching for changes too
                     _fileSystemWatcher.Watch(filePath, (file, changeType) =>
                     {
                         OnAdditionalFileChanged(file, changeType);
@@ -499,6 +502,8 @@ namespace OmniSharp.MSBuild
                 }
             }
 
+            // find all currently available additional documents, that do not have a counterpart in the submitted ones
+            // if we found any, it means it has to be removed from workspace
             var removedDocs = currentAdditionalDocuments.Where(d => !additionalFiles.Contains(d.Key)).ToDictionary(p => p.Key, p => p.Value);
             foreach (var removedDoc in removedDocs)
             {
@@ -508,7 +513,11 @@ namespace OmniSharp.MSBuild
 
         private void OnAdditionalFileChanged(string path, FileChangeType changeType)
         {
-            // only update the content of the document if it is still part of any project
+            // note that this method doesn't add/remove from workspace
+            // that is done in UpdateAdditionalFiles
+            // here we handle content change though
+
+            // only update the content of the document if it is part of any project
             if (changeType == FileChangeType.Create && File.Exists(path))
             {
                 // try find matching project
