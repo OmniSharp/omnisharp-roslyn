@@ -3,6 +3,7 @@ All changes to the project will be documented in this file.
 
 ## [1.34.7] - not yet released
 * Updated the embedded Mono to 6.4.0 (PR:[#1640](https://github.com/OmniSharp/omnisharp-roslyn/pull/1640))
+* Update to Roslyn `3.4.0-beta3-19551-02` to align with the upcoming .NET Core 3.1 Preview 3 (PR:[#1644](https://github.com/OmniSharp/omnisharp-roslyn/pull/1644))
 
 ## [1.34.6] - 2019-10-25
 * Update to Roslyn `3.4.0-beta3-19516-01` (PR:[#1634](https://github.com/OmniSharp/omnisharp-roslyn/pull/1634))
@@ -23,8 +24,8 @@ All changes to the project will be documented in this file.
 * Added support for `CheckForOverflowUnderflow ` in csproj files (PR: [#1587](https://github.com/OmniSharp/omnisharp-roslyn/pull/1587))
 * Updated LSP libraries to 0.13 which fixes problems with clients not supporting dynamic registrations. ([#1505](https://github.com/OmniSharp/omnisharp-roslyn/issues/1505), [#1525](https://github.com/OmniSharp/omnisharp-roslyn/issues/1525), PR: [#1562](https://github.com/OmniSharp/omnisharp-roslyn/pull/1562))
 * Update to Roslyn `3.4.0-beta1-19460-02` to align with the upcoming .NET Core 3.1 preview 1 (PR:[#1597](https://github.com/OmniSharp/omnisharp-roslyn/pull/1597))
- 
-## [1.34.2] - 2019-08-16 
+
+## [1.34.2] - 2019-08-16
 * Update to Roslyn `3.3.0-beta2-19401-05` which fixes a 1.34.1 regression resulting in StackOverflowException on code analysis of partial classes (PR: [#1579](https://github.com/OmniSharp/omnisharp-roslyn/pull/1579))
 * Added support for reading C# 8.0 `Nullable` setting from csproj files (and dropped support for `NullableContextOptions` - based on the LDM decision to [rename the MSBuild property](https://github.com/dotnet/roslyn/issues/35432) ([#1573](https://github.com/OmniSharp/omnisharp-roslyn/pull/1573))
 
@@ -66,7 +67,7 @@ All changes to the project will be documented in this file.
             }
         }
     ```
-* Analyzers improvements (PR: [#1440](https://github.com/OmniSharp/omnisharp-roslyn/pull/1440)) 
+* Analyzers improvements (PR: [#1440](https://github.com/OmniSharp/omnisharp-roslyn/pull/1440))
 	* Dynamically loaded / modifiable rulesets instead without full restart on omnisharp after every change
 	* Reanalyze updated projects
 	* Built-int Roslyn diagnostics can be controlled by rulesets even when analyzers are not enabled
