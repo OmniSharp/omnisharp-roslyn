@@ -1,7 +1,7 @@
 parameters:
   # Configuration: Release
   Verbosity: Normal
-  DotNetVersion: "2.2.300"
+  DotNetVersion: "3.0.100"
   CakeVersion: "0.32.1"
   NuGetVersion: "4.9.2"
 steps:
@@ -17,7 +17,7 @@ steps:
     displayName: 'Deserialize GitVersion'
     inputs:
       jsonfiles: $(Build.ArtifactStagingDirectory)/gitversion/**/gitversion.json
-  - task: DotNetCoreInstaller@0
+  - task: UseDotNet@2
     displayName: Install dotnet $(DotNetVersion)
     inputs:
       packageType: 'sdk'

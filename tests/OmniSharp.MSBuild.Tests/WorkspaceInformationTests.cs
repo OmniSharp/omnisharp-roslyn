@@ -63,6 +63,22 @@ namespace OmniSharp.MSBuild.Tests
         }
 
         [Fact]
+        public async Task NetCore30Project()
+        {
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("NetCore30Project"))
+            using (var host = CreateMSBuildTestHost(testProject.Directory))
+            {
+                var workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
+
+                Assert.NotNull(workspaceInfo.Projects);
+                var project = Assert.Single(workspaceInfo.Projects);
+                Assert.Equal("NetCore30Project", project.AssemblyName);
+                Assert.Equal(".NETCoreApp,Version=v3.0", project.TargetFramework);
+                Assert.Equal("netcoreapp3.0", project.TargetFrameworks[0].ShortName);
+            }
+        }
+
+        [Fact]
         public async Task TwoProjectsWithSolution()
         {
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("TwoProjectsWithSolution"))

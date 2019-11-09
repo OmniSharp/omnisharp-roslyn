@@ -60,8 +60,8 @@ namespace OmniSharp.MSBuild.Discovery.Providers
                 return NoInstances;
             }
 
-            // Double-check Mono version. MSBuild support in versions earlier than 5.2.0 is
-            // too experimental to use.
+            // Double-check Mono version.
+            // .NET Core 3.0 is not supported in MSBuild before 6.4.0
             var monoVersion = PlatformHelper.GetMonoVersion();
             if (monoVersion == null)
             {
@@ -69,16 +69,16 @@ namespace OmniSharp.MSBuild.Discovery.Providers
                 return NoInstances;
             }
 
-            if (monoVersion < new Version("5.18.1"))
+            if (monoVersion < new Version("6.4.0"))
             {
-                Logger.LogDebug($"Found Mono MSBuild but it could not be used because it is version {monoVersion} and in needs to be >= 5.18.1");
+                Logger.LogInformation($"Found Mono MSBuild but it could not be used because it is version {monoVersion} and it needs to be >= 6.4.0. OmniSharp will use embedded Mono instead. If you encounter any problems with OmniSharp, it is recommended to upgrade your Mono to the latest version. See https://www.mono-project.com/download/stable/.");
                 return NoInstances;
             }
 
             var toolsPath = FindMSBuildToolsPath(path);
             if (toolsPath == null)
             {
-                Logger.LogDebug($"Mono MSBuild could not be used because an MSBuild tools path could not be found.");
+                Logger.LogWarning($"Mono MSBuild could not be used because an MSBuild tools path could not be found.");
                 return NoInstances;
             }
 
@@ -91,8 +91,8 @@ namespace OmniSharp.MSBuild.Discovery.Providers
 
                 if (Platform.Current.OperatingSystem == Utilities.OperatingSystem.Linux)
                 {
-                    Logger.LogWarning(@"It looks like you have Mono 5.2.0 or greater installed but MSBuild could not be found.
-Try installing MSBuild into Mono (e.g. 'sudo apt-get install msbuild') to enable better MSBuild support.");
+                    Logger.LogWarning(@"It looks like you have Mono 6.4.0 or greater installed but MSBuild could not be found.
+Try installing MSBuild into Mono (e.g. 'sudo apt-get install msbuild') to enable better MSBuild support, or upgrade to latest Mono: https://www.mono-project.com/download/stable/.");
                 }
 
                 return NoInstances;
@@ -112,7 +112,7 @@ Try installing MSBuild into Mono (e.g. 'sudo apt-get install msbuild') to enable
                 new MSBuildInstance(
                     nameof(DiscoveryType.Mono),
                     toolsPath,
-                    new Version(16, 0),
+                    new Version(16, 3),
                     DiscoveryType.Mono,
                     propertyOverrides.ToImmutable()));
         }

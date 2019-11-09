@@ -23,7 +23,7 @@ namespace OmniSharp.DotNetTest.Tests
         protected async Task<RunTestResponse> RunDotNetTestAsync(string projectName, string methodName, string testFramework, bool shouldPass, string targetFrameworkVersion = null, bool expectResults = true)
         {
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync(projectName))
-            using (var host = CreateOmniSharpHost(testProject.Directory, ConfigurationData, DotNetCliVersion))
+            using (var host = CreateOmniSharpHost(testProject.Directory, null, DotNetCliVersion))
             {
                 var service = GetRequestHandler(host);
 

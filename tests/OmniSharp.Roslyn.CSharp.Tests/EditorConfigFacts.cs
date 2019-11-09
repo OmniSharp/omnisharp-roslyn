@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using OmniSharp.Models;
 using OmniSharp.Models.CodeFormat;
+using OmniSharp.Models.Diagnostics;
 using OmniSharp.Models.V2.CodeActions;
 using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Services.Formatting;
@@ -187,8 +188,8 @@ class Foo
             {
                 var result = await host.RequestCodeCheckAsync();
 
-                Assert.Contains(result.QuickFixes.Where(x => x.FileName == testFile.FileName), f => f.Text == "Use framework type (IDE0049)");
-                Assert.Contains(result.QuickFixes.Where(x => x.FileName == testFile.FileName), f => f.Text == "Use explicit type instead of 'var' (IDE0008)");
+                Assert.Contains(result.QuickFixes.OfType<DiagnosticLocation>().Where(x => x.FileName == testFile.FileName), f => f.Text == "Use framework type" && f.Id == "IDE0049");
+                Assert.Contains(result.QuickFixes.OfType<DiagnosticLocation>().Where(x => x.FileName == testFile.FileName), f => f.Text == "Use explicit type instead of 'var'" && f.Id == "IDE0008");
             }
         }
 
@@ -216,7 +217,7 @@ class Foo
             {
                 var result = await host.RequestCodeCheckAsync();
 
-                Assert.Contains(result.QuickFixes.Where(x => x.FileName == testFile.FileName), f => f.Text == "Naming rule violation: Missing prefix: 'xxx_' (IDE1006)");
+                Assert.Contains(result.QuickFixes.OfType<DiagnosticLocation>().Where(x => x.FileName == testFile.FileName), f => f.Text == "Naming rule violation: Missing prefix: 'xxx_'" && f.Id == "IDE1006");
             }
         }
 

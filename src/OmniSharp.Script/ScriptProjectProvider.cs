@@ -98,12 +98,9 @@ namespace OmniSharp.Script
                 .WithMetadataReferenceResolver(CreateMetadataReferenceResolver())
                 .WithSourceReferenceResolver(ScriptSourceResolver.Default)
                 .WithAssemblyIdentityComparer(DesktopAssemblyIdentityComparer.Default)
-                .WithSpecificDiagnosticOptions(CompilationOptionsHelper.GetDefaultSuppressedDiagnosticOptions());
-
-            if (_scriptOptions.IsNugetEnabled())
-            {
-                compilationOptions = compilationOptions.WithSpecificDiagnosticOptions(_scriptOptions.NullableDiagnostics);
-            }
+                .WithSpecificDiagnosticOptions(!_scriptOptions.IsNugetEnabled()
+                    ? CompilationOptionsHelper.GetDefaultSuppressedDiagnosticOptions()
+                    : CompilationOptionsHelper.GetDefaultSuppressedDiagnosticOptions(_scriptOptions.NullableDiagnostics)); // for .NET Core 3.0 dotnet-script use extra nullable diagnostics
 
             var topLevelBinderFlagsProperty = typeof(CSharpCompilationOptions).GetProperty(TopLevelBinderFlagsProperty, BindingFlags.Instance | BindingFlags.NonPublic);
             var binderFlagsType = typeof(CSharpCompilationOptions).GetTypeInfo().Assembly.GetType(BinderFlagsType);
