@@ -13,7 +13,6 @@ namespace OmniSharp.Options
 
     public class OmniSharpExtensionsOptions
     {
-
         public string[] LocationPaths { get; set; }
 
         public IEnumerable<string> GetNormalizedLocationPaths(IOmniSharpEnvironment env)
