@@ -55,11 +55,10 @@ namespace OmniSharp.Http
             var plugins = _commandLinePlugins.AssemblyNames.Concat(options.CurrentValue.Plugins.GetNormalizedLocationPaths(_environment));
 
             var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
-            var logger = loggerFactory.CreateLogger<Startup>();
             var assemblyLoader = serviceProvider.GetRequiredService<IAssemblyLoader>();
             _compositionHost = new CompositionHostBuilder(serviceProvider)
                 .WithOmniSharpAssemblies()
-                .WithAssemblies(assemblyLoader.LoadByAssemblyNameOrPath(logger, plugins).ToArray())
+                .WithAssemblies(assemblyLoader.LoadByAssemblyNameOrPath(loggerFactory, plugins).ToArray())
                 .Build();
 
             return serviceProvider;

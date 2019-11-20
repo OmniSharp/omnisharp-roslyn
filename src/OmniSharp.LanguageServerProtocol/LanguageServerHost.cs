@@ -100,7 +100,7 @@ namespace OmniSharp.LanguageServerProtocol
             var compositionHostBuilder = new CompositionHostBuilder(_serviceProvider)
                 .WithOmniSharpAssemblies()
                 .WithAssemblies(typeof(LanguageServerHost).Assembly)
-                .WithAssemblies(assemblyLoader.LoadByAssemblyNameOrPath(_logger, plugins.AssemblyNames).ToArray());
+                .WithAssemblies(assemblyLoader.LoadByAssemblyNameOrPath(_loggerFactory, plugins.AssemblyNames).ToArray());
 
             _compositionHost = compositionHostBuilder.Build();
 

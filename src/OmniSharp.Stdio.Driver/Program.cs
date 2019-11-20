@@ -62,10 +62,9 @@ namespace OmniSharp.Stdio.Driver
                     var options = serviceProvider.GetRequiredService<IOptionsMonitor<OmniSharpOptions>>();
                     var plugins = application.CreatePluginAssemblies(options.CurrentValue, environment);
 
-                    var logger = loggerFactory.CreateLogger<Program>();
                     var compositionHostBuilder = new CompositionHostBuilder(serviceProvider)
                         .WithOmniSharpAssemblies()
-                        .WithAssemblies(assemblyLoader.LoadByAssemblyNameOrPath(logger, plugins.AssemblyNames).ToArray());
+                        .WithAssemblies(assemblyLoader.LoadByAssemblyNameOrPath(loggerFactory, plugins.AssemblyNames).ToArray());
 
                     using (var host = new Host(input, writer, environment, serviceProvider, compositionHostBuilder, loggerFactory, cancellation))
                     {
