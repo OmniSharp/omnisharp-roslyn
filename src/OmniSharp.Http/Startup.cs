@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Composition.Hosting;
 using System.Linq;
 using Microsoft.AspNetCore.Builder;
@@ -22,9 +21,9 @@ namespace OmniSharp.Http
         private readonly IOmniSharpEnvironment _environment;
         private readonly IEventEmitter _eventEmitter;
         private CompositionHost _compositionHost;
-        private IEnumerable<string> _commandLinePlugins;
+        private PluginAssemblies _commandLinePlugins;
 
-        public Startup(IOmniSharpEnvironment environment, IEventEmitter eventEmitter, IEnumerable<string> commandLinePlugins)
+        public Startup(IOmniSharpEnvironment environment, IEventEmitter eventEmitter, PluginAssemblies commandLinePlugins)
         {
             _environment = environment;
             _eventEmitter = eventEmitter;
@@ -53,14 +52,14 @@ namespace OmniSharp.Http
                 });
 
             var options = serviceProvider.GetRequiredService<IOptionsMonitor<OmniSharpOptions>>();
-            var plugins = new PluginAssemblies(_commandLinePlugins.Concat(options.CurrentValue.Plugins.GetNormalizedLocationPaths(_environment)));
+            var plugins = _commandLinePlugins.AssemblyNames.Concat(options.CurrentValue.Plugins.GetNormalizedLocationPaths(_environment));
 
             var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
             var logger = loggerFactory.CreateLogger<Startup>();
             var assemblyLoader = serviceProvider.GetRequiredService<IAssemblyLoader>();
             _compositionHost = new CompositionHostBuilder(serviceProvider)
                 .WithOmniSharpAssemblies()
-                .WithAssemblies(assemblyLoader.LoadByAssemblyNameOrPath(logger, plugins.AssemblyNames).ToArray())
+                .WithAssemblies(assemblyLoader.LoadByAssemblyNameOrPath(logger, plugins).ToArray())
                 .Build();
 
             return serviceProvider;

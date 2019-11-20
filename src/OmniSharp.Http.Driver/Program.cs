@@ -1,4 +1,5 @@
 using System;
+using OmniSharp.Plugins;
 using OmniSharp.Services;
 
 namespace OmniSharp.Http.Driver
@@ -14,8 +15,9 @@ namespace OmniSharp.Http.Driver
                 Configuration.ZeroBasedIndices = application.ZeroBasedIndices;
 
                 var writer = new SharedTextWriter(Console.Out);
+                var commandLinePlugins = new PluginAssemblies(application.Plugin);
 
-                var host = new Host(environment, writer, application.Plugin, application.Port, application.Interface);
+                var host = new Host(environment, writer, commandLinePlugins, application.Port, application.Interface);
                 host.Start();
 
                 return 0;

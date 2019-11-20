@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -15,14 +14,14 @@ namespace OmniSharp.Http
     {
         private readonly IOmniSharpEnvironment _environment;
         private readonly ISharedTextWriter _sharedTextWriter;
-        private readonly IEnumerable<string> _commandLinePlugins;
+        private readonly PluginAssemblies _commandLinePlugins;
         private readonly int _serverPort;
         private readonly string _serverInterface;
 
         public Host(
             IOmniSharpEnvironment environment,
             ISharedTextWriter sharedTextWriter,
-            IEnumerable<string> commandLinePlugins,
+            PluginAssemblies commandLinePlugins,
             int serverPort,
             string serverInterface)
         {
