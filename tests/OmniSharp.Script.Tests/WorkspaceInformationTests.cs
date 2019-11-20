@@ -19,7 +19,7 @@ namespace OmniSharp.Script.Tests
         private static Dictionary<string, string> s_netCoreScriptingConfiguration = new Dictionary<string, string>
         {
             ["script:enableScriptNuGetReferences"] = "true",
-            ["script:defaultTargetFramework"] = "netcoreapp2.1"
+            ["script:defaultTargetFramework"] = "netcoreapp3.0"
         };
 
         public WorkspaceInformationTests(ITestOutputHelper output)
