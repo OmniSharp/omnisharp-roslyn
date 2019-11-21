@@ -38,22 +38,6 @@ namespace OmniSharp.MSBuild.Discovery.Providers
                 // a particular assembly in the GAC as a "guarantee". However, we don't include that
                 // in our Mono package. So, we'll just bypass the check.
                 propertyOverrides.Add("BypassFrameworkInstallChecks", "true");
-
-                // To better support older versions of Mono that don't include
-                // MSBuild 15, we attempt to set property overrides to the locations
-                // of Mono's 'xbuild' and 'xbuild-frameworks' paths.
-                if (_allowMonoPaths)
-                {
-                    if (TryGetMonoXBuildPath(out var xbuildPath))
-                    {
-                        extensionsPath = xbuildPath;
-                    }
-
-                    if (TryGetMonoXBuildFrameworksPath(out var xbuildFrameworksPath))
-                    {
-                        propertyOverrides.Add("TargetFrameworkRootPath", xbuildFrameworksPath);
-                    }
-                }
             }
 
             propertyOverrides.Add("MSBuildToolsPath", toolsPath);
