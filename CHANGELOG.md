@@ -2,7 +2,7 @@
 All changes to the project will be documented in this file.
 
 ## [1.34.8] - not yet released
-* Update to Roslyn `3.5.0-beta1-19564-02` (PR:[#1652](https://github.com/OmniSharp/omnisharp-roslyn/pull/1652))
+* Update to Roslyn `3.5.0-beta1-19571-01` (PR:[#1653](https://github.com/OmniSharp/omnisharp-roslyn/pull/1653))
 
 ## [1.34.7] - 2019-11-06
 * Updated the embedded Mono to 6.4.0 (PR:[#1640](https://github.com/OmniSharp/omnisharp-roslyn/pull/1640))
