@@ -51,47 +51,5 @@ namespace OmniSharp.MSBuild.Discovery.Providers
                     propertyOverrides.ToImmutable(),
                     setMSBuildExePathVariable: true));
         }
-
-        private static bool TryGetMonoXBuildPath(out string path)
-        {
-            path = null;
-
-            var monoXBuildDirPath = PlatformHelper.GetMonoXBuildDirPath();
-            if (monoXBuildDirPath == null)
-            {
-                return false;
-            }
-
-            var monoXBuild15DirPath = Path.Combine(monoXBuildDirPath, "15.0");
-            if (Directory.Exists(monoXBuild15DirPath))
-            {
-                path = monoXBuildDirPath;
-                return true;
-            }
-
-
-            var monoXBuildCurrentDirPath = Path.Combine(monoXBuildDirPath, "Current");
-            if (Directory.Exists(monoXBuildCurrentDirPath))
-            {
-                path = monoXBuildDirPath;
-                return true;
-            }
-
-            return false;
-        }
-
-        private static bool TryGetMonoXBuildFrameworksPath(out string path)
-        {
-            path = null;
-
-            var monoMSBuildXBuildFrameworksDirPath = PlatformHelper.GetMonoXBuildFrameworksDirPath();
-            if (monoMSBuildXBuildFrameworksDirPath == null)
-            {
-                return false;
-            }
-
-            path = monoMSBuildXBuildFrameworksDirPath;
-            return true;
-        }
     }
 }
