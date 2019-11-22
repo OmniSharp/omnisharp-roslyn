@@ -8,12 +8,9 @@ namespace OmniSharp.MSBuild.Discovery.Providers
 {
     internal class StandAloneInstanceProvider : MSBuildInstanceProvider
     {
-        private readonly bool _allowMonoPaths;
-
-        public StandAloneInstanceProvider(ILoggerFactory loggerFactory, bool allowMonoPaths)
+        public StandAloneInstanceProvider(ILoggerFactory loggerFactory)
             : base(loggerFactory)
         {
-            _allowMonoPaths = allowMonoPaths;
         }
 
         public override ImmutableArray<MSBuildInstance> GetInstances()
