@@ -20,10 +20,12 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
         protected override string EndpointName => OmniSharpEndpoints.GotoDefinition;
 
-        [Fact]
-        public async Task ReturnsDefinitionInSameFile()
+        [Theory]
+        [InlineData("foo.cs")]
+        [InlineData("foo.csx")]
+        public async Task ReturnsDefinitionInSameFile(string filename)
         {
-            var testFile = new TestFile("foo.cs", @"
+            var testFile = new TestFile(filename, @"
 class {|def:Foo|} {
     private F$$oo foo;
 }");
@@ -31,10 +33,12 @@ class {|def:Foo|} {
             await TestGoToSourceAsync(testFile);
         }
 
-        [Fact]
-        public async Task DoesNotReturnOnPropertAccessorGet()
+        [Theory]
+        [InlineData("foo.cs")]
+        [InlineData("foo.csx")]
+        public async Task DoesNotReturnOnPropertAccessorGet(string filename)
         {
-            var testFile = new TestFile("foo.cs", @"
+            var testFile = new TestFile(filename, @"
 class Test {
     public string Foo{ g$$et; set; }
 }");
@@ -42,10 +46,12 @@ class Test {
             await TestGoToSourceAsync(testFile);
         }
 
-        [Fact]
-        public async Task DoesNotReturnOnPropertAccessorSet()
+        [Theory]
+        [InlineData("foo.cs")]
+        [InlineData("foo.csx")]
+        public async Task DoesNotReturnOnPropertAccessorSet(string filename)
         {
-            var testFile = new TestFile("foo.cs", @"
+            var testFile = new TestFile(filename, @"
 class Test {
     public int Foo{ get; s$$et; }
 }");
@@ -53,10 +59,12 @@ class Test {
             await TestGoToSourceAsync(testFile);
         }
 
-        [Fact]
-        public async Task DoesNotReturnOnPropertyAccessorPropertyDef()
+        [Theory]
+        [InlineData("foo.cs")]
+        [InlineData("foo.csx")]
+        public async Task DoesNotReturnOnPropertyAccessorPropertyDef(string filename)
         {
-            var testFile = new TestFile("foo.cs", @"
+            var testFile = new TestFile(filename, @"
 class Test {
     public int |def:Foo| Fo$$o{ get; set; }
 }");
@@ -64,10 +72,12 @@ class Test {
             await TestGoToSourceAsync(testFile);
         }
 
-        [Fact]
-        public async Task ReturnsOnPropertyAccessorPropertySetting()
+        [Theory]
+        [InlineData("foo.cs")]
+        [InlineData("foo.csx")]
+        public async Task ReturnsOnPropertyAccessorPropertySetting(string filename)
         {
-            var testFile = new TestFile("foo.cs", @"
+            var testFile = new TestFile(filename, @"
 class Test {
     public int |def:Foo|{ get; set; }
 
@@ -80,10 +90,12 @@ class Test {
             await TestGoToSourceAsync(testFile);
         }
 
-        [Fact]
-        public async Task ReturnsOnPropertyAccessorField1()
+        [Theory]
+        [InlineData("foo.cs")]
+        [InlineData("foo.csx")]
+        public async Task ReturnsOnPropertyAccessorField1(string filename)
         {
-            var testFile = new TestFile("foo.cs", @"
+            var testFile = new TestFile(filename, @"
 class Test {
 
     public int |def:foo|;
@@ -98,10 +110,12 @@ class Test {
             await TestGoToSourceAsync(testFile);
         }
 
-        [Fact]
-        public async Task ReturnsOnPropertyAccessorField2()
+        [Theory]
+        [InlineData("foo.cs")]
+        [InlineData("foo.csx")]
+        public async Task ReturnsOnPropertyAccessorField2(string filename)
         {
-            var testFile = new TestFile("foo.cs", @"
+            var testFile = new TestFile(filename, @"
 class Test {
 
     public int |def:foo|;
@@ -116,10 +130,12 @@ class Test {
             await TestGoToSourceAsync(testFile);
         }
 
-        [Fact]
-        public async Task ReturnsOnPropertyAccessorPropertyGetting()
+        [Theory]
+        [InlineData("foo.cs")]
+        [InlineData("foo.csx")]
+        public async Task ReturnsOnPropertyAccessorPropertyGetting(string filename)
         {
-            var testFile = new TestFile("foo.cs", @"
+            var testFile = new TestFile(filename, @"
 class Test {
     public int |def:Foo|{ get; set; }
 
