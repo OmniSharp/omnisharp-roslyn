@@ -117,6 +117,62 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         }
 
         [Fact]
+        public async Task CanFindReferencesWithLineRemapping()
+        {
+            const string code = @"
+                public class Foo
+                {
+                    public void b$$ar() { }
+                }
+
+                public class FooConsumer
+                {
+                    public FooConsumer()
+                    {
+#line 1
+                        new Foo().bar();
+#line default
+                    }
+                }";
+
+            var usages = await FindUsagesAsync(code);
+            Assert.Equal(2, usages.QuickFixes.Count());
+            Assert.True(usages.QuickFixes.Count(x => x.Line == 0) == 1, "One result should be resolve to line 0");
+            Assert.True(usages.QuickFixes.Count(x => x.Line == 3) == 1, "One result should be resolve to line 3");
+        }
+
+        [Fact]
+        public async Task CanFindReferencesWithLineRemappingAcrossFiles()
+        {
+            var testFiles = new[]
+            {
+                new TestFile("a.cs", @"
+                public class Foo
+                {
+                    public void b$$ar() { }
+                }
+
+                public class FooConsumer
+                {
+                    public FooConsumer()
+                    {
+#line 1 ""b.cs""
+                        new Foo().bar();
+#line default
+                    }
+                }"),
+                new TestFile("b.cs",
+                    @"// hello")
+            };
+
+            var usages = await FindUsagesAsync(testFiles, onlyThisFile: false);
+            Assert.Equal(2, usages.QuickFixes.Count());
+            Assert.True(usages.QuickFixes.Count(x => x.Line == 0) == 1, "One result should be resolved to line 1");
+            Assert.True(usages.QuickFixes.Count(x => x.FileName == "b.cs") == 1, "One result should be resolved to 'b'cs");
+            Assert.True(usages.QuickFixes.Count(x => x.Line == 3) == 1, "One result should be resolved to line 4");
+        }
+
+        [Fact]
         public async Task ExcludesMethodDefinition()
         {
             const string code = @"
