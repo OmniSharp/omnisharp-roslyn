@@ -13,7 +13,7 @@ namespace OmniSharp.Helpers
             if (!location.IsInSource)
                 throw new Exception("Location is not in the source tree");
 
-            var lineSpan = location.GetLineSpan();
+            var lineSpan = location.GetMappedLineSpan();
             var path = lineSpan.Path;
             var documents = workspace.GetDocuments(path);
 
