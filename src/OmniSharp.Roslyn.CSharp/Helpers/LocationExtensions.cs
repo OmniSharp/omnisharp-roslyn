@@ -25,9 +25,9 @@ namespace OmniSharp.Helpers
                 Text = text.Trim(),
                 FileName = path,
                 Line = line,
-                Column = lineSpan.StartLinePosition.Character,
+                Column = lineSpan.HasMappedPath ? 0 : lineSpan.StartLinePosition.Character, // when a #line directive maps into a separate file, assume columns (0,0)
                 EndLine = lineSpan.EndLinePosition.Line,
-                EndColumn = lineSpan.EndLinePosition.Character,
+                EndColumn = lineSpan.HasMappedPath ? 0 : lineSpan.EndLinePosition.Character,
                 Projects = documents.Select(document => document.Project.Name).ToArray()
             };
         }

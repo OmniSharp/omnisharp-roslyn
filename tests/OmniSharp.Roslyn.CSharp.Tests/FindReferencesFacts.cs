@@ -117,7 +117,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         }
 
         [Fact]
-        public async Task CanFindReferencesWithLineRemapping()
+        public async Task CanFindReferencesWithLineMapping()
         {
             const string code = @"
                 public class Foo
@@ -137,12 +137,19 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             var usages = await FindUsagesAsync(code);
             Assert.Equal(2, usages.QuickFixes.Count());
-            Assert.True(usages.QuickFixes.Count(x => x.Line == 0) == 1, "One result should be resolve to line 0");
-            Assert.True(usages.QuickFixes.Count(x => x.Line == 3) == 1, "One result should be resolve to line 3");
+
+            var mappedResult = usages.QuickFixes.FirstOrDefault(x => x.Line == 0);
+            var regularResult = usages.QuickFixes.FirstOrDefault(x => x.Line == 3);
+            Assert.NotNull(mappedResult);
+            Assert.NotNull(regularResult);
+
+            // regular result has regular postition
+            Assert.Equal(32, regularResult.Column);
+            Assert.Equal(35, regularResult.EndColumn);
         }
 
         [Fact]
-        public async Task CanFindReferencesWithLineRemappingAcrossFiles()
+        public async Task CanFindReferencesWithLineMappingAcrossFiles()
         {
             var testFiles = new[]
             {
@@ -167,9 +174,19 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             var usages = await FindUsagesAsync(testFiles, onlyThisFile: false);
             Assert.Equal(2, usages.QuickFixes.Count());
-            Assert.True(usages.QuickFixes.Count(x => x.Line == 0) == 1, "One result should be resolved to line 1");
-            Assert.True(usages.QuickFixes.Count(x => x.FileName == "b.cs") == 1, "One result should be resolved to 'b'cs");
-            Assert.True(usages.QuickFixes.Count(x => x.Line == 3) == 1, "One result should be resolved to line 4");
+
+            var mappedResult = usages.QuickFixes.FirstOrDefault(x => x.Line == 0 && x.FileName == "b.cs");
+            var regularResult = usages.QuickFixes.FirstOrDefault(x => x.Line == 3 && x.FileName == "a.cs");
+            Assert.NotNull(mappedResult);
+            Assert.NotNull(regularResult);
+
+            // regular result has regular postition
+            Assert.Equal(32, regularResult.Column);
+            Assert.Equal(35, regularResult.EndColumn);
+
+            // mapped result has column 0,0
+            Assert.Equal(0, mappedResult.Column);
+            Assert.Equal(0, mappedResult.EndColumn);
         }
 
         [Fact]
