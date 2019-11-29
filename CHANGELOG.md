@@ -2,6 +2,7 @@
 All changes to the project will be documented in this file.
 
 ## [1.34.9] - not yet released
+* Line pragma is now respected in find references ([#1649](https://github.com/OmniSharp/omnisharp-roslyn/issues/1649), PR:[#1660](https://github.com/OmniSharp/omnisharp-roslyn/pull/1660))
 * Do not set mono paths when running in standalone mode ([omnisharp-vscode#3410](https://github.com/OmniSharp/omnisharp-vscode/issues/3410), [omnisharp-vscode#3340](https://github.com/OmniSharp/omnisharp-vscode/issues/3340), [#1650](https://github.com/OmniSharp/omnisharp-roslyn/issues/1650), PR:[#1656](https://github.com/OmniSharp/omnisharp-roslyn/pull/1656))
 
 ## [1.34.8] - 2019-11-21
