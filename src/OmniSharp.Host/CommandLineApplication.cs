@@ -45,13 +45,13 @@ namespace OmniSharp
             {
                 // we are interested in arg with "=" if it's first
                 // or not-first but not preceded by "-s" or "--source"
-                if (args[i].Contains("="))
+                if (args[i] != null && args[i].Contains("="))
                 {
                     if (i == 0)
                     {
                         extraArgs.Add(args[i]);
                     }
-                    else if (!args[i - 1].Equals("-s", StringComparison.OrdinalIgnoreCase) && !args[i - 1].Equals("-s", StringComparison.OrdinalIgnoreCase))
+                    else if (!args[i - 1].Equals("-s", StringComparison.OrdinalIgnoreCase) && !args[i - 1].Equals("--source", StringComparison.OrdinalIgnoreCase))
                     {
                         extraArgs.Add(args[i]);
                     }
