@@ -36,11 +36,29 @@ namespace OmniSharp
             _debug = Application.Option("-d | --debug", "Wait for debugger to attach", CommandOptionType.NoValue);
         }
 
-        public int Execute(IEnumerable<string> args)
+        public int Execute(string[] args)
         {
             // omnisharp.json arguments should not be parsed by the CLI args parser
             // they will contain "=" so we should filter them out
-            OtherArgs = args.Where(x => x.Contains("="));
+            var extraArgs = new List<string>();
+            for (var i = 0; i < args.Length; i++)
+            {
+                // we are interested in arg with "=" if it's first
+                // or not-first but not preceded by "-s" or "--source"
+                if (args[i] != null && args[i].Contains("="))
+                {
+                    if (i == 0)
+                    {
+                        extraArgs.Add(args[i]);
+                    }
+                    else if (!args[i - 1].Equals("-s", StringComparison.OrdinalIgnoreCase) && !args[i - 1].Equals("--source", StringComparison.OrdinalIgnoreCase))
+                    {
+                        extraArgs.Add(args[i]);
+                    }
+                }
+            }
+
+            OtherArgs = extraArgs;
             return Application.Execute(args.Except(OtherArgs).ToArray());
         }
 

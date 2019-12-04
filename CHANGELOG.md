@@ -3,6 +3,7 @@ All changes to the project will be documented in this file.
 
 ## [1.34.9] - not yet released
 * Do not set mono paths when running in standalone mode ([omnisharp-vscode#3410](https://github.com/OmniSharp/omnisharp-vscode/issues/3410), [omnisharp-vscode#3340](https://github.com/OmniSharp/omnisharp-vscode/issues/3340), [#1650](https://github.com/OmniSharp/omnisharp-roslyn/issues/1650), PR:[#1656](https://github.com/OmniSharp/omnisharp-roslyn/pull/1656))
+* Fixed a bug where OmniSharp would crash on startup if the path contained `=` sign ([omnisharp-vscode#3436](https://github.com/OmniSharp/omnisharp-vscode/issues/3436), PR:[#1661](https://github.com/OmniSharp/omnisharp-roslyn/pull/1661))
 
 ## [1.34.8] - 2019-11-21
 * Update to Roslyn `3.5.0-beta1-19571-01` (PR:[#1653](https://github.com/OmniSharp/omnisharp-roslyn/pull/1653))
