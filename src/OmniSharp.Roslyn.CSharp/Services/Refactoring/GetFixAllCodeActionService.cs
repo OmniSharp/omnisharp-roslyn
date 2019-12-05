@@ -1,23 +1,32 @@
-﻿using System.Composition;
+﻿using System.Collections.Generic;
+using System.Composition;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
+using Microsoft.Extensions.Logging;
 using OmniSharp.Abstractions.Models.V1.FixAll;
 using OmniSharp.Mef;
 using OmniSharp.Roslyn.CSharp.Services.Refactoring.V2;
 using OmniSharp.Roslyn.CSharp.Workers.Diagnostics;
+using OmniSharp.Services;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
 {
     [OmniSharpHandler(OmniSharpEndpoints.GetFixAll, LanguageNames.CSharp)]
-    public class GetFixAllCodeActionService : FixAllCodeActionBase, IRequestHandler<GetFixAllRequest, GetFixAllResponse>
+    public class GetFixAllCodeActionService : BaseCodeActionService<GetFixAllRequest, GetFixAllResponse>
     {
         [ImportingConstructor]
-        public GetFixAllCodeActionService(ICsDiagnosticWorker diagnosticWorker, CachingCodeFixProviderForProjects codeFixProvider, OmniSharpWorkspace workspace) : base(diagnosticWorker, codeFixProvider, workspace)
+        public GetFixAllCodeActionService(
+            OmniSharpWorkspace workspace,
+            [ImportMany] IEnumerable<ICodeActionProvider> providers,
+            ILoggerFactory loggerFactory,
+            ICsDiagnosticWorker diagnostics,
+            CachingCodeFixProviderForProjects codeFixesForProject
+        ) : base(workspace, providers, loggerFactory.CreateLogger<GetFixAllCodeActionService>(), diagnostics, codeFixesForProject)
         {
         }
 
-        public async Task<GetFixAllResponse> Handle(GetFixAllRequest request)
+        public override async Task<GetFixAllResponse> Handle(GetFixAllRequest request)
         {
             var availableFixes = await GetDiagnosticsMappedWithFixAllProviders(request.Scope, request.FileName);
 

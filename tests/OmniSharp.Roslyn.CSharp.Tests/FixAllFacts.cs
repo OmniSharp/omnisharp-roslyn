@@ -71,18 +71,27 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     class C{}
                 ";
 
+                // If filtering isn't set, this should also add 'internal' etc which
+                // should not appear now as result.
                 var expectedText =
                 @"
-                    internal class C{}
+                    class C { }
                 ";
 
                 var testFilePath = CreateTestProjectWithDocument(host, originalText);
 
                 var handler = host.GetRequestHandler<RunFixAllCodeActionService>(OmniSharpEndpoints.RunFixAll);
 
+                await handler.Handle(new RunFixAllRequest
+                {
+                    Scope = FixAllScope.Document,
+                    FileName = testFilePath,
+                    FixAllFilter = new[] { new FixAllItem("IDE0055", "Fix formatting") }
+                });
+
                 string textAfterFix = await GetContentOfDocumentFromWorkspace(host, testFilePath);
 
-                AssertUtils.AssertIgnoringIndent(textAfterFix, expectedText);
+                AssertUtils.AssertIgnoringIndent(expectedText, textAfterFix);
             }
         }
 
