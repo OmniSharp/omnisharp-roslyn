@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
@@ -13,7 +14,9 @@ namespace OmniSharp.Helpers
             if (!location.IsInSource)
                 throw new Exception("Location is not in the source tree");
 
-            var lineSpan = location.GetLineSpan();
+            var lineSpan = Path.GetExtension(location.SourceTree.FilePath).Equals(".cake", StringComparison.OrdinalIgnoreCase)
+                ? location.GetLineSpan()
+                : location.GetMappedLineSpan();
             var path = lineSpan.Path;
             var documents = workspace.GetDocuments(path);
 
@@ -25,9 +28,9 @@ namespace OmniSharp.Helpers
                 Text = text.Trim(),
                 FileName = path,
                 Line = line,
-                Column = lineSpan.StartLinePosition.Character,
+                Column = lineSpan.HasMappedPath ? 0 : lineSpan.StartLinePosition.Character, // when a #line directive maps into a separate file, assume columns (0,0)
                 EndLine = lineSpan.EndLinePosition.Line,
-                EndColumn = lineSpan.EndLinePosition.Character,
+                EndColumn = lineSpan.HasMappedPath ? 0 : lineSpan.EndLinePosition.Character,
                 Projects = documents.Select(document => document.Project.Name).ToArray()
             };
         }
