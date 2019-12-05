@@ -24,18 +24,18 @@ namespace OmniSharp
     [Export, Shared]
     public class OmniSharpWorkspace : Workspace
     {
-        public bool IsInitialized
+        public bool Initialized
         {
             get { return isInitialized; }
             set
             {
                 if (isInitialized == value) return;
                 isInitialized = value;
-                Initialized(isInitialized);
+                OnInitialized(isInitialized);
             }
         }
 
-        public event Action<bool> Initialized = delegate { };
+        public event Action<bool> OnInitialized = delegate { };
 
         public BufferManager BufferManager { get; private set; }
 

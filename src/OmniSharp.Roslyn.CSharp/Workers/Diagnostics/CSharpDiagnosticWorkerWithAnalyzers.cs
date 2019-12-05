@@ -62,9 +62,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             Task.Factory.StartNew(() => Worker(AnalyzerWorkType.Foreground), TaskCreationOptions.LongRunning);
             Task.Factory.StartNew(() => Worker(AnalyzerWorkType.Background), TaskCreationOptions.LongRunning);
 
-            _workspace.Initialized += (isInitialized) => OnWorkspaceInitialized(isInitialized);
+            _workspace.OnInitialized += (isInitialized) => OnWorkspaceInitialized(isInitialized);
 
-            OnWorkspaceInitialized(_workspace.IsInitialized);
+            OnWorkspaceInitialized(_workspace.Initialized);
         }
 
         public void OnWorkspaceInitialized(bool isInitialized)

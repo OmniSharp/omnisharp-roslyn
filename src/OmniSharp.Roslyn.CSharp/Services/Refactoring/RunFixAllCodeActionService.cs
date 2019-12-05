@@ -50,6 +50,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
                     return request.FixAllFilter.Any(x => diagWithFix.HasFixForId(x.Id));
                 });
 
+            var cancellationSource = new CancellationTokenSource(TimeSpan.FromMilliseconds(request.Timeout));
+
             foreach (var singleFixableProviderWithDocument in filteredProvidersWithFix)
             {
                 try
@@ -70,7 +72,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
                         action.EquivalenceKey,
                         fixableDiagnosticIds,
                         _fixAllDiagnosticProvider,
-                        CancellationToken.None
+                        cancellationSource.Token
                     );
 
                     var fixes = await singleFixableProviderWithDocument.FixAllProvider.GetFixAsync(fixAllContext);
@@ -78,7 +80,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
                     if (fixes == null)
                         continue;
 
-                    var operations = await fixes.GetOperationsAsync(CancellationToken.None);
+                    var operations = await fixes.GetOperationsAsync(cancellationSource.Token);
 
                     foreach (var o in operations)
                     {
@@ -86,7 +88,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
 
                         if (o is ApplyChangesOperation applyChangesOperation)
                         {
-                            applyChangesOperation.Apply(Workspace, CancellationToken.None);
+                            applyChangesOperation.Apply(Workspace, cancellationSource.Token);
                         }
                     }
                 }

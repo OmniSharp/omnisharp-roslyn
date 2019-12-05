@@ -105,7 +105,7 @@ namespace OmniSharp.Stdio
             endpointHandlers.Add(
                 OmniSharpEndpoints.CheckReadyStatus,
                 new Lazy<EndpointHandler>(
-                    () => new GenericEndpointHandler(x => Task.FromResult<object>(workspace.IsInitialized)))
+                    () => new GenericEndpointHandler(x => Task.FromResult<object>(workspace.Initialized)))
             );
             endpointHandlers.Add(
                 OmniSharpEndpoints.StopServer,
