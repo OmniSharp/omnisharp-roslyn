@@ -7,10 +7,10 @@ namespace OmniSharp.Abstractions.Models.V1.FixAll
     {
         public RunFixAllResponse()
         {
-            Changes = new List<ModifiedFileResponse>();
+            Changes = new List<FileOperationResponse>();
         }
 
-        public IEnumerable<ModifiedFileResponse> Changes { get; set; }
+        public IEnumerable<FileOperationResponse> Changes { get; set; }
 
         public IAggregateResponse Merge(IAggregateResponse response) { return response; }
     }

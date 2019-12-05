@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using OmniSharp.Abstractions.Models.V1.FixAll;
+using OmniSharp.Models;
 using OmniSharp.Models.Events;
 using OmniSharp.Roslyn.CSharp.Services.Refactoring;
 using TestUtility;
@@ -44,14 +45,14 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 string textAfterFix = await GetContentOfDocumentFromWorkspace(host, testFilePath);
                 AssertUtils.AssertIgnoringIndent(textAfterFix, expectedText);
 
-                var internalClassChange = response.Changes.Single().Changes.Single(x => x.NewText == "internal ");
+                var internalClassChange = response.Changes.OfType<ModifiedFileResponse>().Single().Changes.Single(x => x.NewText == "internal ");
 
                 Assert.Equal(0, internalClassChange.StartLine);
                 Assert.Equal(0, internalClassChange.StartColumn);
                 Assert.Equal(0, internalClassChange.EndLine);
                 Assert.Equal(0, internalClassChange.EndColumn);
 
-                var formatFix = response.Changes.Single().Changes.Single(x => x.NewText == " ");
+                var formatFix = response.Changes.OfType<ModifiedFileResponse>().Single().Changes.Single(x => x.NewText == " ");
 
                 Assert.Equal(0, formatFix.StartLine);
                 Assert.Equal(9, formatFix.StartColumn);
@@ -79,15 +80,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
                 var handler = host.GetRequestHandler<RunFixAllCodeActionService>(OmniSharpEndpoints.RunFixAll);
 
-                var response = await handler.Handle(new RunFixAllRequest
-                {
-                    Scope = FixAllScope.Document,
-                    FileName = testFilePath,
-                    FixAllFilter = new [] { new FixAllItem("IDE0040", message: "This really doesn't matter. Works as description. Fix internal etc.") }
-                });
-
                 string textAfterFix = await GetContentOfDocumentFromWorkspace(host, testFilePath);
-                var changesFromOnlyDocument = response.Changes.Single().Changes.Single();
 
                 AssertUtils.AssertIgnoringIndent(textAfterFix, expectedText);
             }
