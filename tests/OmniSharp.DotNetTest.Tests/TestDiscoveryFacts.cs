@@ -47,7 +47,7 @@ namespace OmniSharp.DotNetTest.Tests
         public async Task FindTestMethods(string projectName, string fileName, int line, int column, bool expectToFind, string expectedTestFramework, string expectedFeatureName, string expectedMethodName)
         {
             using (var testProject = await this._testAssets.GetTestProjectAsync(projectName))
-            using (var host = CreateOmniSharpHost(testProject.Directory, ConfigurationData, DotNetCliVersion.Current))
+            using (var host = CreateOmniSharpHost(testProject.Directory, null, DotNetCliVersion.Current))
             {
                 var filePath = Path.Combine(testProject.Directory, fileName);
 

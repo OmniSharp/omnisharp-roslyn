@@ -4,7 +4,9 @@ using System.Text;
 using System.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using OmniSharp.LanguageServerProtocol;
+using OmniSharp.Options;
 using OmniSharp.Services;
 using OmniSharp.Stdio.Eventing;
 using OmniSharp.Stdio.Logging;
@@ -57,11 +59,13 @@ namespace OmniSharp.Stdio.Driver
                     var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
                     var assemblyLoader = serviceProvider.GetRequiredService<IAssemblyLoader>();
 
-                    var plugins = application.CreatePluginAssemblies();
+                    var options = serviceProvider.GetRequiredService<IOptionsMonitor<OmniSharpOptions>>();
+                    var plugins = application.CreatePluginAssemblies(options.CurrentValue, environment);
 
+                    var logger = loggerFactory.CreateLogger<Program>();
                     var compositionHostBuilder = new CompositionHostBuilder(serviceProvider)
                         .WithOmniSharpAssemblies()
-                        .WithAssemblies(assemblyLoader.LoadByAssemblyNameOrPath(plugins.AssemblyNames).ToArray());
+                        .WithAssemblies(assemblyLoader.LoadByAssemblyNameOrPath(logger, plugins.AssemblyNames).ToArray());
 
                     using (var host = new Host(input, writer, environment, serviceProvider, compositionHostBuilder, loggerFactory, cancellation))
                     {

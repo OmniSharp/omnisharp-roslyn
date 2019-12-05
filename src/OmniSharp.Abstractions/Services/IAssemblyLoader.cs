@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
@@ -54,11 +55,22 @@ namespace OmniSharp.Services
             }
         }
 
-        public static IEnumerable<Assembly> LoadByAssemblyNameOrPath(this IAssemblyLoader loader, IEnumerable<string>  assemblyNames)
+        public static IEnumerable<Assembly> LoadByAssemblyNameOrPath(this IAssemblyLoader loader, ILogger logger, IEnumerable<string>  assemblyNames)
         {
             foreach (var assemblyName in assemblyNames)
             {
-                yield return loader.LoadByAssemblyNameOrPath(assemblyName);
+                Assembly assembly;
+                try
+                {
+                    assembly = loader.LoadByAssemblyNameOrPath(assemblyName);
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, $"Failed to load assembly by name or path: {assemblyName}");
+                    continue;
+                }
+
+                yield return assembly;
             }
         }
     }

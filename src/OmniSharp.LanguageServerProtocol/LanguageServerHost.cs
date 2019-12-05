@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using OmniSharp.Extensions.JsonRpc;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OmniSharp.Extensions.LanguageServer.Protocol.Server;
@@ -16,6 +17,7 @@ using OmniSharp.LanguageServerProtocol.Eventing;
 using OmniSharp.LanguageServerProtocol.Handlers;
 using OmniSharp.Mef;
 using OmniSharp.Models.Diagnostics;
+using OmniSharp.Options;
 using OmniSharp.Roslyn;
 using OmniSharp.Services;
 using OmniSharp.Utilities;
@@ -91,13 +93,14 @@ namespace OmniSharp.LanguageServerProtocol
             _eventEmitter = new LanguageServerEventEmitter();
             _serviceProvider = CompositionHostBuilder.CreateDefaultServiceProvider(_environment, configurationRoot, _eventEmitter, _services);
 
-            var plugins = _application.CreatePluginAssemblies();
+            var options = _serviceProvider.GetRequiredService<IOptionsMonitor<OmniSharpOptions>>();
+            var plugins = _application.CreatePluginAssemblies(options.CurrentValue, _environment);
 
             var assemblyLoader = _serviceProvider.GetRequiredService<IAssemblyLoader>();
             var compositionHostBuilder = new CompositionHostBuilder(_serviceProvider)
                 .WithOmniSharpAssemblies()
                 .WithAssemblies(typeof(LanguageServerHost).Assembly)
-                .WithAssemblies(assemblyLoader.LoadByAssemblyNameOrPath(plugins.AssemblyNames).ToArray());
+                .WithAssemblies(assemblyLoader.LoadByAssemblyNameOrPath(_logger, plugins.AssemblyNames).ToArray());
 
             _compositionHost = compositionHostBuilder.Build();
 

@@ -80,8 +80,8 @@ namespace OmniSharp.Utilities
             }
             else
             {
-                // If this is not Windows, run 'uname' on Bash to get the OS name and architecture.
-                var output = RunOnBashAndCaptureOutput("uname", "-s -m");
+                // If this is not Windows, run 'uname' on a POSIX shell to get the OS name and architecture.
+                var output = RunOnShellAndCaptureOutput("uname", "-s -m");
                 if (string.IsNullOrEmpty(output))
                 {
                     return new Platform();
@@ -126,7 +126,7 @@ namespace OmniSharp.Utilities
 
         private static Version GetMacOSVersion()
         {
-            var versionText = RunOnBashAndCaptureOutput("sw_vers", "-productVersion");
+            var versionText = RunOnShellAndCaptureOutput("sw_vers", "-productVersion");
             return ParseVersion(versionText);
         }
 
@@ -191,7 +191,7 @@ namespace OmniSharp.Utilities
             return null;
         }
 
-        private static string RunOnBashAndCaptureOutput(string fileName, string arguments)
-            => ProcessHelper.RunAndCaptureOutput("/bin/bash", $"-c '{fileName} {arguments}'");
+        private static string RunOnShellAndCaptureOutput(string fileName, string arguments)
+            => ProcessHelper.RunAndCaptureOutput("/bin/sh", $"-c '{fileName} {arguments}'");
     }
 }

@@ -155,7 +155,7 @@ namespace TestUtility
             => new MemoryCache(new MemoryCacheOptions());
 
         private static IMSBuildLocator CreateMSBuildLocator(ILoggerFactory loggerFactory, IAssemblyLoader assemblyLoader)
-            => MSBuildLocator.CreateStandAlone(loggerFactory, assemblyLoader, allowMonoPaths: false);
+            => MSBuildLocator.CreateStandAlone(loggerFactory, assemblyLoader);
 
         private static IOptionsMonitor<OmniSharpOptions> CreateOptionsMonitor(IConfigurationRoot configurationRoot)
         {

@@ -5,11 +5,14 @@ using System.Linq;
 
 namespace OmniSharp.Options
 {
-    public class RoslynExtensionsOptions
+    public class RoslynExtensionsOptions : OmniSharpExtensionsOptions
     {
         public bool EnableAnalyzersSupport { get; set; }
         public int DocumentAnalysisTimeoutMs { get; set; } = 10 * 1000;
+    }
 
+    public class OmniSharpExtensionsOptions
+    {
         public string[] LocationPaths { get; set; }
 
         public IEnumerable<string> GetNormalizedLocationPaths(IOmniSharpEnvironment env)

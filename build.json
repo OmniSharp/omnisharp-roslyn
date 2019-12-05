@@ -1,14 +1,14 @@
 {
   "DotNetInstallScriptURL": "https://dot.net/v1",
-  "DotNetChannel": "preview",
-  "DotNetVersion": "2.1.505",
+  "DotNetChannel": "Current",
+  "DotNetVersion": "3.0.100",
   "RequiredMonoVersion": "6.4.0",
   "DownloadURL": "https://roslynomnisharp.blob.core.windows.net/ext",
-  "MonoRuntimeMacOS": "mono.macOS-5.18.1.0.zip",
-  "MonoRuntimeLinux32": "mono.linux-x86-5.18.1.0.zip",
-  "MonoRuntimeLinux64": "mono.linux-x86_64-5.18.1.0.zip",
-  "MonoMSBuildRuntime": "Microsoft.Build.Runtime.Mono-5.18.1.0.zip",
-  "MonoMSBuildLib": "Microsoft.Build.Lib.Mono-5.18.1.0.zip",
+  "MonoRuntimeMacOS": "mono.macOS-6.4.0.198.zip",
+  "MonoRuntimeLinux32": "mono.linux-x86-6.4.0.198.zip",
+  "MonoRuntimeLinux64": "mono.linux-x86_64-6.4.0.198.zip",
+  "MonoMSBuildRuntime": "Microsoft.Build.Runtime.Mono-6.4.0.198.zip",
+  "MonoMSBuildLib": "Microsoft.Build.Lib.Mono-6.4.0.198.zip",
   "HostProjects": [
     "OmniSharp.Stdio.Driver",
     "OmniSharp.Http.Driver"
@@ -36,7 +36,8 @@
     "SolutionWithSignedProject",
     "ProjectWithMultiTFMLib",
     "ExternAlias",
-    "ProjectWithComplexAnalyzers"
+    "ProjectWithComplexAnalyzers",
+    "NetCore30Project"
   ],
   "CakeTestAssets": [
     "CakeProject"
