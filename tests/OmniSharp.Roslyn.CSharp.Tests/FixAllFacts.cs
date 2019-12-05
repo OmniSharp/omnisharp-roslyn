@@ -39,7 +39,9 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 var response = await handler.Handle(new RunFixAllRequest
                 {
                     Scope = FixAllScope.Document,
-                    FileName = testFilePath
+                    FileName = testFilePath,
+                    WantsTextChanges = true,
+                    WantsAllCodeActionOperations = true
                 });
 
                 string textAfterFix = await GetContentOfDocumentFromWorkspace(host, testFilePath);
@@ -86,7 +88,9 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 {
                     Scope = FixAllScope.Document,
                     FileName = testFilePath,
-                    FixAllFilter = new[] { new FixAllItem("IDE0055", "Fix formatting") }
+                    FixAllFilter = new[] { new FixAllItem("IDE0055", "Fix formatting") },
+                    WantsTextChanges = true,
+                    WantsAllCodeActionOperations = true
                 });
 
                 string textAfterFix = await GetContentOfDocumentFromWorkspace(host, testFilePath);
@@ -122,7 +126,9 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 {
                     Scope = scope,
                     FileName = fileInScope,
-                    FixAllFilter = new[] { new FixAllItem("IDE0055", "Fix formatting") }
+                    FixAllFilter = new[] { new FixAllItem("IDE0055", "Fix formatting") },
+                    WantsTextChanges = true,
+                    WantsAllCodeActionOperations = true
                 });
 
                 string textAfterFixInScope = await GetContentOfDocumentFromWorkspace(host, fileInScope);
@@ -150,10 +156,12 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
                 var handler = host.GetRequestHandler<RunFixAllCodeActionService>(OmniSharpEndpoints.RunFixAll);
 
-                var response = await handler.Handle(new RunFixAllRequest
+                await handler.Handle(new RunFixAllRequest
                 {
                     Scope = FixAllScope.Document,
-                    FileName = testFilePath
+                    FileName = testFilePath,
+                    WantsTextChanges = true,
+                    WantsAllCodeActionOperations = true
                 });
 
                 string textAfterFix = await GetContentOfDocumentFromWorkspace(host, testFilePath);
@@ -181,10 +189,12 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
                 var handler = host.GetRequestHandler<RunFixAllCodeActionService>(OmniSharpEndpoints.RunFixAll);
 
-                var response = await handler.Handle(new RunFixAllRequest
+                await handler.Handle(new RunFixAllRequest
                 {
                     Scope = FixAllScope.Document,
-                    FileName = testFilePath
+                    FileName = testFilePath,
+                    WantsTextChanges = true,
+                    WantsAllCodeActionOperations = true
                 });
 
                 string textAfterFix = await GetContentOfDocumentFromWorkspace(host, testFilePath);
@@ -253,6 +263,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 {
                     Scope = FixAllScope.Document,
                     FileName = testFilePath,
+                    WantsTextChanges = true,
+                    WantsAllCodeActionOperations = true,
                     FixAllFilter = null // This means: try fix everything.
                 });
 
@@ -260,6 +272,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 {
                     Scope = FixAllScope.Project,
                     FileName = testFilePath,
+                    WantsTextChanges = true,
+                    WantsAllCodeActionOperations = true,
                     FixAllFilter = null // This means: try fix everything.
                 }));
 
@@ -267,6 +281,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 {
                     Scope = FixAllScope.Solution,
                     FileName = testFilePath,
+                    WantsTextChanges = true,
+                    WantsAllCodeActionOperations = true,
                     FixAllFilter = null
                 }));
             }
