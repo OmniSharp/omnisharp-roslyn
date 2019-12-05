@@ -13,5 +13,6 @@ namespace OmniSharp.Abstractions.Models.V1.FixAll
         public int Timeout { get; set; } = 3000;
         public bool ApplyTextChanges { get; set; } = true;
         public bool WantsAllCodeActionOperations { get; set; }
+        public bool WantsTextChanges { get; set; }
     }
 }

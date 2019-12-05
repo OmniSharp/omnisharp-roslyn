@@ -12,6 +12,7 @@ using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Abstractions.Models.V1.FixAll;
 using OmniSharp.Mef;
+using OmniSharp.Models;
 using OmniSharp.Roslyn.CSharp.Services.Refactoring.V2;
 using OmniSharp.Roslyn.CSharp.Workers.Diagnostics;
 using OmniSharp.Services;
@@ -62,6 +63,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
 
             var cancellationSource = new CancellationTokenSource(TimeSpan.FromMilliseconds(request.Timeout));
 
+            var solutionForUpdates = Workspace.CurrentSolution;
+            var directory = Path.GetDirectoryName(request.FileName);
+            var changes = new List<FileOperationResponse>();
+
             foreach (var singleFixableProviderWithDocument in filteredProvidersWithFix)
             {
                 try
@@ -98,7 +103,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
 
                         if (o is ApplyChangesOperation applyChangesOperation)
                         {
-                            applyChangesOperation.Apply(Workspace, cancellationSource.Token);
+                            var fileChangesResult = await GetFileChangesAsync(applyChangesOperation.ChangedSolution, solutionForUpdates, directory, request.WantsTextChanges, request.WantsAllCodeActionOperations);
+
+                            changes.AddRange(fileChangesResult.FileChanges);
+                            solutionForUpdates = fileChangesResult.Solution;
                         }
                     }
                 }
@@ -108,18 +116,14 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
                 }
             }
 
-            var currentSolution = Workspace.CurrentSolution;
-
             if (request.ApplyTextChanges)
             {
-                Workspace.TryApplyChanges(currentSolution);
+                Workspace.TryApplyChanges(solutionForUpdates);
             }
-
-            var changes = await GetFileChangesAsync(Workspace.CurrentSolution, solutionBeforeChanges, Path.GetDirectoryName(request.FileName), true, true);
 
             return new RunFixAllResponse
             {
-                Changes = changes.FileChanges
+                Changes = changes
             };
         }
 
