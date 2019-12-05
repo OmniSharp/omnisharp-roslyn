@@ -117,6 +117,79 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         }
 
         [Fact]
+        public async Task CanFindReferencesWithLineMapping()
+        {
+            const string code = @"
+                public class Foo
+                {
+                    public void b$$ar() { }
+                }
+
+                public class FooConsumer
+                {
+                    public FooConsumer()
+                    {
+#line 1
+                        new Foo().bar();
+#line default
+                    }
+                }";
+
+            var usages = await FindUsagesAsync(code);
+            Assert.Equal(2, usages.QuickFixes.Count());
+
+            var mappedResult = usages.QuickFixes.FirstOrDefault(x => x.Line == 0);
+            var regularResult = usages.QuickFixes.FirstOrDefault(x => x.Line == 3);
+            Assert.NotNull(mappedResult);
+            Assert.NotNull(regularResult);
+
+            // regular result has regular postition
+            Assert.Equal(32, regularResult.Column);
+            Assert.Equal(35, regularResult.EndColumn);
+        }
+
+        [Fact]
+        public async Task CanFindReferencesWithLineMappingAcrossFiles()
+        {
+            var testFiles = new[]
+            {
+                new TestFile("a.cs", @"
+                public class Foo
+                {
+                    public void b$$ar() { }
+                }
+
+                public class FooConsumer
+                {
+                    public FooConsumer()
+                    {
+#line 1 ""b.cs""
+                        new Foo().bar();
+#line default
+                    }
+                }"),
+                new TestFile("b.cs",
+                    @"// hello")
+            };
+
+            var usages = await FindUsagesAsync(testFiles, onlyThisFile: false);
+            Assert.Equal(2, usages.QuickFixes.Count());
+
+            var mappedResult = usages.QuickFixes.FirstOrDefault(x => x.Line == 0 && x.FileName == "b.cs");
+            var regularResult = usages.QuickFixes.FirstOrDefault(x => x.Line == 3 && x.FileName == "a.cs");
+            Assert.NotNull(mappedResult);
+            Assert.NotNull(regularResult);
+
+            // regular result has regular postition
+            Assert.Equal(32, regularResult.Column);
+            Assert.Equal(35, regularResult.EndColumn);
+
+            // mapped result has column 0,0
+            Assert.Equal(0, mappedResult.Column);
+            Assert.Equal(0, mappedResult.EndColumn);
+        }
+
+        [Fact]
         public async Task ExcludesMethodDefinition()
         {
             const string code = @"
