@@ -11,7 +11,6 @@ namespace OmniSharp.Abstractions.Models.V1.FixAll
         // If this is null -> filter not set -> try to fix all issues in current defined scope.
         public FixAllItem[] FixAllFilter { get; set; }
         public int Timeout { get; set; } = 3000;
-        public bool ApplyTextChanges { get; set; } = true;
         public bool WantsAllCodeActionOperations { get; set; }
         public bool WantsTextChanges { get; set; }
     }
