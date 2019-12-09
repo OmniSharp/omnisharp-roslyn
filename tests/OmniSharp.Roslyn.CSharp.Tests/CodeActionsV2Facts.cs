@@ -105,7 +105,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 }";
 
             var refactorings = await FindRefactoringNamesAsync(code, roslynAnalyzersEnabled);
-            Assert.Contains("Extract Method", refactorings);
+            Assert.Contains("Extract method", refactorings);
         }
 
         [Theory]
@@ -137,7 +137,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 "Generate type 'Console' -> Generate class 'Console' in new file",
                 "Generate type 'Console' -> Generate class 'Console'",
                 "Generate type 'Console' -> Generate nested class 'Console'",
-                "Extract Method",
+                "Extract local function",
+                "Extract method",
                 "Introduce local for 'Console.Write(\"should be using System;\")'"
             } : new List<string>
             {
@@ -151,7 +152,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 "Generate type 'Console' -> Generate class 'Console' in new file",
                 "Generate type 'Console' -> Generate class 'Console'",
                 "Generate type 'Console' -> Generate nested class 'Console'",
-                "Extract Method",
+                "Extract local function",
+                "Extract method",
                 "Introduce local for 'Console.Write(\"should be using System;\")'"
             };
             Assert.Equal(expected.OrderBy(x => x), refactorings.OrderBy(x => x));
@@ -183,7 +185,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                         Console.Write(""should be using System;"");
                     }
                 }";
-            var response = await RunRefactoringAsync(code, "Extract Method", isAnalyzersEnabled: roslynAnalyzersEnabled);
+            var response = await RunRefactoringAsync(code, "Extract method", isAnalyzersEnabled: roslynAnalyzersEnabled);
             AssertIgnoringIndent(expected, ((ModifiedFileResponse)response.Changes.First()).Buffer);
         }
 
