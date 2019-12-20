@@ -23,7 +23,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
         private const string SymbolCompletionItem = "Microsoft.CodeAnalysis.Completion.Providers.SymbolCompletionItem";
         private const string SymbolKind = nameof(SymbolKind);
         private const string SymbolName = nameof(SymbolName);
-        private const string SymbolsKey = nameof(Symbols);
         private const string Symbols = nameof(Symbols);
         private static readonly Type _symbolCompletionItemType;
         private static MethodInfo _getSymbolsAsync;
@@ -51,7 +50,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
         {
             var properties = completionItem.Properties;
 
-            if (completionItem.GetType() == _symbolCompletionItemType || properties.ContainsKey(SymbolsKey))
+            if (completionItem.GetType() == _symbolCompletionItemType || properties.ContainsKey(Symbols))
             {
                 var decodedSymbolsTask = _getSymbolsAsync.InvokeStatic<Task<ImmutableArray<ISymbol>>>(new object[] { completionItem, document, default(CancellationToken) });
                 if (decodedSymbolsTask != null)
