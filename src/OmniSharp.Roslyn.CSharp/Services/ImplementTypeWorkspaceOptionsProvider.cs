@@ -31,17 +31,18 @@ namespace OmniSharp.Roslyn.CSharp.Services
         {
             if (omniSharpOptions.ImplementTypeOptions.InsertionBehavior != null)
             {
-                var insertionBehaviorOptionValue = _implementTypeOptions.Value.GetField("InsertionBehavior", BindingFlags.Public | BindingFlags.Static)?.GetValue(null) as IOption;
-                if (insertionBehaviorOptionValue != null)
+                if (_implementTypeOptions.Value.GetField("InsertionBehavior", BindingFlags.Public | BindingFlags.Static)?.GetValue(null) is IOption insertionBehaviorOptionValue)
                 {
                     currentOptionSet = currentOptionSet.WithChangedOption(new OptionKey(insertionBehaviorOptionValue, LanguageNames.CSharp), (int)omniSharpOptions.ImplementTypeOptions.InsertionBehavior);
                 }
             }
 
-            var propertyGenerationBehaviorOptionValue = _implementTypeOptions.Value.GetField("PropertyGenerationBehavior", BindingFlags.Public | BindingFlags.Static)?.GetValue(null) as IOption;
-            if (propertyGenerationBehaviorOptionValue != null)
+            if (omniSharpOptions.ImplementTypeOptions.PropertyGenerationBehavior != null)
             {
-                currentOptionSet = currentOptionSet.WithChangedOption(new OptionKey(propertyGenerationBehaviorOptionValue, LanguageNames.CSharp), (int)omniSharpOptions.ImplementTypeOptions.PropertyGenerationBehavior);
+                if (_implementTypeOptions.Value.GetField("PropertyGenerationBehavior", BindingFlags.Public | BindingFlags.Static)?.GetValue(null) is IOption propertyGenerationBehaviorOptionValue)
+                {
+                    currentOptionSet = currentOptionSet.WithChangedOption(new OptionKey(propertyGenerationBehaviorOptionValue, LanguageNames.CSharp), (int)omniSharpOptions.ImplementTypeOptions.PropertyGenerationBehavior);
+                }
             }
 
             return currentOptionSet;
