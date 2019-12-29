@@ -3,13 +3,45 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using Microsoft.CodeAnalysis;
 using OmniSharp.Models.V2;
+using OmniSharp.Roslyn.Utilities;
 using OmniSharp.Utilities;
 
 namespace OmniSharp.Extensions
 {
     public static class SymbolExtensions
     {
+        private static readonly SymbolDisplayFormat NameFormat =
+            new SymbolDisplayFormat(
+                globalNamespaceStyle: SymbolDisplayGlobalNamespaceStyle.Omitted,
+                typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces,
+                propertyStyle: SymbolDisplayPropertyStyle.NameOnly,
+                genericsOptions: SymbolDisplayGenericsOptions.IncludeTypeParameters | SymbolDisplayGenericsOptions.IncludeVariance,
+                memberOptions: SymbolDisplayMemberOptions.IncludeParameters | SymbolDisplayMemberOptions.IncludeExplicitInterface,
+                parameterOptions:
+                    SymbolDisplayParameterOptions.IncludeParamsRefOut |
+                    SymbolDisplayParameterOptions.IncludeExtensionThis |
+                    SymbolDisplayParameterOptions.IncludeType |
+                    SymbolDisplayParameterOptions.IncludeName,
+                miscellaneousOptions:
+                    SymbolDisplayMiscellaneousOptions.EscapeKeywordIdentifiers |
+                    SymbolDisplayMiscellaneousOptions.UseSpecialTypes);
+
         private readonly static CachedStringBuilder s_cachedBuilder;
+
+        public static string ToNameDisplayString(this ISymbol symbol)
+        {
+            return symbol.ToDisplayString(NameFormat);
+        }
+
+        public static INamedTypeSymbol GetContainingTypeOrThis(this ISymbol symbol)
+        {
+            if (symbol is INamedTypeSymbol namedType)
+            {
+                return namedType;
+            }
+
+            return symbol.ContainingType;
+        }
 
         public static string GetMetadataName(this ISymbol symbol)
         {

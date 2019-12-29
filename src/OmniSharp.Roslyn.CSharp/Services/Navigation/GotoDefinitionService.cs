@@ -11,6 +11,7 @@ using OmniSharp.Mef;
 using OmniSharp.Models;
 using OmniSharp.Models.GotoDefinition;
 using OmniSharp.Models.Metadata;
+using OmniSharp.Roslyn.CSharp.Services.Decompilation;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Navigation
 {
@@ -18,19 +19,19 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
     public class GotoDefinitionService : IRequestHandler<GotoDefinitionRequest, GotoDefinitionResponse>
     {
         private readonly MetadataHelper _metadataHelper;
+        private readonly DecompilationHelper _decompilationHelper;
         private readonly OmniSharpWorkspace _workspace;
 
         [ImportingConstructor]
-        public GotoDefinitionService(OmniSharpWorkspace workspace, MetadataHelper metadataHelper)
+        public GotoDefinitionService(OmniSharpWorkspace workspace, MetadataHelper metadataHelper, DecompilationHelper decompilationHelper)
         {
             _workspace = workspace;
             _metadataHelper = metadataHelper;
+            _decompilationHelper = decompilationHelper;
         }
 
         public async Task<GotoDefinitionResponse> Handle(GotoDefinitionRequest request)
         {
-            var quickFixes = new List<QuickFix>();
-
             var document = _metadataHelper.FindDocumentInMetadataCache(request.FileName) ??
                 _workspace.GetDocument(request.FileName);
 
@@ -39,7 +40,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
             if (document != null)
             {
                 var semanticModel = await document.GetSemanticModelAsync();
-                var syntaxTree = semanticModel.SyntaxTree;
                 var sourceText = await document.GetTextAsync();
                 var position = sourceText.Lines.GetPosition(new LinePosition(request.Line, request.Column));
                 var symbol = await SymbolFinder.FindSymbolAtPositionAsync(semanticModel, position, _workspace);
@@ -71,13 +71,14 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
                     }
                     else if (location.IsInMetadata && request.WantMetadata)
                     {
-                        var cancellationSource = new CancellationTokenSource(TimeSpan.FromMilliseconds(request.Timeout));
-                        var (metadataDocument, _) = await _metadataHelper.GetAndAddDocumentFromMetadata(document.Project, symbol, cancellationSource.Token);
+                        var cancellationSource = new CancellationTokenSource(TimeSpan.FromMilliseconds(60000));
+                        var (metadataDocument, _) = await _decompilationHelper.GetAndAddDecompiledDocument(document.Project, symbol, cancellationSource.Token);
                         if (metadataDocument != null)
                         {
                             cancellationSource = new CancellationTokenSource(TimeSpan.FromMilliseconds(request.Timeout));
 
-                            var metadataLocation = await _metadataHelper.GetSymbolLocationFromMetadata(symbol, metadataDocument, cancellationSource.Token);
+                            //var metadataLocation = await _metadataHelper.GetSymbolLocationFromMetadata(symbol, metadataDocument, cancellationSource.Token);
+                            var metadataLocation = Location.None;
                             var lineSpan = metadataLocation.GetMappedLineSpan();
 
                             response = new GotoDefinitionResponse

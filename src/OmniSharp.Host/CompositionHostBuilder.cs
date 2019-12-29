@@ -19,6 +19,7 @@ using OmniSharp.Mef;
 using OmniSharp.MSBuild.Discovery;
 using OmniSharp.Options;
 using OmniSharp.Roslyn;
+using OmniSharp.Roslyn.CSharp.Services.Decompilation;
 using OmniSharp.Services;
 
 namespace OmniSharp
@@ -53,6 +54,7 @@ namespace OmniSharp
 
             var fileSystemWatcher = new ManualFileSystemWatcher();
             var metadataHelper = new MetadataHelper(assemblyLoader);
+            var decompilationHelper = new DecompilationHelper(assemblyLoader);
 
             var logger = loggerFactory.CreateLogger<CompositionHostBuilder>();
 
@@ -80,6 +82,7 @@ namespace OmniSharp
                 .WithProvider(MefValueProvider.From(analyzerAssemblyLoader))
                 .WithProvider(MefValueProvider.From(dotNetCliService))
                 .WithProvider(MefValueProvider.From(metadataHelper))
+                .WithProvider(MefValueProvider.From(decompilationHelper))
                 .WithProvider(MefValueProvider.From(msbuildLocator))
                 .WithProvider(MefValueProvider.From(eventEmitter));
 

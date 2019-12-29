@@ -3,8 +3,10 @@ using System.Composition;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
+using Newtonsoft.Json;
 using OmniSharp.Mef;
 using OmniSharp.Models.Metadata;
+using OmniSharp.Roslyn.CSharp.Services.Decompilation;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Navigation
 {
@@ -12,13 +14,15 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
     public class MetadataService : IRequestHandler<MetadataRequest, MetadataResponse>
     {
         private readonly MetadataHelper _metadataHelper;
+        private readonly DecompilationHelper _decompilationHelper;
         private readonly OmniSharpWorkspace _workspace;
 
         [ImportingConstructor]
-        public MetadataService(OmniSharpWorkspace workspace, MetadataHelper metadataHelper)
+        public MetadataService(OmniSharpWorkspace workspace, MetadataHelper metadataHelper, DecompilationHelper decompilationHelper)
         {
             _workspace = workspace;
             _metadataHelper = metadataHelper;
+            _decompilationHelper = decompilationHelper;
         }
 
         public async Task<MetadataResponse> Handle(MetadataRequest request)
@@ -31,7 +35,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
                 if (symbol != null && symbol.ContainingAssembly.Name == request.AssemblyName)
                 {
                     var cancellationSource = new CancellationTokenSource(TimeSpan.FromMilliseconds(request.Timeout));
-                    var (metadataDocument, documentPath) = await _metadataHelper.GetAndAddDocumentFromMetadata(project, symbol, cancellationSource.Token);
+                    var (metadataDocument, documentPath) = await _decompilationHelper.GetAndAddDecompiledDocument(project, symbol, cancellationSource.Token);
+                    //var (metadataDocument, documentPath) = await _metadataHelper.GetAndAddDocumentFromMetadata(project, symbol, cancellationSource.Token);
                     if (metadataDocument != null)
                     {
                         var source = await metadataDocument.GetTextAsync();
