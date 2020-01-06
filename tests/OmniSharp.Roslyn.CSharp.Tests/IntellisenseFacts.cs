@@ -259,6 +259,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             var completions = await FindCompletionsAsync(filename, source);
             ContainsCompletions(completions.Select(c => c.CompletionText), "Foo");
+            ContainsCompletions(completions.Select(c => c.ReturnType), "string");
         }
 
         [Theory]
