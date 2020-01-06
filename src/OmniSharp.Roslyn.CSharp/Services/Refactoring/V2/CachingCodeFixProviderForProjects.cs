@@ -61,7 +61,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             var codeFixes = project.AnalyzerReferences
                 .OfType<AnalyzerFileReference>()
                 .SelectMany(analyzerFileReference => analyzerFileReference.GetAssembly().DefinedTypes)
-                .Where(x => x.IsSubclassOf(typeof(CodeFixProvider)))
+                .Where(x => !x.IsAbstract && x.IsSubclassOf(typeof(CodeFixProvider)))
                 .Select(x =>
                 {
                     try
