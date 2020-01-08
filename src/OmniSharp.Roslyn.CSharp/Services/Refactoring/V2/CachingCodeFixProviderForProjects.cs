@@ -61,26 +61,29 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             var codeFixes = project.AnalyzerReferences
                 .OfType<AnalyzerFileReference>()
                 .SelectMany(analyzerFileReference => analyzerFileReference.GetAssembly().DefinedTypes)
-                .Where(x => x.IsSubclassOf(typeof(CodeFixProvider)))
+                .Where(x => !x.IsAbstract && x.IsSubclassOf(typeof(CodeFixProvider)))
                 .Select(x =>
                 {
                     try
                     {
                         var attribute = x.GetCustomAttribute<ExportCodeFixProviderAttribute>();
-
-                        if (attribute?.Languages != null && attribute.Languages.Contains(project.Language))
+                        if (attribute == null)
                         {
-                            return x.AsType().CreateInstance<CodeFixProvider>();
+                            _logger.LogTrace($"Skipping code fix provider '{x.AsType()}' because it is missing the ExportCodeFixProviderAttribute.");
+                            return null;
                         }
 
-                        _logger.LogInformation($"Skipping code fix provider '{x.AsType()}' because its language doesn't match '{project.Language}'.");
+                        if (attribute.Languages == null || !attribute.Languages.Contains(project.Language))
+                        {
+                            _logger.LogInformation($"Skipping code fix provider '{x.AsType()}' because its language '{attribute.Languages?.FirstOrDefault()}' doesn't match '{project.Language}'.");
+                            return null;
+                        }
 
-                        return null;
+                        return x.AsType().CreateInstance<CodeFixProvider>();
                     }
                     catch (Exception ex)
                     {
                         _logger.LogError($"Creating instance of code fix provider '{x.AsType()}' failed, error: {ex}");
-
                         return null;
                     }
                 })
