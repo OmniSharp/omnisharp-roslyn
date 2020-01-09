@@ -21,7 +21,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
         private const string ParitalMethodCompletionProvider = "Microsoft.CodeAnalysis.CSharp.Completion.Providers.PartialMethodCompletionProvider";
         private const string ProviderName = nameof(ProviderName);
         private const string SymbolCompletionItem = "Microsoft.CodeAnalysis.Completion.Providers.SymbolCompletionItem";
-        private const string SymbolCompletionProvider = "Microsoft.CodeAnalysis.CSharp.Completion.Providers.SymbolCompletionProvider";
         private const string SymbolKind = nameof(SymbolKind);
         private const string SymbolName = nameof(SymbolName);
         private const string Symbols = nameof(Symbols);
@@ -49,7 +48,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
 
         public static async Task<IEnumerable<ISymbol>> GetCompletionSymbolsAsync(this CompletionItem completionItem, IEnumerable<ISymbol> recommendedSymbols, Document document)
         {
-            if (completionItem.GetType() == _symbolCompletionItemType)
+            var properties = completionItem.Properties;
+
+            if (completionItem.GetType() == _symbolCompletionItemType || properties.ContainsKey(Symbols))
             {
                 var decodedSymbolsTask = _getSymbolsAsync.InvokeStatic<Task<ImmutableArray<ISymbol>>>(new object[] { completionItem, document, default(CancellationToken) });
                 if (decodedSymbolsTask != null)
@@ -57,8 +58,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
                     return await decodedSymbolsTask;
                 }
             }
-
-            var properties = completionItem.Properties;
 
             // if the completion provider encoded symbols into Properties, we can return them
             if (properties.ContainsKey(SymbolName) && properties.ContainsKey(SymbolKind))

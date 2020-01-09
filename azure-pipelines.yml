@@ -47,7 +47,7 @@ jobs:
       vmImage: "macOS-10.13"
     dependsOn: GitVersion
     variables:
-      MONO_VERSION: 6.4.0
+      MONO_VERSION: 6.6.0
     steps:
       - template: ./.pipelines/init.yml
         parameters:
@@ -56,7 +56,7 @@ jobs:
           DotNetVersion: $(DotNetVersion)
           NuGetVersion: $(NuGetVersion)
       - script: |
-          curl -o mono.pkg https://download.mono-project.com/archive/$MONO_VERSION/macos-10-universal/MonoFramework-MDK-$MONO_VERSION.198.macos10.xamarin.universal.pkg
+          curl -o mono.pkg https://download.mono-project.com/archive/$MONO_VERSION/macos-10-universal/MonoFramework-MDK-$MONO_VERSION.161.macos10.xamarin.universal.pkg
           sudo installer -pkg mono.pkg -target /
           sudo cp -rf /Library/Frameworks/Mono.framework/Versions/$MONO_VERSION/ /Library/Frameworks/Mono.framework/Versions/Current/
           MONOPREFIX=/Library/Frameworks/Mono.framework/Versions/$MONO_VERSION
@@ -79,7 +79,7 @@ jobs:
       vmImage: "Ubuntu-16.04"
     dependsOn: GitVersion
     variables:
-      MONO_VERSION: 6.4.0
+      MONO_VERSION: 6.6.0
     steps:
       - template: ./.pipelines/init.yml
         parameters:
@@ -90,7 +90,7 @@ jobs:
       - script: |
           sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF
           sudo apt install apt-transport-https ca-certificates
-          echo "deb https://download.mono-project.com/repo/ubuntu vs-xenial/snapshots/6.4.0.198 main" | sudo tee /etc/apt/sources.list.d/mono-official-stable.list
+          echo "deb https://download.mono-project.com/repo/ubuntu stable-xenial/snapshots/$MONO_VERSION.161 main" | sudo tee /etc/apt/sources.list.d/mono-official-stable.list
           sudo apt update
           sudo apt install mono-devel
           sudo apt install msbuild
