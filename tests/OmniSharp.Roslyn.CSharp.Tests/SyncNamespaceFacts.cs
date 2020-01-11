@@ -151,10 +151,5 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             Assert.Equal(typeof(ProjectId), parameters[0].ParameterType);
             Assert.Equal(typeof(string), parameters[1].ParameterType);
         }
-
-        private static string TrimLines(string source)
-        {
-            return string.Join("\n", source.Split('\n').Select(s => s.Trim()));
-        }
     }
 }
