@@ -3,9 +3,9 @@
   xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <PropertyGroup>
-    <MSBuildPackageVersion>16.3.0-preview-19426-01</MSBuildPackageVersion>
+    <MSBuildPackageVersion>16.4.0</MSBuildPackageVersion>
     <NuGetPackageVersion>5.2.0</NuGetPackageVersion>
-    <RoslynPackageVersion>3.5.0-beta1-19571-01</RoslynPackageVersion>
+    <RoslynPackageVersion>3.5.0-beta3-20058-03</RoslynPackageVersion>
     <XunitPackageVersion>2.4.0</XunitPackageVersion>
   </PropertyGroup>
 
@@ -15,7 +15,6 @@
     <PackageReference Update="Dotnet.Script.DependencyModel" Version="0.50.0" />
     <PackageReference Update="Dotnet.Script.DependencyModel.NuGet" Version="0.50.0" />
 
-    <PackageReference Update="Humanizer" Version="2.2.0" />
     <PackageReference Update="McMaster.Extensions.CommandLineUtils" Version="2.2.4" />
 
     <PackageReference Update="Microsoft.AspNetCore.Diagnostics" Version="2.1.1" />
@@ -50,7 +49,7 @@
     <PackageReference Update="Microsoft.Extensions.Options" Version="2.1.1" />
     <PackageReference Update="Microsoft.Extensions.Options.ConfigurationExtensions" Version="2.1.1" />
 
-    <PackageReference Update="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.0-preview.1" />
+    <PackageReference Update="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.0" />
     <PackageReference Update="Microsoft.NET.Test.Sdk" Version="15.7.2" />
     <PackageReference Update="Microsoft.TestPlatform.TranslationLayer" Version="15.7.2" />
     <PackageReference Update="Microsoft.VisualStudio.CodingConventions" Version="1.1.20180503.2" />

@@ -12,6 +12,8 @@ namespace OmniSharp.Options
 
         public RenameOptions RenameOptions { get; set; } = new RenameOptions();
 
+        public ImplementTypeOptions ImplementTypeOptions { get; set; } = new ImplementTypeOptions();
+
         public OmniSharpExtensionsOptions Plugins { get; set; } = new OmniSharpExtensionsOptions();
     }
 }

@@ -1,10 +1,17 @@
 # Changelog
 All changes to the project will be documented in this file.
 
-## [1.34.9] - not yet released
+## [1.34.10] - not yet released
+* Update to Roslyn `3.5.0-beta3-20058-03` (PR: [#1680](https://github.com/OmniSharp/omnisharp-roslyn/pull/1680))
+* Fixed a bug where completion items didn't decode symbols corectly (impacted, for example, object initializer completion quality) ([omnisharp-vscode#3465](https://github.com/OmniSharp/omnisharp-vscode/issues/3465), PR: [#1670](https://github.com/OmniSharp/omnisharp-roslyn/pull/1670))
+* Updated to MsBuild 16.4.0 on Linux/MacOS (PR:[#1669](https://github.com/OmniSharp/omnisharp-roslyn/pull/1669))
+
+## [1.34.9] - 2019-12-10
+* Updated to MsBuild 16.4.0 on Windows (PR:[#1662](https://github.com/OmniSharp/omnisharp-roslyn/pull/1662))
 * Line pragma is now respected in find references ([#1649](https://github.com/OmniSharp/omnisharp-roslyn/issues/1649), PR:[#1660](https://github.com/OmniSharp/omnisharp-roslyn/pull/1660))
 * Do not set mono paths when running in standalone mode ([omnisharp-vscode#3410](https://github.com/OmniSharp/omnisharp-vscode/issues/3410), [omnisharp-vscode#3340](https://github.com/OmniSharp/omnisharp-vscode/issues/3340), [#1650](https://github.com/OmniSharp/omnisharp-roslyn/issues/1650), PR:[#1656](https://github.com/OmniSharp/omnisharp-roslyn/pull/1656))
 * Fixed a bug where OmniSharp would crash on startup if the path contained `=` sign ([omnisharp-vscode#3436](https://github.com/OmniSharp/omnisharp-vscode/issues/3436), PR:[#1661](https://github.com/OmniSharp/omnisharp-roslyn/pull/1661))
+* Update to Roslyn `3.5.0-beta2-19606-01` (PR:[#1663](https://github.com/OmniSharp/omnisharp-roslyn/pull/1663))
 
 ## [1.34.8] - 2019-11-21
 * Update to Roslyn `3.5.0-beta1-19571-01` (PR:[#1653](https://github.com/OmniSharp/omnisharp-roslyn/pull/1653))
