@@ -130,7 +130,7 @@ public class Foo : I$$Foo
 
                 Assert.Single(changes);
                 Assert.NotNull(changes[0].FileName);
-                AssertIgnoringIndent(expectedChange, ((ModifiedFileResponse)changes[0]).Changes.First().NewText);
+                AssertUtils.AssertIgnoringIndent(expectedChange, ((ModifiedFileResponse)changes[0]).Changes.First().NewText);
             }
         }
     }

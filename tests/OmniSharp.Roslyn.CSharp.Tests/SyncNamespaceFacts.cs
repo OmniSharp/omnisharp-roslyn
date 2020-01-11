@@ -98,7 +98,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 };
                 var runResponse = await runRequestHandler.Handle(runRequest);
 
-                AssertIgnoringIndent(expected, ((ModifiedFileResponse)runResponse.Changes.First()).Buffer);
+                AssertUtils.AssertIgnoringIndent(expected, ((ModifiedFileResponse)runResponse.Changes.First()).Buffer);
             }
         }
 
@@ -131,7 +131,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 };
                 var runResponse = await runRequestHandler.Handle(runRequest);
 
-                AssertIgnoringIndent(expected, ((ModifiedFileResponse)runResponse.Changes.First()).Buffer);
+                AssertUtils.AssertIgnoringIndent(expected, ((ModifiedFileResponse)runResponse.Changes.First()).Buffer);
             }
         }
 
@@ -150,11 +150,6 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             Assert.Equal(2, parameters.Count());
             Assert.Equal(typeof(ProjectId), parameters[0].ParameterType);
             Assert.Equal(typeof(string), parameters[1].ParameterType);
-        }
-
-        private static void AssertIgnoringIndent(string expected, string actual)
-        {
-            Assert.Equal(TrimLines(expected), TrimLines(actual), false, true, true);
         }
 
         private static string TrimLines(string source)
