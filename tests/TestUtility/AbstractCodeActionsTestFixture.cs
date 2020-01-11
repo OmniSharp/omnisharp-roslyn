@@ -44,9 +44,9 @@ namespace TestUtility
         protected async Task<RunCodeActionResponse> RunRefactoringAsync(string code, string refactoringName, bool wantsChanges = false, bool isAnalyzersEnabled = true)
         {
             var refactorings = await FindRefactoringsAsync(code, configurationData: TestHelpers.GetConfigurationDataWithAnalyzerConfig(isAnalyzersEnabled));
-            Assert.Contains(refactoringName, refactorings.Select(a => a.Name));
+            Assert.Contains(refactoringName.ToLower(), refactorings.Select(a => a.Name.ToLower()));
 
-            var identifier = refactorings.First(action => action.Name.Equals(refactoringName)).Identifier;
+            var identifier = refactorings.First(action => action.Name.ToLower().Equals(refactoringName.ToLower())).Identifier;
             return await RunRefactoringsAsync(code, identifier, wantsChanges);
         }
 

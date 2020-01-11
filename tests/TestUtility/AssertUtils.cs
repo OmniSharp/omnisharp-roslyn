@@ -12,7 +12,7 @@ namespace TestUtility
 
         private static string TrimLines(string source)
         {
-            return string.Join("\n", source.Split('\n').Select(s => s.Trim()));
+            return string.Join("", source.Split('\n').Select(s => s.Trim()));
         }
     }
 }
