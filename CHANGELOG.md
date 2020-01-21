@@ -5,6 +5,15 @@ All changes to the project will be documented in this file.
 * Update to Roslyn `3.5.0-beta3-20058-03` (PR: [#1680](https://github.com/OmniSharp/omnisharp-roslyn/pull/1680))
 * Fixed a bug where completion items didn't decode symbols corectly (impacted, for example, object initializer completion quality) ([omnisharp-vscode#3465](https://github.com/OmniSharp/omnisharp-vscode/issues/3465), PR: [#1670](https://github.com/OmniSharp/omnisharp-roslyn/pull/1670))
 * Updated to MsBuild 16.4.0 on Linux/MacOS (PR:[#1669](https://github.com/OmniSharp/omnisharp-roslyn/pull/1669))
+* Added support for implement type options - it is now possible to define whether code-fix/refactoring generated properties should be auto- or throwing-properties and at which place in the class should newly generated members be inserted. They can be set via OmniSharp configuration, such as `omnisharp.json` file. (PR: [#1672](https://github.com/OmniSharp/omnisharp-roslyn/pull/1672))
+    ```JSON
+    {
+        "ImplementTypeOptions": {
+            "PropertyGenerationBehavior": "PreferAutoProperties", // or "PreferThrowingProperties" which is the default
+            "InsertionBehavior": "AtTheEnd" // or "WithOtherMembersOfTheSameKind" which is default
+        }
+    }
+    ```
 
 ## [1.34.9] - 2019-12-10
 * Updated to MsBuild 16.4.0 on Windows (PR:[#1662](https://github.com/OmniSharp/omnisharp-roslyn/pull/1662))
