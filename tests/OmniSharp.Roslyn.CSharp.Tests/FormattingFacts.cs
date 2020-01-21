@@ -264,7 +264,7 @@ using System;
 
 namespace Bar
 {
-    class Foo {}
+    class Foo { }
 }");
 
             using (var host = CreateOmniSharpHost(new[] { testFile }, configurationData: new Dictionary<string, string>
@@ -284,13 +284,13 @@ using Dummy;
 
 namespace Bar
 {
-    class Foo {}
+    class Foo { }
 }", response.Buffer);
             }
         }
 
         [Fact]
-        public async Task DoersntOrganizeImportsWhenDisabled()
+        public async Task DoesntOrganizeImportsWhenDisabled()
         {
             var testFile = new TestFile("dummy.cs", @"
 using System.IO;
@@ -299,7 +299,7 @@ using System;
 
 namespace Bar
 {
-    class Foo {}
+    class Foo { }
 }");
 
             using (var host = CreateOmniSharpHost(new[] { testFile }, configurationData: new Dictionary<string, string>
@@ -319,7 +319,7 @@ using System;
 
 namespace Bar
 {
-    class Foo {}
+    class Foo { }
 }", response.Buffer);
             }
         }
