@@ -89,6 +89,11 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Formatting
                 : document.Project.Solution.Workspace.Options;
             var newDocument = await Formatter.FormatAsync(document, TextSpan.FromBounds(start, end), optionSet);
 
+            if (omnisharpOptions.FormattingOptions.OrganizeImports)
+            {
+                newDocument = await Formatter.OrganizeImportsAsync(document);
+            }
+
             return await TextChanges.GetAsync(newDocument, document);
         }
 
@@ -98,6 +103,12 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Formatting
                 ? await document.Project.Solution.Workspace.Options.WithEditorConfigOptions(document.FilePath, loggerFactory)
                 : document.Project.Solution.Workspace.Options;
             var newDocument = await Formatter.FormatAsync(document, optionSet);
+
+            if (omnisharpOptions.FormattingOptions.OrganizeImports)
+            {
+                newDocument = await Formatter.OrganizeImportsAsync(document);
+            }
+
             var text = await newDocument.GetTextAsync();
 
             return text.ToString();
@@ -109,6 +120,11 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Formatting
                 ? await document.Project.Solution.Workspace.Options.WithEditorConfigOptions(document.FilePath, loggerFactory)
                 : document.Project.Solution.Workspace.Options;
             var newDocument = await Formatter.FormatAsync(document, optionSet);
+
+            if (omnisharpOptions.FormattingOptions.OrganizeImports)
+            {
+                newDocument = await Formatter.OrganizeImportsAsync(document);
+            }
 
             return await TextChanges.GetAsync(newDocument, document);
         }
