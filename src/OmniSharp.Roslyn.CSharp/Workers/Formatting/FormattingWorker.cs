@@ -84,49 +84,36 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Formatting
 
         public static async Task<IEnumerable<LinePositionSpanTextChange>> GetFormattingChanges(Document document, int start, int end, OmniSharpOptions omnisharpOptions, ILoggerFactory loggerFactory)
         {
-            var optionSet = omnisharpOptions.FormattingOptions.EnableEditorConfigSupport
-                ? await document.Project.Solution.Workspace.Options.WithEditorConfigOptions(document.FilePath, loggerFactory)
-                : document.Project.Solution.Workspace.Options;
-            var newDocument = await Formatter.FormatAsync(document, TextSpan.FromBounds(start, end), optionSet);
-
-            if (omnisharpOptions.FormattingOptions.OrganizeImports)
-            {
-                newDocument = await Formatter.OrganizeImportsAsync(document);
-            }
-
+            var newDocument = await FormatDocument(document, omnisharpOptions, loggerFactory, TextSpan.FromBounds(start, end));
             return await TextChanges.GetAsync(newDocument, document);
         }
 
         public static async Task<string> GetFormattedText(Document document, OmniSharpOptions omnisharpOptions, ILoggerFactory loggerFactory)
         {
-            var optionSet = omnisharpOptions.FormattingOptions.EnableEditorConfigSupport
-                ? await document.Project.Solution.Workspace.Options.WithEditorConfigOptions(document.FilePath, loggerFactory)
-                : document.Project.Solution.Workspace.Options;
-            var newDocument = await Formatter.FormatAsync(document, optionSet);
-
-            if (omnisharpOptions.FormattingOptions.OrganizeImports)
-            {
-                newDocument = await Formatter.OrganizeImportsAsync(document);
-            }
-
+            var newDocument = await FormatDocument(document, omnisharpOptions, loggerFactory);
             var text = await newDocument.GetTextAsync();
-
             return text.ToString();
         }
 
         public static async Task<IEnumerable<LinePositionSpanTextChange>> GetFormattedTextChanges(Document document, OmniSharpOptions omnisharpOptions, ILoggerFactory loggerFactory)
         {
+            var newDocument = await FormatDocument(document, omnisharpOptions, loggerFactory);
+            return await TextChanges.GetAsync(newDocument, document);
+        }
+
+        private static async Task<Document> FormatDocument(Document document, OmniSharpOptions omnisharpOptions, ILoggerFactory loggerFactory, TextSpan? textSpan = null)
+        {
             var optionSet = omnisharpOptions.FormattingOptions.EnableEditorConfigSupport
                 ? await document.Project.Solution.Workspace.Options.WithEditorConfigOptions(document.FilePath, loggerFactory)
                 : document.Project.Solution.Workspace.Options;
-            var newDocument = await Formatter.FormatAsync(document, optionSet);
 
+            var newDocument = textSpan != null ? await Formatter.FormatAsync(document, textSpan.Value, optionSet) : await Formatter.FormatAsync(document, optionSet);
             if (omnisharpOptions.FormattingOptions.OrganizeImports)
             {
                 newDocument = await Formatter.OrganizeImportsAsync(document);
             }
 
-            return await TextChanges.GetAsync(newDocument, document);
+            return newDocument;
         }
     }
 }
