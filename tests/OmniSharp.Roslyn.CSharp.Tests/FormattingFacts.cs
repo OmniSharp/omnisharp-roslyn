@@ -254,6 +254,76 @@ class C {
             }
         }
 
+        [Fact]
+        public async Task OrganizesImports()
+        {
+            var testFile = new TestFile("dummy.cs", @"
+using System.IO;
+using Dummy;
+using System;
+
+namespace Bar
+{
+    class Foo { }
+}");
+
+            using (var host = CreateOmniSharpHost(new[] { testFile }, configurationData: new Dictionary<string, string>
+            {
+                ["FormattingOptions:OrganizeImports"] = "true"
+            }))
+            {
+                var requestHandler = host.GetRequestHandler<CodeFormatService>(OmniSharpEndpoints.CodeFormat);
+
+                var request = new CodeFormatRequest { FileName = testFile.FileName };
+                var response = await requestHandler.Handle(request);
+
+                Assert.Equal(@"
+using System;
+using System.IO;
+using Dummy;
+
+namespace Bar
+{
+    class Foo { }
+}", response.Buffer);
+            }
+        }
+
+        [Fact]
+        public async Task DoesntOrganizeImportsWhenDisabled()
+        {
+            var testFile = new TestFile("dummy.cs", @"
+using System.IO;
+using Dummy;
+using System;
+
+namespace Bar
+{
+    class Foo { }
+}");
+
+            using (var host = CreateOmniSharpHost(new[] { testFile }, configurationData: new Dictionary<string, string>
+            {
+                ["FormattingOptions:OrganizeImports"] = "false"
+            }))
+            {
+                var requestHandler = host.GetRequestHandler<CodeFormatService>(OmniSharpEndpoints.CodeFormat);
+
+                var request = new CodeFormatRequest { FileName = testFile.FileName };
+                var response = await requestHandler.Handle(request);
+
+                Assert.Equal(@"
+using System.IO;
+using Dummy;
+using System;
+
+namespace Bar
+{
+    class Foo { }
+}", response.Buffer);
+            }
+        }
+
         private static void AssertFormatTargetKind(SyntaxKind kind, string input)
         {
             var content = TestContent.Parse(input);
