@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -120,9 +121,9 @@ namespace OmniSharp.Cake.Tests
         private async Task<RunCodeActionResponse> RunRefactoringAsync(string code, string refactoringName)
         {
             var refactorings = await FindRefactoringsAsync(code);
-            Assert.Contains(refactoringName.ToLower(), refactorings.Select(a => a.Name.ToLower()));
+            Assert.Contains(refactoringName, refactorings.Select(x => x.Name), StringComparer.OrdinalIgnoreCase);
 
-            var identifier = refactorings.First(action => action.Name.ToLower().Equals(refactoringName.ToLower())).Identifier;
+            var identifier = refactorings.First(action => action.Name.Equals(refactoringName, StringComparison.OrdinalIgnoreCase)).Identifier;
             return await RunRefactoringsAsync(code, identifier);
         }
 

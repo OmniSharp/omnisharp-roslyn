@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Composition.Hosting.Core;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -41,12 +43,19 @@ namespace TestUtility
             return host;
         }
 
+        protected OmniSharpTestHost CreateOmniSharpHost(
+            string path = null,
+            IEnumerable<KeyValuePair<string, string>> configurationData = null,
+            DotNetCliVersion dotNetCliVersion = DotNetCliVersion.Current,
+            IEnumerable<ExportDescriptorProvider> additionalExports = null)
+            => OmniSharpTestHost.Create(path, this.TestOutput, configurationData, dotNetCliVersion, additionalExports);
+
         protected async Task<RunCodeActionResponse> RunRefactoringAsync(string code, string refactoringName, bool wantsChanges = false, bool isAnalyzersEnabled = true)
         {
             var refactorings = await FindRefactoringsAsync(code, configurationData: TestHelpers.GetConfigurationDataWithAnalyzerConfig(isAnalyzersEnabled));
-            Assert.Contains(refactoringName.ToLower(), refactorings.Select(a => a.Name.ToLower()));
+            Assert.Contains(refactoringName, refactorings.Select(x => x.Name), StringComparer.OrdinalIgnoreCase);
 
-            var identifier = refactorings.First(action => action.Name.ToLower().Equals(refactoringName.ToLower())).Identifier;
+            var identifier = refactorings.First(action => action.Name.Equals(refactoringName, StringComparison.OrdinalIgnoreCase)).Identifier;
             return await RunRefactoringsAsync(code, identifier, wantsChanges);
         }
 
