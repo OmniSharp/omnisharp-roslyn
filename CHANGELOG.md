@@ -14,6 +14,14 @@ All changes to the project will be documented in this file.
         }
     }
     ```
+* Added support for organizing usings on format. This can be set via OmniSharp configuration, such as `omnisharp.json` file. (PR: [#1686](https://github.com/OmniSharp/omnisharp-roslyn/pull/1686))
+    ```JSON
+    {
+        "FormattingOptions": {
+            "OrganizeImports": true
+        }
+    }
+    ```  
 
 ## [1.34.9] - 2019-12-10
 * Updated to MsBuild 16.4.0 on Windows (PR:[#1662](https://github.com/OmniSharp/omnisharp-roslyn/pull/1662))
