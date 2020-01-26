@@ -43,13 +43,6 @@ namespace TestUtility
             return host;
         }
 
-        protected OmniSharpTestHost CreateOmniSharpHost(
-            string path = null,
-            IEnumerable<KeyValuePair<string, string>> configurationData = null,
-            DotNetCliVersion dotNetCliVersion = DotNetCliVersion.Current,
-            IEnumerable<ExportDescriptorProvider> additionalExports = null)
-            => OmniSharpTestHost.Create(path, this.TestOutput, configurationData, dotNetCliVersion, additionalExports);
-
         protected async Task<RunCodeActionResponse> RunRefactoringAsync(string code, string refactoringName, bool wantsChanges = false, bool isAnalyzersEnabled = true)
         {
             var refactorings = await FindRefactoringsAsync(code, configurationData: TestHelpers.GetConfigurationDataWithAnalyzerConfig(isAnalyzersEnabled));
