@@ -71,6 +71,10 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
 
         public async override Task<Unit> Handle(DidChangeTextDocumentParams notification, CancellationToken cancellationToken)
         {
+            if (notification.ContentChanges == null)
+            {
+                return Unit.Value;
+            }
             var contentChanges = notification.ContentChanges.ToArray();
             if (contentChanges.Length == 1 && contentChanges[0].Range == null)
             {

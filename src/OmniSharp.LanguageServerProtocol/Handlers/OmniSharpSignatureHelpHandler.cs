@@ -44,7 +44,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
 
             var omnisharpResponse = await _signatureHandler.Handle(omnisharpRequest);
 
-            if (!omnisharpResponse.Signatures.Any())
+            if (omnisharpResponse == null || !omnisharpResponse.Signatures.Any())
             {
                 return null;
             }
