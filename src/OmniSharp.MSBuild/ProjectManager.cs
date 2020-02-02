@@ -176,7 +176,7 @@ namespace OmniSharp.MSBuild
                     await Task.Delay(LoopDelay, cancellationToken);
                     ProcessQueue(cancellationToken);
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     _logger.LogError($"Error occurred while processing project updates: {ex}");
                 }
@@ -343,6 +343,7 @@ namespace OmniSharp.MSBuild
             if (!_workspace.TryApplyChanges(newSolution))
             {
                 _logger.LogError($"Failed to remove project from workspace: '{projectFileInfo.FilePath}'");
+                return false;
             }
 
             // TODO: Stop watching project files
@@ -385,34 +386,46 @@ namespace OmniSharp.MSBuild
                 });
             }
 
-            if (!string.IsNullOrEmpty(projectFileInfo.ProjectAssetsFile))
+            foreach(var projectAssetFile in GetProjectAssetFilePaths(projectFileInfo))
             {
-                _fileSystemWatcher.Watch(projectFileInfo.ProjectAssetsFile, (file, changeType) =>
+                _fileSystemWatcher.Watch(projectAssetFile, (file, changeType) =>
                 {
-                    QueueProjectUpdate(projectFileInfo.FilePath, allowAutoRestore: false, projectFileInfo.ProjectIdInfo);
-                });
-
-                var restoreDirectory = Path.GetDirectoryName(projectFileInfo.ProjectAssetsFile);
-                var nugetFileBase = Path.Combine(restoreDirectory, Path.GetFileName(projectFileInfo.FilePath) + ".nuget");
-                var nugetCacheFile = nugetFileBase + ".cache";
-                var nugetPropsFile = nugetFileBase + ".g.props";
-                var nugetTargetsFile = nugetFileBase + ".g.targets";
-
-                _fileSystemWatcher.Watch(nugetCacheFile, (file, changeType) =>
-                {
-                    QueueProjectUpdate(projectFileInfo.FilePath, allowAutoRestore: false, projectFileInfo.ProjectIdInfo);
-                });
-
-                _fileSystemWatcher.Watch(nugetPropsFile, (file, changeType) =>
-                {
-                    QueueProjectUpdate(projectFileInfo.FilePath, allowAutoRestore: false, projectFileInfo.ProjectIdInfo);
-                });
-
-                _fileSystemWatcher.Watch(nugetTargetsFile, (file, changeType) =>
-                {
-                    QueueProjectUpdate(projectFileInfo.FilePath, allowAutoRestore: false, projectFileInfo.ProjectIdInfo);
+                    QueueProjectUpdate(projectAssetFile, allowAutoRestore: false, projectFileInfo.ProjectIdInfo);
                 });
             }
+        }
+
+        private void UnwatchProjectFiles(ProjectFileInfo projectFileInfo)
+        {
+            _fileSystemWatcher.Unwatch(projectFileInfo.FilePath);
+
+            if (projectFileInfo.RuleSet?.FilePath != null)
+            {
+                _fileSystemWatcher.Unwatch(projectFileInfo.RuleSet.FilePath);
+            }
+
+            foreach(var projectAssetFile in GetProjectAssetFilePaths(projectFileInfo))
+            {
+                _fileSystemWatcher.Unwatch(projectAssetFile);
+            }
+        }
+
+        private static IEnumerable<string> GetProjectAssetFilePaths(ProjectFileInfo projectFileInfo)
+        {
+            if (!string.IsNullOrEmpty(projectFileInfo.ProjectAssetsFile))
+            {
+                return new string[] {};
+            }
+
+            var restoreDirectory = Path.GetDirectoryName(projectFileInfo.ProjectAssetsFile);
+            var nugetFileBase = Path.Combine(restoreDirectory, Path.GetFileName(projectFileInfo.FilePath) + ".nuget");
+            return new[]
+            {
+                projectFileInfo.ProjectAssetsFile,
+                nugetFileBase + ".cache",
+                nugetFileBase + ".g.props",
+                nugetFileBase + ".g.targets"
+            };
         }
 
         private void UpdateProject(string projectFilePath)
@@ -477,10 +490,10 @@ namespace OmniSharp.MSBuild
 
             foreach (var file in additionalFiles)
             {
-                 if (File.Exists(file))
-                 {
+                if (File.Exists(file))
+                {
                     _workspace.AddAdditionalDocument(project.Id, file);
-                 }
+                }
             }
         }
 
