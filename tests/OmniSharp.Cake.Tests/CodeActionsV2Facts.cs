@@ -44,7 +44,7 @@ namespace OmniSharp.Cake.Tests
                 }";
 
             var refactorings = await FindRefactoringNamesAsync(code);
-            Assert.Contains("Extract Method", refactorings);
+            Assert.Contains("Extract method", refactorings);
         }
 
         [Fact]
@@ -64,7 +64,8 @@ namespace OmniSharp.Cake.Tests
             {
                 "using System.Text.RegularExpressions;",
                 "System.Text.RegularExpressions.Regex",
-                "Extract Method",
+                "Extract method",
+                "Extract local function",
                 "Introduce local for 'Regex.Match(\"foo\", \"bar\")'"
             };
             Assert.Equal(expected, refactorings);
@@ -91,7 +92,7 @@ namespace OmniSharp.Cake.Tests
                 EndColumn = 8
             };
 
-            var response = await RunRefactoringAsync(code, "Extract Method");
+            var response = await RunRefactoringAsync(code, "Extract method");
             var modifiedFile = response.Changes.FirstOrDefault() as ModifiedFileResponse;
 
             Assert.Single(response.Changes);

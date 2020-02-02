@@ -185,7 +185,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     public string PropertyHere { get; set; }
                 }
                 ";
-            var response = await RunRefactoringAsync(code, "Extract Interface...");
+            var response = await RunRefactoringAsync(code, "Extract interface...");
 
             AssertIgnoringIndent(expected, ((ModifiedFileResponse)response.Changes.First()).Buffer);
         }
