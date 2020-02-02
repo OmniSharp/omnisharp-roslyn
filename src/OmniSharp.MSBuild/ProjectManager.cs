@@ -10,7 +10,6 @@ using System.Threading.Tasks.Dataflow;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json.Linq;
 using OmniSharp.Eventing;
 using OmniSharp.FileWatching;
 using OmniSharp.Models.UpdateBuffer;
@@ -18,13 +17,10 @@ using OmniSharp.MSBuild.Logging;
 using OmniSharp.MSBuild.Models.Events;
 using OmniSharp.MSBuild.Notification;
 using OmniSharp.MSBuild.ProjectFile;
-using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
-using OmniSharp.Roslyn.CSharp.Services.Refactoring.V2;
 using OmniSharp.Options;
 using OmniSharp.Roslyn.Utilities;
 using OmniSharp.Services;
 using OmniSharp.Utilities;
-using System.Reflection;
 using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace OmniSharp.MSBuild
@@ -36,11 +32,13 @@ namespace OmniSharp.MSBuild
             public ProjectIdInfo ProjectIdInfo;
             public string FilePath { get; }
             public bool AllowAutoRestore { get; set; }
+            public FileChangeType ChangeType { get; }
             public ProjectLoadedEventArgs LoadedEventArgs { get; set; }
 
-            public ProjectToUpdate(string filePath, bool allowAutoRestore, ProjectIdInfo projectIdInfo)
+            public ProjectToUpdate(string filePath, bool allowAutoRestore, ProjectIdInfo projectIdInfo, FileChangeType changeType)
             {
                 ProjectIdInfo = projectIdInfo ?? throw new ArgumentNullException(nameof(projectIdInfo));
+                ChangeType = changeType;
                 FilePath = filePath ?? throw new ArgumentNullException(nameof(filePath));
                 AllowAutoRestore = allowAutoRestore;
             }
@@ -122,7 +120,7 @@ namespace OmniSharp.MSBuild
                         if (_projectsRequestedOnDemand.TryAdd(csProjFile, 0 /*unused*/))
                         {
                             var projectIdInfo = new ProjectIdInfo(ProjectId.CreateNewId(csProjFile), false);
-                            QueueProjectUpdate(csProjFile, allowAutoRestore: true, projectId: projectIdInfo);
+                            QueueProjectUpdate(csProjFile, allowAutoRestore: true, projectId: projectIdInfo, FileChangeType.Unspecified);
                         }
                     }
 
@@ -153,10 +151,10 @@ namespace OmniSharp.MSBuild
         public IEnumerable<ProjectFileInfo> GetAllProjects() => _projectFiles.GetItems();
         public bool TryGetProject(string projectFilePath, out ProjectFileInfo projectFileInfo) => _projectFiles.TryGetValue(projectFilePath, out projectFileInfo);
 
-        public void QueueProjectUpdate(string projectFilePath, bool allowAutoRestore, ProjectIdInfo projectId)
+        public void QueueProjectUpdate(string projectFilePath, bool allowAutoRestore, ProjectIdInfo projectId, FileChangeType changeType = FileChangeType.Unspecified)
         {
             _logger.LogInformation($"Queue project update for '{projectFilePath}'");
-            _queue.Post(new ProjectToUpdate(projectFilePath, allowAutoRestore, projectId));
+            _queue.Post(new ProjectToUpdate(projectFilePath, allowAutoRestore, projectId, changeType));
         }
 
         public async Task WaitForQueueEmptyAsync()
@@ -188,20 +186,14 @@ namespace OmniSharp.MSBuild
             _processingQueue = true;
             try
             {
-                Dictionary<string, ProjectToUpdate> projectByFilePathMap = null;
-                List<ProjectToUpdate> projectList = null;
+                var projectByFilePathMap = new Dictionary<string, ProjectToUpdate>(StringComparer.OrdinalIgnoreCase);
+                var projectList = new List<ProjectToUpdate>();
 
                 while (_queue.TryReceive(out var currentProject))
                 {
                     if (cancellationToken.IsCancellationRequested)
                     {
                         break;
-                    }
-
-                    if (projectByFilePathMap == null)
-                    {
-                        projectByFilePathMap = new Dictionary<string, ProjectToUpdate>(StringComparer.OrdinalIgnoreCase);
-                        projectList = new List<ProjectToUpdate>();
                     }
 
                     // Ensure that we don't process the same project twice. However, if a project *does*
@@ -217,7 +209,11 @@ namespace OmniSharp.MSBuild
                         continue;
                     }
 
-                    // TODO: Handle removing project
+                    if(currentProject.ChangeType == FileChangeType.Delete)
+                    {
+                        RemoveProject(currentProject.FilePath);
+                        continue;
+                    }
 
                     projectByFilePathMap.Add(currentProject.FilePath, currentProject);
                     projectList.Add(currentProject);
@@ -253,35 +249,32 @@ namespace OmniSharp.MSBuild
                     }
                 }
 
-                if (projectByFilePathMap != null)
+                foreach (var project in projectList)
                 {
-                    foreach (var project in projectList)
-                    {
-                        UpdateProject(project.FilePath);
+                    UpdateProject(project.FilePath);
 
-                        // Fire loaded events
-                        if (project.LoadedEventArgs != null)
+                    // Fire loaded events
+                    if (project.LoadedEventArgs != null)
+                    {
+                        foreach (var eventSink in _eventSinks)
                         {
-                            foreach (var eventSink in _eventSinks)
+                            try
                             {
-                                try
-                                {
-                                    eventSink.ProjectLoaded(project.LoadedEventArgs);
-                                }
-                                catch (Exception ex)
-                                {
-                                    _logger.LogError(ex, "Exception thrown while calling event sinks");
-                                }
+                                eventSink.ProjectLoaded(project.LoadedEventArgs);
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger.LogError(ex, "Exception thrown while calling event sinks");
                             }
                         }
                     }
+                }
 
-                    foreach (var project in projectList)
+                foreach (var project in projectList)
+                {
+                    if (_projectFiles.TryGetValue(project.FilePath, out var projectFileInfo))
                     {
-                        if (_projectFiles.TryGetValue(project.FilePath, out var projectFileInfo))
-                        {
-                            _packageDependencyChecker.CheckForUnresolvedDependences(projectFileInfo, project.AllowAutoRestore);
-                        }
+                        _packageDependencyChecker.CheckForUnresolvedDependences(projectFileInfo, project.AllowAutoRestore);
                     }
                 }
             }
@@ -346,7 +339,7 @@ namespace OmniSharp.MSBuild
                 return false;
             }
 
-            // TODO: Stop watching project files
+            UnwatchProjectFiles(projectFileInfo);
 
             return true;
         }
@@ -371,18 +364,16 @@ namespace OmniSharp.MSBuild
 
         private void WatchProjectFiles(ProjectFileInfo projectFileInfo)
         {
-            // TODO: This needs some improvement. Currently, it tracks both deletions and changes
-            // as "updates". We should properly remove projects that are deleted.
             _fileSystemWatcher.Watch(projectFileInfo.FilePath, (file, changeType) =>
             {
-                QueueProjectUpdate(projectFileInfo.FilePath, allowAutoRestore: true, projectFileInfo.ProjectIdInfo);
+                QueueProjectUpdate(projectFileInfo.FilePath, allowAutoRestore: true, projectFileInfo.ProjectIdInfo, changeType);
             });
 
             if (projectFileInfo.RuleSet?.FilePath != null)
             {
                 _fileSystemWatcher.Watch(projectFileInfo.RuleSet.FilePath, (file, changeType) =>
                 {
-                    QueueProjectUpdate(projectFileInfo.FilePath, allowAutoRestore: false, projectFileInfo.ProjectIdInfo);
+                    QueueProjectUpdate(projectFileInfo.FilePath, allowAutoRestore: false, projectFileInfo.ProjectIdInfo, changeType);
                 });
             }
 
@@ -390,7 +381,7 @@ namespace OmniSharp.MSBuild
             {
                 _fileSystemWatcher.Watch(projectAssetFile, (file, changeType) =>
                 {
-                    QueueProjectUpdate(projectAssetFile, allowAutoRestore: false, projectFileInfo.ProjectIdInfo);
+                    QueueProjectUpdate(projectAssetFile, allowAutoRestore: false, projectFileInfo.ProjectIdInfo, changeType);
                 });
             }
         }
@@ -607,7 +598,7 @@ namespace OmniSharp.MSBuild
                         referencedProject = ProjectFileInfo.CreateNoBuild(projectReferencePath, _projectLoader);
                         AddProject(referencedProject);
 
-                        QueueProjectUpdate(projectReferencePath, allowAutoRestore: true, referencedProject.ProjectIdInfo);
+                        QueueProjectUpdate(projectReferencePath, allowAutoRestore: true, referencedProject.ProjectIdInfo, FileChangeType.Unspecified);
                     }
                 }
 

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -171,9 +171,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                     QueueForAnalysis(ImmutableArray.Create(changeEvent.DocumentId), AnalyzerWorkType.Foreground);
                     break;
                 case WorkspaceChangeKind.DocumentRemoved:
-                    if(!_currentDiagnosticResults.TryRemove(changeEvent.DocumentId, out _))
+                    if(_currentDiagnosticResults.TryRemove(changeEvent.DocumentId, out _))
                     {
-                        _logger.LogDebug($"Tried to remove non existent document from analysis, document: {changeEvent.DocumentId}");
+                        var existingDocumentsInProject = _workspace.CurrentSolution.GetProject(changeEvent.ProjectId).Documents.Select(x => x.Id).ToImmutableArray();
+                        QueueForAnalysis(existingDocumentsInProject, AnalyzerWorkType.Background);
                     };
                     break;
                 case WorkspaceChangeKind.ProjectAdded:
@@ -182,6 +183,18 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                     _logger.LogDebug($"Project {changeEvent.ProjectId} updated, reanalyzing its diagnostics.");
                     var projectDocumentIds = _workspace.CurrentSolution.GetProject(changeEvent.ProjectId).Documents.Select(x => x.Id).ToImmutableArray();
                     QueueForAnalysis(projectDocumentIds, AnalyzerWorkType.Background);
+                    break;
+                case WorkspaceChangeKind.ProjectRemoved:
+                    var removedProject = changeEvent.OldSolution.GetProject(changeEvent.ProjectId);
+
+                    _forwarder.ProjectAnalyzedInBackground(removedProject.FilePath, ProjectDiagnosticStatus.Started);
+
+                    foreach(var removedDocument in removedProject.Documents)
+                    {
+                        _currentDiagnosticResults.TryRemove(removedDocument.Id, out _);
+                    }
+
+                    _forwarder.ProjectAnalyzedInBackground(removedProject.FilePath, ProjectDiagnosticStatus.Ready);
                     break;
             }
         }

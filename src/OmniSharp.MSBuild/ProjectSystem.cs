@@ -86,7 +86,7 @@ namespace OmniSharp.MSBuild
         public void Initalize(IConfiguration configuration)
         {
             if (Initialized) return;
-            
+
             _options = new MSBuildOptions();
             ConfigurationBinder.Bind(configuration, _options);
 
