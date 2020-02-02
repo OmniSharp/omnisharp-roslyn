@@ -71,7 +71,7 @@ namespace OmniSharp.FileWatching
 
             lock (_gate)
             {
-                if (!_callbacksMap.ContainsKey(pathOrExtension))
+                if (_callbacksMap.ContainsKey(pathOrExtension))
                 {
                     _callbacksMap.Remove(pathOrExtension);
                 }
