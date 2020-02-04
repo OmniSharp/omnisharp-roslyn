@@ -265,26 +265,42 @@ Task("CreateMSBuildFolder")
 
     // Copy MSBuild SDK Resolver and DotNetHostResolver
     Information("Copying MSBuild SDK resolver...");
-    var sdkResolverSourceFolder = CombinePaths(env.Folders.Tools, "Microsoft.DotNet.MSBuildSdkResolver", "lib", sdkResolverTFM);
-    var sdkResolverTargetFolder = CombinePaths(msbuildCurrentBinTargetFolder, "SdkResolvers", "Microsoft.DotNet.MSBuildSdkResolver");
-    DirectoryHelper.ForceCreate(sdkResolverTargetFolder);
+    var msbuildSdkResolverSourceFolder = CombinePaths(env.Folders.Tools, "Microsoft.DotNet.MSBuildSdkResolver", "lib", sdkResolverTFM);
+    var msbuildSdkResolverTargetFolder = CombinePaths(msbuildCurrentBinTargetFolder, "SdkResolvers", "Microsoft.DotNet.MSBuildSdkResolver");
+    DirectoryHelper.ForceCreate(msbuildSdkResolverTargetFolder);
     FileHelper.Copy(
-        source: CombinePaths(sdkResolverSourceFolder, "Microsoft.DotNet.MSBuildSdkResolver.dll"),
-        destination: CombinePaths(sdkResolverTargetFolder, "Microsoft.DotNet.MSBuildSdkResolver.dll"));
+        source: CombinePaths(msbuildSdkResolverSourceFolder, "Microsoft.DotNet.MSBuildSdkResolver.dll"),
+        destination: CombinePaths(msbuildSdkResolverTargetFolder, "Microsoft.DotNet.MSBuildSdkResolver.dll"));
 
     if (Platform.Current.IsWindows)
     {
-        CopyDotNetHostResolver(env, "win", "x86", "hostfxr.dll", sdkResolverTargetFolder, copyToArchSpecificFolder: true);
-        CopyDotNetHostResolver(env, "win", "x64", "hostfxr.dll", sdkResolverTargetFolder, copyToArchSpecificFolder: true);
+        CopyDotNetHostResolver(env, "win", "x86", "hostfxr.dll", msbuildSdkResolverTargetFolder, copyToArchSpecificFolder: true);
+        CopyDotNetHostResolver(env, "win", "x64", "hostfxr.dll", msbuildSdkResolverTargetFolder, copyToArchSpecificFolder: true);
     }
     else if (Platform.Current.IsMacOS)
     {
-        CopyDotNetHostResolver(env, "osx", "x64", "libhostfxr.dylib", sdkResolverTargetFolder, copyToArchSpecificFolder: false);
+        CopyDotNetHostResolver(env, "osx", "x64", "libhostfxr.dylib", msbuildSdkResolverTargetFolder, copyToArchSpecificFolder: false);
     }
     else if (Platform.Current.IsLinux)
     {
-        CopyDotNetHostResolver(env, "linux", "x64", "libhostfxr.so", sdkResolverTargetFolder, copyToArchSpecificFolder: false);
+        CopyDotNetHostResolver(env, "linux", "x64", "libhostfxr.so", msbuildSdkResolverTargetFolder, copyToArchSpecificFolder: false);
     }
+
+    Information("Copying NuGet SDK resolver...");
+    var nugetSdkResolverSourceFolder = CombinePaths(env.Folders.Tools, "Microsoft.Build.NuGetSdkResolver", "lib", sdkResolverTFM);
+    var nugetSdkResolverTargetFolder = CombinePaths(msbuildCurrentBinTargetFolder, "SdkResolvers", "Microsoft.Build.NuGetSdkResolver");
+    DirectoryHelper.ForceCreate(nugetSdkResolverTargetFolder);
+    FileHelper.Copy(
+        source: CombinePaths(nugetSdkResolverSourceFolder, "Microsoft.Build.NuGetSdkResolver.dll"),
+        destination: CombinePaths(msbuildCurrentBinTargetFolder, "Microsoft.Build.NuGetSdkResolver.dll"));
+    FileHelper.WriteAllLines(
+        path: CombinePaths(nugetSdkResolverTargetFolder, "Microsoft.Build.NuGetSdkResolver.xml"),
+        contents: new [] {
+            "<SdkResolver>",
+            "  <Path>../../Microsoft.Build.NuGetSdkResolver.dll</Path>",
+            "</SdkResolver>"
+        }
+    );
 
     // Copy content of NuGet.Build.Tasks
     var nugetBuildTasksFolder = CombinePaths(env.Folders.Tools, "NuGet.Build.Tasks");
@@ -299,13 +315,17 @@ Task("CreateMSBuildFolder")
         source: CombinePaths(nugetBuildTasksTargetsFolder, "NuGet.targets"),
         destination: CombinePaths(msbuildCurrentBinTargetFolder, "NuGet.targets"));
 
-    // Copy dependencies of NuGet.Build.Tasks
+    // Copy dependencies of NuGet.Build.Tasks & Microsoft.Build.NuGetSdkResolver
     var nugetPackages = new []
     {
         "NuGet.Commands",
         "NuGet.Common",
         "NuGet.Configuration",
+        "NuGet.Credentials",
+        "NuGet.DependencyResolver.Core",
         "NuGet.Frameworks",
+        "NuGet.LibraryModel",
+        "NuGet.Packaging",
         "NuGet.ProjectModel",
         "NuGet.Protocol",
         "NuGet.Versioning"
@@ -319,6 +339,11 @@ Task("CreateMSBuildFolder")
             source: CombinePaths(env.Folders.Tools, nugetPackage, "lib", "net472", binaryName),
             destination: CombinePaths(msbuildCurrentBinTargetFolder, binaryName));
     }
+
+    // Copy additional dependency of Microsoft.Build.NuGetSdkResolver
+    FileHelper.Copy(
+        source: CombinePaths(env.Folders.Tools, "Newtonsoft.Json", "lib", "net45", "Newtonsoft.Json.dll"),
+        destination: CombinePaths(msbuildCurrentBinTargetFolder, "Newtonsoft.Json.dll"));
 
     // Copy content of Microsoft.Net.Compilers
     Information("Copying Microsoft.Net.Compilers...");
