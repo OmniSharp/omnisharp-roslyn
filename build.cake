@@ -147,8 +147,6 @@ Task("InstallMonoAssets")
     DownloadFileAndUnzip($"{buildPlan.DownloadURL}/{buildPlan.MonoRuntimeMacOS}", env.Folders.MonoRuntimeMacOS);
     DownloadFileAndUnzip($"{buildPlan.DownloadURL}/{buildPlan.MonoRuntimeLinux32}", env.Folders.MonoRuntimeLinux32);
     DownloadFileAndUnzip($"{buildPlan.DownloadURL}/{buildPlan.MonoRuntimeLinux64}", env.Folders.MonoRuntimeLinux64);
-    DownloadFileAndUnzip($"{buildPlan.DownloadURL}/{buildPlan.MonoMSBuildRuntime}", env.Folders.MonoMSBuildRuntime);
-    DownloadFileAndUnzip($"{buildPlan.DownloadURL}/{buildPlan.MonoMSBuildLib}", env.Folders.MonoMSBuildLib);
 
     var monoInstallFolder = env.CurrentMonoRuntime.InstallFolder;
     var monoRuntimeFile = env.CurrentMonoRuntime.RuntimeFile;
@@ -196,6 +194,9 @@ Task("CreateMSBuildFolder")
     var msbuildCurrentTargetFolder = CombinePaths(env.Folders.MSBuild, "Current");
     var msbuildCurrentBinTargetFolder = CombinePaths(msbuildCurrentTargetFolder, "Bin");
 
+    DirectoryHelper.ForceCreate(msbuildCurrentTargetFolder);
+    DirectoryHelper.ForceCreate(msbuildCurrentBinTargetFolder);
+
     var msbuildLibraries = new []
     {
         "Microsoft.Build",
@@ -206,6 +207,46 @@ Task("CreateMSBuildFolder")
         "Microsoft.Build.Tasks.v12.0",
         "Microsoft.Build.Utilities.v4.0",
         "Microsoft.Build.Utilities.v12.0"
+    };
+
+    var msbuildRuntimeFiles = new []
+    {
+        "Microsoft.Common.CrossTargeting.targets",
+        "Microsoft.Common.CurrentVersion.targets",
+        "Microsoft.Common.Mono.targets",
+        "Microsoft.Common.overridetasks",
+        "Microsoft.Common.targets",
+        "Microsoft.Common.tasks",
+        "Microsoft.CSharp.CrossTargeting.targets",
+        "Microsoft.CSharp.CurrentVersion.targets",
+        "Microsoft.CSharp.Mono.targets",
+        "Microsoft.CSharp.targets",
+        "Microsoft.Data.Entity.targets",
+        "Microsoft.Managed.targets",
+        "Microsoft.NET.props",
+        "Microsoft.NETFramework.CurrentVersion.props",
+        "Microsoft.NETFramework.CurrentVersion.targets",
+        "Microsoft.NETFramework.props",
+        "Microsoft.NETFramework.targets",
+        "Microsoft.ServiceModel.targets",
+        "Microsoft.VisualBasic.CrossTargeting.targets",
+        "Microsoft.VisualBasic.CurrentVersion.targets",
+        "Microsoft.VisualBasic.Mono.targets",
+        "Microsoft.VisualBasic.targets",
+        "Microsoft.WinFx.targets",
+        "Microsoft.WorkflowBuildExtensions.targets",
+        "Microsoft.Xaml.targets",
+        "MSBuild.dll",
+        "MSBuild.dll.config",
+        "System.Buffers.dll",
+        "System.Collections.Immutable.dll",
+        "System.Memory.dll",
+        "System.Numerics.Vectors.dll",
+        "System.Reflection.Metadata.dll",
+        "System.Resources.Extensions.dll",
+        "System.Threading.Tasks.Dataflow.dll",
+        "Workflow.VisualBasic.targets",
+        "Workflow.targets"
     };
 
     string sdkResolverTFM;
@@ -239,11 +280,25 @@ Task("CreateMSBuildFolder")
     {
         Information("Copying Mono MSBuild runtime...");
 
-        var msbuildSourceFolder = env.Folders.MonoMSBuildRuntime;
-        DirectoryHelper.Copy(msbuildSourceFolder, msbuildCurrentBinTargetFolder, copySubDirectories: false);
+        var monoBasePath = Platform.Current.IsMacOS
+            ? "/Library/Frameworks/Mono.framework/Versions/Current/lib/mono"
+            : "/usr/lib/mono";
+        var monoMSBuildPath = $"{monoBasePath}/msbuild/Current/bin";
+        var monoXBuildPath = $"{monoBasePath}/xbuild/Current";
 
-        var msbuild15SourceFolder = CombinePaths(msbuildSourceFolder, "15.0");
-        DirectoryHelper.Copy(msbuild15SourceFolder, msbuildCurrentTargetFolder);
+        var commonTargetsSourcePath = CombinePaths(monoXBuildPath, "Microsoft.Common.props");
+        var commonTargetsTargetPath = CombinePaths(msbuildCurrentTargetFolder, "Microsoft.Common.props");
+        FileHelper.Copy(commonTargetsSourcePath, commonTargetsTargetPath);
+
+        foreach (var runtimeFileName in msbuildRuntimeFiles)
+        {
+            var runtimeSourcePath = CombinePaths(monoMSBuildPath, runtimeFileName);
+            var runtimeTargetPath = CombinePaths(msbuildCurrentBinTargetFolder, runtimeFileName);
+            if (FileHelper.Exists(runtimeSourcePath))
+            {
+                FileHelper.Copy(runtimeSourcePath, runtimeTargetPath);
+            }
+        }
 
         Information("Copying MSBuild libraries...");
 
@@ -252,7 +307,7 @@ Task("CreateMSBuildFolder")
             var libraryFileName = library + ".dll";
 
             // copy MSBuild from current Mono (should be 6.4.0+)
-            var librarySourcePath = CombinePaths(Platform.Current.IsMacOS ? "/Library/Frameworks/Mono.framework/Versions/Current/lib/mono/msbuild/15.0/bin" : "/usr/lib/mono/msbuild/Current/bin", libraryFileName);
+            var librarySourcePath = CombinePaths(monoMSBuildPath, libraryFileName);
             var libraryTargetPath = CombinePaths(msbuildCurrentBinTargetFolder, libraryFileName);
             if (FileHelper.Exists(librarySourcePath))
             {

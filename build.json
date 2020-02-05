@@ -7,8 +7,6 @@
   "MonoRuntimeMacOS": "mono.macOS-6.8.0.104.zip",
   "MonoRuntimeLinux32": "mono.linux-x86-6.8.0.96.zip",
   "MonoRuntimeLinux64": "mono.linux-x86_64-6.8.0.96.zip",
-  "MonoMSBuildRuntime": "Microsoft.Build.Runtime.Mono-6.8.0.104.zip",
-  "MonoMSBuildLib": "Microsoft.Build.Lib.Mono-6.8.0.104.zip",
   "HostProjects": [
     "OmniSharp.Stdio.Driver",
     "OmniSharp.Http.Driver"
