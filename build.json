@@ -1,51 +1,49 @@
 {
-  "DotNetInstallScriptURL": "https://dot.net/v1",
-  "DotNetChannel": "Current",
-  "DotNetVersion": "3.0.100",
-  "RequiredMonoVersion": "6.6.0",
-  "DownloadURL": "https://roslynomnisharp.blob.core.windows.net/ext",
-  "MonoRuntimeMacOS": "mono.macOS-6.6.0.161.zip",
-  "MonoRuntimeLinux32": "mono.linux-x86-6.6.0.161.zip",
-  "MonoRuntimeLinux64": "mono.linux-x86_64-6.6.0.161.zip",
-  "MonoMSBuildRuntime": "Microsoft.Build.Runtime.Mono-6.6.0.161.zip",
-  "MonoMSBuildLib": "Microsoft.Build.Lib.Mono-6.6.0.161.zip",
-  "HostProjects": [
-    "OmniSharp.Stdio.Driver",
-    "OmniSharp.Http.Driver"
-  ],
-  "TestProjects": [
-    "OmniSharp.MSBuild.Tests",
-    "OmniSharp.Roslyn.CSharp.Tests",
-    "OmniSharp.Http.Tests",
-    "OmniSharp.Stdio.Tests",
-    "OmniSharp.DotNetTest.Tests",
-    "OmniSharp.Tests",
-    "OmniSharp.Cake.Tests",
-    "OmniSharp.Script.Tests"
-  ],
-  "TestAssets": [
-    "NUnitTestProject",
-    "XunitTestProject",
-    "MSTestProject",
-    "ProjectAndSolution",
-    "ProjectAndSolutionWithProjectSection",
-    "TwoProjectsWithSolution",
-    "ProjectWithGeneratedFile",
-    "CSharpAndFSharp",
-    "ProjectWithMismatchedFileName",
-    "SolutionWithSignedProject",
-    "ProjectWithMultiTFMLib",
-    "ExternAlias",
-    "ProjectWithComplexAnalyzers",
-    "NetCore30Project"
-  ],
-  "CakeTestAssets": [
-    "CakeProject"
-  ],
-  "WindowsOnlyTestAssets": [
-    "AntlrGeneratedFiles"
-  ],
-  "RestoreOnlyTestAssets":[
-    "ProjectWithMissingType"
-  ]
+    "DotNetInstallScriptURL": "https://dot.net/v1",
+    "DotNetChannel": "Current",
+    "DotNetVersion": "3.0.100",
+    "RequiredMonoVersion": "6.6.0",
+    "DownloadURL": "https://roslynomnisharp.blob.core.windows.net/ext",
+    "MonoRuntimeMacOS": "mono.macOS-6.8.0.105.zip",
+    "MonoRuntimeLinux32": "mono.linux-x86-6.8.0.105.zip",
+    "MonoRuntimeLinux64": "mono.linux-x86_64-6.8.0.105.zip",
+    "HostProjects": [
+        "OmniSharp.Stdio.Driver",
+        "OmniSharp.Http.Driver"
+    ],
+    "TestProjects": [
+        "OmniSharp.MSBuild.Tests",
+        "OmniSharp.Roslyn.CSharp.Tests",
+        "OmniSharp.Http.Tests",
+        "OmniSharp.Stdio.Tests",
+        "OmniSharp.DotNetTest.Tests",
+        "OmniSharp.Tests",
+        "OmniSharp.Cake.Tests",
+        "OmniSharp.Script.Tests"
+    ],
+    "TestAssets": [
+        "NUnitTestProject",
+        "XunitTestProject",
+        "MSTestProject",
+        "ProjectAndSolution",
+        "ProjectAndSolutionWithProjectSection",
+        "TwoProjectsWithSolution",
+        "ProjectWithGeneratedFile",
+        "CSharpAndFSharp",
+        "ProjectWithMismatchedFileName",
+        "SolutionWithSignedProject",
+        "ProjectWithMultiTFMLib",
+        "ExternAlias",
+        "ProjectWithComplexAnalyzers",
+        "NetCore30Project"
+    ],
+    "CakeTestAssets": [
+        "CakeProject"
+    ],
+    "WindowsOnlyTestAssets": [
+        "AntlrGeneratedFiles"
+    ],
+    "RestoreOnlyTestAssets": [
+        "ProjectWithMissingType"
+    ]
 }
