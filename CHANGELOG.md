@@ -1,7 +1,7 @@
 # Changelog
 All changes to the project will be documented in this file.
 
-## [1.34.11] - not yet released
+## [1.34.11] - 2020-02-05
 * Updated the bundled to Mono 6.8.0 and MSBuild to be copied from Mono 6.8.0 ([#1693](https://github.com/OmniSharp/omnisharp-roslyn/issues/1693), PR: [#1697](https://github.com/OmniSharp/omnisharp-roslyn/pull/1697))
 * Included NugetSDKResolver in the minimal MSBuild, which introduces support for Nuget based project SDKs like Arcade ([#1678](https://github.com/OmniSharp/omnisharp-roslyn/issues/1678), PR: [#1696](https://github.com/OmniSharp/omnisharp-roslyn/pull/1696))
 
