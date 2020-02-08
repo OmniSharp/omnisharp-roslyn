@@ -175,7 +175,48 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var usages = await FindUsagesAsync(testFiles, onlyThisFile: false);
             Assert.Equal(2, usages.QuickFixes.Count());
 
-            var mappedResult = usages.QuickFixes.FirstOrDefault(x => x.Line == 0 && x.FileName == "b.cs");
+            var mappedResult = usages.QuickFixes.FirstOrDefault(x => x.Line == 0 && x.FileName == "b.cs" && x.Text == "// hello");
+            var regularResult = usages.QuickFixes.FirstOrDefault(x => x.Line == 3 && x.FileName == "a.cs");
+            Assert.NotNull(mappedResult);
+            Assert.NotNull(regularResult);
+
+            // regular result has regular postition
+            Assert.Equal(32, regularResult.Column);
+            Assert.Equal(35, regularResult.EndColumn);
+
+            // mapped result has column 0,0
+            Assert.Equal(0, mappedResult.Column);
+            Assert.Equal(0, mappedResult.EndColumn);
+        }
+
+        [Fact]
+        public async Task DoesNotFallOutOfBoundsWithIncorrectMapping()
+        {
+            var testFiles = new[]
+            {
+                new TestFile("a.cs", @"
+                public class Foo
+                {
+                    public void b$$ar() { }
+                }
+
+                public class FooConsumer
+                {
+                    public FooConsumer()
+                    {
+#line 100 ""b.cs""
+new Foo().bar();
+#line default
+                    }
+                }"),
+                new TestFile("b.cs",
+                    @"// hello")
+            };
+
+            var usages = await FindUsagesAsync(testFiles, onlyThisFile: false);
+            Assert.Equal(2, usages.QuickFixes.Count());
+
+            var mappedResult = usages.QuickFixes.FirstOrDefault(x => x.Line == 99 && x.FileName == "b.cs" && x.Text == "new Foo().bar();");
             var regularResult = usages.QuickFixes.FirstOrDefault(x => x.Line == 3 && x.FileName == "a.cs");
             Assert.NotNull(mappedResult);
             Assert.NotNull(regularResult);
