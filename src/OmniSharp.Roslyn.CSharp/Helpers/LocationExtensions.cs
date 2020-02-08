@@ -21,8 +21,8 @@ namespace OmniSharp.Helpers
                 : location.GetMappedLineSpan();
 
             var documents = workspace.GetDocuments(lineSpan.Path);
-            var sourceText = GetSourceText(location, documents, lineSpan.HasMappedPath);
-            var text = GetText(location, sourceText, lineSpan.StartLinePosition.Line);
+            (var sourceText, var isMappedDocument) = GetSourceText(location, documents, lineSpan.HasMappedPath);
+            var text = GetText(location, sourceText, lineSpan.StartLinePosition.Line, isMappedDocument);
 
             return new QuickFix
             {
@@ -35,42 +35,32 @@ namespace OmniSharp.Helpers
                 Projects = documents.Select(document => document.Project.Name).ToArray()
             };
 
-            static SourceText GetSourceText(Location location, IEnumerable<Document> documents, bool hasMappedPath)
+            static (SourceText sourceText, bool isMappedDocument) GetSourceText(Location location, IEnumerable<Document> documents, bool hasMappedPath)
             {
-                SourceText sourceText = null;
-
                 // if we have a mapped linespan and we found a corresponding document, pick that one
                 // otherwise use the SourceText of current location
                 if (hasMappedPath && documents != null && documents.Any())
                 {
-                    documents.First().TryGetText(out sourceText);
+                    if (documents.First().TryGetText(out SourceText sourceText))
+                    {
+                        return (sourceText, true);
+                    }
                 }
 
-                if (sourceText == null)
-                {
-                    sourceText = location.SourceTree.GetText();
-                }
-
-                return sourceText;
+                return (location.SourceTree.GetText(), false);
             }
 
-            static string GetText(Location location, SourceText sourceText, int startLine)
+            static string GetText(Location location, SourceText sourceText, int startLine, bool isMappedDocument)
             {
-                string text;
                 // bounds check in case the mapping is incorrect, since user can put whatever line they want
-                if (sourceText.Lines.Count > startLine)
+                if (isMappedDocument && sourceText.Lines.Count > startLine)
                 {
-                    text = sourceText.Lines[startLine].ToString();
-                }
-                else
-                {
-                    var fallBackLineSpan = location.GetLineSpan();
-
-                    // in case we fall out of bounds, we shouldn't crash, fallback to text from the unmapped span and the current file
-                    text = location.SourceTree.GetText().Lines[fallBackLineSpan.StartLinePosition.Line].ToString();
+                    return sourceText.Lines[startLine].ToString();
                 }
 
-                return text;
+                // in case we fall out of bounds, we shouldn't crash, fallback to text from the unmapped span and the current file
+                var fallBackLineSpan = location.GetLineSpan();
+                return location.SourceTree.GetText().Lines[fallBackLineSpan.StartLinePosition.Line].ToString();
             }
         }
     }

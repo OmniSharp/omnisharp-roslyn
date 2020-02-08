@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using OmniSharp.Models;
 using OmniSharp.Models.FindUsages;
@@ -148,82 +149,56 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             Assert.Equal(35, regularResult.EndColumn);
         }
 
-        [Fact]
-        public async Task CanFindReferencesWithLineMappingAcrossFiles()
+        [Theory]
+        [InlineData(1, "// hello", true)] // everything correct
+        [InlineData(100, "new Foo().bar();", true)] // file exists in workspace but mapping incorrect
+        [InlineData(1, "new Foo().bar();", false)] // file doesn't exist in workspace but mapping correct
+        public async Task CanFindReferencesWithLineMappingAcrossFiles(int mappingLine, string expectedMappingText, bool mappedFileExistsInWorkspace)
         {
-            var testFiles = new[]
+            var testFiles = new List<TestFile>()
             {
                 new TestFile("a.cs", @"
                 public class Foo
                 {
-                    public void b$$ar() { }
+public void b$$ar() { }
                 }
 
                 public class FooConsumer
                 {
                     public FooConsumer()
                     {
-#line 1 ""b.cs""
-                        new Foo().bar();
-#line default
-                    }
-                }"),
-                new TestFile("b.cs",
-                    @"// hello")
-            };
-
-            var usages = await FindUsagesAsync(testFiles, onlyThisFile: false);
-            Assert.Equal(2, usages.QuickFixes.Count());
-
-            var mappedResult = usages.QuickFixes.FirstOrDefault(x => x.Line == 0 && x.FileName == "b.cs" && x.Text == "// hello");
-            var regularResult = usages.QuickFixes.FirstOrDefault(x => x.Line == 3 && x.FileName == "a.cs");
-            Assert.NotNull(mappedResult);
-            Assert.NotNull(regularResult);
-
-            // regular result has regular postition
-            Assert.Equal(32, regularResult.Column);
-            Assert.Equal(35, regularResult.EndColumn);
-
-            // mapped result has column 0,0
-            Assert.Equal(0, mappedResult.Column);
-            Assert.Equal(0, mappedResult.EndColumn);
-        }
-
-        [Fact]
-        public async Task DoesNotFallOutOfBoundsWithIncorrectMapping()
-        {
-            var testFiles = new[]
-            {
-                new TestFile("a.cs", @"
-                public class Foo
-                {
-                    public void b$$ar() { }
-                }
-
-                public class FooConsumer
-                {
-                    public FooConsumer()
-                    {
-#line 100 ""b.cs""
+#line "+mappingLine+@" ""b.cs""
 new Foo().bar();
 #line default
                     }
                 }"),
-                new TestFile("b.cs",
-                    @"// hello")
+                
             };
 
-            var usages = await FindUsagesAsync(testFiles, onlyThisFile: false);
+            if (mappedFileExistsInWorkspace)
+            {
+                testFiles.Add(new TestFile("b.cs",
+                    @"// hello"));
+            }
+
+            var usages = await FindUsagesAsync(testFiles.ToArray(), onlyThisFile: false);
             Assert.Equal(2, usages.QuickFixes.Count());
 
-            var mappedResult = usages.QuickFixes.FirstOrDefault(x => x.Line == 99 && x.FileName == "b.cs" && x.Text == "new Foo().bar();");
-            var regularResult = usages.QuickFixes.FirstOrDefault(x => x.Line == 3 && x.FileName == "a.cs");
-            Assert.NotNull(mappedResult);
-            Assert.NotNull(regularResult);
+            var regularResult = usages.QuickFixes.ElementAt(0);
+            var mappedResult = usages.QuickFixes.ElementAt(1);
+
+            Assert.Equal("a.cs", regularResult.FileName);
+            Assert.Equal("b.cs", mappedResult.FileName);
+
+            Assert.Equal(3, regularResult.Line);
+            Assert.Equal(mappingLine-1, mappedResult.Line);
+
+            Assert.Equal("public void bar() { }", regularResult.Text);
+            Assert.Equal(expectedMappingText, mappedResult.Text);
 
             // regular result has regular postition
-            Assert.Equal(32, regularResult.Column);
-            Assert.Equal(35, regularResult.EndColumn);
+            Assert.Equal(12, regularResult.Column);
+            Assert.Equal(15, regularResult.EndColumn);
 
             // mapped result has column 0,0
             Assert.Equal(0, mappedResult.Column);
