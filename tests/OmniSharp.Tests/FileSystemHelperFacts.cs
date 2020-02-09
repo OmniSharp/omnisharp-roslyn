@@ -132,6 +132,60 @@ namespace OmniSharp.Tests
             Assert.False(result);
         }
 
+        [Fact]
+        public void FindParentPath()
+        {
+            const string expectedPath = "/src/project";
+
+            const string path = "/src/project/file.cs";
+            var candidateParentPaths = new[]
+            {
+                "/src/project/obj",
+                expectedPath,
+                "/test/project.test",
+            };
+
+            string result = FileSystemHelper.FindParentPath(path, candidateParentPaths);
+
+            Assert.Equal(expectedPath, result);
+        }
+
+        [Fact]
+        public void FindParentPath_ReturnsNullIfNoParentFound()
+        {
+            const string path = "/src/project/";
+            var candidateParentPaths = new[] { "/test/project" };
+
+            string result = FileSystemHelper.FindParentPath(path, candidateParentPaths);
+
+            Assert.Null(result);
+        }
+
+        [Fact]
+        public void FindParentPath_ReturnsNullIfPathOrParentPathsIsNull()
+        {
+            string result = FileSystemHelper.FindParentPath(null, null);
+
+            Assert.Null(result);
+        }
+
+        [Fact]
+        public void FindParentPath_GetParentPath_GivenCandidatePathsAsFile()
+        {
+            const string expectedPath = "/src/project/project.csproj";
+            const string path = "/src/project/file.cs";
+            var candidateParentPaths = new[]
+            {
+                "/src/project/obj",
+                "/src/project/obj/",
+                expectedPath,
+            };
+
+            string result = FileSystemHelper.FindParentPath(path, candidateParentPaths);
+
+            Assert.Equal(expectedPath, result);
+        }
+
         private FileSystemHelper CreateFileSystemHelper(params string[] excludePatterns)
         {
             var environment = new OmniSharpEnvironment(TestAssets.Instance.TestAssetsFolder, 1000, LogLevel.Information, null);

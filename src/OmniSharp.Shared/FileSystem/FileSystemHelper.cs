@@ -90,5 +90,28 @@ namespace OmniSharp.FileSystem
                 parentPath,
                 StringComparison.Ordinal);
         }
+
+        /// <summary>
+        /// Find the first occurrence of a set of candidate paths that is the parent
+        /// of the specified path
+        /// </summary>
+        /// <param name="path">The path that will be verified</param>
+        /// <param name="candidateParentPaths">A set of possible parent paths</param>
+        public static string FindParentPath(
+            string path,
+            IEnumerable<string> candidateParentPaths)
+        {
+            if (path == null || candidateParentPaths == null)
+            {
+                return null;
+            }
+
+            return candidateParentPaths.FirstOrDefault(
+                parentPath => IsChildPath(
+                    path,
+                    Path.HasExtension(parentPath)
+                        ? Path.GetDirectoryName(parentPath)
+                        : parentPath));
+        }
     }
 }
