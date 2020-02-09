@@ -66,6 +66,50 @@ namespace OmniSharp.FileSystem
         }
 
         /// <summary>
+        /// Verifies whether the path is excluded by any of the given patterns
+        /// </summary>
+        /// <param name="path">The path that will be verified</param>
+        /// <param name="targetDirectory">The target directory</param>
+        /// <param name="excludePatterns">A list of patterns to be excluded</param>
+        public static bool IsPathExcluded(
+            string filePath,
+            string targetDirectory,
+            IEnumerable<string> excludePatterns)
+        {
+            if (!IsChildPath(filePath, targetDirectory))
+            {
+                return false;
+            }
+
+            filePath = Path.GetFullPath(filePath);
+            targetDirectory = Path.GetFullPath(targetDirectory);
+
+            var targetDirectoryLength = targetDirectory.Length;
+
+            // Checks whether the target directory has a leading path separator.
+            // If it does not, one more char should be accounted in its length
+            if (!targetDirectory.EndsWith(s_directorySeparatorChar, StringComparison.InvariantCulture))
+            {
+                targetDirectoryLength += 1;
+            }
+
+            // Removes the target directory part of the file to get the relative path
+            var relativeFilePath = filePath.Substring(
+                targetDirectoryLength,
+                filePath.Length - targetDirectoryLength);
+
+            var matcher = new Matcher();
+            matcher.AddInclude(relativeFilePath);
+
+            if (excludePatterns != null)
+            {
+                matcher.AddExcludePatterns(excludePatterns);
+            }
+
+            return !matcher.GetResultsInFullPath(targetDirectory).Any();
+        }
+
+        /// <summary>
         /// Verifies whether the path specified is a child of the specified parent path
         /// </summary>
         /// <param name="path">Path that will be verified</param>

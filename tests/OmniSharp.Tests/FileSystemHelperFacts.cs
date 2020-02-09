@@ -186,6 +186,31 @@ namespace OmniSharp.Tests
             Assert.Equal(expectedPath, result);
         }
 
+        [Fact]
+        public void IsFileExcluded_VerifyThatFileIsNotExcluded_IfNotChildOfTargetPath()
+        {
+            const string file = "/src/project/excluded/file.cs";
+            const string targetDirectory = "/test/project";
+            var excludePatterns = new[] { "**/excluded" };
+
+            bool result = FileSystemHelper.IsPathExcluded(file, targetDirectory, excludePatterns);
+
+            Assert.False(result);
+        }
+
+        [Theory]
+        [InlineData("/src/project")]
+        [InlineData("/src/project/")]
+        public void IsFileExcluded_VerifyThatFileIsExcluded(string targetDirectory)
+        {
+            const string file = "/src/project/excluded/file.cs";
+            var excludePatterns = new[] { "**/excluded" };
+
+            bool result = FileSystemHelper.IsPathExcluded(file, targetDirectory, excludePatterns);
+
+            Assert.True(result);
+        }
+
         private FileSystemHelper CreateFileSystemHelper(params string[] excludePatterns)
         {
             var environment = new OmniSharpEnvironment(TestAssets.Instance.TestAssetsFolder, 1000, LogLevel.Information, null);
