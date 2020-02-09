@@ -58,6 +58,7 @@ namespace OmniSharp.MSBuild.ProjectFile
         public bool RunAnalyzers => _data.RunAnalyzers;
         public bool RunAnalyzersDuringLiveAnalysis => _data.RunAnalyzersDuringLiveAnalysis;
         public string DefaultNamespace => _data.DefaultNamespace;
+        public ImmutableArray<string> DefaultItemExcludes => _data.DefaultItemExcludes;
 
         public ProjectIdInfo ProjectIdInfo { get; }
 

@@ -56,6 +56,7 @@ namespace OmniSharp.MSBuild.ProjectFile
             public bool RunAnalyzers { get; }
             public bool RunAnalyzersDuringLiveAnalysis { get; }
             public string DefaultNamespace { get; }
+            public ImmutableArray<string> DefaultItemExcludes { get; }
 
             private ProjectData()
             {
@@ -72,6 +73,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 AdditionalFiles = ImmutableArray<string>.Empty;
                 ReferenceAliases = ImmutableDictionary<string, string>.Empty;
                 ProjectReferenceAliases = ImmutableDictionary<string, string>.Empty;
+                DefaultItemExcludes = ImmutableArray<string>.Empty;
             }
 
             private ProjectData(
@@ -160,7 +162,8 @@ namespace OmniSharp.MSBuild.ProjectFile
                 bool runAnalyzersDuringLiveAnalysis,
                 RuleSet ruleset,
                 ImmutableDictionary<string, string> referenceAliases,
-                ImmutableDictionary<string, string> projectReferenceAliases)
+                ImmutableDictionary<string, string> projectReferenceAliases,
+                ImmutableArray<string> defaultItemExcludes)
                 : this(guid, name, assemblyName, targetPath, outputPath, intermediateOutputPath, projectAssetsFile,
                       configuration, platform, targetFramework, targetFrameworks, outputKind, languageVersion, nullableContextOptions, allowUnsafeCode, checkForOverflowUnderflow,
                       documentationFile, preprocessorSymbolNames, suppressedDiagnosticIds, signAssembly, assemblyOriginatorKeyFile, treatWarningsAsErrors, defaultNamespace, runAnalyzers, runAnalyzersDuringLiveAnalysis, ruleset)
@@ -173,6 +176,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 AdditionalFiles = additionalFiles.EmptyIfDefault();
                 ReferenceAliases = referenceAliases;
                 ProjectReferenceAliases = projectReferenceAliases;
+                DefaultItemExcludes = defaultItemExcludes.EmptyIfDefault();
             }
 
             public static ProjectData Create(MSB.Evaluation.Project project)
@@ -257,6 +261,8 @@ namespace OmniSharp.MSBuild.ProjectFile
 
                 var ruleset = ResolveRulesetIfAny(projectInstance);
 
+                var defaultItemExcludes = PropertyConverter.SplitList(projectInstance.GetPropertyValue(PropertyNames.DefaultItemExcludes), ';').ToImmutableArray();
+
                 var sourceFiles = GetFullPaths(
                     projectInstance.GetItems(ItemNames.Compile), filter: FileNameIsNotGenerated);
 
@@ -324,7 +330,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                     outputKind, languageVersion, nullableContextOptions, allowUnsafeCode, checkForOverflowUnderflow, documentationFile, preprocessorSymbolNames, suppressedDiagnosticIds,
                     signAssembly, assemblyOriginatorKeyFile,
                     sourceFiles, projectReferences.ToImmutable(), references.ToImmutable(), packageReferences, analyzers, additionalFiles, treatWarningsAsErrors, defaultNamespace, runAnalyzers, runAnalyzersDuringLiveAnalysis, ruleset,
-                    referenceAliases.ToImmutableDictionary(), projectReferenceAliases.ToImmutable());
+                    referenceAliases.ToImmutableDictionary(), projectReferenceAliases.ToImmutable(), defaultItemExcludes);
             }
 
             private static RuleSet ResolveRulesetIfAny(MSB.Execution.ProjectInstance projectInstance)
