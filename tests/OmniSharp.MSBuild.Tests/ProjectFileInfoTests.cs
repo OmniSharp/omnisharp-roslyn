@@ -196,5 +196,22 @@ namespace OmniSharp.MSBuild.Tests
                 Assert.Equal(ReportDiagnostic.Default, compilationOptions.GeneralDiagnosticOption);
             }
         }
+
+        [Fact]
+        public async Task Check_file_should_be_excluded_from_HelloWorld_project()
+        {
+            using (var host = CreateOmniSharpHost())
+            using (var testProject = await _testAssets.GetTestProjectAsync("HelloWorld"))
+            {
+                var projectFilePath = Path.Combine(testProject.Directory, "HelloWorld.csproj");
+                var projectFileInfo = CreateProjectFileInfo(host, testProject, projectFilePath);
+                var filePath = Path.Combine(testProject.Directory, projectFileInfo.IntermediateOutputPath, "AssemblyInfo.cs");
+
+                var isExcluded = projectFileInfo.IsFileExcluded(filePath);
+
+                Assert.True(isExcluded);
+                Assert.Contains(projectFileInfo.DefaultItemExcludes, i => i.Contains("obj"));
+            }
+        }
     }
 }

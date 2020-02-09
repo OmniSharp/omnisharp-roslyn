@@ -5,6 +5,7 @@ using System.Linq;
 using System.Runtime.Versioning;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using OmniSharp.FileSystem;
 using OmniSharp.MSBuild.Logging;
 using OmniSharp.MSBuild.Notification;
 
@@ -141,5 +142,10 @@ namespace OmniSharp.MSBuild.ProjectFile
                     return string.Equals(fileName, "UnityEngine.dll", StringComparison.OrdinalIgnoreCase)
                         || string.Equals(fileName, "UnityEditor.dll", StringComparison.OrdinalIgnoreCase);
                 });
+
+        public bool IsFileExcluded(string filePath)
+        {
+            return FileSystemHelper.IsPathExcluded(filePath, Directory, DefaultItemExcludes);
+        }
     }
 }
