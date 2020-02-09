@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using OmniSharp.FileSystem;
 
 namespace OmniSharp.MSBuild.ProjectFile
 {
@@ -75,6 +76,15 @@ namespace OmniSharp.MSBuild.ProjectFile
                     Add(value);
                 }
             }
+        }
+
+        public ProjectFileInfo TryGetItemByFile(string filePath)
+        {
+            var key = FileSystemHelper.FindParentPath(filePath, _itemMap.Keys);
+
+            return key == null
+                ? null
+                : _itemMap[key];
         }
     }
 }
