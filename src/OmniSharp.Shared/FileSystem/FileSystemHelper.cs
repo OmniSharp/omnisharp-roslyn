@@ -64,5 +64,31 @@ namespace OmniSharp.FileSystem
             var relativePath = Uri.UnescapeDataString(relativeUri.ToString()).Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
             return relativePath;
         }
+
+        /// <summary>
+        /// Verifies whether the path specified is a child of the specified parent path
+        /// </summary>
+        /// <param name="path">Path that will be verified</param>
+        /// <param name="parentPath">The possible parent path</param>
+        public static bool IsChildPath(string path, string parentPath)
+        {
+            if (path == null || parentPath == null)
+            {
+                return false;
+            }
+
+            path = Path.GetFullPath(path);
+            parentPath = Path.GetFullPath(parentPath);
+
+            if (path.Length < parentPath.Length)
+            {
+                return false;
+            }
+
+            return string.Equals(
+                path.Substring(0, parentPath.Length),
+                parentPath,
+                StringComparison.Ordinal);
+        }
     }
 }

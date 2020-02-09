@@ -91,6 +91,47 @@ namespace OmniSharp.Tests
             Assert.Null(ex);
         }
 
+        [Fact]
+        public void IsChildPath_CheckThatPathIsChildPath()
+        {
+            const string path = "/src/project/test.csproj";
+            const string root = "/src/project";
+
+            bool result = FileSystemHelper.IsChildPath(path, root);
+
+            Assert.True(result);
+        }
+
+        [Fact]
+        public void IsChildPath_CheckThatIsNotChildPath_WithShortPath()
+        {
+            const string path = "/src";
+            const string root = "/src/project";
+
+            bool result = FileSystemHelper.IsChildPath(path, root);
+
+            Assert.False(result);
+        }
+
+        [Fact]
+        public void IsChildPath_CheckThatIsNotChildPath_WithDifferentPaths()
+        {
+            const string path = "/src/project/file.cs";
+            const string root = "/src/other-project";
+
+            bool result = FileSystemHelper.IsChildPath(path, root);
+
+            Assert.False(result);
+        }
+
+        [Fact]
+        public void IsChildPath_CheckThatIsNotChildPath_WithAnyOfThePathsNull()
+        {
+            bool result = FileSystemHelper.IsChildPath(null, null);
+
+            Assert.False(result);
+        }
+
         private FileSystemHelper CreateFileSystemHelper(params string[] excludePatterns)
         {
             var environment = new OmniSharpEnvironment(TestAssets.Instance.TestAssetsFolder, 1000, LogLevel.Information, null);
