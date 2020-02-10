@@ -117,21 +117,23 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             Assert.Equal(2, usages.QuickFixes.Count());
         }
 
-        [Fact]
-        public async Task CanFindReferencesWithLineMapping()
+        [Theory]
+        [InlineData(9, "public FooConsumer()")]
+        [InlineData(100, "new Foo().bar();")]
+        public async Task CanFindReferencesWithLineMapping(int mappingLine, string expectedMappingText)
         {
-            const string code = @"
+            var code = @"
                 public class Foo
                 {
-                    public void b$$ar() { }
+public void b$$ar() { }
                 }
 
                 public class FooConsumer
                 {
-                    public FooConsumer()
+public FooConsumer()
                     {
-#line 1
-                        new Foo().bar();
+#line "+mappingLine+@"
+new Foo().bar();
 #line default
                     }
                 }";
@@ -139,14 +141,26 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var usages = await FindUsagesAsync(code);
             Assert.Equal(2, usages.QuickFixes.Count());
 
-            var mappedResult = usages.QuickFixes.FirstOrDefault(x => x.Line == 0);
-            var regularResult = usages.QuickFixes.FirstOrDefault(x => x.Line == 3);
-            Assert.NotNull(mappedResult);
-            Assert.NotNull(regularResult);
+            var quickFixes = usages.QuickFixes.OrderBy(x => x.Line);
+            var regularResult = quickFixes.ElementAt(0);
+            var mappedResult = quickFixes.ElementAt(1);
+
+            Assert.Equal("dummy.cs", regularResult.FileName);
+            Assert.Equal("dummy.cs", mappedResult.FileName);
+
+            Assert.Equal("public void bar() { }", regularResult.Text);
+            Assert.Equal(expectedMappingText, mappedResult.Text);
+
+            Assert.Equal(3, regularResult.Line);
+            Assert.Equal(mappingLine-1, mappedResult.Line);
 
             // regular result has regular postition
-            Assert.Equal(32, regularResult.Column);
-            Assert.Equal(35, regularResult.EndColumn);
+            Assert.Equal(12, regularResult.Column);
+            Assert.Equal(15, regularResult.EndColumn);
+
+            // mapped result has column 0,0
+            Assert.Equal(10, mappedResult.Column);
+            Assert.Equal(13, mappedResult.EndColumn);
         }
 
         [Theory]

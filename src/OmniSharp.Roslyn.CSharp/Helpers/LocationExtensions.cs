@@ -21,8 +21,8 @@ namespace OmniSharp.Helpers
                 : location.GetMappedLineSpan();
 
             var documents = workspace.GetDocuments(lineSpan.Path);
-            (var sourceText, var isMappedDocument) = GetSourceText(location, documents, lineSpan.HasMappedPath);
-            var text = GetText(location, sourceText, lineSpan.StartLinePosition.Line, isMappedDocument);
+            var sourceText = GetSourceText(location, documents, lineSpan.HasMappedPath);
+            var text = GetText(location, sourceText, lineSpan.StartLinePosition.Line);
 
             return new QuickFix
             {
@@ -35,25 +35,31 @@ namespace OmniSharp.Helpers
                 Projects = documents.Select(document => document.Project.Name).ToArray()
             };
 
-            static (SourceText sourceText, bool isMappedDocument) GetSourceText(Location location, IEnumerable<Document> documents, bool hasMappedPath)
+            static SourceText GetSourceText(Location location, IEnumerable<Document> documents, bool hasMappedPath)
             {
                 // if we have a mapped linespan and we found a corresponding document, pick that one
                 // otherwise use the SourceText of current location
-                if (hasMappedPath && documents != null && documents.Any())
+                if (hasMappedPath)
                 {
-                    if (documents.First().TryGetText(out SourceText sourceText))
+                    if (documents != null && documents.Any() && documents.First().TryGetText(out SourceText sourceText))
                     {
-                        return (sourceText, true);
+                        // we have a mapped document that exists in workspace
+                        return sourceText;
                     }
+
+                    // we have a mapped document that doesn't exist in workspace
+                    // in that case we have to always fall back to original linespan
+                    return null;
                 }
 
-                return (location.SourceTree.GetText(), false);
+                // unmapped document so just continue with current SourceText
+                return location.SourceTree.GetText();
             }
 
-            static string GetText(Location location, SourceText sourceText, int startLine, bool isMappedDocument)
+            static string GetText(Location location, SourceText sourceText, int startLine)
             {
                 // bounds check in case the mapping is incorrect, since user can put whatever line they want
-                if (isMappedDocument && sourceText.Lines.Count > startLine)
+                if (sourceText != null && sourceText.Lines.Count > startLine)
                 {
                     return sourceText.Lines[startLine].ToString();
                 }
