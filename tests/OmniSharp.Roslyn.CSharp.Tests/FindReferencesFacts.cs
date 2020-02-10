@@ -125,15 +125,15 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var code = @"
                 public class Foo
                 {
-public void b$$ar() { }
+                    public void b$$ar() { }
                 }
 
                 public class FooConsumer
                 {
-public FooConsumer()
+                    public FooConsumer()
                     {
-#line "+mappingLine+@"
-new Foo().bar();
+#line " + mappingLine+ @"
+                        new Foo().bar();
 #line default
                     }
                 }";
@@ -155,12 +155,12 @@ new Foo().bar();
             Assert.Equal(mappingLine-1, mappedResult.Line);
 
             // regular result has regular postition
-            Assert.Equal(12, regularResult.Column);
-            Assert.Equal(15, regularResult.EndColumn);
+            Assert.Equal(32, regularResult.Column);
+            Assert.Equal(35, regularResult.EndColumn);
 
             // mapped result has column 0,0
-            Assert.Equal(10, mappedResult.Column);
-            Assert.Equal(13, mappedResult.EndColumn);
+            Assert.Equal(34, mappedResult.Column);
+            Assert.Equal(37, mappedResult.EndColumn);
         }
 
         [Theory]
@@ -174,7 +174,7 @@ new Foo().bar();
                 new TestFile("a.cs", @"
                 public class Foo
                 {
-public void b$$ar() { }
+                    public void b$$ar() { }
                 }
 
                 public class FooConsumer
@@ -182,7 +182,7 @@ public void b$$ar() { }
                     public FooConsumer()
                     {
 #line "+mappingLine+@" ""b.cs""
-new Foo().bar();
+                        new Foo().bar();
 #line default
                     }
                 }"),
@@ -211,12 +211,59 @@ new Foo().bar();
             Assert.Equal(expectedMappingText, mappedResult.Text);
 
             // regular result has regular postition
-            Assert.Equal(12, regularResult.Column);
-            Assert.Equal(15, regularResult.EndColumn);
+            Assert.Equal(32, regularResult.Column);
+            Assert.Equal(35, regularResult.EndColumn);
 
             // mapped result has column 0,0
             Assert.Equal(0, mappedResult.Column);
             Assert.Equal(0, mappedResult.EndColumn);
+        }
+
+        [Fact]
+        public async Task CanFindReferencesWithNegativeLineMapping()
+        {
+            var testFiles = new List<TestFile>()
+            {
+                new TestFile("a.cs", @"
+                public class Foo
+                {
+                    public void b$$ar() { }
+                }
+
+                public class FooConsumer
+                {
+                    public FooConsumer()
+                    {
+#line -10 ""b.cs""
+                        new Foo().bar();
+#line default
+                    }
+                }"),
+
+            };
+
+            testFiles.Add(new TestFile("b.cs",
+                    @"// hello"));
+
+            var usages = await FindUsagesAsync(testFiles.ToArray(), onlyThisFile: false);
+            Assert.Equal(2, usages.QuickFixes.Count());
+
+            var regularResult = usages.QuickFixes.ElementAt(0);
+            var mappedResult = usages.QuickFixes.ElementAt(1);
+
+            Assert.Equal("a.cs", regularResult.FileName);
+            Assert.Equal("a.cs", mappedResult.FileName);
+
+            Assert.Equal(3, regularResult.Line);
+            Assert.Equal(11, mappedResult.Line);
+
+            Assert.Equal("public void bar() { }", regularResult.Text);
+            Assert.Equal("new Foo().bar();", mappedResult.Text);
+
+            Assert.Equal(32, regularResult.Column);
+            Assert.Equal(35, regularResult.EndColumn);
+            Assert.Equal(34, mappedResult.Column);
+            Assert.Equal(37, mappedResult.EndColumn);
         }
 
         [Fact]

@@ -22,11 +22,11 @@ namespace OmniSharp.Helpers
 
             var documents = workspace.GetDocuments(lineSpan.Path);
             var sourceText = GetSourceText(location, documents, lineSpan.HasMappedPath);
-            var text = GetText(location, sourceText, lineSpan.StartLinePosition.Line);
+            var text = GetLineText(location, sourceText, lineSpan.StartLinePosition.Line);
 
             return new QuickFix
             {
-                Text = text,
+                Text = text.Trim(),
                 FileName = lineSpan.Path,
                 Line = lineSpan.StartLinePosition.Line,
                 Column = lineSpan.HasMappedPath ? 0 : lineSpan.StartLinePosition.Character, // when a #line directive maps into a separate file, assume columns (0,0)
@@ -41,10 +41,11 @@ namespace OmniSharp.Helpers
                 // otherwise use the SourceText of current location
                 if (hasMappedPath)
                 {
-                    if (documents != null && documents.Any() && documents.First().TryGetText(out SourceText sourceText))
+                    SourceText source = null;
+                    if (documents != null && documents.Any() && documents.FirstOrDefault(d => d.TryGetText(out source)) != null)
                     {
                         // we have a mapped document that exists in workspace
-                        return sourceText;
+                        return source;
                     }
 
                     // we have a mapped document that doesn't exist in workspace
@@ -56,7 +57,7 @@ namespace OmniSharp.Helpers
                 return location.SourceTree.GetText();
             }
 
-            static string GetText(Location location, SourceText sourceText, int startLine)
+            static string GetLineText(Location location, SourceText sourceText, int startLine)
             {
                 // bounds check in case the mapping is incorrect, since user can put whatever line they want
                 if (sourceText != null && sourceText.Lines.Count > startLine)
