@@ -7,6 +7,7 @@
     "MonoRuntimeMacOS": "mono.macOS-6.8.0.105.zip",
     "MonoRuntimeLinux32": "mono.linux-x86-6.8.0.105.zip",
     "MonoRuntimeLinux64": "mono.linux-x86_64-6.8.0.105.zip",
+    "MonoRuntimeLinuxArm64": "mono.linux-arm64-6.8.0.105.zip",
     "HostProjects": [
         "OmniSharp.Stdio.Driver",
         "OmniSharp.Http.Driver"

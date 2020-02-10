@@ -36,6 +36,7 @@ trap _cleanup_target_path EXIT
 readonly OS_MAC="macOS"
 readonly OS_Linux32="linux-x86"
 readonly OS_Linux64="linux-x86_64"
+readonly OS_LinuxArm64="linux-arm64"
 
 os=""
 
@@ -50,6 +51,9 @@ case `uname` in
                 ;;
             "x86_64")
                 os=$OS_Linux64
+                ;;
+            "aarch64" | "arm64")
+                os=$OS_LinuxArm64
                 ;;
         esac
         ;;

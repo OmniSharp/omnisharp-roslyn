@@ -151,8 +151,7 @@ public class Folders
     public string MonoRuntimeMacOS { get; }
     public string MonoRuntimeLinux32 { get; }
     public string MonoRuntimeLinux64 { get; }
-    public string MonoMSBuildRuntime { get; }
-    public string MonoMSBuildLib { get; }
+    public string MonoRuntimeLinuxArm64 { get; }
 
     public Folders(string workingDirectory)
     {
@@ -176,8 +175,7 @@ public class Folders
         this.MonoRuntimeMacOS = PathHelper.Combine(this.Tools, "Mono.Runtime.MacOS");
         this.MonoRuntimeLinux32 = PathHelper.Combine(this.Tools, "Mono.Runtime.Linux-x86");
         this.MonoRuntimeLinux64 = PathHelper.Combine(this.Tools, "Mono.Runtime.Linux-x64");
-        this.MonoMSBuildRuntime = PathHelper.Combine(this.Tools, "Microsoft.Build.Runtime.Mono");
-        this.MonoMSBuildLib = PathHelper.Combine(this.Tools, "Microsoft.Build.Lib.Mono");
+        this.MonoRuntimeLinuxArm64 = PathHelper.Combine(this.Tools, "Mono.Runtime.Linux-arm64");
     }
 }
 
@@ -229,7 +227,8 @@ public class BuildEnvironment
         {
             new MonoRuntime("osx", this.Folders.MonoRuntimeMacOS, "mono"),
             new MonoRuntime("linux-x86", this.Folders.MonoRuntimeLinux32, "mono"),
-            new MonoRuntime("linux-x64", this.Folders.MonoRuntimeLinux64, "mono")
+            new MonoRuntime("linux-x64", this.Folders.MonoRuntimeLinux64, "mono"),
+            new MonoRuntime("linux-arm64", this.Folders.MonoRuntimeLinuxArm64, "mono")
         };
 
         if (Platform.Current.IsMacOS)
@@ -245,7 +244,9 @@ public class BuildEnvironment
             }
             else if (Platform.Current.Is64Bit)
             {
-                this.CurrentMonoRuntime = this.MonoRuntimes[2];
+                this.CurrentMonoRuntime = !Platform.Current.IsArm
+                    ? this.MonoRuntimes[2]
+                    : this.MonoRuntimes[3];
             }
             this.BuildMonoRuntimes = this.MonoRuntimes.Skip(1).ToArray();
         }
@@ -349,8 +350,7 @@ public class BuildPlan
     public string MonoRuntimeMacOS { get; set; }
     public string MonoRuntimeLinux32 { get; set; }
     public string MonoRuntimeLinux64 { get; set; }
-    public string MonoMSBuildRuntime { get; set; }
-    public string MonoMSBuildLib { get; set; }
+    public string MonoRuntimeLinuxArm64 { get; set; }
     public string[] HostProjects { get; set; }
     public string[] TestProjects { get; set; }
     public string[] TestAssets { get; set; }
