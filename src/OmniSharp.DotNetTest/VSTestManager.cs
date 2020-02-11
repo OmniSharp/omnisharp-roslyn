@@ -106,6 +106,24 @@ namespace OmniSharp.DotNetTest
             }
         }
 
+        public override DiscoverTestsResponse DiscoverTests(string runSettings, string testFrameworkName, string targetFrameworkVersion)
+        {
+            VerifyTestFramework(testFrameworkName);
+
+            var testCases = DiscoverTestsAsync(null, runSettings, targetFrameworkVersion, CancellationToken.None).Result;
+            return new DiscoverTestsResponse
+            {
+                Tests = testCases.Select(o => new Test
+                {
+                    FullyQualifiedName = o.FullyQualifiedName,
+                    DisplayName = o.DisplayName,
+                    Source = o.Source,
+                    CodeFilePath = o.CodeFilePath,
+                    LineNumber = o.LineNumber
+                }).ToArray()
+            };
+        }
+
         public override GetTestStartInfoResponse GetTestStartInfo(string methodName, string runSettings, string testFrameworkName, string targetFrameworkVersion)
         {
             VerifyTestFramework(testFrameworkName);
@@ -276,7 +294,11 @@ namespace OmniSharp.DotNetTest
 
             var testCases = new List<TestCase>();
             var done = false;
-            var hashset = new HashSet<string>(methodNames);
+            HashSet<string> hashset = null;
+            if (methodNames != null)
+            {
+                hashset = new HashSet<string>(methodNames);
+            }
 
             while (!done)
             {
@@ -294,14 +316,14 @@ namespace OmniSharp.DotNetTest
 
                     case MessageType.TestCasesFound:
                         var foundTestCases = message.DeserializePayload<TestCase[]>();
-                        testCases.AddRange(foundTestCases.Where(isInRequestedMethods));
+                        testCases.AddRange(methodNames != null ? foundTestCases.Where(isInRequestedMethods) : foundTestCases);
                         break;
 
                     case MessageType.DiscoveryComplete:
                         var lastDiscoveredTests = message.DeserializePayload<DiscoveryCompletePayload>().LastDiscoveredTests;
                         if (lastDiscoveredTests != null)
                         {
-                            testCases.AddRange(lastDiscoveredTests.Where(isInRequestedMethods));
+                            testCases.AddRange(methodNames != null ? lastDiscoveredTests.Where(isInRequestedMethods) : lastDiscoveredTests);
                         }
 
                         done = true;
