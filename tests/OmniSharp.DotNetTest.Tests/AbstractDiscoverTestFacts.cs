@@ -30,6 +30,7 @@ namespace OmniSharp.DotNetTest.Tests
 
                 var request = new DiscoverTestsRequest
                 {
+                    FileName = Path.Combine(testProject.Directory, "TestProgram.cs"),
                     TestFrameworkName = testFramework,
                     TargetFrameworkVersion = targetFrameworkVersion
                 };
@@ -45,7 +46,6 @@ namespace OmniSharp.DotNetTest.Tests
                     var test = response.Tests.SingleOrDefault(o => o.FullyQualifiedName == expectedTest.FullyQualifiedName);
                     Assert.True(test != null, "Expected test with matching FullyQualifiedName");
                     Assert.True(test.DisplayName == expectedTest.DisplayName, "Expected DisplayName to match");
-                    Assert.True(test.Source == expectedTest.Source, "Expected Source to match");
                     Assert.True(test.LineNumber == expectedTest.LineNumber, "Expected LineNumber to match");
                 }
             }
