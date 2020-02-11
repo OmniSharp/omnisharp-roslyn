@@ -223,5 +223,27 @@ namespace OmniSharp.DotNetTest.Tests
             Assert.Single(response.Results);
             Assert.NotEmpty(response.Results[0].StandardOutput);
         }
+
+        [Fact]
+        public async Task RunMSTestWithRunSettings()
+        {
+            await RunDotNetTestAsync(
+                MSTestProject,
+                methodName: "Main.Test.MainTest.CheckRunSettings",
+                testFramework: "mstest",
+                shouldPass: true,
+                useRunSettings: true);
+        }
+
+        [Fact]
+        public async Task RunMSTestWithoutRunSettings()
+        {
+            await RunDotNetTestAsync(
+                MSTestProject,
+                methodName: "Main.Test.MainTest.CheckRunSettings",
+                testFramework: "mstest",
+                shouldPass: false,
+                useRunSettings: false);
+        }
     }
 }
