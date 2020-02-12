@@ -1,10 +1,9 @@
-﻿using OmniSharp.Models;
+using OmniSharp.Models;
 
 namespace OmniSharp.DotNetTest.Models
 {
-    public class BaseTestClassRequest : Request
+    public class BaseTestRequest : Request
     {
-        public string[] MethodNames { get; set; }
         public string RunSettings { get; set; }
         public string TestFrameworkName { get; set; }
         
@@ -12,5 +11,15 @@ namespace OmniSharp.DotNetTest.Models
         /// e.g. .NETCoreApp, Version=2.0
         /// </summary>
         public string TargetFrameworkVersion { get; set; }
+    }
+
+    public class SingleTestRequest : BaseTestRequest
+    {
+        public string MethodName { get; set; }
+    }
+
+    public class MultiTestRequest : BaseTestRequest
+    {
+        public string[] MethodNames { get; set; }
     }
 }

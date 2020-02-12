@@ -108,8 +108,6 @@ namespace OmniSharp.DotNetTest
 
         public override DiscoverTestsResponse DiscoverTests(string runSettings, string testFrameworkName, string targetFrameworkVersion)
         {
-            VerifyTestFramework(testFrameworkName);
-
             var testCases = DiscoverTestsAsync(null, runSettings, targetFrameworkVersion, CancellationToken.None).Result;
             return new DiscoverTestsResponse
             {
