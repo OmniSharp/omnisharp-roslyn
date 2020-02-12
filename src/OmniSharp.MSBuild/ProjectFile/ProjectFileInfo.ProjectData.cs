@@ -51,6 +51,7 @@ namespace OmniSharp.MSBuild.ProjectFile
             public ImmutableArray<string> AdditionalFiles { get; }
             public RuleSet RuleSet { get; }
             public ImmutableDictionary<string, string> ReferenceAliases { get; }
+            public ImmutableDictionary<string, string> ProjectReferenceAliases { get; }
             public bool TreatWarningsAsErrors { get; }
             public string DefaultNamespace { get; }
 
@@ -68,6 +69,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 Analyzers = ImmutableArray<string>.Empty;
                 AdditionalFiles = ImmutableArray<string>.Empty;
                 ReferenceAliases = ImmutableDictionary<string, string>.Empty;
+                ProjectReferenceAliases = ImmutableDictionary<string, string>.Empty;
             }
 
             private ProjectData(
@@ -148,7 +150,8 @@ namespace OmniSharp.MSBuild.ProjectFile
                 bool treatWarningsAsErrors,
                 string defaultNamespace,
                 RuleSet ruleset,
-                ImmutableDictionary<string, string> referenceAliases)
+                ImmutableDictionary<string, string> referenceAliases,
+                ImmutableDictionary<string, string> projectReferenceAliases)
                 : this(guid, name, assemblyName, targetPath, outputPath, intermediateOutputPath, projectAssetsFile,
                       configuration, platform, targetFramework, targetFrameworks, outputKind, languageVersion, nullableContextOptions, allowUnsafeCode, checkForOverflowUnderflow,
                       documentationFile, preprocessorSymbolNames, suppressedDiagnosticIds, signAssembly, assemblyOriginatorKeyFile, treatWarningsAsErrors, defaultNamespace, ruleset)
@@ -160,6 +163,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 Analyzers = analyzers.EmptyIfDefault();
                 AdditionalFiles = additionalFiles.EmptyIfDefault();
                 ReferenceAliases = referenceAliases;
+                ProjectReferenceAliases = projectReferenceAliases;
             }
 
             public static ProjectData Create(MSB.Evaluation.Project project)
@@ -243,8 +247,24 @@ namespace OmniSharp.MSBuild.ProjectFile
                 var sourceFiles = GetFullPaths(
                     projectInstance.GetItems(ItemNames.Compile), filter: FileNameIsNotGenerated);
 
-                var projectReferences = GetFullPaths(
-                    projectInstance.GetItems(ItemNames.ProjectReference), filter: IsCSharpProject);
+                var projectReferences = ImmutableArray.CreateBuilder<string>();
+                var projectReferenceAliases = ImmutableDictionary.CreateBuilder<string, string>();
+                var projectReferencesAdded = new HashSet<string>();
+                foreach (var projectReferenceItem in projectInstance.GetItems(ItemNames.ProjectReference))
+                {
+                    var fullPath = projectReferenceItem.GetMetadataValue(MetadataNames.FullPath);
+
+                    if (IsCSharpProject(fullPath) && projectReferencesAdded.Add(fullPath))
+                    {
+                        projectReferences.Add(fullPath);
+
+                        var aliases = projectReferenceItem.GetMetadataValue(MetadataNames.Aliases);
+                        if (!string.IsNullOrEmpty(aliases))
+                        {
+                            projectReferenceAliases[fullPath] = aliases;
+                        }
+                    }
+                }
 
                 var references = ImmutableArray.CreateBuilder<string>();
                 var referenceAliases = ImmutableDictionary.CreateBuilder<string, string>();
@@ -272,11 +292,12 @@ namespace OmniSharp.MSBuild.ProjectFile
                     if (!string.IsNullOrEmpty(fullPath))
                     {
                         references.Add(fullPath);
-                    }
-                    var aliases = referencePathItem.GetMetadataValue(MetadataNames.Aliases);
-                    if(!string.IsNullOrEmpty(aliases))
-                    {
-                        referenceAliases[referencePathItem.EvaluatedInclude] = aliases;
+
+                        var aliases = referencePathItem.GetMetadataValue(MetadataNames.Aliases);
+                        if (!string.IsNullOrEmpty(aliases))
+                        {
+                            referenceAliases[fullPath] = aliases;
+                        }
                     }
                 }
 
@@ -289,7 +310,8 @@ namespace OmniSharp.MSBuild.ProjectFile
                     configuration, platform, targetFramework, targetFrameworks,
                     outputKind, languageVersion, nullableContextOptions, allowUnsafeCode, checkForOverflowUnderflow, documentationFile, preprocessorSymbolNames, suppressedDiagnosticIds,
                     signAssembly, assemblyOriginatorKeyFile,
-                    sourceFiles, projectReferences, references.ToImmutable(), packageReferences, analyzers, additionalFiles, treatWarningsAsErrors, defaultNamespace, ruleset, referenceAliases.ToImmutableDictionary());
+                    sourceFiles, projectReferences.ToImmutable(), references.ToImmutable(), packageReferences, analyzers, additionalFiles, treatWarningsAsErrors, defaultNamespace, ruleset,
+                    referenceAliases.ToImmutableDictionary(), projectReferenceAliases.ToImmutable());
             }
 
             private static RuleSet ResolveRulesetIfAny(MSB.Execution.ProjectInstance projectInstance)
