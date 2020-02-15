@@ -1,7 +1,15 @@
 # Changelog
 All changes to the project will be documented in this file.
 
-## [1.34.10] - not yet released
+## [1.34.12] - not yet released
+* Fixed out of bounds exception in line mapping ([omnisharp-vscode#3485](https://github.com/OmniSharp/omnisharp-vscode/issues/3485), PR: [#1707](https://github.com/OmniSharp/omnisharp-roslyn/pull/1707))
+* Added support for aliases in project references ([#1685](https://github.com/OmniSharp/omnisharp-roslyn/issues/1685), PR: [#1701](https://github.com/OmniSharp/omnisharp-roslyn/pull/1701))
+
+## [1.34.11] - 2020-02-05
+* Updated the bundled to Mono 6.8.0 and MSBuild to be copied from Mono 6.8.0 ([#1693](https://github.com/OmniSharp/omnisharp-roslyn/issues/1693), PR: [#1697](https://github.com/OmniSharp/omnisharp-roslyn/pull/1697))
+* Included NugetSDKResolver in the minimal MSBuild, which introduces support for Nuget based project SDKs like Arcade ([#1678](https://github.com/OmniSharp/omnisharp-roslyn/issues/1678), PR: [#1696](https://github.com/OmniSharp/omnisharp-roslyn/pull/1696))
+
+## [1.34.10] - 2020-01-27
 * Update to Roslyn `3.5.0-beta3-20058-03` (PR: [#1680](https://github.com/OmniSharp/omnisharp-roslyn/pull/1680))
 * Fixed a bug where completion items didn't decode symbols corectly (impacted, for example, object initializer completion quality) ([omnisharp-vscode#3465](https://github.com/OmniSharp/omnisharp-vscode/issues/3465), PR: [#1670](https://github.com/OmniSharp/omnisharp-roslyn/pull/1670))
 * Updated to MsBuild 16.4.0 on Linux/MacOS (PR:[#1669](https://github.com/OmniSharp/omnisharp-roslyn/pull/1669))

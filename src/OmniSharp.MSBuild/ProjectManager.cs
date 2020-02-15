@@ -608,7 +608,24 @@ namespace OmniSharp.MSBuild
                     continue;
                 }
 
-                var projectReference = new ProjectReference(referencedProject.Id);
+                ImmutableArray<string> aliases = default;
+                if (_projectFiles.TryGetValue(project.FilePath, out var projectFileInfo))
+                {
+                    if (projectFileInfo.ProjectReferenceAliases.TryGetValue(projectReferencePath, out var projectReferenceAliases))
+                    {
+                        if (!string.IsNullOrEmpty(projectReferenceAliases))
+                        {
+                            aliases = projectReferenceAliases.Split(';').ToImmutableArray();
+                            _logger.LogDebug($"Setting aliases: {projectReferencePath}, {projectReferenceAliases} ");
+                        }
+                    }
+                }
+                else
+                {
+                    _logger.LogDebug($"failed to get project info:{project.FilePath}");
+                }
+
+                var projectReference = new ProjectReference(referencedProject.Id, aliases);
 
                 if (existingProjectReferences.Remove(projectReference))
                 {
@@ -663,7 +680,7 @@ namespace OmniSharp.MSBuild
                 {
                     if (_projectFiles.TryGetValue(project.FilePath, out var projectFileInfo))
                     {
-                        if (projectFileInfo.ReferenceAliases != null && projectFileInfo.ReferenceAliases.TryGetValue(referencePath, out var aliases))
+                        if (projectFileInfo.ReferenceAliases.TryGetValue(referencePath, out var aliases))
                         {
                             if (!string.IsNullOrEmpty(aliases))
                             {
