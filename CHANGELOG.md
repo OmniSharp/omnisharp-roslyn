@@ -1,7 +1,7 @@
 # Changelog
 All changes to the project will be documented in this file.
 
-## [1.34.12] - not yet released
+## [1.34.12] - 2020-02-18
 * Fixed out of bounds exception in line mapping ([omnisharp-vscode#3485](https://github.com/OmniSharp/omnisharp-vscode/issues/3485), PR: [#1707](https://github.com/OmniSharp/omnisharp-roslyn/pull/1707))
 * Added support for aliases in project references ([#1685](https://github.com/OmniSharp/omnisharp-roslyn/issues/1685), PR: [#1701](https://github.com/OmniSharp/omnisharp-roslyn/pull/1701))
 * Raised the lowest discovered VS2019 version to 16.3 ((#1700)[https://github.com/OmniSharp/omnisharp-roslyn/issues/1700], PR: (#1713)(https://github.com/OmniSharp/omnisharp-roslyn/pull/1713))
