@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 using TestUtility;
 using Xunit;
@@ -270,6 +271,52 @@ namespace OmniSharp.MSBuild.Tests
             {
                 var workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
                 Assert.Null(workspaceInfo);
+            }
+        }
+
+        [Fact]
+        public async Task TestProjectWithAliasOnProjectReference()
+        {
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ExternAlias"))
+            using (var host = CreateMSBuildTestHost(testProject.Directory))
+            {
+                var project = host
+                    .Workspace
+                    .CurrentSolution
+                    .Projects
+                    .Single(x => x.AssemblyName == "ExternAlias.App2");
+
+                var lib = host
+                    .Workspace
+                    .CurrentSolution
+                    .Projects
+                    .Single(x => x.AssemblyName == "ExternAlias.Lib");
+
+                var projectReference = project
+                    .ProjectReferences
+                    .Single(x => x.ProjectId == lib.Id);
+
+                Assert.Equal("abc", projectReference.Aliases.Single());
+            }
+        }
+
+        [Fact]
+        public async Task TestProjectWithAliasOnReference()
+        {
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ExternAlias"))
+            using (var host = CreateMSBuildTestHost(testProject.Directory))
+            {
+                var project = host
+                    .Workspace
+                    .CurrentSolution
+                    .Projects
+                    .Single(x => x.AssemblyName == "ExternAlias.App");
+
+                var reference = project
+                    .MetadataReferences
+                    .Single(x => x.Display == "ExternAlias.Lib.dll");
+
+                Assert.Equal("abc", reference.Properties.Aliases.Single());
             }
         }
     }
