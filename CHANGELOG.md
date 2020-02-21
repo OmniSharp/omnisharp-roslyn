@@ -1,7 +1,7 @@
 # Changelog
 All changes to the project will be documented in this file.
 
-## [1.34.13] - not yet released
+## [1.34.13] - 2020-02-19
 * Fixed a bug where organizing usings clashed with other formatting settings (PR: [#1715](https://github.com/OmniSharp/omnisharp-roslyn/pull/1713))
 
 ## [1.34.12] - 2020-02-18
