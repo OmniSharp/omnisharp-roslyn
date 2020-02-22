@@ -337,13 +337,16 @@ Task("CreateMSBuildFolder")
     {
         CopyDotNetHostResolver(env, "osx", "x64", "libhostfxr.dylib", msbuildSdkResolverTargetFolder, copyToArchSpecificFolder: false);
     }
-    else if (Platform.Current.IsArm)
-    {
-        CopyDotNetHostResolver(env, "linux", "arm64", "libhostfxr.so", msbuildSdkResolverTargetFolder, copyToArchSpecificFolder: false);
-    }
     else if (Platform.Current.IsLinux)
     {
-        CopyDotNetHostResolver(env, "linux", "x64", "libhostfxr.so", msbuildSdkResolverTargetFolder, copyToArchSpecificFolder: false);
+        if (Platform.Current.IsArm)
+        {
+            CopyDotNetHostResolver(env, "linux", "arm64", "libhostfxr.so", msbuildSdkResolverTargetFolder, copyToArchSpecificFolder: false);
+        }
+        else
+        {
+            CopyDotNetHostResolver(env, "linux", "x64", "libhostfxr.so", msbuildSdkResolverTargetFolder, copyToArchSpecificFolder: false);
+        }
     }
 
     Information("Copying NuGet SDK resolver...");

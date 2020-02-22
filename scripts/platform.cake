@@ -70,9 +70,10 @@ public sealed class Platform
             {
                 architecture = "x64";
             }
-            else if (osArch.Equals("aarch64", StringComparison.OrdinalIgnoreCase))
+            else if (osArch.Equals("aarch64", StringComparison.OrdinalIgnoreCase)
+                || osArch.Equals("arm64", StringComparison.OrdinalIgnoreCase))
             {
-                architecture = "amd64";
+                architecture = "arm64";
             }
             else
             {
