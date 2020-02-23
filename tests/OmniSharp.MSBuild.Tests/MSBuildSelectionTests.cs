@@ -23,7 +23,7 @@ namespace OmniSharp.MSBuild.Tests
                 new MSBuildInstance(
                     "Test Instance",
                     TestIO.GetRandomTempFolderPath(),
-                    Version.Parse("16.1.2.3"),
+                    Version.Parse("16.3.2.3"),
                     DiscoveryType.VisualStudioSetup
                 ).AddDotNetCoreToFakeInstance(),
                 GetStandAloneMSBuildInstance()
@@ -50,7 +50,7 @@ namespace OmniSharp.MSBuild.Tests
                 new MSBuildInstance(
                     "Valid Test Instance",
                     TestIO.GetRandomTempFolderPath(),
-                    Version.Parse("16.3.2.1"),
+                    Version.Parse("16.3.2.3"),
                     DiscoveryType.VisualStudioSetup
                 ),
                 GetInvalidMsBuildInstance(),
@@ -59,7 +59,7 @@ namespace OmniSharp.MSBuild.Tests
                 new MSBuildInstance(
                     "Another Valid Test Instance",
                     TestIO.GetRandomTempFolderPath(),
-                    Version.Parse("16.1.2.3"),
+                    Version.Parse("16.3.2.1"),
                     DiscoveryType.VisualStudioSetup
                 ).AddDotNetCoreToFakeInstance(),
                 GetStandAloneMSBuildInstance()
@@ -107,7 +107,7 @@ namespace OmniSharp.MSBuild.Tests
                 new MSBuildInstance(
                     "Manually Overridden",
                     TestIO.GetRandomTempFolderPath(),
-                    Version.Parse("99.0.0"),
+                    Version.Parse("1.0.0"),
                     DiscoveryType.UserOverride
                 ).AddDotNetCoreToFakeInstance(),
             };
@@ -136,7 +136,7 @@ namespace OmniSharp.MSBuild.Tests
                 new MSBuildInstance(
                     "Test Instance",
                     TestIO.GetRandomTempFolderPath(),
-                    Version.Parse("16.1.2.3"),
+                    Version.Parse("16.3.2.3"),
                     DiscoveryType.VisualStudioSetup
                 ),
                 GetStandAloneMSBuildInstance()
@@ -155,22 +155,25 @@ namespace OmniSharp.MSBuild.Tests
             msbuildLocator.DeleteFakeInstancesFolders();
         }
 
-        [Fact]
-        public void StandAloneIsPreferredOverVS2017()
+        [Theory]
+        [InlineData("15.1.2.3")]
+        [InlineData("16.1.2.3")]
+        [InlineData("16.2.2.3")]
+        public void StandAloneIsPreferredOverUnsupportedVS(string vsVersion)
         {
             var msBuildInstances = new[]
             {
                 new MSBuildInstance(
                     "Test Instance",
                     TestIO.GetRandomTempFolderPath(),
-                    Version.Parse("15.1.2.3"),
+                    Version.Parse(vsVersion),
                     DiscoveryType.VisualStudioSetup
-                ),
+                ).AddDotNetCoreToFakeInstance(),
                 GetStandAloneMSBuildInstance()
             };
 
             var msbuildLocator = new MSFakeLocator(msBuildInstances);
-            var logger = LoggerFactory.CreateLogger(nameof(StandAloneIsPreferredOverVS2017));
+            var logger = LoggerFactory.CreateLogger(nameof(StandAloneIsPreferredOverUnsupportedVS));
 
             // test
             msbuildLocator.RegisterDefaultInstance(logger);
@@ -187,9 +190,9 @@ namespace OmniSharp.MSBuild.Tests
             return new MSBuildInstance(
                 "Stand Alone :(",
                 TestIO.GetRandomTempFolderPath(),
-                Version.Parse("16.3.0.0"),
+                Version.Parse("16.4.0.0"),
                 DiscoveryType.StandAlone
-            );
+            ).AddDotNetCoreToFakeInstance();
         }
 
         private static MSBuildInstance GetInvalidMsBuildInstance()

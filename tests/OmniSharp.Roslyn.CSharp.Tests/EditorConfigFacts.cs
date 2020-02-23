@@ -123,6 +123,38 @@ class Bar:Foo { }
             }
         }
 
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task RespectsCSharpFormatSettingsWhenOrganizingUsings(string filename)
+        {
+            var testFile = new TestFile(Path.Combine(TestAssets.Instance.TestFilesFolder, filename), @"
+using Y;
+using X;
+class Foo { }
+class Bar  :  Foo { }
+");
+            var expected = @"
+using X;
+using Y;
+class Foo { }
+class Bar:Foo { }
+";
+
+            using (var host = CreateOmniSharpHost(new[] { testFile }, new Dictionary<string, string>
+            {
+                ["FormattingOptions:EnableEditorConfigSupport"] = "true",
+                ["FormattingOptions:OrganizeImports"] = "true"
+            }, TestAssets.Instance.TestFilesFolder))
+            {
+                var requestHandler = host.GetRequestHandler<CodeFormatService>(OmniSharpEndpoints.CodeFormat);
+
+                var request = new CodeFormatRequest { FileName = testFile.FileName };
+                var response = await requestHandler.Handle(request);
+
+                Assert.Equal(expected, response.Buffer);
+            }
+        }
 
         [Theory]
         [InlineData("dummy.cs")]
