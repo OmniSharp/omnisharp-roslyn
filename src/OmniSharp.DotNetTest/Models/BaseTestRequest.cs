@@ -11,6 +11,7 @@ namespace OmniSharp.DotNetTest.Models
         /// e.g. .NETCoreApp, Version=2.0
         /// </summary>
         public string TargetFrameworkVersion { get; set; }
+        public bool NoBuild { get; set; } = false;
     }
 
     public class SingleTestRequest : BaseTestRequest

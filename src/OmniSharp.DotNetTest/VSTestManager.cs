@@ -64,8 +64,13 @@ namespace OmniSharp.DotNetTest
             }
         }
 
-        protected override bool PrepareToConnect()
+        protected override bool PrepareToConnect(bool noBuild)
         {
+            if (noBuild)
+            {
+                return true;
+            }
+
             // The project must be built before we can test.
             var arguments = "build";
 

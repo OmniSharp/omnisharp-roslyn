@@ -50,10 +50,10 @@ namespace OmniSharp.DotNetTest
             Logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        public static TestManager Start(Project project, IDotNetCliService dotNetCli, IEventEmitter eventEmitter, ILoggerFactory loggerFactory)
+        public static TestManager Start(Project project, IDotNetCliService dotNetCli, IEventEmitter eventEmitter, ILoggerFactory loggerFactory, bool noBuild)
         {
             var manager = Create(project, dotNetCli, eventEmitter, loggerFactory);
-            manager.Connect();
+            manager.Connect(noBuild);
             return manager;
         }
 
@@ -94,20 +94,20 @@ namespace OmniSharp.DotNetTest
 
         public abstract Task DebugLaunchAsync(CancellationToken cancellationToken);
 
-        protected virtual bool PrepareToConnect()
+        protected virtual bool PrepareToConnect(bool noBuild)
         {
             // Descendents can override.
             return true;
         }
 
-        private void Connect()
+        private void Connect(bool noBuild)
         {
             if (_isConnected)
             {
                 throw new InvalidOperationException("Already connected.");
             }
 
-            if (!PrepareToConnect())
+            if (!PrepareToConnect(noBuild))
             {
                 return;
             }
