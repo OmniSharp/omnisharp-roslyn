@@ -69,6 +69,11 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
                         changes.AddRange(fileChangesResult.FileChanges);
                         solution = fileChangesResult.Solution;
                     }
+                    else
+                    {
+                        o.Apply(this.Workspace, CancellationToken.None);
+                        solution = this.Workspace.CurrentSolution;
+                    }
 
                     if (request.WantsAllCodeActionOperations)
                     {
