@@ -381,7 +381,7 @@ namespace OmniSharp.MSBuild
             {
                 _fileSystemWatcher.Watch(projectAssetFile, (file, changeType) =>
                 {
-                    QueueProjectUpdate(projectAssetFile, allowAutoRestore: false, projectFileInfo.ProjectIdInfo, changeType);
+                    QueueProjectUpdate(projectFileInfo.FilePath, allowAutoRestore: false, projectFileInfo.ProjectIdInfo, changeType);
                 });
             }
         }
@@ -403,7 +403,7 @@ namespace OmniSharp.MSBuild
 
         private static IEnumerable<string> GetProjectAssetFilePaths(ProjectFileInfo projectFileInfo)
         {
-            if (!string.IsNullOrEmpty(projectFileInfo.ProjectAssetsFile))
+            if (string.IsNullOrEmpty(projectFileInfo.ProjectAssetsFile))
             {
                 return new string[] {};
             }
