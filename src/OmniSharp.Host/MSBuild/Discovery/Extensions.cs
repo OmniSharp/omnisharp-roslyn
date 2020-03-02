@@ -95,7 +95,7 @@ namespace OmniSharp.MSBuild.Discovery
                 score--;
 
             // VS 2019 should be preferred
-            if (i.Version.Major >= 16)
+            if (i.Version.Major >= 16 && i.Version.Minor >= 3)
                 score++;
             else
                 score--;

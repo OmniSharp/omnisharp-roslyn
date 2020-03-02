@@ -142,7 +142,7 @@ namespace OmniSharp.MSBuild.Tests
         }
 
         [Fact]
-        public async Task ExternAlias()
+        public async Task ExternAliasWithReference()
         {
             using (var host = CreateOmniSharpHost())
             using (var testProject = await _testAssets.GetTestProjectAsync("ExternAlias"))
@@ -152,12 +152,32 @@ namespace OmniSharp.MSBuild.Tests
                 Assert.Single(projectFileInfo.ReferenceAliases);
                 foreach(var kv in projectFileInfo.ReferenceAliases)
                 {
-                    this.TestOutput.WriteLine($"{kv.Key} = {kv.Value}");
+                    TestOutput.WriteLine($"{kv.Key} = {kv.Value}");
                 }
-                // reference path should be same as evaluated HintPath("$(ProjectDir)../ExternAlias.Lib/bin/Debug/netstandard2.0/ExternAlias.Lib.dll")
-                var libpath = string.Format($"{Path.Combine(testProject.Directory, "ExternAlias.App")}{Path.DirectorySeparatorChar}../ExternAlias.Lib/bin/Debug/netstandard2.0/ExternAlias.Lib.dll");
+
+                var libpath = Path.Combine(testProject.Directory, "ExternAlias.Lib", "bin", "Debug", "netstandard2.0", "ExternAlias.Lib.dll");
                 Assert.True(projectFileInfo.ReferenceAliases.ContainsKey(libpath));
                 Assert.Equal("abc", projectFileInfo.ReferenceAliases[libpath]);
+            }
+        }
+
+        [Fact]
+        public async Task ExternAliasWithProjectReference()
+        {
+            using (var host = CreateOmniSharpHost())
+            using (var testProject = await _testAssets.GetTestProjectAsync("ExternAlias"))
+            {
+                var projectFilePath = Path.Combine(testProject.Directory, "ExternAlias.App2", "ExternAlias.App2.csproj");
+                var projectFileInfo = CreateProjectFileInfo(host, testProject, projectFilePath);
+                Assert.Single(projectFileInfo.ProjectReferenceAliases);
+                foreach(var kv in projectFileInfo.ProjectReferenceAliases)
+                {
+                    TestOutput.WriteLine($"{kv.Key} = {kv.Value}");
+                }
+
+                var projectReferencePath = Path.Combine(testProject.Directory, "ExternAlias.Lib", "ExternAlias.Lib.csproj");
+                Assert.True(projectFileInfo.ProjectReferenceAliases.ContainsKey(projectReferencePath));
+                Assert.Equal("abc", projectFileInfo.ProjectReferenceAliases[projectReferencePath]);
             }
         }
 

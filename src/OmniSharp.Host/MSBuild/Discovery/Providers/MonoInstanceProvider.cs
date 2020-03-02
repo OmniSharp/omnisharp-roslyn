@@ -112,7 +112,7 @@ Try installing MSBuild into Mono (e.g. 'sudo apt-get install msbuild') to enable
                 new MSBuildInstance(
                     nameof(DiscoveryType.Mono),
                     toolsPath,
-                    new Version(16, 3),
+                    new Version(16, 4),
                     DiscoveryType.Mono,
                     propertyOverrides.ToImmutable()));
         }
