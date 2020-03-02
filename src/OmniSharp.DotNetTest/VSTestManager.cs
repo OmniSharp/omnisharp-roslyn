@@ -402,7 +402,7 @@ namespace OmniSharp.DotNetTest
                         case MessageType.TestRunStatsChange:
                             var testRunChange = message.DeserializePayload<TestRunChangedEventArgs>();
                             var newResults = ConvertResults(testRunChange.NewTestResults);
-                            passed = passed &&  testRunChange.NewTestResults.Any(o => o.Outcome == TestOutcome.Failed);
+                            passed = passed && !testRunChange.NewTestResults.Any(o => o.Outcome == TestOutcome.Failed);
                             results.AddRange(newResults);
                             foreach (var result in newResults)
                             {
