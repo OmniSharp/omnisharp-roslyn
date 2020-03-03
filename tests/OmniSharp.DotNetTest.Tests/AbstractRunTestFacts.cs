@@ -20,7 +20,7 @@ namespace OmniSharp.DotNetTest.Tests
             return host.GetRequestHandler<RunTestService>(OmniSharpEndpoints.V2.RunTest);
         }
 
-        protected async Task<RunTestResponse> RunDotNetTestAsync(string projectName, string methodName, string testFramework, bool shouldPass, string targetFrameworkVersion = null, bool expectResults = true)
+        protected async Task<RunTestResponse> RunDotNetTestAsync(string projectName, string methodName, string testFramework, bool shouldPass, string targetFrameworkVersion = null, bool expectResults = true, bool useRunSettings = false)
         {
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync(projectName))
             using (var host = CreateOmniSharpHost(testProject.Directory, null, DotNetCliVersion))
@@ -34,6 +34,11 @@ namespace OmniSharp.DotNetTest.Tests
                     TestFrameworkName = testFramework,
                     TargetFrameworkVersion = targetFrameworkVersion
                 };
+
+                if (useRunSettings)
+                {
+                    request.RunSettings = Path.Combine(testProject.Directory, "TestRunSettings.runsettings");
+                }
 
                 var response = await service.Handle(request);
 
