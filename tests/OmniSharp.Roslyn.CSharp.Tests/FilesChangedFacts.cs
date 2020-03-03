@@ -68,6 +68,32 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         }
 
         [Fact]
+        public async void TestFileAddedToExcludedMSBuildDirectoryIsIgnored()
+        {
+            const string excludedFileName = "GeneratedAssemblyInfo.cs";
+
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectAndSolution"))
+            using (var host = CreateOmniSharpHost(testProject.Directory))
+            {
+                var watcher = host.GetExport<IFileSystemWatcher>();
+
+                var project = host.Workspace.CurrentSolution.Projects.First();
+                var projectDirectory = Path.GetDirectoryName(project.FilePath);
+                var intermediateOutputPath = Path.Combine(projectDirectory, "obj", "netstandard2.0");
+                var filePath = Path.Combine(intermediateOutputPath, excludedFileName);
+
+                Directory.CreateDirectory(intermediateOutputPath);
+                File.WriteAllText(filePath, "content");
+
+                var handler = GetRequestHandler(host);
+                await handler.Handle(new[] { new FilesChangedRequest { FileName = filePath, ChangeType = FileChangeType.Create } });
+
+                var updatedProject = host.Workspace.CurrentSolution.Projects.First();
+                Assert.DoesNotContain(updatedProject.Documents, d => d.FilePath == filePath && d.Name == excludedFileName);
+            }
+        }
+
+        [Fact]
         public void TestMultipleDirectoryWatchers()
         {
             using (var host = CreateEmptyOmniSharpHost())
