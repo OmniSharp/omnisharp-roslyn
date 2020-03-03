@@ -175,6 +175,30 @@ namespace N1
             Assert.DoesNotContain(highlights, x => x.Kind.EndsWith("name"));
         }
 
+        [Fact]
+        public async Task HighlightDoesNotContainAdditiveKinds()
+        {
+            var testFile = new TestFile("a.cs", @"
+namespace N1
+{
+    class C1
+    {
+        static void M1()
+        {
+
+        }
+    }
+}   
+");
+
+            var highlights = await GetHighlightsAsync(testFile);
+
+            foreach (var additiveName in Microsoft.CodeAnalysis.Classification.ClassificationTypeNames.AdditiveTypeNames)
+            {
+                Assert.DoesNotContain(highlights, x => x.Kind == additiveName);
+            }
+        }
+
         private async Task<HighlightSpan[]> GetHighlightsAsync(TestFile testFile, int? line = null, HighlightClassification? exclude = null)
         {
             SharedOmniSharpTestHost.AddFilesToWorkspace(testFile);
