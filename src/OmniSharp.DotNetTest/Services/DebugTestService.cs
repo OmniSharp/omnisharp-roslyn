@@ -36,7 +36,7 @@ namespace OmniSharp.DotNetTest.Services
             {
                 //only if the test manager connected successfully, shall we proceed with the request
                 _debugSessionManager.StartSession(testManager);
-                return _debugSessionManager.DebugGetStartInfoAsync(request.MethodName, request.TestFrameworkName, request.TargetFrameworkVersion, CancellationToken.None);
+                return _debugSessionManager.DebugGetStartInfoAsync(request.MethodName, request.RunSettings, request.TestFrameworkName, request.TargetFrameworkVersion, CancellationToken.None);
             }
 
             throw new InvalidOperationException("The debugger could not be started");

@@ -28,7 +28,7 @@ namespace OmniSharp.DotNetTest.Services
             var testManager = CreateTestManager(request.FileName);
             _debugSessionManager.StartSession(testManager);
 
-            return await _debugSessionManager.DebugGetStartInfoAsync(request.MethodNames, request.TestFrameworkName, request.TargetFrameworkVersion, CancellationToken.None);
+            return await _debugSessionManager.DebugGetStartInfoAsync(request.MethodNames, request.RunSettings, request.TestFrameworkName, request.TargetFrameworkVersion, CancellationToken.None);
         }
     }
 }
