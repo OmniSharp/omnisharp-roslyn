@@ -110,7 +110,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Formatting
             var newDocument = textSpan != null ? await Formatter.FormatAsync(document, textSpan.Value, optionSet) : await Formatter.FormatAsync(document, optionSet);
             if (omnisharpOptions.FormattingOptions.OrganizeImports)
             {
-                newDocument = await Formatter.OrganizeImportsAsync(document);
+                newDocument = await Formatter.OrganizeImportsAsync(newDocument);
             }
 
             return newDocument;
