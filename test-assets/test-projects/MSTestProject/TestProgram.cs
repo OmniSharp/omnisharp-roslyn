@@ -6,6 +6,8 @@ namespace Main.Test
     [TestClass]
     public class MainTest
     {
+        public TestContext TestContext { get; set; }
+
         [TestMethod]
         public void Test()
         {
@@ -40,6 +42,12 @@ namespace Main.Test
             int a = 1, b = 1;
             Console.WriteLine($"a = {a}, b = {b}");
             Assert.AreEqual(a,b);
+        }
+
+        [TestMethod]
+        public void CheckRunSettings()
+        {
+            Assert.AreEqual(TestContext.Properties["TestRunSetting"].ToString(), "CorrectValue");
         }
 
         private void UtilityFunction()

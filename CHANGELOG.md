@@ -1,6 +1,10 @@
 # Changelog
 All changes to the project will be documented in this file.
 
+## [1.34.14] - 2020-03-09
+* Added support for `annotations` value of `Nullable` csproj property ([#1721](https://github.com/OmniSharp/omnisharp-roslyn/issues/1721), PR: [#1722](https://github.com/OmniSharp/omnisharp-roslyn/pull/1722))
+* Added ability to specify custom RunSettings for tests (PR: [omnisharp-vscode#3573](https://github.com/OmniSharp/omnisharp-vscode/pull/3573), PR: [#1710](https://github.com/OmniSharp/omnisharp-roslyn/pull/1710))
+
 ## [1.34.13] - 2020-02-19
 * Fixed a bug where organizing usings clashed with other formatting settings (PR: [#1715](https://github.com/OmniSharp/omnisharp-roslyn/pull/1713))
 
