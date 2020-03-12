@@ -26,8 +26,24 @@ namespace OmniSharp.DotNetTest
         {
         }
 
-        private object GetDefaultRunSettings(string targetFrameworkVersion)
+        private object LoadRunSettingsOrDefault(string runSettingsPath, string targetFrameworkVersion)
         {
+            if (runSettingsPath != null)
+            {
+                try
+                {
+                    return File.ReadAllText(runSettingsPath);
+                }
+                catch (FileNotFoundException)
+                {
+                    EmitTestMessage(TestMessageLevel.Warning, $"RunSettings file {runSettingsPath} not found. Continuing with default settings...");
+                }
+                catch (Exception e)
+                {
+                    EmitTestMessage(TestMessageLevel.Warning, $"There was an error loading runsettings at {runSettingsPath}: {e}. Continuing with default settings...");
+                }
+            }
+
             if (!string.IsNullOrWhiteSpace(targetFrameworkVersion))
             {
                 return $@"
@@ -101,18 +117,18 @@ namespace OmniSharp.DotNetTest
             }
         }
 
-        public override GetTestStartInfoResponse GetTestStartInfo(string methodName, string testFrameworkName, string targetFrameworkVersion)
+        public override GetTestStartInfoResponse GetTestStartInfo(string methodName, string runSettings, string testFrameworkName, string targetFrameworkVersion)
         {
             VerifyTestFramework(testFrameworkName);
 
-            var testCases = DiscoverTests(new string[] { methodName }, targetFrameworkVersion);
+            var testCases = DiscoverTests(new string[] { methodName }, runSettings, targetFrameworkVersion);
 
             SendMessage(MessageType.GetTestRunnerProcessStartInfoForRunSelected,
                 new
                 {
                     TestCases = testCases,
                     DebuggingEnabled = true,
-                    RunSettings = GetDefaultRunSettings(targetFrameworkVersion)
+                    RunSettings = LoadRunSettingsOrDefault(runSettings, targetFrameworkVersion)
                 });
 
             var message = ReadMessage();
@@ -126,21 +142,21 @@ namespace OmniSharp.DotNetTest
             };
         }
 
-        public override async Task<DebugTestGetStartInfoResponse> DebugGetStartInfoAsync(string methodName, string testFrameworkName, string targetFrameworkVersion, CancellationToken cancellationToken)
-         => await DebugGetStartInfoAsync(new string[] { methodName }, testFrameworkName, targetFrameworkVersion, cancellationToken);
+        public override async Task<DebugTestGetStartInfoResponse> DebugGetStartInfoAsync(string methodName, string runSettings, string testFrameworkName, string targetFrameworkVersion, CancellationToken cancellationToken)
+         => await DebugGetStartInfoAsync(new string[] { methodName }, runSettings, testFrameworkName, targetFrameworkVersion, cancellationToken);
 
-        public override async Task<DebugTestGetStartInfoResponse> DebugGetStartInfoAsync(string[] methodNames, string testFrameworkName, string targetFrameworkVersion, CancellationToken cancellationToken)
+        public override async Task<DebugTestGetStartInfoResponse> DebugGetStartInfoAsync(string[] methodNames, string runSettings, string testFrameworkName, string targetFrameworkVersion, CancellationToken cancellationToken)
         {
             VerifyTestFramework(testFrameworkName);
 
-            var testCases = await DiscoverTestsAsync(methodNames, targetFrameworkVersion, cancellationToken);
+            var testCases = await DiscoverTestsAsync(methodNames, runSettings, targetFrameworkVersion, cancellationToken);
 
             SendMessage(MessageType.GetTestRunnerProcessStartInfoForRunSelected,
                 new
                 {
                     TestCases = testCases,
                     DebuggingEnabled = true,
-                    RunSettings = GetDefaultRunSettings(targetFrameworkVersion)
+                    RunSettings = LoadRunSettingsOrDefault(runSettings, targetFrameworkVersion)
                 });
 
             var message = await ReadMessageAsync(cancellationToken);
@@ -186,14 +202,14 @@ namespace OmniSharp.DotNetTest
             }
         }
 
-        public override RunTestResponse RunTest(string methodName, string testFrameworkName, string targetFrameworkVersion)
-            => RunTest(new string[] { methodName }, testFrameworkName, targetFrameworkVersion);
+        public override RunTestResponse RunTest(string methodName, string runSettings, string testFrameworkName, string targetFrameworkVersion)
+            => RunTest(new string[] { methodName }, runSettings, testFrameworkName, targetFrameworkVersion);
 
-        public override RunTestResponse RunTest(string[] methodNames, string testFrameworkName, string targetFrameworkVersion)
+        public override RunTestResponse RunTest(string[] methodNames, string runSettings, string testFrameworkName, string targetFrameworkVersion)
         {
             VerifyTestFramework(testFrameworkName);
 
-            var testCases = DiscoverTests(methodNames, targetFrameworkVersion);
+            var testCases = DiscoverTests(methodNames, runSettings, targetFrameworkVersion);
 
             var testResults = new List<TestResult>();
 
@@ -204,7 +220,7 @@ namespace OmniSharp.DotNetTest
                     new
                     {
                         TestCases = testCases,
-                        RunSettings = GetDefaultRunSettings(targetFrameworkVersion)
+                        RunSettings = LoadRunSettingsOrDefault(runSettings, targetFrameworkVersion)
                     });
 
                 var done = false;
@@ -244,10 +260,10 @@ namespace OmniSharp.DotNetTest
                     ErrorMessage = testResult.ErrorMessage,
                     ErrorStackTrace = testResult.ErrorStackTrace,
                     StandardOutput = testResult.Messages
-                                    .Where(message => message.Category == TestResultMessage.StandardOutCategory)
-                                    .Select(message => message.Text).ToArray(),
+                        .Where(message => message.Category == TestResultMessage.StandardOutCategory)
+                        .Select(message => message.Text).ToArray(),
                     StandardError = testResult.Messages.Where(message => message.Category == TestResultMessage.StandardErrorCategory)
-                    .Select(message => message.Text).ToArray()
+                        .Select(message => message.Text).ToArray()
                 });
 
             return new RunTestResponse
@@ -257,7 +273,7 @@ namespace OmniSharp.DotNetTest
             };
         }
 
-        private async Task<TestCase[]> DiscoverTestsAsync(string[] methodNames, string targetFrameworkVersion, CancellationToken cancellationToken)
+        private async Task<TestCase[]> DiscoverTestsAsync(string[] methodNames, string runSettings, string targetFrameworkVersion, CancellationToken cancellationToken)
         {
             SendMessage(MessageType.StartDiscovery,
                 new
@@ -266,7 +282,7 @@ namespace OmniSharp.DotNetTest
                     {
                         Project.OutputFilePath
                     },
-                    RunSettings = GetDefaultRunSettings(targetFrameworkVersion)
+                    RunSettings = LoadRunSettingsOrDefault(runSettings, targetFrameworkVersion)
                 });
 
             var testCases = new List<TestCase>();
@@ -322,9 +338,9 @@ namespace OmniSharp.DotNetTest
             };
         }
 
-        private TestCase[] DiscoverTests(string[] methodNames, string targetFrameworkVersion)
+        private TestCase[] DiscoverTests(string[] methodNames, string runSettings, string targetFrameworkVersion)
         {
-            return DiscoverTestsAsync(methodNames, targetFrameworkVersion, CancellationToken.None).Result;
+            return DiscoverTestsAsync(methodNames, runSettings, targetFrameworkVersion, CancellationToken.None).Result;
         }
     }
 }
