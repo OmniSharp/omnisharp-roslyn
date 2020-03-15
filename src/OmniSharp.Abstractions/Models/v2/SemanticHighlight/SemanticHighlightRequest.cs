@@ -3,7 +3,7 @@ using OmniSharp.Models.V2;
 
 namespace OmniSharp.Models.SemanticHighlight
 {
-    [OmniSharpEndpoint(OmniSharpEndpoints.V2.SemanticHighlight, typeof(SemanticHighlightRequest), typeof(SemanticHighlightResponse))]
+    [OmniSharpEndpoint(OmniSharpEndpoints.V2.Highlight, typeof(SemanticHighlightRequest), typeof(SemanticHighlightResponse))]
     public class SemanticHighlightRequest : Request
     {
         /// <summary>

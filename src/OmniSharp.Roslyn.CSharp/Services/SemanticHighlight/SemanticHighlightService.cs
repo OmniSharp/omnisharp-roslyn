@@ -10,7 +10,7 @@ using OmniSharp.Models.SemanticHighlight;
 
 namespace OmniSharp.Roslyn.CSharp.Services.SemanticHighlight
 {
-    [OmniSharpHandler(OmniSharpEndpoints.V2.SemanticHighlight, LanguageNames.CSharp)]
+    [OmniSharpHandler(OmniSharpEndpoints.V2.Highlight, LanguageNames.CSharp)]
     public class SemanticHighlightService : IRequestHandler<SemanticHighlightRequest, SemanticHighlightResponse>
     {
         [ImportingConstructor]
@@ -50,7 +50,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.SemanticHighlight
                 }
 
                 results.AddRange(spans
-                    .Where(span => !ClassificationTypeNames.AdditiveTypeNames.Contains(span.ClassificationType))
                     .Select(span => new ClassifiedResult()
                     {
                         Span = span,
@@ -62,13 +61,19 @@ namespace OmniSharp.Roslyn.CSharp.Services.SemanticHighlight
             {
                 Spans = results
                     .GroupBy(result => result.Span.TextSpan.ToString())
-                    .Select(grouping => CreateSemanticSpan(grouping.First().Span, grouping.First().Lines))
+                    .Select(grouping => CreateSemanticSpan(grouping, grouping.First().Lines))
                     .ToArray()
             };
         }
 
-        public static SemanticHighlightSpan CreateSemanticSpan(ClassifiedSpan span, TextLineCollection lines)
+        private static SemanticHighlightSpan CreateSemanticSpan(IEnumerable<ClassifiedResult> results, TextLineCollection lines)
         {
+            var additiveResults = results.Where(result => ClassificationTypeNames.AdditiveTypeNames.Contains(result.Span.ClassificationType));
+            var modifiers = additiveResults.Select(result => _modifierMap[result.Span.ClassificationType]).ToArray();
+
+            var result = results.Except(additiveResults).Single();
+            var span = result.Span;
+
             var linePos = lines.GetLinePositionSpan(span.TextSpan);
 
             return new SemanticHighlightSpan
@@ -78,7 +83,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.SemanticHighlight
                 StartColumn = linePos.Start.Character,
                 EndColumn = linePos.End.Character,
                 Type = _classificationMap[span.ClassificationType],
-                Modifiers = null
+                Modifiers = modifiers
             };
         }
 
@@ -156,6 +161,12 @@ namespace OmniSharp.Roslyn.CSharp.Services.SemanticHighlight
                 [ClassificationTypeNames.RegexText] = SemanticHighlightClassification.RegexText,
                 [ClassificationTypeNames.RegexSelfEscapedCharacter] = SemanticHighlightClassification.RegexSelfEscapedCharacter,
                 [ClassificationTypeNames.RegexOtherEscape] = SemanticHighlightClassification.RegexOtherEscape,
+            };
+
+        private static readonly Dictionary<string, SemanticHighlightModifier> _modifierMap =
+            new Dictionary<string, SemanticHighlightModifier>
+            {
+                [ClassificationTypeNames.StaticSymbol] = SemanticHighlightModifier.Static,
             };
 
         private readonly OmniSharpWorkspace _workspace;
