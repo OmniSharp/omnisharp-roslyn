@@ -29,27 +29,20 @@ namespace OmniSharp.Roslyn.CSharp.Services.SemanticHighlight
             {
                 var project = document.Project.Name;
                 var text = await document.GetTextAsync();
-                var spans = new List<ClassifiedSpan>();
 
-                if (request.Range == null)
-                {
-                    foreach (var span in await Classifier.GetClassifiedSpansAsync(document, new TextSpan(0, text.Length)))
-                    {
-                        spans.Add(span);
-                    }
-                }
-                else
+                TextSpan textSpan;
+                if (request.Range is object)
                 {
                     var start = text.Lines.GetPosition(new LinePosition(request.Range.Start.Line, request.Range.Start.Column));
                     var end = text.Lines.GetPosition(new LinePosition(request.Range.End.Line, request.Range.End.Column));
-                    var textSpan = new TextSpan(start, end - start);
-                    foreach (var span in await Classifier.GetClassifiedSpansAsync(document, textSpan))
-                    {
-                        spans.Add(span);
-                    }
+                    textSpan = new TextSpan(start, end - start);
+                }
+                else
+                {
+                    textSpan = new TextSpan(0, text.Length);
                 }
 
-                results.AddRange(spans
+                results.AddRange((await Classifier.GetClassifiedSpansAsync(document, textSpan))
                     .Select(span => new ClassifiedResult()
                     {
                         Span = span,
