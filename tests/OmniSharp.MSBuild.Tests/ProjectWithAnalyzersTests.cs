@@ -71,8 +71,25 @@ namespace OmniSharp.MSBuild.Tests
             {
                 var project = host.Workspace.CurrentSolution.Projects.Single();
 
-                Assert.Contains(project.CompilationOptions.SpecificDiagnosticOptions, x => x.Key == "CA1021" && x.Value == ReportDiagnostic.Warn);
+                var diagnostics = await host.RequestCodeCheckAsync(Path.Combine(testProject.Directory, "Program.cs"));
+
+                Assert.NotEmpty(diagnostics.QuickFixes);
+                Assert.Contains(diagnostics.QuickFixes.OfType<DiagnosticLocation>(), x => x.Id == "IDE0060"); // Unused args.
             }
+        }
+
+        [Theory]
+        [InlineData("ProjectWithDisabledAnalyzers")]
+        [InlineData("ProjectWithDisabledAnalyzers2")]
+        public async Task WhenProjectWithRunAnalyzersDisabledIsLoadedThenAnalyzersAreIgnored(string projectName)
+        {
+            using var testProject = await TestAssets.Instance.GetTestProjectAsync(projectName);
+            await RestoreProject(testProject);
+
+            using var host = CreateMSBuildTestHost(testProject.Directory, configurationData: TestHelpers.GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled: true));
+            var analyzerReferences = host.Workspace.CurrentSolution.Projects.Single().AnalyzerReferences.ToList();
+
+            Assert.Empty(analyzerReferences);
         }
 
         [Fact]
