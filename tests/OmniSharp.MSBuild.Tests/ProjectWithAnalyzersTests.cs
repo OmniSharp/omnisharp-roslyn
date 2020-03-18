@@ -67,14 +67,11 @@ namespace OmniSharp.MSBuild.Tests
         public async Task WhenProjectIsLoadedThenItContainsCustomRulesetsFromCsproj()
         {
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithAnalyzers"))
-            using (var host = CreateMSBuildTestHost(testProject.Directory))
+            using (var host = CreateMSBuildTestHost(testProject.Directory, configurationData: TestHelpers.GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled: true)))
             {
                 var project = host.Workspace.CurrentSolution.Projects.Single();
 
-                var diagnostics = await host.RequestCodeCheckAsync(Path.Combine(testProject.Directory, "Program.cs"));
-
-                Assert.NotEmpty(diagnostics.QuickFixes);
-                Assert.Contains(diagnostics.QuickFixes.OfType<DiagnosticLocation>(), x => x.Id == "IDE0060"); // Unused args.
+                Assert.Contains(project.CompilationOptions.SpecificDiagnosticOptions, x => x.Key == "CA1021" && x.Value == ReportDiagnostic.Warn);
             }
         }
 
