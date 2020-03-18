@@ -3,6 +3,7 @@ All changes to the project will be documented in this file.
 
 ## [1.34.15] - not yet released
 * Support for .NET Core 3.1 in csx files (PR: [#1731](https://github.com/OmniSharp/omnisharp-roslyn/pull/1731))
+* Support for `<RunAnalyzers />` and `<RunAnalyzersDuringLiveAnalysis />` (PR: [#1739](https://github.com/OmniSharp/omnisharp-roslyn/pull/1739))
 
 ## [1.34.14] - 2020-03-09
 * Added support for `annotations` value of `Nullable` csproj property ([#1721](https://github.com/OmniSharp/omnisharp-roslyn/issues/1721), PR: [#1722](https://github.com/OmniSharp/omnisharp-roslyn/pull/1722))
