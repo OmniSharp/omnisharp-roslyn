@@ -44,7 +44,7 @@ jobs:
 
   - job: macOS
     pool:
-      vmImage: "macOS-10.13"
+      vmImage: "macOS-10.15"
     dependsOn: GitVersion
     variables:
       MONO_VERSION: 6.8.0
