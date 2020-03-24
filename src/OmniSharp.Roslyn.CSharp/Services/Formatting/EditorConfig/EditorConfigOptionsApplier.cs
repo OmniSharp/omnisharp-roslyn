@@ -23,7 +23,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Formatting.EditorConfig
         static EditorConfigOptionsApplier()
         {
             _optionsWithStorage = new List<(IOption, OptionStorageLocation, MethodInfo)>();
-            _optionsWithStorage.AddRange(GetPropertyBasedOptionsWithStorageFromTypes(typeof(FormattingOptions), typeof(CSharpFormattingOptions), typeof(SimplificationOptions)));
+            _optionsWithStorage.AddRange(GetPropertyBasedOptionsWithStorageFromTypes(typeof(FormattingOptions), typeof(CSharpFormattingOptions), typeof(SimplificationOptions), typeof(SimplificationOptions).Assembly.GetType("Microsoft.CodeAnalysis.Simplification.NamingStyleOptions")));
             _optionsWithStorage.AddRange(GetFieldBasedOptionsWithStorageFromTypes(typeof(CodeStyleOptions), typeof(CSharpFormattingOptions).Assembly.GetType("Microsoft.CodeAnalysis.CSharp.CodeStyle.CSharpCodeStyleOptions")));
         }
 
@@ -81,8 +81,19 @@ namespace OmniSharp.Roslyn.CSharp.Services.Formatting.EditorConfig
         }
 
         internal static bool IsEditorConfigStorage(OptionStorageLocation storageLocation)
-            => storageLocation.GetType().FullName.StartsWith("Microsoft.CodeAnalysis.Options.EditorConfigStorageLocation") ||
-               storageLocation.GetType().FullName.StartsWith("Microsoft.CodeAnalysis.Options.NamingStylePreferenceEditorConfigStorageLocation");
+        {
+            if (storageLocation.GetType().FullName.StartsWith("Microsoft.CodeAnalysis.Options.EditorConfigStorageLocation"))
+            {
+                return true;
+            }
+
+            if (storageLocation.GetType().FullName.StartsWith("Microsoft.CodeAnalysis.Options.NamingStylePreferenceEditorConfigStorageLocation"))
+            {
+                return true;
+            }
+
+            return false;
+        }
 
         internal static bool TryGetConventionValue((IOption, OptionStorageLocation, MethodInfo) optionWithStorage, Dictionary<string, string> adjustedConventions, out object value)
         {

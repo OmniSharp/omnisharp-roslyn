@@ -243,7 +243,7 @@ class C {
                 omnisharpOptions.FormattingOptions.NewLine = "\n";
                 omnisharpOptions.FormattingOptions.IndentationSize = 1;
 
-                host.Workspace.Options = optionsProvider.Process(host.Workspace.Options, omnisharpOptions, new OmniSharpEnvironment());
+                host.Workspace.TryApplyChanges(host.Workspace.CurrentSolution.WithOptions(optionsProvider.Process(host.Workspace.Options, omnisharpOptions, new OmniSharpEnvironment())));
 
                 var requestHandler = host.GetRequestHandler<CodeFormatService>(OmniSharpEndpoints.CodeFormat);
 
