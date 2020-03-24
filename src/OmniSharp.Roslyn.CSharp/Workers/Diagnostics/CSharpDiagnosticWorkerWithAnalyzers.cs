@@ -55,7 +55,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             _workspaceAnalyzerOptionsConstructor = Assembly
                 .Load("Microsoft.CodeAnalysis.Features")
                 .GetType("Microsoft.CodeAnalysis.Diagnostics.WorkspaceAnalyzerOptions")
-                .GetConstructor(new Type[] { typeof(AnalyzerOptions), typeof(OptionSet), typeof(Solution) })
+                .GetConstructor(new Type[] { typeof(AnalyzerOptions), typeof(Solution) })
                 ?? throw new InvalidOperationException("Could not resolve 'Microsoft.CodeAnalysis.Diagnostics.WorkspaceAnalyzerOptions' for IDE analyzers.");
 
             _workspace.WorkspaceChanged += OnWorkspaceChanged;
@@ -201,7 +201,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                     .GetCompilationAsync();
 
                 var workspaceAnalyzerOptions =
-                    (AnalyzerOptions)_workspaceAnalyzerOptionsConstructor.Invoke(new object[] { project.AnalyzerOptions, project.Solution.Options, project.Solution });
+                    (AnalyzerOptions)_workspaceAnalyzerOptionsConstructor.Invoke(new object[] { project.AnalyzerOptions, project.Solution });
 
                 foreach (var documentId in documentsGroupedByProject)
                 {
