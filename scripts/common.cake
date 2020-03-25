@@ -343,7 +343,7 @@ public class BuildPlan
 {
     public string DotNetInstallScriptURL { get; set; }
     public string DotNetChannel { get; set; }
-    public string DotNetVersion { get; set; }
+    public string[] DotNetVersions { get; set; }
     public string RequiredMonoVersion { get; set; }
     public string DownloadURL { get; set; }
     public string MonoRuntimeMacOS { get; set; }
