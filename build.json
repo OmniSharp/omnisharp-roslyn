@@ -1,7 +1,9 @@
 {
     "DotNetInstallScriptURL": "https://dot.net/v1",
     "DotNetChannel": "Current",
-    "DotNetVersion": "3.0.100",
+    "DotNetVersions": [
+        "3.0.100"
+    ],
     "RequiredMonoVersion": "6.6.0",
     "DownloadURL": "https://roslynomnisharp.blob.core.windows.net/ext",
     "MonoRuntimeMacOS": "mono.macOS-6.8.0.105.zip",
