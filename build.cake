@@ -114,9 +114,12 @@ Task("InstallDotNetCoreSdk")
 {
     if (!useGlobalDotNetSdk)
     {
-        InstallDotNetSdk(env, buildPlan,
-            version: buildPlan.DotNetVersion,
-            installFolder: env.Folders.DotNetSdk);
+        foreach (var dotnetVersion in buildPlan.DotNetVersions) 
+        {
+            InstallDotNetSdk(env, buildPlan,
+                version: dotnetVersion,
+                installFolder: env.Folders.DotNetSdk);
+        }
 
         // Add non-legacy .NET SDK to PATH
         var oldPath = Environment.GetEnvironmentVariable("PATH");
