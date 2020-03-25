@@ -1,8 +1,9 @@
 {
     "DotNetInstallScriptURL": "https://dot.net/v1",
-    "DotNetChannel": "Current",
+    "DotNetChannel": "Preview",
     "DotNetVersions": [
-        "3.0.100"
+        "3.0.100",
+        "5.0.100-preview.2.20169.1"
     ],
     "RequiredMonoVersion": "6.6.0",
     "DownloadURL": "https://roslynomnisharp.blob.core.windows.net/ext",
@@ -37,7 +38,8 @@
         "ProjectWithMultiTFMLib",
         "ExternAlias",
         "ProjectWithComplexAnalyzers",
-        "NetCore30Project"
+        "NetCore30Project",
+        "Net50Project"
     ],
     "CakeTestAssets": [
         "CakeProject"
