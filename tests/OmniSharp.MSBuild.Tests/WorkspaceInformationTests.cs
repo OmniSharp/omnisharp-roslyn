@@ -92,11 +92,11 @@ namespace OmniSharp.MSBuild.Tests
                 var appProject = workspaceInfo.Projects.Single(proj => proj.IsExe);
                 Assert.Equal("console-app", appProject.AssemblyName);
                 Assert.Equal(".NETCoreApp,Version=v5.0", appProject.TargetFramework);
-                Assert.Equal("netcoreapp5.0", appProject.TargetFrameworks[0].ShortName);
+                Assert.Contains(appProject.TargetFrameworks[0].ShortName, new[] { "net5.0", "netcoreapp5.0" });
                 var libProject = workspaceInfo.Projects.Single(proj => !proj.IsExe);
                 Assert.Equal("net50-lib", libProject.AssemblyName);
                 Assert.Equal(".NETCoreApp,Version=v5.0", libProject.TargetFramework);
-                Assert.Equal("net50", libProject.TargetFrameworks[0].ShortName);
+                Assert.Contains(libProject.TargetFrameworks[0].ShortName, new[] { "net50", "net5.0" });
             }
         }
 
