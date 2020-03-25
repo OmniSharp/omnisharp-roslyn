@@ -41,7 +41,6 @@
         "ProjectWithDisabledAnalyzers",
         "ProjectWithDisabledAnalyzers2",
         "ProjectWithAnalyzers",
-        "NetCore30Project"
         "NetCore30Project",
         "Net50Project"
     ],
