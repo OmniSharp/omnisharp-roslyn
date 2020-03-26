@@ -57,5 +57,25 @@ The <paramref name=""arg""/> parameter takes a number and <paramref name=""arg2"
 The arg parameter takes a number and arg2 takes a string.";
             Assert.Equal(expected, plainText, ignoreLineEndingDifferences: true);
         }
+
+        [Fact]
+        public void Has_typeparam_and_param_in_description()
+        {
+            var documentation = @"
+<member name=""M:TestNamespace.TestClass.CreateWorkspace`1"">
+    <summary>
+    Creates a workspace.
+    </summary>
+    <typeparam name=""T"">The type of workspace being created.</typeparam>
+    <param name=""Path"">The path to the workspace.</param>
+</member>";
+            var plainText = DocumentationConverter.ConvertDocumentation(documentation, "\n");
+            var expected =
+@"Creates a workspace.
+
+<T>: The type of workspace being created.
+Path: The path to the workspace.";
+            Assert.Equal(expected, plainText, ignoreLineEndingDifferences: true);
+        }
     }
 }
