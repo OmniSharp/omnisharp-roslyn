@@ -25,7 +25,7 @@ namespace OmniSharp.Roslyn.CSharp.Services
             _blockStructureOptions = _csharpFeatureAssembly.LazyGetType("Microsoft.CodeAnalysis.Structure.BlockStructureOptions");
         }
 
-        public int Order => 100;
+        public int Order => 140;
 
         public OptionSet Process(OptionSet currentOptionSet, OmniSharpOptions omniSharpOptions, IOmniSharpEnvironment omnisharpEnvironment)
         {
