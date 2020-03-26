@@ -1,6 +1,9 @@
 # Changelog
 All changes to the project will be documented in this file.
 
+## [1.34.16] - not yet released
+* Support for `<RunAnalyzers />` and `<RunAnalyzersDuringLiveAnalysis />` (PR: [#1739](https://github.com/OmniSharp/omnisharp-roslyn/pull/1739))
+
 ## [1.34.15] - 2020-03-25
 * Support for .NET Core 3.1 in csx files (PR: [#1731](https://github.com/OmniSharp/omnisharp-roslyn/pull/1731))
 * Update the minimal MSBuild to better support .NET 5 Previews ([omnisharp-vscode#3653](https://github.com/OmniSharp/omnisharp-vscode/issues/3653), PR: [#1746](https://github.com/OmniSharp/omnisharp-roslyn/pull/1746))

@@ -55,6 +55,8 @@ namespace OmniSharp.MSBuild.ProjectFile
         public ImmutableDictionary<string, string> ReferenceAliases => _data.ReferenceAliases;
         public ImmutableDictionary<string, string> ProjectReferenceAliases => _data.ProjectReferenceAliases;
         public bool TreatWarningsAsErrors => _data.TreatWarningsAsErrors;
+        public bool RunAnalyzers => _data.RunAnalyzers;
+        public bool RunAnalyzersDuringLiveAnalysis => _data.RunAnalyzersDuringLiveAnalysis;
         public string DefaultNamespace => _data.DefaultNamespace;
 
         public ProjectIdInfo ProjectIdInfo { get; }

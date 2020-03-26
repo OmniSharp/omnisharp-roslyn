@@ -38,6 +38,9 @@
         "ProjectWithMultiTFMLib",
         "ExternAlias",
         "ProjectWithComplexAnalyzers",
+        "ProjectWithDisabledAnalyzers",
+        "ProjectWithDisabledAnalyzers2",
+        "ProjectWithAnalyzers",
         "NetCore30Project",
         "Net50Project"
     ],
