@@ -1,6 +1,7 @@
 ﻿using Microsoft.CodeAnalysis;
 using OmniSharp.Extensions;
 using OmniSharp.Services;
+using OmniSharp.Utilities;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -14,15 +15,16 @@ namespace OmniSharp.Roslyn.CSharp.Services.Decompilation
 {
     public class DecompilationHelper : MetadataHelperBase
     {
-        //private const string CSharpDecompiledSourceService = "Microsoft.CodeAnalysis.CSharp.DecompiledSource.CSharpDecompiledSourceService";
+        private const string CSharpDecompiledSourceService = "Microsoft.CodeAnalysis.Editor.CSharp.DecompiledSource.CSharpDecompiledSourceService";
         private const string DecompiledKey = "$Decompiled$";
-
-        //private readonly Lazy<Type> _csharpDecompiledSourceService;
+        private readonly Lazy<Assembly> _editorFeaturesAssembly;
+        private readonly Lazy<Type> _csharpDecompiledSourceService;
         private Dictionary<string, Document> _decompiledDocumentCache = new Dictionary<string, Document>();
 
         public DecompilationHelper(IAssemblyLoader loader) : base(loader)
         {
-            // _csharpDecompiledSourceService = _csharpFeatureAssembly.LazyGetType(CSharpDecompiledSourceService);
+            _editorFeaturesAssembly = _loader.LazyLoad(Configuration.RoslynEditorFeatures);
+            _csharpDecompiledSourceService = _editorFeaturesAssembly.LazyGetType(CSharpDecompiledSourceService);
         }
 
         public async Task<(Document metadataDocument, string documentPath)> GetAndAddDecompiledDocument(Project project, ISymbol symbol, CancellationToken cancellationToken = new CancellationToken())
@@ -54,11 +56,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Decompilation
                 var topLevelSymbol = symbol.GetTopLevelContainingNamedType();
 
                 var temporaryDocument = decompilationProject.AddDocument(fileName, string.Empty);
-                var service = new OmniSharpCSharpDecompiledSourceService(temporaryDocument.Project.LanguageServices);
-                var documentTask = service.AddSourceToAsync(temporaryDocument, await decompilationProject.GetCompilationAsync(), topLevelSymbol, cancellationToken);
-                //var method = _csharpDecompiledSourceService.GetMethod(AddSourceToAsync);
+                var method = _csharpDecompiledSourceService.GetMethod(AddSourceToAsync);
 
-                //var documentTask = method.Invoke<Task<Document>>(service, new object[] { temporaryDocument, await decompilationProject.GetCompilationAsync(), topLevelSymbol, default(CancellationToken) });
+                var service = Activator.CreateInstance(_csharpDecompiledSourceService.Value, new object[] { temporaryDocument.Project.LanguageServices });
+                var documentTask = method.Invoke<Task<Document>>(service, new object[] { temporaryDocument, await decompilationProject.GetCompilationAsync(), topLevelSymbol, cancellationToken });
                 metadataDocument = await documentTask;
 
                 _decompiledDocumentCache[fileName] = metadataDocument;

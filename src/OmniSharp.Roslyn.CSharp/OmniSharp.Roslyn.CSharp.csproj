@@ -5,6 +5,8 @@
         <PlatformTarget>AnyCPU</PlatformTarget>
         <IsPackable>true</IsPackable>
         <PublishRepositoryUrl>true</PublishRepositoryUrl>
+        <RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
+        <RunAnalyzersDuringLiveAnalysis>false</RunAnalyzersDuringLiveAnalysis>
         <RunAnalyzers>false</RunAnalyzers>
     </PropertyGroup>
 

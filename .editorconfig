@@ -11,5 +11,20 @@ indent_size = 4
 [*.cs]
 indent_size = 4
 
+# VSTHRD200: Use "Async" suffix for async methods
+dotnet_diagnostic.VSTHRD200.severity = none
+
+# VSTHRD002: Avoid problematic synchronous waits
+dotnet_diagnostic.VSTHRD002.severity = none
+
+# VSTHRD105: Avoid method overloads that assume TaskScheduler.Current
+dotnet_diagnostic.VSTHRD105.severity = none
+
+# VSTHRD011: Use AsyncLazy<T>
+dotnet_diagnostic.VSTHRD011.severity = none
+
+# VSTHRD110: Observe result of async calls
+dotnet_diagnostic.VSTHRD110.severity = none
+
 [*.{yml,yaml}]
 indent_size = 2
