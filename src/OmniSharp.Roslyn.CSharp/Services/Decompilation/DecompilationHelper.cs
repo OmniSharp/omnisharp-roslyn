@@ -12,21 +12,16 @@ using System.Threading.Tasks;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Decompilation
 {
-    public class DecompilationHelper
+    public class DecompilationHelper : MetadataHelperBase
     {
         //private const string CSharpDecompiledSourceService = "Microsoft.CodeAnalysis.CSharp.DecompiledSource.CSharpDecompiledSourceService";
-        private const string AddSourceToAsync = "AddSourceToAsync";
         private const string DecompiledKey = "$Decompiled$";
 
-        private readonly IAssemblyLoader _loader;
-        private readonly Lazy<Assembly> _csharpFeatureAssembly;
         //private readonly Lazy<Type> _csharpDecompiledSourceService;
         private Dictionary<string, Document> _decompiledDocumentCache = new Dictionary<string, Document>();
 
-        public DecompilationHelper(IAssemblyLoader loader)
+        public DecompilationHelper(IAssemblyLoader loader) : base(loader)
         {
-            _loader = loader;
-            _csharpFeatureAssembly = _loader.LazyLoad(Configuration.RoslynCSharpFeatures);
             // _csharpDecompiledSourceService = _csharpFeatureAssembly.LazyGetType(CSharpDecompiledSourceService);
         }
 
@@ -71,46 +66,5 @@ namespace OmniSharp.Roslyn.CSharp.Services.Decompilation
 
             return (metadataDocument, fileName);
         }
-
-        private static string GetFilePathForSymbol(Project project, ISymbol symbol)
-        {
-            var topLevelSymbol = symbol.GetTopLevelContainingNamedType();
-            return $"$decompiled$/Project/{Folderize(project.Name)}/Assembly/{Folderize(topLevelSymbol.ContainingAssembly.Name)}/Symbol/{Folderize(GetTypeDisplayString(topLevelSymbol))}.cs".Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
-        }
-
-        private static string GetTypeDisplayString(INamedTypeSymbol symbol)
-        {
-            if (symbol.SpecialType != SpecialType.None)
-            {
-                var specialType = symbol.SpecialType;
-                var name = Enum.GetName(typeof(SpecialType), symbol.SpecialType).Replace("_", ".");
-                return name;
-            }
-
-            if (symbol.IsGenericType)
-            {
-                symbol = symbol.ConstructUnboundGenericType();
-            }
-
-            if (symbol.IsUnboundGenericType)
-            {
-                // TODO: Is this the best to get the fully metadata name?
-                var parts = symbol.ToDisplayParts();
-                var filteredParts = parts.Where(x => x.Kind != SymbolDisplayPartKind.Punctuation).ToArray();
-                var typeName = new StringBuilder();
-                foreach (var part in filteredParts.Take(filteredParts.Length - 1))
-                {
-                    typeName.Append(part.Symbol.Name);
-                    typeName.Append(".");
-                }
-                typeName.Append(symbol.MetadataName);
-
-                return typeName.ToString();
-            }
-
-            return symbol.ToDisplayString();
-        }
-
-        private static string Folderize(string path) => string.Join("/", path.Split('.'));
     }
 }
