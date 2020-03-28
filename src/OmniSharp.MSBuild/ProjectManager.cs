@@ -444,6 +444,12 @@ namespace OmniSharp.MSBuild
 
         private void UpdateAnalyzerReferences(Project project, ProjectFileInfo projectFileInfo)
         {
+            if (!projectFileInfo.RunAnalyzers || !projectFileInfo.RunAnalyzersDuringLiveAnalysis)
+            {
+                _workspace.SetAnalyzerReferences(project.Id, ImmutableArray<AnalyzerFileReference>.Empty);
+                return;
+            }
+
             var analyzerFileReferences = projectFileInfo.Analyzers
                 .Select(analyzerReferencePath => new AnalyzerFileReference(analyzerReferencePath, _analyzerAssemblyLoader))
                 .ToImmutableArray();

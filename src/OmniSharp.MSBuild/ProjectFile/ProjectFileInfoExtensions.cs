@@ -76,6 +76,11 @@ namespace OmniSharp.MSBuild.ProjectFile
 
         private static IEnumerable<AnalyzerReference> ResolveAnalyzerReferencesForProject(ProjectFileInfo projectFileInfo, IAnalyzerAssemblyLoader analyzerAssemblyLoader)
         {
+            if (!projectFileInfo.RunAnalyzers || !projectFileInfo.RunAnalyzersDuringLiveAnalysis)
+            {
+                return Enumerable.Empty<AnalyzerReference>();
+            }
+
             foreach(var analyzerAssemblyPath in projectFileInfo.Analyzers.Distinct())
             {
                 analyzerAssemblyLoader.AddDependencyLocation(analyzerAssemblyPath);

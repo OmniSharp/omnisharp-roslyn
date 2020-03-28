@@ -32,6 +32,8 @@
         public const string _ResolveReferenceDependencies = nameof(_ResolveReferenceDependencies);
         public const string RootNamespace = nameof(RootNamespace);
         public const string RoslynTargetsPath = nameof(RoslynTargetsPath);
+        public const string RunAnalyzers = nameof(RunAnalyzers);
+        public const string RunAnalyzersDuringLiveAnalysis = nameof(RunAnalyzersDuringLiveAnalysis);
         public const string SignAssembly = nameof(SignAssembly);
         public const string SkipCompilerExecution = nameof(SkipCompilerExecution);
         public const string SolutionDir = nameof(SolutionDir);
