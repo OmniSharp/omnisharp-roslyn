@@ -2,6 +2,9 @@
 using System.Composition;
 using System.Linq;
 using System.Reflection;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Host;
+using Microsoft.CodeAnalysis.Host.Mef;
 using OmniSharp.Options;
 using OmniSharp.Services;
 
@@ -31,4 +34,18 @@ namespace OmniSharp.Roslyn.CSharp.Services
             Assemblies = builder.ToImmutable();
         }
     }
+
+    //[ExportLanguageServiceFactory(typeof(IDecompiledSourceService), LanguageNames.CSharp), Shared]
+    //public class OmniSharpCSharpDecompiledSourceServiceFactory : ILanguageServiceFactory
+    //{
+    //    [ImportingConstructor]
+    //    public OmniSharpCSharpDecompiledSourceServiceFactory()
+    //    {
+    //    }
+
+    //    public ILanguageService CreateLanguageService(HostLanguageServices provider)
+    //    {
+    //        return new CSharpDecompiledSourceService(provider);
+    //    }
+    //}
 }
