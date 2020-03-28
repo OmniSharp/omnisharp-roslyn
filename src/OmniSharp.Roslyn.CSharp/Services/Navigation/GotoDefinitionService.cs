@@ -11,6 +11,7 @@ using OmniSharp.Mef;
 using OmniSharp.Models;
 using OmniSharp.Models.GotoDefinition;
 using OmniSharp.Models.Metadata;
+using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Services.Decompilation;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Navigation
@@ -20,14 +21,16 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
     {
         private readonly MetadataHelper _metadataHelper;
         private readonly DecompilationHelper _decompilationHelper;
+        private readonly OmniSharpOptions _omnisharpOptions;
         private readonly OmniSharpWorkspace _workspace;
 
         [ImportingConstructor]
-        public GotoDefinitionService(OmniSharpWorkspace workspace, MetadataHelper metadataHelper, DecompilationHelper decompilationHelper)
+        public GotoDefinitionService(OmniSharpWorkspace workspace, MetadataHelper metadataHelper, DecompilationHelper decompilationHelper, OmniSharpOptions omnisharpOptions)
         {
             _workspace = workspace;
             _metadataHelper = metadataHelper;
             _decompilationHelper = decompilationHelper;
+            _omnisharpOptions = omnisharpOptions;
         }
 
         public async Task<GotoDefinitionResponse> Handle(GotoDefinitionRequest request)
@@ -71,33 +74,47 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
                     }
                     else if (location.IsInMetadata && request.WantMetadata)
                     {
-                        var cancellationSource = new CancellationTokenSource(TimeSpan.FromMilliseconds(60000));
-                        var (metadataDocument, _) = await _decompilationHelper.GetAndAddDecompiledDocument(document.Project, symbol, cancellationSource.Token);
-                        if (metadataDocument != null)
+                        var metadataLocation = await GetMetadataLocation(document, symbol, request.Timeout);
+                        var lineSpan = metadataLocation.GetMappedLineSpan();
+
+                        response = new GotoDefinitionResponse
                         {
-                            cancellationSource = new CancellationTokenSource(TimeSpan.FromMilliseconds(request.Timeout));
-
-                            //var metadataLocation = await _metadataHelper.GetSymbolLocationFromMetadata(symbol, metadataDocument, cancellationSource.Token);
-                            var metadataLocation = Location.None;
-                            var lineSpan = metadataLocation.GetMappedLineSpan();
-
-                            response = new GotoDefinitionResponse
+                            Line = lineSpan.StartLinePosition.Line,
+                            Column = lineSpan.StartLinePosition.Character,
+                            MetadataSource = new MetadataSource()
                             {
-                                Line = lineSpan.StartLinePosition.Line,
-                                Column = lineSpan.StartLinePosition.Character,
-                                MetadataSource = new MetadataSource()
-                                {
-                                    AssemblyName = symbol.ContainingAssembly.Name,
-                                    ProjectName = document.Project.Name,
-                                    TypeName = _metadataHelper.GetSymbolName(symbol)
-                                },
-                            };
-                        }
+                                AssemblyName = symbol.ContainingAssembly.Name,
+                                ProjectName = document.Project.Name,
+                                TypeName = _metadataHelper.GetSymbolName(symbol)
+                            },
+                        };
                     }
                 }
             }
 
             return response;
+        }
+
+        private async Task<Location> GetMetadataLocation(Document document, ISymbol symbol, int timeout)
+        {
+            var cancellationSource = new CancellationTokenSource(TimeSpan.FromMilliseconds(timeout));
+
+            if (_omnisharpOptions.RoslynExtensionsOptions.EnableDecompilationSupport)
+            {
+                var (metadataDoc, _) = await _decompilationHelper.GetAndAddDecompiledDocument(document.Project, symbol, cancellationSource.Token);
+                return Location.None;
+            }
+
+            var (metadataDocument, _) = await _metadataHelper.GetAndAddDocumentFromMetadata(document.Project, symbol, cancellationSource.Token);
+            if (metadataDocument != null)
+            {
+                cancellationSource = new CancellationTokenSource(TimeSpan.FromMilliseconds(timeout));
+
+                var metadataLocation = await _metadataHelper.GetSymbolLocationFromMetadata(symbol, metadataDocument, cancellationSource.Token);
+                return metadataLocation;
+            }
+
+            return Location.None;
         }
     }
 }
