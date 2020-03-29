@@ -26,5 +26,8 @@ dotnet_diagnostic.VSTHRD011.severity = none
 # VSTHRD110: Observe result of async calls
 dotnet_diagnostic.VSTHRD110.severity = none
 
+# VSTHRD103: Call async methods when in an async method
+dotnet_diagnostic.VSTHRD103.severity = none
+
 [*.{yml,yaml}]
 indent_size = 2

@@ -5,9 +5,6 @@
         <PlatformTarget>AnyCPU</PlatformTarget>
         <IsPackable>true</IsPackable>
         <PublishRepositoryUrl>true</PublishRepositoryUrl>
-        <RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
-        <RunAnalyzersDuringLiveAnalysis>false</RunAnalyzersDuringLiveAnalysis>
-        <RunAnalyzers>false</RunAnalyzers>
     </PropertyGroup>
 
     <ItemGroup>
@@ -17,7 +14,6 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="ICSharpCode.Decompiler" />
         <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" PrivateAssets="All" />
         <PackageReference Include="System.Reactive" />
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
