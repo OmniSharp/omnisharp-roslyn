@@ -36,9 +36,9 @@ namespace OmniSharp.MSBuild.Tests
 
             public void Emit(string kind, object args)
             {
-                if(args is ProjectConfigurationMessage)
+                if(args is ProjectConfigurationMessage message)
                 {
-                    ReceivedMessages = ReceivedMessages.Add((ProjectConfigurationMessage)args);
+                    ReceivedMessages = ReceivedMessages.Add(message);
                     _messageEvent.Set();
                 }
             }
