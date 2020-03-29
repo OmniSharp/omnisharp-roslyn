@@ -3,17 +3,17 @@
   xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <PropertyGroup>
-    <MSBuildPackageVersion>16.4.0</MSBuildPackageVersion>
+    <MSBuildPackageVersion>16.5.0</MSBuildPackageVersion>
     <NuGetPackageVersion>5.2.0</NuGetPackageVersion>
-    <RoslynPackageVersion>3.5.0-beta3-20058-03</RoslynPackageVersion>
+    <RoslynPackageVersion>3.6.0-2.20167.2</RoslynPackageVersion>
     <XunitPackageVersion>2.4.0</XunitPackageVersion>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Update="Cake.Scripting.Transport" Version="0.3.0" />
 
-    <PackageReference Update="Dotnet.Script.DependencyModel" Version="0.50.0" />
-    <PackageReference Update="Dotnet.Script.DependencyModel.NuGet" Version="0.50.0" />
+    <PackageReference Update="Dotnet.Script.DependencyModel" Version="0.51.0" />
+    <PackageReference Update="Dotnet.Script.DependencyModel.NuGet" Version="0.51.0" />
 
     <PackageReference Update="McMaster.Extensions.CommandLineUtils" Version="2.2.4" />
 
@@ -82,7 +82,7 @@
     <PackageReference Update="xunit" Version="$(XunitPackageVersion)" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0-beta2-18618-05" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
   </ItemGroup>
 
 

@@ -67,12 +67,26 @@ namespace OmniSharp.MSBuild.Tests
         public async Task WhenProjectIsLoadedThenItContainsCustomRulesetsFromCsproj()
         {
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithAnalyzers"))
-            using (var host = CreateMSBuildTestHost(testProject.Directory))
+            using (var host = CreateMSBuildTestHost(testProject.Directory, configurationData: TestHelpers.GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled: true)))
             {
                 var project = host.Workspace.CurrentSolution.Projects.Single();
 
                 Assert.Contains(project.CompilationOptions.SpecificDiagnosticOptions, x => x.Key == "CA1021" && x.Value == ReportDiagnostic.Warn);
             }
+        }
+
+        [Theory]
+        [InlineData("ProjectWithDisabledAnalyzers")]
+        [InlineData("ProjectWithDisabledAnalyzers2")]
+        public async Task WhenProjectWithRunAnalyzersDisabledIsLoadedThenAnalyzersAreIgnored(string projectName)
+        {
+            using var testProject = await TestAssets.Instance.GetTestProjectAsync(projectName);
+            await RestoreProject(testProject);
+
+            using var host = CreateMSBuildTestHost(testProject.Directory, configurationData: TestHelpers.GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled: true));
+            var analyzerReferences = host.Workspace.CurrentSolution.Projects.Single().AnalyzerReferences.ToList();
+
+            Assert.Empty(analyzerReferences);
         }
 
         [Fact]

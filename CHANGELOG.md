@@ -1,6 +1,16 @@
 # Changelog
 All changes to the project will be documented in this file.
 
+## [1.34.16] - not yet released
+* Support for `<RunAnalyzers />` and `<RunAnalyzersDuringLiveAnalysis />` (PR: [#1739](https://github.com/OmniSharp/omnisharp-roslyn/pull/1739))
+* Add `typeparam` documentation comments to text description ([omnisharp-vscode#3516](https://github.com/OmniSharp/omnisharp-vscode/issues/3516), PR: [#1749](https://github.com/OmniSharp/omnisharp-roslyn/pull/1749))
+* Tag `#region` blocks appropriately in the block structure service ([omnisharp-vscode#2621](https://github.com/OmniSharp/omnisharp-vscode/issues/2621), PR: [#1748](https://github.com/OmniSharp/omnisharp-roslyn/pull/1748))
+
+## [1.34.15] - 2020-03-25
+* Support for .NET Core 3.1 in csx files (PR: [#1731](https://github.com/OmniSharp/omnisharp-roslyn/pull/1731))
+* Update the minimal MSBuild to better support .NET 5 Previews ([omnisharp-vscode#3653](https://github.com/OmniSharp/omnisharp-vscode/issues/3653), PR: [#1746](https://github.com/OmniSharp/omnisharp-roslyn/pull/1746))
+* Updated to Roslyn [3.6.0-3.20170.19] (PR: [#1745](https://github.com/OmniSharp/omnisharp-roslyn/pull/1745))
+
 ## [1.34.14] - 2020-03-09
 * Added support for `annotations` value of `Nullable` csproj property ([#1721](https://github.com/OmniSharp/omnisharp-roslyn/issues/1721), PR: [#1722](https://github.com/OmniSharp/omnisharp-roslyn/pull/1722))
 * Added ability to specify custom RunSettings for tests (PR: [omnisharp-vscode#3573](https://github.com/OmniSharp/omnisharp-vscode/pull/3573), PR: [#1710](https://github.com/OmniSharp/omnisharp-roslyn/pull/1710))
@@ -14,7 +24,7 @@ All changes to the project will be documented in this file.
 * Raised the lowest discovered VS2019 version to 16.3 ([#1700](https://github.com/OmniSharp/omnisharp-roslyn/issues/1700), PR: [#1713](https://github.com/OmniSharp/omnisharp-roslyn/pull/1713))
 
 ## [1.34.11] - 2020-02-05
-* Updated the bundled to Mono 6.8.0 and MSBuild to be copied from Mono 6.8.0 ([#1693](https://github.com/OmniSharp/omnisharp-roslyn/issues/1693), PR: [#1697](https://github.com/OmniSharp/omnisharp-roslyn/pull/1697))
+* Updated the bundled Mono to 6.8.0 and MSBuild to be copied from Mono 6.8.0 ([#1693](https://github.com/OmniSharp/omnisharp-roslyn/issues/1693), PR: [#1697](https://github.com/OmniSharp/omnisharp-roslyn/pull/1697))
 * Included NugetSDKResolver in the minimal MSBuild, which introduces support for Nuget based project SDKs like Arcade ([#1678](https://github.com/OmniSharp/omnisharp-roslyn/issues/1678), PR: [#1696](https://github.com/OmniSharp/omnisharp-roslyn/pull/1696))
 
 ## [1.34.10] - 2020-01-27
