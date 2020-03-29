@@ -18,9 +18,12 @@
         <PackageReference Include="System.Reactive" />
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Features" />
-        <PackageReference Include="Microsoft.CodeAnalysis.CSharp.EditorFeatures" />
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" />
         <PackageReference Include="Microsoft.VisualStudio.CodingConventions" />
+    </ItemGroup>
+
+    <ItemGroup Condition=" '$(TargetFramework)' == 'net472'">
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp.EditorFeatures" />
     </ItemGroup>
 
 </Project>

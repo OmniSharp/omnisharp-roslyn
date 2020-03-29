@@ -13,6 +13,8 @@ using System.Threading.Tasks;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Decompilation
 {
+    // due to dependency on Microsoft.CodeAnalysis.Editor.CSharp
+    // this class supports only net472
     public class DecompilationHelper : BaseMetadataHelper
     {
         private const string CSharpDecompiledSourceService = "Microsoft.CodeAnalysis.Editor.CSharp.DecompiledSource.CSharpDecompiledSourceService";

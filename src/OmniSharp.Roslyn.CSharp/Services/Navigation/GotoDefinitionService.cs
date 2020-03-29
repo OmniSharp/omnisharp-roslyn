@@ -97,12 +97,19 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
 
         private async Task<Location> GetMetadataLocation(Document document, ISymbol symbol, int timeout)
         {
+            // we only support decompilation when running on net472
+            // due to dependency on Microsoft.CodeAnalysis.Editor.CSharp
+#if NET472
+            var enableDecompilationSupport = _omnisharpOptions.RoslynExtensionsOptions.EnableDecompilationSupport;
+#else
+            var enableDecompilationSupport = false;
+#endif
             // since decompilation is slower, use a larger cancellation time (default is 2s per request)
-            var cancellationTimeout = _omnisharpOptions.RoslynExtensionsOptions.EnableDecompilationSupport
+            var cancellationTimeout = enableDecompilationSupport
                 ? timeout <= 10000 ? 10000 : timeout // minimum 20s for decompilation
                 : timeout; // request defined for metadata
 
-            var (metadataDocument, _) = _omnisharpOptions.RoslynExtensionsOptions.EnableDecompilationSupport
+            var (metadataDocument, _) = enableDecompilationSupport
                 ? await _decompilationHelper.GetAndAddDecompiledDocument(document.Project, symbol, new CancellationTokenSource(cancellationTimeout).Token)
                 : await _metadataHelper.GetAndAddDocumentFromMetadata(document.Project, symbol, new CancellationTokenSource(cancellationTimeout).Token);
 

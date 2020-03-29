@@ -38,7 +38,16 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
                 if (symbol != null && symbol.ContainingAssembly.Name == request.AssemblyName)
                 {
                     var cancellationSource = new CancellationTokenSource(TimeSpan.FromMilliseconds(request.Timeout));
-                    var (metadataDocument, documentPath) = _omniSharpOptions.RoslynExtensionsOptions.EnableDecompilationSupport ?
+
+                    // we only support decompilation when running on net472
+                    // due to dependency on Microsoft.CodeAnalysis.Editor.CSharp
+#if NET472
+                    var enableDecompilationSupport = _omniSharpOptions.RoslynExtensionsOptions.EnableDecompilationSupport;
+#else
+                    var enableDecompilationSupport = false;
+#endif
+
+                    var (metadataDocument, documentPath) = enableDecompilationSupport ?
                         await _decompilationHelper.GetAndAddDecompiledDocument(project, symbol, cancellationSource.Token) :
                         await _metadataHelper.GetAndAddDocumentFromMetadata(project, symbol, cancellationSource.Token);
 
