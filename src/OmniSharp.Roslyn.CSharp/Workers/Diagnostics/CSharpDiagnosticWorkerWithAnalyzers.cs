@@ -73,7 +73,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
             return Task.Run(async () =>
             {
-                while (!_workspace.Initialized || _workspace.CurrentSolution.Projects.Count() == 0) await Task.Delay(50);
+                while (!_workspace.Initialized) await Task.Delay(50);
             })
             .ContinueWith(_ => Task.Delay(50))
             .ContinueWith(_ =>

@@ -35,6 +35,26 @@ namespace OmniSharp.MSBuild.Tests
             }
         }
 
+        [Fact]
+        public async Task WhenNewAnalyzerReferenceIsAdded_ThenAutomaticallyUseItWithoutRestart()
+        {
+            var emitter = new ProjectLoadTestEventEmitter();
+
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithAnalyzers"))
+            using (var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory), configurationData: TestHelpers.GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled: true)))
+            {
+                var csprojFile =  Path.Combine(testProject.Directory, "ProjectWithAnalyzers.csproj");
+
+                await NotifyFileremoved(host, csprojFile);
+
+                emitter.WaitForProjectUpdate();
+
+                var diagnostics = await host.RequestCodeCheckAsync(Path.Combine(testProject.Directory, "Program.cs"));
+
+                Assert.Empty(diagnostics.QuickFixes);
+            }
+        }
+
         private static async Task NotifyFileremoved(OmniSharpTestHost host, string file)
         {
             await host.GetFilesChangedService().Handle(new[] {
