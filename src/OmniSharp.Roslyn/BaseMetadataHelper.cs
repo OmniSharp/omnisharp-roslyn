@@ -12,7 +12,7 @@ using OmniSharp.Utilities;
 
 namespace OmniSharp.Roslyn
 {
-    public abstract class MetadataHelperBase
+    public abstract class BaseMetadataHelper
     {
         protected readonly IAssemblyLoader _loader;
         protected readonly Lazy<Assembly> _featureAssembly;
@@ -29,7 +29,7 @@ namespace OmniSharp.Roslyn
         protected const string Create = "Create";
         protected const string MetadataKey = "$Metadata$";
 
-        public MetadataHelperBase(IAssemblyLoader loader)
+        protected BaseMetadataHelper(IAssemblyLoader loader)
         {
             _loader = loader;
             _featureAssembly = _loader.LazyLoad(Configuration.RoslynFeatures);

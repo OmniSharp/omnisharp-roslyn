@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Decompilation
 {
-    public class DecompilationHelper : MetadataHelperBase
+    public class DecompilationHelper : BaseMetadataHelper
     {
         private const string CSharpDecompiledSourceService = "Microsoft.CodeAnalysis.Editor.CSharp.DecompiledSource.CSharpDecompiledSourceService";
         private const string DecompiledKey = "$Decompiled$";

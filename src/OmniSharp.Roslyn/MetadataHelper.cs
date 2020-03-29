@@ -13,7 +13,7 @@ using OmniSharp.Utilities;
 
 namespace OmniSharp.Roslyn
 {
-    public class MetadataHelper : MetadataHelperBase
+    public class MetadataHelper : BaseMetadataHelper
     {
         private readonly Lazy<Type> _csharpMetadataAsSourceService;
         private Dictionary<string, Document> _metadataDocumentCache = new Dictionary<string, Document>();
