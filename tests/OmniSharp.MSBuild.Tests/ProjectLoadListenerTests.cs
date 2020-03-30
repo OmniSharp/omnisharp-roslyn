@@ -1,16 +1,9 @@
 using Microsoft.Build.Construction;
 using Microsoft.Build.Execution;
 using Microsoft.CodeAnalysis;
-using Microsoft.Extensions.Logging;
-using OmniSharp.Mef;
-using OmniSharp.Models;
 using OmniSharp.Models.Events;
-using OmniSharp.MSBuild.Notification;
 using OmniSharp.Services;
-using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Composition.Hosting.Core;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -96,13 +89,13 @@ namespace OmniSharp.MSBuild.Tests
         {
             // Arrange
             var expectedTFM = "netcoreapp2.1";
-            var emitter = new ProjectLoadTestEventEmitter();
+            var emitter = new TestEventEmitter();
 
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("HelloWorld"))
             using (var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory)))
             {
-                Assert.Single(emitter.ReceivedMessages);
-                Assert.Equal(emitter.ReceivedMessages[0].TargetFrameworks.First(), expectedTFM);
+                Assert.Single(emitter.Messages);
+                Assert.Equal(emitter.Messages.OfType<ProjectConfigurationMessage>().First().TargetFrameworks.First(), expectedTFM);
             }
         }
 
@@ -110,14 +103,14 @@ namespace OmniSharp.MSBuild.Tests
         public async Task If_there_is_a_solution_file_the_project_guid_present_in_it_is_emitted()
         {
             // Arrange
-            var emitter = new ProjectLoadTestEventEmitter();
+            var emitter = new TestEventEmitter();
 
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectAndSolution"))
             using (var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory)))
             {
                 var expectedGuid = "A4C2694D-AEB4-4CB1-8951-5290424EF883".ToLower();
-                Assert.Single(emitter.ReceivedMessages);
-                Assert.Equal(emitter.ReceivedMessages[0].ProjectId, expectedGuid);
+                Assert.Single(emitter.Messages);
+                Assert.Equal(emitter.Messages.OfType<ProjectConfigurationMessage>().First().ProjectId, expectedGuid);
             }
         }
 
@@ -125,22 +118,22 @@ namespace OmniSharp.MSBuild.Tests
         public async Task If_there_is_no_solution_file_the_hash_of_project_file_content_and_name_is_emitted()
         {
             // Arrange
-            var emitter = new ProjectLoadTestEventEmitter();
+            var emitter = new TestEventEmitter();
 
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("HelloWorld"))
             using (var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory)))
             {
                 var projectFileContent = File.ReadAllText(Directory.GetFiles(testProject.Directory, "*.csproj").Single());
                 var expectedGuid = GetHashedReference($"Filename: HelloWorld.csproj\n{projectFileContent}");
-                Assert.Single(emitter.ReceivedMessages);
-                Assert.Equal(emitter.ReceivedMessages[0].ProjectId, expectedGuid);
+                Assert.Single(emitter.Messages);
+                Assert.Equal(emitter.Messages.OfType<ProjectConfigurationMessage>().First().ProjectId, expectedGuid);
             }
         }
 
         [Fact]
         public async Task Given_a_restored_project_the_references_are_emitted()
         {
-            var emitter = new ProjectLoadTestEventEmitter();
+            var emitter = new TestEventEmitter();
 
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("HelloWorld"))
             {
@@ -148,8 +141,8 @@ namespace OmniSharp.MSBuild.Tests
                 await dotnetCliService.RestoreAsync(testProject.Directory);
                 using (var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory)))
                 {
-                    Assert.Single(emitter.ReceivedMessages);
-                    Assert.NotEmpty(emitter.ReceivedMessages[0].References.Where(reference => reference == GetHashedReference("system.core")));
+                    Assert.Single(emitter.Messages);
+                    Assert.NotEmpty(emitter.Messages.OfType<ProjectConfigurationMessage>().First().References.Where(reference => reference == GetHashedReference("system.core")));
                 }
             }
         }
@@ -158,13 +151,13 @@ namespace OmniSharp.MSBuild.Tests
         [Fact]
         public async Task If_there_are_multiple_target_frameworks_they_are_emitted()
         {
-            var emitter = new ProjectLoadTestEventEmitter();
+            var emitter = new TestEventEmitter();
 
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithMultiTFMLib/Lib"))
             using (var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory)))
             {
-                Assert.Single(emitter.ReceivedMessages);
-                var tfm = emitter.ReceivedMessages[0].TargetFrameworks.ToArray();
+                Assert.Single(emitter.Messages);
+                var tfm = emitter.Messages.OfType<ProjectConfigurationMessage>().First().TargetFrameworks.ToArray();
                 Assert.Equal(2, tfm.Count());
                 Assert.Equal("netstandard1.3", tfm[0]);
                 Assert.Equal("netstandard2.0",tfm[1]);
@@ -175,14 +168,14 @@ namespace OmniSharp.MSBuild.Tests
         public async Task The_hashed_references_of_the_source_files_are_emitted()
         {
             // Arrange
-            var emitter = new ProjectLoadTestEventEmitter();
+            var emitter = new TestEventEmitter();
 
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("HelloWorld"))
             using (var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory)))
             {
-                Assert.Single(emitter.ReceivedMessages);
-                Assert.Single(emitter.ReceivedMessages[0].FileExtensions);
-                Assert.Equal(emitter.ReceivedMessages[0].FileExtensions.First(), GetHashedFileExtension(".cs"));
+                Assert.Single(emitter.Messages);
+                Assert.Single(emitter.Messages.OfType<ProjectConfigurationMessage>().First().FileExtensions);
+                Assert.Equal(emitter.Messages.OfType<ProjectConfigurationMessage>().First().FileExtensions.First(), GetHashedFileExtension(".cs"));
             }
         }
 

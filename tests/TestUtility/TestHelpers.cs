@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
@@ -127,7 +128,7 @@ namespace TestUtility
             return copyOfExistingConfigs;
         }
 
-        public static async Task WaitUntil(Func<Task<bool>> condition, int frequency = 25, int timeout = -1)
+        public static async Task WaitUntil(Func<Task<bool>> condition, int frequency = 25, int timeoutMs = 10000)
         {
             var waitTask = Task.Run(async () =>
             {
@@ -135,8 +136,8 @@ namespace TestUtility
             });
 
             if (waitTask != await Task.WhenAny(waitTask,
-                    Task.Delay(timeout)))
-                throw new TimeoutException();
+                    Task.Delay(timeoutMs)))
+                throw new TimeoutException($"Timeout of {timeoutMs} ms exceeded before condition came true.");
         }
 
         public static void SetDefaultCulture()
