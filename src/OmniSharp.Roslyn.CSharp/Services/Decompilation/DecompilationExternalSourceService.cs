@@ -30,7 +30,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Decompilation
 
         public async Task<(Document metadataDocument, string documentPath)> GetAndAddExternalSymbolDocument(Project project, ISymbol symbol, CancellationToken cancellationToken)
         {
-            var fileName = GetFilePathForSymbol(project, symbol);
+            var fileName = symbol.GetFilePathForExternalSymbol(project);
 
             Project decompilationProject;
 

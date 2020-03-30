@@ -9,6 +9,5 @@ namespace OmniSharp.Roslyn
         Task<(Document metadataDocument, string documentPath)> GetAndAddExternalSymbolDocument(Project project, ISymbol symbol, CancellationToken cancellationToken);
         Document FindDocumentInCache(string fileName);
         Task<Location> GetExternalSymbolLocation(ISymbol symbol, Document metadataDocument, CancellationToken cancellationToken);
-        string GetSymbolName(ISymbol symbol);
     }
 }

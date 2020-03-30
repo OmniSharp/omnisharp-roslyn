@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -22,14 +23,13 @@ namespace OmniSharp.Roslyn
         protected readonly Lazy<Type> _symbolKey;
         protected readonly Lazy<Type> _metadataAsSourceHelper;
         protected readonly Lazy<MethodInfo> _getLocationInGeneratedSourceAsync;
-        protected Dictionary<string, Document> _cache = new Dictionary<string, Document>();
+        protected ConcurrentDictionary<string, Document> _cache = new ConcurrentDictionary<string, Document>();
 
         protected const string SymbolKey = "Microsoft.CodeAnalysis.SymbolKey";
         protected const string MetadataAsSourceHelpers = "Microsoft.CodeAnalysis.MetadataAsSource.MetadataAsSourceHelpers";
         protected const string GetLocationInGeneratedSourceAsync = "GetLocationInGeneratedSourceAsync";
         protected const string AddSourceToAsync = "AddSourceToAsync";
         protected const string Create = "Create";
-        protected const string MetadataKey = "$Metadata$";
 
         protected BaseExternalSourceService(IAssemblyLoader loader)
         {
@@ -53,13 +53,6 @@ namespace OmniSharp.Roslyn
             return null;
         }
 
-        public string GetSymbolName(ISymbol symbol)
-        {
-            var topLevelSymbol = symbol.GetTopLevelContainingNamedType();
-            return GetTypeDisplayString(topLevelSymbol);
-        }
-
-
         public async Task<Location> GetExternalSymbolLocation(ISymbol symbol, Document metadataDocument, CancellationToken cancellationToken = new CancellationToken())
         {
             var symbolKeyCreateMethod = _symbolKey.GetMethod(Create, BindingFlags.Static | BindingFlags.NonPublic);
@@ -67,46 +60,5 @@ namespace OmniSharp.Roslyn
 
             return await _getLocationInGeneratedSourceAsync.InvokeStatic<Task<Location>>(new object[] { symboldId, metadataDocument, cancellationToken });
         }
-
-        protected static string GetTypeDisplayString(INamedTypeSymbol symbol)
-        {
-            if (symbol.SpecialType != SpecialType.None)
-            {
-                var specialType = symbol.SpecialType;
-                var name = Enum.GetName(typeof(SpecialType), symbol.SpecialType).Replace("_", ".");
-                return name;
-            }
-
-            if (symbol.IsGenericType)
-            {
-                symbol = symbol.ConstructUnboundGenericType();
-            }
-
-            if (symbol.IsUnboundGenericType)
-            {
-                // TODO: Is this the best to get the fully metadata name?
-                var parts = symbol.ToDisplayParts();
-                var filteredParts = parts.Where(x => x.Kind != SymbolDisplayPartKind.Punctuation).ToArray();
-                var typeName = new StringBuilder();
-                foreach (var part in filteredParts.Take(filteredParts.Length - 1))
-                {
-                    typeName.Append(part.Symbol.Name);
-                    typeName.Append(".");
-                }
-                typeName.Append(symbol.MetadataName);
-
-                return typeName.ToString();
-            }
-
-            return symbol.ToDisplayString();
-        }
-
-        protected static string GetFilePathForSymbol(Project project, ISymbol symbol)
-        {
-            var topLevelSymbol = symbol.GetTopLevelContainingNamedType();
-            return $"$metadata$/Project/{Folderize(project.Name)}/Assembly/{Folderize(topLevelSymbol.ContainingAssembly.Name)}/Symbol/{Folderize(GetTypeDisplayString(topLevelSymbol))}.cs".Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
-        }
-
-        protected static string Folderize(string path) => string.Join("/", path.Split('.'));
     }
 }

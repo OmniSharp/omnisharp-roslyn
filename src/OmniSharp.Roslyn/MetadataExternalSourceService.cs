@@ -15,6 +15,7 @@ namespace OmniSharp.Roslyn
 {
     public class MetadataExternalSourceService : BaseExternalSourceService, IExternalSourceService
     {
+        private const string MetadataKey = "$Metadata$";
         private readonly Lazy<Type> _csharpMetadataAsSourceService;
         private const string CSharpMetadataAsSourceService = "Microsoft.CodeAnalysis.CSharp.MetadataAsSource.CSharpMetadataAsSourceService";
 
@@ -25,7 +26,7 @@ namespace OmniSharp.Roslyn
 
         public async Task<(Document metadataDocument, string documentPath)> GetAndAddExternalSymbolDocument(Project project, ISymbol symbol, CancellationToken cancellationToken = new CancellationToken())
         {
-            var fileName = GetFilePathForSymbol(project, symbol);
+            var fileName = symbol.GetFilePathForExternalSymbol(project);
 
             Project metadataProject;
 

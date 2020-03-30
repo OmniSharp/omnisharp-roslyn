@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.FindSymbols;
 using Microsoft.CodeAnalysis.Text;
+using OmniSharp.Extensions;
 using OmniSharp.Mef;
 using OmniSharp.Models.GotoDefinition;
 using OmniSharp.Models.Metadata;
@@ -84,7 +85,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
                                 {
                                     AssemblyName = symbol.ContainingAssembly.Name,
                                     ProjectName = document.Project.Name,
-                                    TypeName = externalSourceService.GetSymbolName(symbol)
+                                    TypeName = symbol.GetSymbolName()
                                 },
                             };
                         }
