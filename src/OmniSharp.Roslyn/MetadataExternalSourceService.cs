@@ -13,34 +13,17 @@ using OmniSharp.Utilities;
 
 namespace OmniSharp.Roslyn
 {
-    public class MetadataHelper : BaseMetadataHelper
+    public class MetadataExternalSourceService : BaseExternalSourceService, IExternalSourceService
     {
         private readonly Lazy<Type> _csharpMetadataAsSourceService;
-        private Dictionary<string, Document> _metadataDocumentCache = new Dictionary<string, Document>();
         private const string CSharpMetadataAsSourceService = "Microsoft.CodeAnalysis.CSharp.MetadataAsSource.CSharpMetadataAsSourceService";
 
-        public MetadataHelper(IAssemblyLoader loader) : base(loader)
+        public MetadataExternalSourceService(IAssemblyLoader loader) : base(loader)
         {
             _csharpMetadataAsSourceService = _csharpFeatureAssembly.LazyGetType(CSharpMetadataAsSourceService);
         }
 
-        public Document FindDocumentInMetadataCache(string fileName)
-        {
-            if (_metadataDocumentCache.TryGetValue(fileName, out var metadataDocument))
-            {
-                return metadataDocument;
-            }
-
-            return null;
-        }
-
-        public string GetSymbolName(ISymbol symbol)
-        {
-            var topLevelSymbol = symbol.GetTopLevelContainingNamedType();
-            return GetTypeDisplayString(topLevelSymbol);
-        }
-
-        public async Task<(Document metadataDocument, string documentPath)> GetAndAddDocumentFromMetadata(Project project, ISymbol symbol, CancellationToken cancellationToken = new CancellationToken())
+        public async Task<(Document metadataDocument, string documentPath)> GetAndAddExternalSymbolDocument(Project project, ISymbol symbol, CancellationToken cancellationToken = new CancellationToken())
         {
             var fileName = GetFilePathForSymbol(project, symbol);
 
@@ -64,7 +47,7 @@ namespace OmniSharp.Roslyn
                 metadataProject = project;
             }
 
-            if (!_metadataDocumentCache.TryGetValue(fileName, out var metadataDocument))
+            if (!_cache.TryGetValue(fileName, out var metadataDocument))
             {
                 var topLevelSymbol = symbol.GetTopLevelContainingNamedType();
 
@@ -75,7 +58,7 @@ namespace OmniSharp.Roslyn
                 var documentTask = method.Invoke<Task<Document>>(service, new object[] { temporaryDocument, await metadataProject.GetCompilationAsync(), topLevelSymbol, cancellationToken });
                 metadataDocument = await documentTask;
 
-                _metadataDocumentCache[fileName] = metadataDocument;
+                _cache[fileName] = metadataDocument;
             }
 
             return (metadataDocument, fileName);

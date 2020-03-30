@@ -15,21 +15,20 @@ namespace OmniSharp.Roslyn.CSharp.Services.Decompilation
 {
     // due to dependency on Microsoft.CodeAnalysis.Editor.CSharp
     // this class supports only net472
-    public class DecompilationHelper : BaseMetadataHelper
+    public class DecompilationExternalSourceService : BaseExternalSourceService, IExternalSourceService
     {
         private const string CSharpDecompiledSourceService = "Microsoft.CodeAnalysis.Editor.CSharp.DecompiledSource.CSharpDecompiledSourceService";
         private const string DecompiledKey = "$Decompiled$";
         private readonly Lazy<Assembly> _editorFeaturesAssembly;
         private readonly Lazy<Type> _csharpDecompiledSourceService;
-        private Dictionary<string, Document> _decompiledDocumentCache = new Dictionary<string, Document>();
 
-        public DecompilationHelper(IAssemblyLoader loader) : base(loader)
+        public DecompilationExternalSourceService(IAssemblyLoader loader) : base(loader)
         {
             _editorFeaturesAssembly = _loader.LazyLoad(Configuration.RoslynEditorFeatures);
             _csharpDecompiledSourceService = _editorFeaturesAssembly.LazyGetType(CSharpDecompiledSourceService);
         }
 
-        public async Task<(Document metadataDocument, string documentPath)> GetAndAddDecompiledDocument(Project project, ISymbol symbol, CancellationToken cancellationToken = new CancellationToken())
+        public async Task<(Document metadataDocument, string documentPath)> GetAndAddExternalSymbolDocument(Project project, ISymbol symbol, CancellationToken cancellationToken)
         {
             var fileName = GetFilePathForSymbol(project, symbol);
 
@@ -53,7 +52,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Decompilation
                 decompilationProject = project;
             }
 
-            if (!_decompiledDocumentCache.TryGetValue(fileName, out var metadataDocument))
+            if (!_cache.TryGetValue(fileName, out var metadataDocument))
             {
                 var topLevelSymbol = symbol.GetTopLevelContainingNamedType();
 
@@ -64,7 +63,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Decompilation
                 var documentTask = method.Invoke<Task<Document>>(service, new object[] { temporaryDocument, await decompilationProject.GetCompilationAsync(), topLevelSymbol, cancellationToken });
                 metadataDocument = await documentTask;
 
-                _decompiledDocumentCache[fileName] = metadataDocument;
+                _cache[fileName] = metadataDocument;
             }
 
             return (metadataDocument, fileName);

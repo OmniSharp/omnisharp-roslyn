@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -12,7 +13,7 @@ using OmniSharp.Utilities;
 
 namespace OmniSharp.Roslyn
 {
-    public abstract class BaseMetadataHelper
+    public abstract class BaseExternalSourceService
     {
         protected readonly IAssemblyLoader _loader;
         protected readonly Lazy<Assembly> _featureAssembly;
@@ -21,6 +22,7 @@ namespace OmniSharp.Roslyn
         protected readonly Lazy<Type> _symbolKey;
         protected readonly Lazy<Type> _metadataAsSourceHelper;
         protected readonly Lazy<MethodInfo> _getLocationInGeneratedSourceAsync;
+        protected Dictionary<string, Document> _cache = new Dictionary<string, Document>();
 
         protected const string SymbolKey = "Microsoft.CodeAnalysis.SymbolKey";
         protected const string MetadataAsSourceHelpers = "Microsoft.CodeAnalysis.MetadataAsSource.MetadataAsSourceHelpers";
@@ -29,7 +31,7 @@ namespace OmniSharp.Roslyn
         protected const string Create = "Create";
         protected const string MetadataKey = "$Metadata$";
 
-        protected BaseMetadataHelper(IAssemblyLoader loader)
+        protected BaseExternalSourceService(IAssemblyLoader loader)
         {
             _loader = loader;
             _featureAssembly = _loader.LazyLoad(Configuration.RoslynFeatures);
@@ -41,7 +43,24 @@ namespace OmniSharp.Roslyn
             _getLocationInGeneratedSourceAsync = _metadataAsSourceHelper.LazyGetMethod(GetLocationInGeneratedSourceAsync);
         }
 
-        public async Task<Location> GetSymbolLocationFromMetadata(ISymbol symbol, Document metadataDocument, CancellationToken cancellationToken = new CancellationToken())
+        public Document FindDocumentInCache(string fileName)
+        {
+            if (_cache.TryGetValue(fileName, out var metadataDocument))
+            {
+                return metadataDocument;
+            }
+
+            return null;
+        }
+
+        public string GetSymbolName(ISymbol symbol)
+        {
+            var topLevelSymbol = symbol.GetTopLevelContainingNamedType();
+            return GetTypeDisplayString(topLevelSymbol);
+        }
+
+
+        public async Task<Location> GetExternalSymbolLocation(ISymbol symbol, Document metadataDocument, CancellationToken cancellationToken = new CancellationToken())
         {
             var symbolKeyCreateMethod = _symbolKey.GetMethod(Create, BindingFlags.Static | BindingFlags.NonPublic);
             var symboldId = symbolKeyCreateMethod.InvokeStatic(new object[] { symbol, cancellationToken });

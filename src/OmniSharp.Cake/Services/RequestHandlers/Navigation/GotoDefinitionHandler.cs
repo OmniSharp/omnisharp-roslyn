@@ -20,12 +20,12 @@ namespace OmniSharp.Cake.Services.RequestHandlers.Navigation
     {
         private const int MethodLineOffset = 3;
         private const int PropertyLineOffset = 7;
-        private readonly MetadataHelper _metadataHelper;
+        private readonly MetadataExternalSourceService _metadataHelper;
 
         [ImportingConstructor]
         public GotoDefinitionHandler(
             OmniSharpWorkspace workspace,
-            MetadataHelper metadataHelper)
+            MetadataExternalSourceService metadataHelper)
             : base(workspace)
         {
             _metadataHelper = metadataHelper ?? throw new ArgumentNullException(nameof(metadataHelper));
@@ -109,14 +109,14 @@ namespace OmniSharp.Cake.Services.RequestHandlers.Navigation
                 return response;
             }
             var cancellationSource = new CancellationTokenSource(TimeSpan.FromMilliseconds(request.Timeout));
-            var (metadataDocument, _) = await _metadataHelper.GetAndAddDocumentFromMetadata(document.Project, symbol, cancellationSource.Token);
+            var (metadataDocument, _) = await _metadataHelper.GetAndAddExternalSymbolDocument(document.Project, symbol, cancellationSource.Token);
             if (metadataDocument == null)
             {
                 return response;
             }
 
             cancellationSource = new CancellationTokenSource(TimeSpan.FromMilliseconds(request.Timeout));
-            var metadataLocation = await _metadataHelper.GetSymbolLocationFromMetadata(symbol, metadataDocument, cancellationSource.Token);
+            var metadataLocation = await _metadataHelper.GetExternalSymbolLocation(symbol, metadataDocument, cancellationSource.Token);
             var lineSpan = metadataLocation.GetMappedLineSpan();
 
             response = new GotoDefinitionResponse

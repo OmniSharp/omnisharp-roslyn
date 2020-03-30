@@ -14,22 +14,22 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
     [OmniSharpHandler(OmniSharpEndpoints.Metadata, LanguageNames.CSharp)]
     public class MetadataService : IRequestHandler<MetadataRequest, MetadataResponse>
     {
-        private readonly MetadataHelper _metadataHelper;
-        private readonly DecompilationHelper _decompilationHelper;
         private readonly OmniSharpOptions _omniSharpOptions;
         private readonly OmniSharpWorkspace _workspace;
+        private readonly ExternalSourceServiceFactory _externalSourceServiceFactory;
 
         [ImportingConstructor]
-        public MetadataService(OmniSharpWorkspace workspace, MetadataHelper metadataHelper, DecompilationHelper decompilationHelper, OmniSharpOptions omniSharpOptions)
+        public MetadataService(OmniSharpWorkspace workspace, ExternalSourceServiceFactory externalSourceServiceFactory, OmniSharpOptions omniSharpOptions)
         {
             _workspace = workspace;
-            _metadataHelper = metadataHelper;
-            _decompilationHelper = decompilationHelper;
+            _externalSourceServiceFactory = externalSourceServiceFactory;
             _omniSharpOptions = omniSharpOptions;
         }
 
         public async Task<MetadataResponse> Handle(MetadataRequest request)
         {
+            var externalSourceService = _externalSourceServiceFactory.Create(_omniSharpOptions);
+
             var response = new MetadataResponse();
             foreach (var project in _workspace.CurrentSolution.Projects)
             {
@@ -37,19 +37,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
                 var symbol = compilation.GetTypeByMetadataName(request.TypeName);
                 if (symbol != null && symbol.ContainingAssembly.Name == request.AssemblyName)
                 {
-                    var cancellationSource = new CancellationTokenSource(TimeSpan.FromMilliseconds(request.Timeout));
-
-                    // we only support decompilation when running on net472
-                    // due to dependency on Microsoft.CodeAnalysis.Editor.CSharp
-#if NET472
-                    var enableDecompilationSupport = _omniSharpOptions.RoslynExtensionsOptions.EnableDecompilationSupport;
-#else
-                    var enableDecompilationSupport = false;
-#endif
-
-                    var (metadataDocument, documentPath) = enableDecompilationSupport ?
-                        await _decompilationHelper.GetAndAddDecompiledDocument(project, symbol, cancellationSource.Token) :
-                        await _metadataHelper.GetAndAddDocumentFromMetadata(project, symbol, cancellationSource.Token);
+                    var cancellationToken = _externalSourceServiceFactory.CreateCancellationToken(_omniSharpOptions, request.Timeout);
+                    var (metadataDocument, documentPath) = await externalSourceService.GetAndAddExternalSymbolDocument(project, symbol, cancellationToken);
 
                     if (metadataDocument != null)
                     {
