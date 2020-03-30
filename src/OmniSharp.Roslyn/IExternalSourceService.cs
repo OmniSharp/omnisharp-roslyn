@@ -6,8 +6,8 @@ namespace OmniSharp.Roslyn
 {
     public interface IExternalSourceService
     {
-        Task<(Document metadataDocument, string documentPath)> GetAndAddExternalSymbolDocument(Project project, ISymbol symbol, CancellationToken cancellationToken);
+        Task<(Document document, string documentPath)> GetAndAddExternalSymbolDocument(Project project, ISymbol symbol, CancellationToken cancellationToken);
         Document FindDocumentInCache(string fileName);
-        Task<Location> GetExternalSymbolLocation(ISymbol symbol, Document metadataDocument, CancellationToken cancellationToken);
+        Task<Location> GetExternalSymbolLocation(ISymbol symbol, Document document, CancellationToken cancellationToken);
     }
 }

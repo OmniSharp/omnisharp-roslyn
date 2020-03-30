@@ -28,7 +28,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Decompilation
             _csharpDecompiledSourceService = _editorFeaturesAssembly.LazyGetType(CSharpDecompiledSourceService);
         }
 
-        public async Task<(Document metadataDocument, string documentPath)> GetAndAddExternalSymbolDocument(Project project, ISymbol symbol, CancellationToken cancellationToken)
+        public async Task<(Document document, string documentPath)> GetAndAddExternalSymbolDocument(Project project, ISymbol symbol, CancellationToken cancellationToken)
         {
             var fileName = symbol.GetFilePathForExternalSymbol(project);
 
@@ -52,7 +52,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Decompilation
                 decompilationProject = project;
             }
 
-            if (!_cache.TryGetValue(fileName, out var metadataDocument))
+            if (!_cache.TryGetValue(fileName, out var document))
             {
                 var topLevelSymbol = symbol.GetTopLevelContainingNamedType();
 
@@ -61,12 +61,12 @@ namespace OmniSharp.Roslyn.CSharp.Services.Decompilation
 
                 var service = Activator.CreateInstance(_csharpDecompiledSourceService.Value, new object[] { temporaryDocument.Project.LanguageServices });
                 var documentTask = method.Invoke<Task<Document>>(service, new object[] { temporaryDocument, await decompilationProject.GetCompilationAsync(), topLevelSymbol, cancellationToken });
-                metadataDocument = await documentTask;
+                document = await documentTask;
 
-                _cache[fileName] = metadataDocument;
+                _cache.TryAdd(fileName, document);
             }
 
-            return (metadataDocument, fileName);
+            return (document, fileName);
         }
     }
 }
