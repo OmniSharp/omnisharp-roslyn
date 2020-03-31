@@ -23,9 +23,4 @@
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" />
         <PackageReference Include="Microsoft.VisualStudio.CodingConventions" />
     </ItemGroup>
-
-    <ItemGroup Condition=" '$(TargetFramework)' == 'net472'">
-        <PackageReference Include="Microsoft.CodeAnalysis.CSharp.EditorFeatures" />
-    </ItemGroup>
-
 </Project>

@@ -31,14 +31,8 @@ namespace OmniSharp.Roslyn.CSharp.Services
 
         public IExternalSourceService Create(OmniSharpOptions omniSharpOptions, HostLanguageServices hostLanguageServices)
         {
-            // we only support decompilation when running on net472
-            // due to dependency on Microsoft.CodeAnalysis.Editor.CSharp
-#if NET472
             var enableDecompilationSupport = omniSharpOptions.RoslynExtensionsOptions.EnableDecompilationSupport;
-#else
-            var enableDecompilationSupport = false;
-#endif
-            // not thread safe!
+
             if (enableDecompilationSupport)
             {
                 if (_decompilationExternalSourceService == null)
@@ -71,12 +65,7 @@ namespace OmniSharp.Roslyn.CSharp.Services
 
         public CancellationToken CreateCancellationToken(OmniSharpOptions omniSharpOptions, int timeout)
         {
-#if NET472
             var enableDecompilationSupport = omniSharpOptions.RoslynExtensionsOptions.EnableDecompilationSupport;
-#else
-            var enableDecompilationSupport = false;
-#endif
-
             // since decompilation is slower, use a larger cancellation time (default is 2s per request)
             var cancellationTimeout = enableDecompilationSupport
                 ? timeout <= 10000 ? 10000 : timeout // minimum 10s for decompilation
