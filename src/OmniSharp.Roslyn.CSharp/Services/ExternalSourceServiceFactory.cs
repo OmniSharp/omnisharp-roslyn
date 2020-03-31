@@ -1,5 +1,8 @@
-﻿using OmniSharp.Options;
+﻿using Microsoft.CodeAnalysis.Host;
+using Microsoft.Extensions.Logging;
+using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Services.Decompilation;
+using OmniSharp.Services;
 using System;
 using System.Collections.Generic;
 using System.Composition;
@@ -13,17 +16,19 @@ namespace OmniSharp.Roslyn.CSharp.Services
     [Export(typeof(ExternalSourceServiceFactory)), Shared]
     public class ExternalSourceServiceFactory
     {
-        private readonly MetadataExternalSourceService _metadataExternalSourceService;
-        private readonly DecompilationExternalSourceService _decompilationExternalSourceService;
+        private MetadataExternalSourceService _metadataExternalSourceService;
+        private DecompilationExternalSourceService _decompilationExternalSourceService;
+        private readonly IAssemblyLoader _assemblyLoader;
+        private readonly ILoggerFactory _loggerFactory;
 
         [ImportingConstructor]
-        public ExternalSourceServiceFactory(MetadataExternalSourceService metadataExternalSourceService, DecompilationExternalSourceService decompilationExternalSourceService)
+        public ExternalSourceServiceFactory(IAssemblyLoader assemblyLoader, ILoggerFactory loggerFactory)
         {
-            _metadataExternalSourceService = metadataExternalSourceService;
-            _decompilationExternalSourceService = decompilationExternalSourceService;
+            _assemblyLoader = assemblyLoader;
+            _loggerFactory = loggerFactory;
         }
 
-        public IExternalSourceService Create(OmniSharpOptions omniSharpOptions)
+        public IExternalSourceService Create(OmniSharpOptions omniSharpOptions, HostLanguageServices hostLanguageServices)
         {
             // we only support decompilation when running on net472
             // due to dependency on Microsoft.CodeAnalysis.Editor.CSharp
@@ -32,10 +37,20 @@ namespace OmniSharp.Roslyn.CSharp.Services
 #else
             var enableDecompilationSupport = false;
 #endif
-
+            // not thread safe!
             if (enableDecompilationSupport)
             {
+                if (_decompilationExternalSourceService == null)
+                {
+                    _decompilationExternalSourceService = new DecompilationExternalSourceService(_assemblyLoader, _loggerFactory, hostLanguageServices);
+                }
+
                 return _decompilationExternalSourceService;
+            }
+
+            if (_metadataExternalSourceService == null)
+            {
+                _metadataExternalSourceService = new MetadataExternalSourceService(_assemblyLoader);
             }
 
             return _metadataExternalSourceService;

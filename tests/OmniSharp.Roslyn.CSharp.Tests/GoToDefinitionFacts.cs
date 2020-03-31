@@ -8,6 +8,7 @@ using OmniSharp.Models.Metadata;
 using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
+using System.Collections.Generic;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
@@ -224,6 +225,35 @@ class Bar {
             await TestGoToMetadataAsync(testFile,
                 expectedAssemblyName: AssemblyHelpers.CorLibName,
                 expectedTypeName: "System.Guid");
+        }
+
+        [Theory]
+        [InlineData("bar.cs")]
+        //[InlineData("bar.csx")]
+        public async Task ReturnsDecompiledDefinition_WhenSymbolIsStaticMethod(string filename)
+        {
+            var testFile = new TestFile(filename, @"
+using System;
+class Bar {
+    public void Baz() {
+        Guid.NewG$$uid();
+    }
+}");
+            using var host = CreateOmniSharpHost(new[] { testFile }, new Dictionary<string, string>
+            {
+                ["RoslynExtensionsOptions:EnableDecompilationSupport"] = "true"
+            }, TestAssets.Instance.TestFilesFolder);
+
+            var response = await GetResponseAsync(new[] { testFile }, wantMetadata: true);
+
+            Assert.NotNull(response.MetadataSource);
+            Assert.False(response.IsEmpty);
+            Assert.Equal(AssemblyHelpers.CorLibName, response.MetadataSource.AssemblyName);
+            Assert.Equal("System.Guid", response.MetadataSource.TypeName);
+
+            // We probably shouldn't hard code metadata locations (they could change randomly)
+            //Assert.NotEqual(0, response.Line);
+            //Assert.NotEqual(0, response.Column);
         }
 
         [Theory]

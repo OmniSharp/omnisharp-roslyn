@@ -1,9 +1,12 @@
 ﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Host;
+using Microsoft.Extensions.Logging;
 using OmniSharp.Extensions;
 using OmniSharp.Services;
 using OmniSharp.Utilities;
 using System;
 using System.Collections.Generic;
+using System.Composition;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -15,17 +18,18 @@ namespace OmniSharp.Roslyn.CSharp.Services.Decompilation
 {
     // due to dependency on Microsoft.CodeAnalysis.Editor.CSharp
     // this class supports only net472
+    [Export(typeof(DecompilationExternalSourceService)), Shared]
     public class DecompilationExternalSourceService : BaseExternalSourceService, IExternalSourceService
     {
-        private const string CSharpDecompiledSourceService = "Microsoft.CodeAnalysis.Editor.CSharp.DecompiledSource.CSharpDecompiledSourceService";
         private const string DecompiledKey = "$Decompiled$";
-        private readonly Lazy<Assembly> _editorFeaturesAssembly;
-        private readonly Lazy<Type> _csharpDecompiledSourceService;
+        private readonly ILoggerFactory _loggerFactory;
+        private readonly OmniSharpCSharpDecompiledSourceService _service;
 
-        public DecompilationExternalSourceService(IAssemblyLoader loader) : base(loader)
+        [ImportingConstructor]
+        public DecompilationExternalSourceService(IAssemblyLoader loader, ILoggerFactory loggerFactory, HostLanguageServices hostLanguageServices) : base(loader)
         {
-            _editorFeaturesAssembly = _loader.LazyLoad(Configuration.RoslynEditorFeatures);
-            _csharpDecompiledSourceService = _editorFeaturesAssembly.LazyGetType(CSharpDecompiledSourceService);
+            _loggerFactory = loggerFactory;
+            _service = new OmniSharpCSharpDecompiledSourceService(hostLanguageServices, _loader, _loggerFactory);
         }
 
         public async Task<(Document document, string documentPath)> GetAndAddExternalSymbolDocument(Project project, ISymbol symbol, CancellationToken cancellationToken)
@@ -55,13 +59,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Decompilation
             if (!_cache.TryGetValue(fileName, out var document))
             {
                 var topLevelSymbol = symbol.GetTopLevelContainingNamedType();
-
                 var temporaryDocument = decompilationProject.AddDocument(fileName, string.Empty);
-                var method = _csharpDecompiledSourceService.GetMethod(AddSourceToAsync);
 
-                var service = Activator.CreateInstance(_csharpDecompiledSourceService.Value, new object[] { temporaryDocument.Project.LanguageServices });
-                var documentTask = method.Invoke<Task<Document>>(service, new object[] { temporaryDocument, await decompilationProject.GetCompilationAsync(), topLevelSymbol, cancellationToken });
-                document = await documentTask;
+                var compilation = await decompilationProject.GetCompilationAsync();
+                document = await _service.AddSourceToAsync(temporaryDocument, compilation, topLevelSymbol, cancellationToken);
 
                 _cache.TryAdd(fileName, document);
             }

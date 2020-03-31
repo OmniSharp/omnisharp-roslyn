@@ -34,18 +34,4 @@ namespace OmniSharp.Roslyn.CSharp.Services
             Assemblies = builder.ToImmutable();
         }
     }
-
-    //[ExportLanguageServiceFactory(typeof(IDecompiledSourceService), LanguageNames.CSharp), Shared]
-    //public class OmniSharpCSharpDecompiledSourceServiceFactory : ILanguageServiceFactory
-    //{
-    //    [ImportingConstructor]
-    //    public OmniSharpCSharpDecompiledSourceServiceFactory()
-    //    {
-    //    }
-
-    //    public ILanguageService CreateLanguageService(HostLanguageServices provider)
-    //    {
-    //        return new CSharpDecompiledSourceService(provider);
-    //    }
-    //}
 }
