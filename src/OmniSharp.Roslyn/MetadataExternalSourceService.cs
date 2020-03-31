@@ -24,7 +24,7 @@ namespace OmniSharp.Roslyn
             _csharpMetadataAsSourceService = _csharpFeatureAssembly.LazyGetType(CSharpMetadataAsSourceService);
         }
 
-        public async Task<(Document document, string documentPath)> GetAndAddExternalSymbolDocument(Project project, ISymbol symbol, CancellationToken cancellationToken = new CancellationToken())
+        public async Task<(Document document, string documentPath)> GetAndAddExternalSymbolDocument(Project project, ISymbol symbol, CancellationToken cancellationToken)
         {
             var fileName = symbol.GetFilePathForExternalSymbol(project);
 

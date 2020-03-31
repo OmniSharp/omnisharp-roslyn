@@ -54,8 +54,7 @@ namespace OmniSharp
             var config = new ContainerConfiguration();
 
             var fileSystemWatcher = new ManualFileSystemWatcher();
-            //var metadataExternalSourceService = new MetadataExternalSourceService(assemblyLoader);
-            //var decompilationExternalSourceService = new DecompilationExternalSourceService(assemblyLoader, loggerFactory);
+            var metadataExternalSourceService = new MetadataExternalSourceService(assemblyLoader);
 
             var logger = loggerFactory.CreateLogger<CompositionHostBuilder>();
 
@@ -82,8 +81,7 @@ namespace OmniSharp
                 .WithProvider(MefValueProvider.From(assemblyLoader))
                 .WithProvider(MefValueProvider.From(analyzerAssemblyLoader))
                 .WithProvider(MefValueProvider.From(dotNetCliService))
-                //.WithProvider(MefValueProvider.From(metadataExternalSourceService))
-                //.WithProvider(MefValueProvider.From(decompilationExternalSourceService))
+                .WithProvider(MefValueProvider.From(metadataExternalSourceService))
                 .WithProvider(MefValueProvider.From(msbuildLocator))
                 .WithProvider(MefValueProvider.From(eventEmitter));
 

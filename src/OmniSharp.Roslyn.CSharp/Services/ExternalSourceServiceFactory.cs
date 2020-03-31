@@ -20,6 +20,7 @@ namespace OmniSharp.Roslyn.CSharp.Services
         private DecompilationExternalSourceService _decompilationExternalSourceService;
         private readonly IAssemblyLoader _assemblyLoader;
         private readonly ILoggerFactory _loggerFactory;
+        private static object padlock = new object();
 
         [ImportingConstructor]
         public ExternalSourceServiceFactory(IAssemblyLoader assemblyLoader, ILoggerFactory loggerFactory)
@@ -42,7 +43,13 @@ namespace OmniSharp.Roslyn.CSharp.Services
             {
                 if (_decompilationExternalSourceService == null)
                 {
-                    _decompilationExternalSourceService = new DecompilationExternalSourceService(_assemblyLoader, _loggerFactory, hostLanguageServices);
+                    lock (padlock)
+                    {
+                        if (_decompilationExternalSourceService == null)
+                        {
+                            _decompilationExternalSourceService = new DecompilationExternalSourceService(_assemblyLoader, _loggerFactory, hostLanguageServices);
+                        }
+                    }
                 }
 
                 return _decompilationExternalSourceService;
@@ -50,7 +57,13 @@ namespace OmniSharp.Roslyn.CSharp.Services
 
             if (_metadataExternalSourceService == null)
             {
-                _metadataExternalSourceService = new MetadataExternalSourceService(_assemblyLoader);
+                lock (padlock)
+                {
+                    if (_metadataExternalSourceService == null)
+                    {
+                        _metadataExternalSourceService = new MetadataExternalSourceService(_assemblyLoader);
+                    }
+                }
             }
 
             return _metadataExternalSourceService;

@@ -18,14 +18,12 @@ namespace OmniSharp.Roslyn.CSharp.Services.Decompilation
 {
     // due to dependency on Microsoft.CodeAnalysis.Editor.CSharp
     // this class supports only net472
-    [Export(typeof(DecompilationExternalSourceService)), Shared]
     public class DecompilationExternalSourceService : BaseExternalSourceService, IExternalSourceService
     {
         private const string DecompiledKey = "$Decompiled$";
         private readonly ILoggerFactory _loggerFactory;
         private readonly OmniSharpCSharpDecompiledSourceService _service;
 
-        [ImportingConstructor]
         public DecompilationExternalSourceService(IAssemblyLoader loader, ILoggerFactory loggerFactory, HostLanguageServices hostLanguageServices) : base(loader)
         {
             _loggerFactory = loggerFactory;
