@@ -229,7 +229,7 @@ class Bar {
 
         [Theory]
         [InlineData("bar.cs")]
-        //[InlineData("bar.csx")]
+        [InlineData("bar.csx")]
         public async Task ReturnsDecompiledDefinition_WhenSymbolIsStaticMethod(string filename)
         {
             var testFile = new TestFile(filename, @"
@@ -239,21 +239,10 @@ class Bar {
         Guid.NewG$$uid();
     }
 }");
-            using var host = CreateOmniSharpHost(new[] { testFile }, new Dictionary<string, string>
-            {
-                ["RoslynExtensionsOptions:EnableDecompilationSupport"] = "true"
-            }, TestAssets.Instance.TestFilesFolder);
 
-            var response = await GetResponseAsync(new[] { testFile }, wantMetadata: true);
-
-            Assert.NotNull(response.MetadataSource);
-            Assert.False(response.IsEmpty);
-            Assert.Equal(AssemblyHelpers.CorLibName, response.MetadataSource.AssemblyName);
-            Assert.Equal("System.Guid", response.MetadataSource.TypeName);
-
-            // We probably shouldn't hard code metadata locations (they could change randomly)
-            //Assert.NotEqual(0, response.Line);
-            //Assert.NotEqual(0, response.Column);
+            await TestDecompilationAsync(testFile,
+                expectedAssemblyName: AssemblyHelpers.CorLibName,
+                expectedTypeName: "System.Guid");
         }
 
         [Theory]
@@ -271,6 +260,25 @@ class Bar {
 }");
 
             await TestGoToMetadataAsync(testFile,
+                expectedAssemblyName: AssemblyHelpers.CorLibName,
+                expectedTypeName: "System.Collections.Generic.List`1");
+        }
+
+        [Theory]
+        [InlineData("bar.cs")]
+        [InlineData("bar.csx")]
+        public async Task ReturnsDecompiledDefinition_WhenSymbolIsInstanceMethod(string filename)
+        {
+            var testFile = new TestFile(filename, @"
+using System.Collections.Generic;
+class Bar {
+    public void Baz() {
+        var foo = new List<string>();
+        foo.ToAr$$ray();
+    }
+}");
+
+            await TestDecompilationAsync(testFile,
                 expectedAssemblyName: AssemblyHelpers.CorLibName,
                 expectedTypeName: "System.Collections.Generic.List`1");
         }
@@ -297,6 +305,25 @@ class Bar {
         [Theory]
         [InlineData("bar.cs")]
         [InlineData("bar.csx")]
+        public async Task ReturnsDecompiledDefinition_WhenSymbolIsGenericType(string filename)
+        {
+            var testFile = new TestFile(filename, @"
+using System.Collections.Generic;
+class Bar {
+    public void Baz() {
+        var foo = new Li$$st<string>();
+        foo.ToArray();
+    }
+}");
+
+            await TestDecompilationAsync(testFile,
+                expectedAssemblyName: AssemblyHelpers.CorLibName,
+                expectedTypeName: "System.Collections.Generic.List`1");
+        }
+
+        [Theory]
+        [InlineData("bar.cs")]
+        [InlineData("bar.csx")]
         public async Task ReturnsDefinitionInMetadata_WhenSymbolIsType(string filename)
         {
             var testFile = new TestFile(filename, @"
@@ -308,6 +335,24 @@ class Bar {
 }");
 
             await TestGoToMetadataAsync(testFile,
+                expectedAssemblyName: AssemblyHelpers.CorLibName,
+                expectedTypeName: "System.String");
+        }
+
+        [Theory]
+        [InlineData("bar.cs")]
+        [InlineData("bar.csx")]
+        public async Task ReturnsDecompiledDefinition_WhenSymbolIsType(string filename)
+        {
+            var testFile = new TestFile(filename, @"
+using System;
+class Bar {
+    public void Baz() {
+        var str = Stri$$ng.Empty;
+    }
+}");
+
+            await TestDecompilationAsync(testFile,
                 expectedAssemblyName: AssemblyHelpers.CorLibName,
                 expectedTypeName: "System.String");
         }
@@ -410,6 +455,21 @@ class Bar {
                 Assert.Equal(0, response.Line);
                 Assert.Equal(0, response.Column);
             }
+        }
+
+        private async Task TestDecompilationAsync(TestFile testFile, string expectedAssemblyName, string expectedTypeName)
+        {
+            using var host = CreateOmniSharpHost(new[] { testFile }, new Dictionary<string, string>
+            {
+                ["RoslynExtensionsOptions:EnableDecompilationSupport"] = "true"
+            }, TestAssets.Instance.TestFilesFolder);
+
+            var response = await GetResponseAsync(new[] { testFile }, wantMetadata: true);
+
+            Assert.NotNull(response.MetadataSource);
+            Assert.False(response.IsEmpty);
+            Assert.Equal(expectedAssemblyName, response.MetadataSource.AssemblyName);
+            Assert.Equal(expectedTypeName, response.MetadataSource.TypeName);
         }
 
         private async Task TestGoToMetadataAsync(TestFile testFile, string expectedAssemblyName, string expectedTypeName)
