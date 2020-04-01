@@ -71,7 +71,7 @@ namespace OmniSharp.Roslyn.CSharp.Services
                 ? timeout <= 10000 ? 10000 : timeout // minimum 10s for decompilation
                 : timeout; // request defined for metadata
 
-            return new CancellationTokenSource(timeout).Token;
+            return new CancellationTokenSource(cancellationTimeout).Token;
         }
     }
 }
