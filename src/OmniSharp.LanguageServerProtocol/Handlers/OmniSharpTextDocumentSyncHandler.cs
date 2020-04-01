@@ -1,13 +1,11 @@
 using System;
 using System.Collections.Generic;
-using System.Composition;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using OmniSharp.Extensions.Embedded.MediatR;
+using MediatR;
 using OmniSharp.Extensions.JsonRpc;
 using OmniSharp.Extensions.LanguageServer.Protocol;
-using OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OmniSharp.Extensions.LanguageServer.Protocol.Server;
 using OmniSharp.Extensions.LanguageServer.Protocol.Server.Capabilities;
@@ -24,7 +22,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             RequestHandlers handlers,
             OmniSharpWorkspace workspace)
         {
-            foreach (var (selector, openHandler, closeHandler, bufferHandler) in handlers
+            foreach (var (selector, pm, openHandler, closeHandler, bufferHandler) in handlers
                 .OfType<
                     Mef.IRequestHandler<FileOpenRequest, FileOpenResponse>,
                     Mef.IRequestHandler<FileCloseRequest, FileCloseResponse>,

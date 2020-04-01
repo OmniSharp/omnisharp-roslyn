@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using OmniSharp.Extensions.JsonRpc;
-using OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities;
+using OmniSharp.Extensions.LanguageServer.Protocol;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OmniSharp.Extensions.LanguageServer.Protocol.Server;
 using OmniSharp.Models;
@@ -16,19 +16,19 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
     {
         public static IEnumerable<IJsonRpcHandler> Enumerate(RequestHandlers handlers)
         {
-            foreach (var (selector, handler) in handlers
+            foreach (var (selector, pm, handler) in handlers
                 .OfType<Mef.IRequestHandler<FindUsagesRequest, QuickFixResponse>>())
                 if (handler != null)
-                    yield return new OmniSharpReferencesHandler(handler, selector);
+                    yield return new OmniSharpReferencesHandler(handler, selector, pm);
         }
 
         private readonly Mef.IRequestHandler<FindUsagesRequest, QuickFixResponse> _findUsagesHandler;
 
-        public OmniSharpReferencesHandler(Mef.IRequestHandler<FindUsagesRequest, QuickFixResponse> findUsagesHandler, DocumentSelector documentSelector)
-            : base(new TextDocumentRegistrationOptions()
+        public OmniSharpReferencesHandler(Mef.IRequestHandler<FindUsagesRequest, QuickFixResponse> findUsagesHandler, DocumentSelector documentSelector, ProgressManager pm)
+            : base(new ReferenceRegistrationOptions()
             {
                 DocumentSelector = documentSelector
-            })
+            }, pm)
         {
             _findUsagesHandler = findUsagesHandler;
         }

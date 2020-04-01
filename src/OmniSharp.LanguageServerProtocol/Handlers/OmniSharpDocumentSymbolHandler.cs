@@ -4,10 +4,9 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using OmniSharp.Extensions.JsonRpc;
-using OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities;
+using OmniSharp.Extensions.LanguageServer.Protocol;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OmniSharp.Extensions.LanguageServer.Protocol.Server;
-using OmniSharp.Models.MembersTree;
 using OmniSharp.Models.V2.CodeStructure;
 
 namespace OmniSharp.LanguageServerProtocol.Handlers
@@ -16,10 +15,10 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
     {
         public static IEnumerable<IJsonRpcHandler> Enumerate(RequestHandlers handlers)
         {
-            foreach (var (selector, handler) in handlers
+            foreach (var (selector, pm, handler) in handlers
                 .OfType<Mef.IRequestHandler<CodeStructureRequest, CodeStructureResponse>>())
                 if (handler != null)
-                    yield return new OmniSharpDocumentSymbolHandler(handler, selector);
+                    yield return new OmniSharpDocumentSymbolHandler(handler, selector, pm);
         }
 
         private readonly Mef.IRequestHandler<CodeStructureRequest, CodeStructureResponse> _codeStructureHandler;
@@ -44,11 +43,11 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             { OmniSharp.Models.V2.SymbolKinds.Unknown, SymbolKind.Class },
         };
 
-        public OmniSharpDocumentSymbolHandler(Mef.IRequestHandler<CodeStructureRequest, CodeStructureResponse> codeStructureHandler, DocumentSelector documentSelector)
-            : base(new TextDocumentRegistrationOptions()
+        public OmniSharpDocumentSymbolHandler(Mef.IRequestHandler<CodeStructureRequest, CodeStructureResponse> codeStructureHandler, DocumentSelector documentSelector, ProgressManager pm)
+            : base(new DocumentSymbolRegistrationOptions()
             {
                 DocumentSelector = documentSelector
-            })
+            }, pm)
         {
             _codeStructureHandler = codeStructureHandler;
         }
@@ -62,7 +61,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
 
             var omnisharpResponse = await _codeStructureHandler.Handle(omnisharpRequest);
 
-            return omnisharpResponse.Elements?.Select(ToDocumentSymbolInformationOrDocumentSymbol).ToArray() ??
+            return omnisharpResponse?.Elements?.Select(ToDocumentSymbolInformationOrDocumentSymbol).ToArray() ??
                 Array.Empty<SymbolInformationOrDocumentSymbol>();
         }
 

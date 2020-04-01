@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using OmniSharp.Extensions.JsonRpc;
 using OmniSharp.Extensions.LanguageServer.Protocol;
-using OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OmniSharp.Extensions.LanguageServer.Protocol.Server;
 using OmniSharp.Models;
@@ -19,12 +18,12 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
     {
         public static IEnumerable<IJsonRpcHandler> Enumerate(RequestHandlers handlers)
         {
-            foreach (var (selector, membersAsTreeHandler, findUsagesHandler) in handlers
+            foreach (var (selector, pm, membersAsTreeHandler, findUsagesHandler) in handlers
                 .OfType<
                     Mef.IRequestHandler<MembersTreeRequest, FileMemberTree>,
                     Mef.IRequestHandler<FindUsagesRequest, QuickFixResponse>>())
             {
-                yield return new OmniSharpCodeLensHandler(membersAsTreeHandler, findUsagesHandler, selector);
+                yield return new OmniSharpCodeLensHandler(membersAsTreeHandler, findUsagesHandler, selector, pm);
             }
         }
 
@@ -34,12 +33,13 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
         public OmniSharpCodeLensHandler(
             Mef.IRequestHandler<MembersTreeRequest, FileMemberTree> membersAsTreeHandler,
             Mef.IRequestHandler<FindUsagesRequest, QuickFixResponse> findUsagesHandler,
-            DocumentSelector documentSelector)
+            DocumentSelector documentSelector,
+            ProgressManager progressManager)
             : base(new CodeLensRegistrationOptions()
             {
                 DocumentSelector = documentSelector,
                 ResolveProvider = true
-            })
+            }, progressManager)
         {
             _membersAsTreeHandler = membersAsTreeHandler;
             _findUsagesHandler = findUsagesHandler;

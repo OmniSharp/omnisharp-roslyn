@@ -27,7 +27,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
 
         public static IEnumerable<IJsonRpcHandler> Enumerate(RequestHandlers handlers)
         {
-            foreach (var (selector, handler) in handlers
+            foreach (var (selector, pm, handler) in handlers
                 .OfType<Mef.IRequestHandler<SignatureHelpRequest, SignatureHelpResponse>>())
                 if (handler != null)
                     yield return new OmniSharpSignatureHelpHandler(handler, selector);

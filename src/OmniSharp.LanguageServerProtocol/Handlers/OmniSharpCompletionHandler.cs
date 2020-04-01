@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using OmniSharp.Extensions.JsonRpc;
-using OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities;
+using OmniSharp.Extensions.LanguageServer.Protocol;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OmniSharp.Extensions.LanguageServer.Protocol.Server;
 using OmniSharp.Models.AutoComplete;
@@ -15,10 +15,10 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
         public static IEnumerable<IJsonRpcHandler> Enumerate(RequestHandlers handlers)
         {
 
-            foreach (var (selector, handler) in handlers
+            foreach (var (selector, pm, handler) in handlers
                 .OfType<Mef.IRequestHandler<AutoCompleteRequest, IEnumerable<AutoCompleteResponse>>>())
                 if (handler != null)
-                    yield return new OmniSharpCompletionHandler(handler, selector);
+                    yield return new OmniSharpCompletionHandler(handler, selector, pm);
         }
 
         private readonly Mef.IRequestHandler<AutoCompleteRequest, IEnumerable<AutoCompleteResponse>> _autoCompleteHandler;
@@ -63,14 +63,14 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             return CompletionItemKind.Property;
         }
 
-        public OmniSharpCompletionHandler(Mef.IRequestHandler<AutoCompleteRequest, IEnumerable<AutoCompleteResponse>> autoCompleteHandler, DocumentSelector documentSelector)
+        public OmniSharpCompletionHandler(Mef.IRequestHandler<AutoCompleteRequest, IEnumerable<AutoCompleteResponse>> autoCompleteHandler, DocumentSelector documentSelector, ProgressManager pm)
             : base(new CompletionRegistrationOptions()
             {
                 DocumentSelector = documentSelector,
                 // TODO: Come along and add a service for getting autocompletion details after the fact.
                 ResolveProvider = false,
                 TriggerCharacters = new[] { ".", },
-            })
+            }, pm)
         {
             _autoCompleteHandler = autoCompleteHandler;
         }

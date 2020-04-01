@@ -16,7 +16,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
     {
         public static IEnumerable<IJsonRpcHandler> Enumerate(RequestHandlers handlers)
         {
-            foreach (var (selector, handler) in handlers
+            foreach (var (selector, pm, handler) in handlers
                 .OfType<Mef.IRequestHandler<CodeFormatRequest, CodeFormatResponse>>())
                 if (handler != null)
                     yield return new OmniSharpDocumentFormattingHandler(handler, selector);
@@ -24,7 +24,8 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
 
         private readonly Mef.IRequestHandler<CodeFormatRequest, CodeFormatResponse> _codeFormatHandler;
 
-        public OmniSharpDocumentFormattingHandler(Mef.IRequestHandler<CodeFormatRequest, CodeFormatResponse> codeFormatHandler, DocumentSelector documentSelector) : base(new TextDocumentRegistrationOptions()
+        public OmniSharpDocumentFormattingHandler(Mef.IRequestHandler<CodeFormatRequest, CodeFormatResponse> codeFormatHandler, DocumentSelector documentSelector)
+        : base(new DocumentFormattingRegistrationOptions()
         {
             DocumentSelector = documentSelector,
         })

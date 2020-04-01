@@ -129,7 +129,8 @@ namespace OmniSharp.LanguageServerProtocol
             // This will mean that we will have a strategy to create handlers from the interface type
             _handlers = new RequestHandlers(
                 _compositionHost.GetExports<Lazy<IRequestHandler, OmniSharpRequestHandlerMetadata>>(),
-                documentSelectors
+                documentSelectors,
+                _options.ProgressManager
             );
 
             _logger.LogTrace("--- Handler Definitions ---");

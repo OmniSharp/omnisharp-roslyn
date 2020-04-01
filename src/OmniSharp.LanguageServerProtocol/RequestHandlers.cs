@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using OmniSharp.Extensions.LanguageServer.Protocol;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OmniSharp.Mef;
 
@@ -11,13 +12,16 @@ namespace OmniSharp.LanguageServerProtocol
     {
         private readonly IEnumerable<Lazy<IRequestHandler, OmniSharpRequestHandlerMetadata>> _requestHandlers;
         private readonly IEnumerable<(string language, DocumentSelector selector)> _documentSelectors;
+        private readonly ProgressManager _progressManager;
 
         public RequestHandlers(
             IEnumerable<Lazy<IRequestHandler, OmniSharpRequestHandlerMetadata>> requestHandlers,
-            IEnumerable<(string language, DocumentSelector selector)> documentSelectors)
+            IEnumerable<(string language, DocumentSelector selector)> documentSelectors,
+            ProgressManager progressManager)
         {
             _requestHandlers = requestHandlers;
             _documentSelectors = documentSelectors;
+            _progressManager = progressManager;
         }
 
         public IEnumerator<RequestHandlerCollection> GetEnumerator()
@@ -26,24 +30,26 @@ namespace OmniSharp.LanguageServerProtocol
                 .Select(documentSelector => new RequestHandlerCollection(
                     documentSelector.language,
                     _requestHandlers.Where(z => z.Metadata.Language == documentSelector.language).Select(z => z.Value),
-                    documentSelector.selector)
+                    documentSelector.selector,
+                    _progressManager)
                 )
                 .GetEnumerator();
         }
 
-        public IEnumerable<(DocumentSelector selector, T handler)> OfType<T>()
+        public IEnumerable<(DocumentSelector selector, ProgressManager pm, T handler)> OfType<T>()
             where T : IRequestHandler
         {
             foreach (var group in this)
             {
                 yield return (
                     group.DocumentSelector,
+                    group.ProgressManager,
                     group.OfType<T>().SingleOrDefault()
                 );
             }
         }
 
-        public IEnumerable<(DocumentSelector selector, T handler, T2 handler2)> OfType<T, T2>()
+        public IEnumerable<(DocumentSelector selector, ProgressManager pm, T handler, T2 handler2)> OfType<T, T2>()
             where T : IRequestHandler
             where T2 : IRequestHandler
         {
@@ -51,13 +57,14 @@ namespace OmniSharp.LanguageServerProtocol
             {
                 yield return (
                     group.DocumentSelector,
+                    group.ProgressManager,
                     group.OfType<T>().SingleOrDefault(),
                     group.OfType<T2>().SingleOrDefault()
                 );
             }
         }
 
-        public IEnumerable<(DocumentSelector selector, T handler, T2 handler2, T3 handler3)> OfType<T, T2, T3>()
+        public IEnumerable<(DocumentSelector selector, ProgressManager pm, T handler, T2 handler2, T3 handler3)> OfType<T, T2, T3>()
             where T : IRequestHandler
             where T2 : IRequestHandler
             where T3 : IRequestHandler
@@ -66,6 +73,7 @@ namespace OmniSharp.LanguageServerProtocol
             {
                 yield return (
                     group.DocumentSelector,
+                    group.ProgressManager,
                     group.OfType<T>().SingleOrDefault(),
                     group.OfType<T2>().SingleOrDefault(),
                     group.OfType<T3>().SingleOrDefault()
@@ -73,7 +81,7 @@ namespace OmniSharp.LanguageServerProtocol
             }
         }
 
-        public IEnumerable<(DocumentSelector selector, T handler, T2 handler2, T3 handler3, T4 handler4)> OfType<T, T2, T3, T4>()
+        public IEnumerable<(DocumentSelector selector, ProgressManager pm, T handler, T2 handler2, T3 handler3, T4 handler4)> OfType<T, T2, T3, T4>()
             where T : IRequestHandler
             where T2 : IRequestHandler
             where T3 : IRequestHandler
@@ -83,6 +91,7 @@ namespace OmniSharp.LanguageServerProtocol
             {
                 yield return (
                     group.DocumentSelector,
+                    group.ProgressManager,
                     group.OfType<T>().SingleOrDefault(),
                     group.OfType<T2>().SingleOrDefault(),
                     group.OfType<T3>().SingleOrDefault(),
