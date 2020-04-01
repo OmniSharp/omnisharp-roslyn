@@ -16,7 +16,6 @@ using OmniSharp.Extensions.LanguageServer.Server;
 using OmniSharp.LanguageServerProtocol.Eventing;
 using OmniSharp.LanguageServerProtocol.Handlers;
 using OmniSharp.Mef;
-using OmniSharp.Models.Diagnostics;
 using OmniSharp.Options;
 using OmniSharp.Roslyn;
 using OmniSharp.Services;
@@ -49,11 +48,16 @@ namespace OmniSharp.LanguageServerProtocol
             _options = new LanguageServerOptions()
                 .WithInput(input)
                 .WithOutput(output)
-                .WithLoggerFactory(_loggerFactory)
+                .ConfigureLogging(x => x
+                    .AddLanguageServer()
+                    .SetMinimumLevel(application.LogLevel))
                 .AddDefaultLoggingProvider()
                 .OnInitialize(Initialize)
-                .WithMinimumLogLevel(application.LogLevel)
-                .WithServices(services => _services = services);
+                .WithServices(services => {
+                        services.AddSingleton<ILoggerFactory>(_loggerFactory);
+                        _services = services;
+                    });
+
             _application = application;
             _cancellationTokenSource = cancellationTokenSource;
         }
