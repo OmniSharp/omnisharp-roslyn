@@ -9,6 +9,7 @@ using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
 using System.Collections.Generic;
+using Microsoft.CodeAnalysis;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
@@ -400,6 +401,7 @@ class Bar {
                 // 3. the metadata response contains SourceName (metadata "file") and SourceText (syntax tree)
                 // use the source to locate "IComparable" which is an interface implemented by Int32 struct
                 var metadataTree = CSharpSyntaxTree.ParseText(metadataResponse.Source);
+
                 var iComparable = metadataTree.GetCompilationUnitRoot().
                     DescendantNodesAndSelf().
                     OfType<BaseTypeDeclarationSyntax>().First().
@@ -425,6 +427,94 @@ class Bar {
                 Assert.NotEqual(0, metadataNavigationResponse.Line);
                 Assert.NotEqual(0, metadataNavigationResponse.Column);
             }
+        }
+
+        [Theory]
+        [InlineData("bar.cs")]
+        [InlineData("bar.csx")]
+        public async Task ReturnsDecompiledDefinition_FromMetadata_WhenSymbolIsType(string filename)
+        {
+            var testFile = new TestFile(filename, @"
+using System;
+class Bar {
+    public void Baz() {
+        var number = in$$t.MaxValue;
+    }
+}");
+
+            using var host = CreateOmniSharpHost(new[] { testFile }, new Dictionary<string, string>
+            {
+                ["RoslynExtensionsOptions:EnableDecompilationSupport"] = "true"
+            });
+
+            var point = testFile.Content.GetPointFromPosition();
+
+            // 1. start by asking for definition of "int"
+            var gotoDefinitionRequest = new GotoDefinitionRequest
+            {
+                FileName = testFile.FileName,
+                Line = point.Line,
+                Column = point.Offset,
+                WantMetadata = true
+            };
+            var gotoDefinitionRequestHandler = GetRequestHandler(host);
+            var gotoDefinitionResponse = await gotoDefinitionRequestHandler.Handle(gotoDefinitionRequest);
+
+            // 2. now, based on the response information
+            // go to the metadata endpoint, and ask for "int" specific decompiled source
+            var metadataRequest = new MetadataRequest
+            {
+                AssemblyName = gotoDefinitionResponse.MetadataSource.AssemblyName,
+                TypeName = gotoDefinitionResponse.MetadataSource.TypeName,
+                ProjectName = gotoDefinitionResponse.MetadataSource.ProjectName,
+                Language = gotoDefinitionResponse.MetadataSource.Language
+            };
+            var metadataRequestHandler = host.GetRequestHandler<MetadataService>(OmniSharpEndpoints.Metadata);
+            var metadataResponse = await metadataRequestHandler.Handle(metadataRequest);
+
+            // 3. the response contains SourceName ("file") and SourceText (syntax tree)
+            // use the source to locate "IComparable" which is an interface implemented by Int32 struct
+            var decompiledTree = CSharpSyntaxTree.ParseText(metadataResponse.Source);
+            var compilationUnit = decompiledTree.GetCompilationUnitRoot();
+
+            // second comment should indicate we have decompiled
+            var comments = compilationUnit.DescendantTrivia().Where(t => t.Kind() == SyntaxKind.SingleLineCommentTrivia).ToArray();
+            Assert.NotNull(comments);
+            Assert.Equal("// Decompiled with ICSharpCode.Decompiler 5.0.2.5153", comments[1].ToString());
+
+            // contrary to regular metadata, we should have methods with full bodies
+            // this condition would fail if decompilation wouldn't work
+            var methods = compilationUnit.
+                DescendantNodesAndSelf().
+                OfType<MethodDeclarationSyntax>().
+                Where(m => m.Body != null);
+
+            Assert.NotEmpty(methods);
+
+            var iComparable = compilationUnit.
+                DescendantNodesAndSelf().
+                OfType<BaseTypeDeclarationSyntax>().First().
+                BaseList.Types.FirstOrDefault(x => x.Type.ToString() == "IComparable");
+            var relevantLineSpan = iComparable.GetLocation().GetLineSpan();
+
+            // 4. now ask for the definition of "IComparable"
+            // pass in the SourceName (metadata "file") as FileName - since it's not a regular file in our workspace
+            var metadataNavigationRequest = new GotoDefinitionRequest
+            {
+                FileName = metadataResponse.SourceName,
+                Line = relevantLineSpan.StartLinePosition.Line,
+                Column = relevantLineSpan.StartLinePosition.Character,
+                WantMetadata = true
+            };
+            var metadataNavigationResponse = await gotoDefinitionRequestHandler.Handle(metadataNavigationRequest);
+
+            // 5. validate the response to be matching the expected IComparable meta info
+            Assert.NotNull(metadataNavigationResponse.MetadataSource);
+            Assert.Equal(AssemblyHelpers.CorLibName, metadataNavigationResponse.MetadataSource.AssemblyName);
+            Assert.Equal("System.IComparable", metadataNavigationResponse.MetadataSource.TypeName);
+
+            Assert.NotEqual(0, metadataNavigationResponse.Line);
+            Assert.NotEqual(0, metadataNavigationResponse.Column);
         }
 
         [Fact]
@@ -462,7 +552,7 @@ class Bar {
             using var host = CreateOmniSharpHost(new[] { testFile }, new Dictionary<string, string>
             {
                 ["RoslynExtensionsOptions:EnableDecompilationSupport"] = "true"
-            }, TestAssets.Instance.TestFilesFolder);
+            });
 
             var response = await GetResponseAsync(new[] { testFile }, wantMetadata: true);
 
