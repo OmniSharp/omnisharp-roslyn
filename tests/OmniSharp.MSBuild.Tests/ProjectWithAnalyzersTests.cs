@@ -126,8 +126,7 @@ namespace OmniSharp.MSBuild.Tests
             Assert.Contains(project.CompilationOptions.SpecificDiagnosticOptions, x => x.Key == "CA1021" && x.Value == ReportDiagnostic.Error);
         }
 
-        // Unstable with MSBuild 16.3 on *nix
-        [ConditionalFact(typeof(WindowsOnly))]
+        [Fact]
         public async Task WhenNewAnalyzerReferenceIsAdded_ThenAutomaticallyUseItWithoutRestart()
         {
             using var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithAnalyzers");
@@ -144,8 +143,10 @@ namespace OmniSharp.MSBuild.Tests
             emitter.Clear();
 
             await NotifyFileChanged(host, csprojFile);
+
             await host.RestoreProject(testProject);
 
+            await emitter.WaitForMessage<PackageRestoreMessage>(x => x.Succeeded);
             await emitter.WaitForMessage<ProjectInformationResponse>();
 
             var diagnostics = await host.RequestCodeCheckAsync(Path.Combine(testProject.Directory, "Program.cs"));
