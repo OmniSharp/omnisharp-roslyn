@@ -330,7 +330,7 @@ namespace OmniSharp
                     var actual = await host.GetResponse<CodeCheckRequest, QuickFixResponse>(OmniSharpEndpoints.CodeCheck, request);
                     Assert.Single(actual.QuickFixes);
 
-                    await WaitForFileUpdate(filePath, host, FileWatching.FileChangeType.Delete);
+                    await DeleteFile(filePath, host, FileWatching.FileChangeType.Delete);
                     actual = await host.GetResponse<CodeCheckRequest, QuickFixResponse>(OmniSharpEndpoints.CodeCheck, request);
                     Assert.Empty(actual.QuickFixes);
                 }
@@ -344,7 +344,7 @@ namespace OmniSharp
             return filePath;
         }
 
-        private async Task WaitForFileUpdate(string filePath, OmniSharpTestHost host, FileWatching.FileChangeType changeType = FileWatching.FileChangeType.Create)
+        private async Task DeleteFile(string filePath, OmniSharpTestHost host, FileWatching.FileChangeType changeType = FileWatching.FileChangeType.Create)
         {
             var fileChangedService = host.GetRequestHandler<OnFilesChangedService>(OmniSharpEndpoints.FilesChanged);
             await fileChangedService.Handle(new[]
@@ -355,8 +355,6 @@ namespace OmniSharp
                         ChangeType = changeType
                     }
                 });
-
-            await Task.Delay(2000);
         }
     }
 }
