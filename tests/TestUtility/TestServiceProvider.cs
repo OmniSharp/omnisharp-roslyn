@@ -146,7 +146,7 @@ namespace TestUtility
                 throw new InvalidOperationException($"Local .NET CLI path does not exist. Did you run build.(ps1|sh) from the command line?");
             }
 
-            return new DotNetCliService(loggerFactory, NullEventEmitter.Instance, dotnetPath);
+            return new DotNetCliService(loggerFactory, eventEmitter, dotnetPath);
         }
 
         private static IMemoryCache CreateMemoryCache()

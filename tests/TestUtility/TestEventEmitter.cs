@@ -17,7 +17,7 @@ namespace TestUtility
 
             var waitTask = Task.Run(async () =>
             {
-                while (!Messages.OfType<T>().Any()) await Task.Delay(frequency);
+                while (!Messages.OfType<T>().Any() && !Messages.OfType<T>().Any(x => predicate(x))) await Task.Delay(frequency);
             });
 
             if (waitTask != await Task.WhenAny(waitTask,

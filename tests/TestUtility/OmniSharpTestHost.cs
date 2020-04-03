@@ -17,6 +17,7 @@ using OmniSharp.Eventing;
 using OmniSharp.Mef;
 using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.MSBuild;
+using OmniSharp.MSBuild.Notification;
 using OmniSharp.Roslyn.CSharp.Services;
 using OmniSharp.Script;
 using OmniSharp.Services;
@@ -82,6 +83,7 @@ namespace TestUtility
             IEnumerable<ExportDescriptorProvider> additionalExports = null,
             [CallerMemberName] string callerName = "")
         {
+            additionalExports = AddEventEmitterToDescriptors(serviceProvider, additionalExports);
             var compositionHost = new CompositionHostBuilder(serviceProvider, s_lazyAssemblies.Value, additionalExports)
                 .Build();
 
@@ -167,5 +169,20 @@ namespace TestUtility
             var service = GetRequestHandler<IRequestHandler<TRequest, TResponse>>(endpoint);
             return service.Handle(request);
         }
+
+        private static IEnumerable<ExportDescriptorProvider> AddEventEmitterToDescriptors(IServiceProvider serviceProvider, IEnumerable<ExportDescriptorProvider> descriptorsIfAny)
+        {
+            var descriptor = MefValueProvider.From<IMSBuildEventSink>(new ProjectLoadListener(serviceProvider.GetService<ILoggerFactory>(), serviceProvider.GetService<IEventEmitter>()));
+
+            if (descriptorsIfAny == null)
+            {
+                return new[] { descriptor };
+            }
+            else
+            {
+                return descriptorsIfAny.Concat(new[] { descriptor });
+            }
+        }
+
     }
 }

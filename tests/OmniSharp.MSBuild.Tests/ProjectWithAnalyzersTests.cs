@@ -38,10 +38,6 @@ namespace OmniSharp.MSBuild.Tests
 
                 var diagnostics = await host.RequestCodeCheckAsync(Path.Combine(testProject.Directory, "Program.cs"));
 
-                await host
-                    .GetTestEventEmitter()
-                    .WaitForEvent<PackageRestoreMessage>(x => x.Succeeded);
-
                 Assert.NotEmpty(diagnostics.QuickFixes);
                 Assert.Contains(diagnostics.QuickFixes.OfType<DiagnosticLocation>(), x => x.Id == "IDE0060"); // Unused args.
             }
@@ -104,10 +100,12 @@ namespace OmniSharp.MSBuild.Tests
                     csprojFileXml => csprojFileXml.Descendants("CodeAnalysisRuleSet").Single().Value = "witherrorlevel.ruleset");
 
                 var emitter = host.GetTestEventEmitter();
+                emitter.Clear();
 
                 await NotifyFileChanged(host, csprojFile);
 
-                await emitter.WaitForEvent<ProjectConfigurationMessage>();
+                //await emitter.WaitForEvent<ProjectConfigurationMessage>();
+                await Task.Delay(5000);
 
                 var project = host.Workspace.CurrentSolution.Projects.Single();
                 Assert.Contains(project.CompilationOptions.SpecificDiagnosticOptions, x => x.Key == "CA1021" && x.Value == ReportDiagnostic.Error);
@@ -124,10 +122,11 @@ namespace OmniSharp.MSBuild.Tests
                     ruleXml => ruleXml.Descendants("Rule").Single().Attribute("Action").Value = "Error");
 
                 var emitter = host.GetTestEventEmitter();
+                emitter.Clear();
 
                 await NotifyFileChanged(host, ruleFile);
 
-                await emitter.WaitForEvent<ProjectConfigurationMessage>();
+                await emitter.WaitForEvent<ProjectDiagnosticStatusMessage>(x => x.Status == ProjectDiagnosticStatus.Ready);
 
                 var project = host.Workspace.CurrentSolution.Projects.Single();
                 Assert.Contains(project.CompilationOptions.SpecificDiagnosticOptions, x => x.Key == "CA1021" && x.Value == ReportDiagnostic.Error);
@@ -149,13 +148,13 @@ namespace OmniSharp.MSBuild.Tests
                     });
 
                 var emitter = host.GetTestEventEmitter();
-
+                emitter.Clear();
+                   
                 await NotifyFileChanged(host, csprojFile);
-
-                await emitter.WaitForEvent<ProjectConfigurationMessage>();
                 await host.RestoreProject(testProject);
 
-                await emitter.WaitForEvent<ProjectDiagnosticStatusMessage>();
+                await emitter.WaitForEvent<ProjectConfigurationMessage>();
+                await emitter.WaitForEvent<ProjectDiagnosticStatusMessage>(x => x.Status == ProjectDiagnosticStatus.Ready);
 
                 var diagnostics = await host.RequestCodeCheckAsync(Path.Combine(testProject.Directory, "Program.cs"));
 
