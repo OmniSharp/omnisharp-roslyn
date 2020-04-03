@@ -1,13 +1,8 @@
 using System;
 using System.Collections.Immutable;
-using System.Composition.Hosting.Core;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using OmniSharp.Eventing;
-using OmniSharp.Mef;
-using OmniSharp.MSBuild;
-using OmniSharp.MSBuild.Notification;
 
 namespace TestUtility
 {
@@ -17,14 +12,17 @@ namespace TestUtility
 
         public async Task WaitForEvent<T>(Predicate<T> predicate = null, int frequency = 25, int timeoutMs = 15000)
         {
+            if (predicate == null)
+                predicate = _ => true;
+
             var waitTask = Task.Run(async () =>
             {
-                while (!Messages.OfType<T>().Any() && predicate(Messages.OfType<T>().First())) await Task.Delay(frequency);
+                while (!Messages.OfType<T>().Any()) await Task.Delay(frequency);
             });
 
             if (waitTask != await Task.WhenAny(waitTask,
                     Task.Delay(timeoutMs)))
-                throw new TimeoutException($"Timeout of {timeoutMs} ms exceeded before any matching message for type {typeof(T)} received or precondition for that type failed (if any).");
+                throw new TimeoutException($"Timeout of {timeoutMs} ms exceeded before any matching message for type {typeof(T)} received or precondition for that type failed (if any), received messages this far: {string.Join(", ", Messages)}");
         }
 
         public void Clear()
@@ -35,16 +33,6 @@ namespace TestUtility
         public void Emit(string kind, object args)
         {
             Messages = Messages.Add(args);
-        }
-
-        public ExportDescriptorProvider[] AsExportDescriptionProvider(ILoggerFactory loggerFactory)
-        {
-            var listener = new ProjectLoadListener(loggerFactory, this);
-
-            return new ExportDescriptorProvider[]
-            {
-                    MefValueProvider.From<IMSBuildEventSink>(listener)
-            };
         }
     }
 }

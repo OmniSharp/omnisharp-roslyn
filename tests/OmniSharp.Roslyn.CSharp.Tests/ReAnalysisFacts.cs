@@ -15,12 +15,10 @@ namespace OmniSharp.Roslyn.CSharp.Tests
     public class ReAnalysisFacts
     {
         private readonly ITestOutputHelper _testOutput;
-        private readonly TestEventEmitter _eventListener;
 
         public ReAnalysisFacts(ITestOutputHelper testOutput)
         {
             _testOutput = testOutput;
-            _eventListener = new TestEventEmitter();
         }
 
 
@@ -68,12 +66,13 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 var projectId = host.AddFilesToWorkspace(new TestFile("a.cs", "public class A { }")).First();
                 var project =  host.Workspace.CurrentSolution.GetProject(projectId);
 
-                _eventListener.Clear();
+                var emitter = host.GetTestEventEmitter();
+                emitter.Clear();
 
                 await reAnalyzeHandler.Handle(new ReAnalyzeRequest());
 
-                await _eventListener.WaitForEvent<ProjectDiagnosticStatusMessage>(x => x.ProjectFilePath == project.FilePath && x.Status == ProjectDiagnosticStatus.Started);
-                await _eventListener.WaitForEvent<ProjectDiagnosticStatusMessage>(x => x.ProjectFilePath == project.FilePath && x.Status == ProjectDiagnosticStatus.Ready);
+                await emitter.WaitForEvent<ProjectDiagnosticStatusMessage>(x => x.ProjectFilePath == project.FilePath && x.Status == ProjectDiagnosticStatus.Started);
+                await emitter.WaitForEvent<ProjectDiagnosticStatusMessage>(x => x.ProjectFilePath == project.FilePath && x.Status == ProjectDiagnosticStatus.Ready);
             }
         }
 
@@ -87,15 +86,17 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 var projectAId = host.AddFilesToWorkspace(new TestFile("a.cs", "public class A { }")).First();
                 var projectA =  host.Workspace.CurrentSolution.GetProject(projectAId);
 
-                _eventListener.Clear();
+                var emitter = host.GetTestEventEmitter();
+
+                emitter.Clear();
 
                 await reAnalyzeHandler.Handle(new ReAnalyzeRequest
                 {
                     FileName = projectA.Documents.Single(x => x.FilePath.EndsWith("a.cs")).FilePath
                 });
 
-                await _eventListener.WaitForEvent<ProjectDiagnosticStatusMessage>(x => x.ProjectFilePath == projectA.FilePath && x.Status == ProjectDiagnosticStatus.Started);
-                await _eventListener.WaitForEvent<ProjectDiagnosticStatusMessage>(x => x.ProjectFilePath == projectA.FilePath && x.Status == ProjectDiagnosticStatus.Ready);
+                await emitter.WaitForEvent<ProjectDiagnosticStatusMessage>(x => x.ProjectFilePath == projectA.FilePath && x.Status == ProjectDiagnosticStatus.Started);
+                await emitter.WaitForEvent<ProjectDiagnosticStatusMessage>(x => x.ProjectFilePath == projectA.FilePath && x.Status == ProjectDiagnosticStatus.Ready);
             }
         }
 
@@ -109,22 +110,23 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 var projectId = host.AddFilesToWorkspace(new TestFile("a.cs", "public class A { }")).First();
                 var project =  host.Workspace.CurrentSolution.GetProject(projectId);
 
-                _eventListener.Clear();
+                var emitter = host.GetTestEventEmitter();
+                emitter.Clear();
 
                 await reAnalyzeHandler.Handle(new ReAnalyzeRequest
                 {
                     FileName = project.FilePath
                 });
 
-                await _eventListener.WaitForEvent<ProjectDiagnosticStatusMessage>(x => x.ProjectFilePath == project.FilePath && x.Status == ProjectDiagnosticStatus.Started);
-                await _eventListener.WaitForEvent<ProjectDiagnosticStatusMessage>(x => x.ProjectFilePath == project.FilePath && x.Status == ProjectDiagnosticStatus.Ready);
+                await emitter.WaitForEvent<ProjectDiagnosticStatusMessage>(x => x.ProjectFilePath == project.FilePath && x.Status == ProjectDiagnosticStatus.Started);
+                await emitter.WaitForEvent<ProjectDiagnosticStatusMessage>(x => x.ProjectFilePath == project.FilePath && x.Status == ProjectDiagnosticStatus.Ready);
             }
         }
 
         private OmniSharpTestHost GetHost()
         {
             return OmniSharpTestHost.Create(testOutput: _testOutput,
-                configurationData: TestHelpers.GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled: true), eventEmitter: _eventListener);
+                configurationData: TestHelpers.GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled: true));
         }
     }
 }

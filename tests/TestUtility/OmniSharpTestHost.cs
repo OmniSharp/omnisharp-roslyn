@@ -102,18 +102,17 @@ namespace TestUtility
             IEnumerable<KeyValuePair<string, string>> configurationData = null,
             DotNetCliVersion dotNetCliVersion = DotNetCliVersion.Current,
             IEnumerable<ExportDescriptorProvider> additionalExports = null,
-            [CallerMemberName] string callerName = "",
-            IEventEmitter eventEmitter = null)
+            [CallerMemberName] string callerName = "")
         {
             var environment = new OmniSharpEnvironment(path, logLevel: LogLevel.Trace);
 
-            var serviceProvider = TestServiceProvider.Create(testOutput, environment, configurationData, dotNetCliVersion, eventEmitter);
+            var serviceProvider = TestServiceProvider.Create(testOutput, environment, configurationData, dotNetCliVersion);
 
             return Create(serviceProvider, additionalExports, callerName);
         }
 
         public T GetExport<T>()
-            => this._compositionHost.GetExport<T>();
+            => _compositionHost.GetExport<T>();
 
         public THandler GetRequestHandler<THandler>(string name, string languageName = LanguageNames.CSharp) where THandler : IRequestHandler
         {
@@ -155,6 +154,11 @@ namespace TestUtility
             {
                 Workspace.RemoveProject(projectId);
             }
+        }
+
+        public TestEventEmitter GetTestEventEmitter()
+        {
+            return (TestEventEmitter)_compositionHost.GetExport<IEventEmitter>();
         }
 
         public Task<TResponse> GetResponse<TRequest, TResponse>(

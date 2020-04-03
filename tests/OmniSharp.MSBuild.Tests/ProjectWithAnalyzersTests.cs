@@ -27,16 +27,20 @@ namespace OmniSharp.MSBuild.Tests
         [Fact]
         public async Task WhenProjectIsRestoredThenReanalyzeProject()
         {
-            var emitter = new TestEventEmitter();
-
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithAnalyzers"))
-            using (var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory), configurationData: TestHelpers.GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled: true)))
+            using (var host = CreateMSBuildTestHost(testProject.Directory, configurationData: TestHelpers.GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled: true)))
             {
                 await host.RestoreProject(testProject);
 
-                await emitter.WaitForEvent<PackageRestoreMessage>(x => x.Succeeded);
+                await host
+                    .GetTestEventEmitter()
+                    .WaitForEvent<PackageRestoreMessage>(x => x.Succeeded);
 
                 var diagnostics = await host.RequestCodeCheckAsync(Path.Combine(testProject.Directory, "Program.cs"));
+
+                await host
+                    .GetTestEventEmitter()
+                    .WaitForEvent<PackageRestoreMessage>(x => x.Succeeded);
 
                 Assert.NotEmpty(diagnostics.QuickFixes);
                 Assert.Contains(diagnostics.QuickFixes.OfType<DiagnosticLocation>(), x => x.Id == "IDE0060"); // Unused args.
@@ -93,15 +97,14 @@ namespace OmniSharp.MSBuild.Tests
         [Fact]
         public async Task WhenProjectRulesetFileIsChangedThenUpdateRulesAccordingly()
         {
-            var emitter = new TestEventEmitter();
-
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithAnalyzers"))
-            using (var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory)))
+            using (var host = CreateMSBuildTestHost(testProject.Directory))
             {
                 var csprojFile = ModifyXmlFileInPlace(Path.Combine(testProject.Directory, "ProjectWithAnalyzers.csproj"),
                     csprojFileXml => csprojFileXml.Descendants("CodeAnalysisRuleSet").Single().Value = "witherrorlevel.ruleset");
 
-                emitter.Clear();
+                var emitter = host.GetTestEventEmitter();
+
                 await NotifyFileChanged(host, csprojFile);
 
                 await emitter.WaitForEvent<ProjectConfigurationMessage>();
@@ -114,15 +117,14 @@ namespace OmniSharp.MSBuild.Tests
         [Fact]
         public async Task WhenProjectRulesetFileRuleIsUpdatedThenUpdateRulesAccordingly()
         {
-            var emitter = new TestEventEmitter();
-
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithAnalyzers"))
-            using (var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory)))
+            using (var host = CreateMSBuildTestHost(testProject.Directory))
             {
                 var ruleFile = ModifyXmlFileInPlace(Path.Combine(testProject.Directory, "default.ruleset"),
                     ruleXml => ruleXml.Descendants("Rule").Single().Attribute("Action").Value = "Error");
 
-                emitter.Clear();
+                var emitter = host.GetTestEventEmitter();
+
                 await NotifyFileChanged(host, ruleFile);
 
                 await emitter.WaitForEvent<ProjectConfigurationMessage>();
@@ -136,10 +138,8 @@ namespace OmniSharp.MSBuild.Tests
         [ConditionalFact(typeof(WindowsOnly))]
         public async Task WhenNewAnalyzerReferenceIsAdded_ThenAutomaticallyUseItWithoutRestart()
         {
-            var emitter = new TestEventEmitter();
-
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithAnalyzers"))
-            using (var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory), configurationData: TestHelpers.GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled: true)))
+            using (var host = CreateMSBuildTestHost(testProject.Directory, configurationData: TestHelpers.GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled: true)))
             {
                 var csprojFile = ModifyXmlFileInPlace(Path.Combine(testProject.Directory, "ProjectWithAnalyzers.csproj"),
                     csprojFileXml =>
@@ -148,7 +148,8 @@ namespace OmniSharp.MSBuild.Tests
                         referencesGroup.Add(new XElement("PackageReference", new XAttribute("Include", "Roslynator.Analyzers"), new XAttribute("Version", "2.1.0")));
                     });
 
-                emitter.Clear();
+                var emitter = host.GetTestEventEmitter();
+
                 await NotifyFileChanged(host, csprojFile);
 
                 await emitter.WaitForEvent<ProjectConfigurationMessage>();
