@@ -1,8 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using OmniSharp.Eventing;
+using OmniSharp.Models.ProjectInformation;
 
 namespace TestUtility
 {
@@ -10,7 +12,7 @@ namespace TestUtility
     {
         public ImmutableArray<object> Messages { get; private set; } = ImmutableArray<object>.Empty;
 
-        public async Task WaitForEvent<T>(Predicate<T> predicate = null, int frequency = 25, int timeoutMs = 15000)
+        public async Task WaitForMessage<T>(Predicate<T> predicate = null, int frequency = 25, int timeoutMs = 15000)
         {
             if (predicate == null)
                 predicate = _ => true;

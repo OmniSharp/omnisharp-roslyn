@@ -94,7 +94,7 @@ namespace OmniSharp.MSBuild.Tests
             using (var host = CreateMSBuildTestHost(testProject.Directory))
             {
                 var emitter = host.GetTestEventEmitter();
-                await emitter.WaitForEvent<ProjectConfigurationMessage>();
+                await emitter.WaitForMessage<ProjectConfigurationMessage>();
                 Assert.Equal(emitter.Messages.OfType<ProjectConfigurationMessage>().First().TargetFrameworks.First(), expectedTFM);
             }
         }
@@ -107,7 +107,7 @@ namespace OmniSharp.MSBuild.Tests
             {
                 var emitter = host.GetTestEventEmitter();
                 var expectedGuid = "A4C2694D-AEB4-4CB1-8951-5290424EF883".ToLower();
-                await emitter.WaitForEvent<ProjectConfigurationMessage>();
+                await emitter.WaitForMessage<ProjectConfigurationMessage>();
                 Assert.Equal(emitter.Messages.OfType<ProjectConfigurationMessage>().First().ProjectId, expectedGuid);
             }
         }
@@ -121,7 +121,7 @@ namespace OmniSharp.MSBuild.Tests
                 var emitter = host.GetTestEventEmitter();
                 var projectFileContent = File.ReadAllText(Directory.GetFiles(testProject.Directory, "*.csproj").Single());
                 var expectedGuid = GetHashedReference($"Filename: HelloWorld.csproj\n{projectFileContent}");
-                await emitter.WaitForEvent<ProjectConfigurationMessage>();
+                await emitter.WaitForMessage<ProjectConfigurationMessage>();
                 Assert.Equal(emitter.Messages.OfType<ProjectConfigurationMessage>().First().ProjectId, expectedGuid);
             }
         }
@@ -134,9 +134,8 @@ namespace OmniSharp.MSBuild.Tests
             {
                 await host.RestoreProject(testProject);
                 var emitter = host.GetTestEventEmitter();
-                await emitter.WaitForEvent<ProjectConfigurationMessage>();
-                await Task.Delay(5000);
-                Assert.NotEmpty(emitter.Messages.OfType<ProjectConfigurationMessage>().First().References.Where(reference => reference == GetHashedReference("system.core")));
+                await emitter.WaitForMessage<ProjectConfigurationMessage>();
+                Assert.NotEmpty(emitter.Messages.OfType<ProjectConfigurationMessage>().Last().References.Where(reference => reference == GetHashedReference("system.core")));
             }
         }
 
@@ -148,9 +147,9 @@ namespace OmniSharp.MSBuild.Tests
             using (var host = CreateMSBuildTestHost(testProject.Directory))
             {
                 var emitter = host.GetTestEventEmitter();
-                Assert.Single(emitter.Messages.OfType<ProjectConfigurationMessage>());
+                Assert.NotEmpty(emitter.Messages.OfType<ProjectConfigurationMessage>());
 
-                var tfm = emitter.Messages.OfType<ProjectConfigurationMessage>().First().TargetFrameworks.ToArray();
+                var tfm = emitter.Messages.OfType<ProjectConfigurationMessage>().Last().TargetFrameworks.ToArray();
                 Assert.Equal(2, tfm.Count());
                 Assert.Equal("netstandard1.3", tfm[0]);
                 Assert.Equal("netstandard2.0",tfm[1]);
@@ -165,7 +164,7 @@ namespace OmniSharp.MSBuild.Tests
             {
                 var emitter = host.GetTestEventEmitter();
 
-                await emitter.WaitForEvent<ProjectConfigurationMessage>();
+                await emitter.WaitForMessage<ProjectConfigurationMessage>();
                 Assert.Single(emitter.Messages.OfType<ProjectConfigurationMessage>().First().FileExtensions);
                 Assert.Equal(emitter.Messages.OfType<ProjectConfigurationMessage>().First().FileExtensions.First(), GetHashedFileExtension(".cs"));
             }

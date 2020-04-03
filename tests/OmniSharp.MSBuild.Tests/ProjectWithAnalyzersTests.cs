@@ -10,6 +10,8 @@ using OmniSharp.FileWatching;
 using OmniSharp.Models.Diagnostics;
 using OmniSharp.Models.Events;
 using OmniSharp.Models.FilesChanged;
+using OmniSharp.Models.ProjectInformation;
+using OmniSharp.MSBuild.Models.Events;
 using OmniSharp.Services;
 using TestUtility;
 using Xunit;
@@ -34,7 +36,7 @@ namespace OmniSharp.MSBuild.Tests
 
                 await host
                     .GetTestEventEmitter()
-                    .WaitForEvent<PackageRestoreMessage>(x => x.Succeeded);
+                    .WaitForMessage<PackageRestoreMessage>(x => x.Succeeded);
 
                 var diagnostics = await host.RequestCodeCheckAsync(Path.Combine(testProject.Directory, "Program.cs"));
 
@@ -104,8 +106,7 @@ namespace OmniSharp.MSBuild.Tests
 
                 await NotifyFileChanged(host, csprojFile);
 
-                //await emitter.WaitForEvent<ProjectConfigurationMessage>();
-                await Task.Delay(5000);
+                await emitter.WaitForMessage<ProjectInformationResponse>();
 
                 var project = host.Workspace.CurrentSolution.Projects.Single();
                 Assert.Contains(project.CompilationOptions.SpecificDiagnosticOptions, x => x.Key == "CA1021" && x.Value == ReportDiagnostic.Error);
@@ -126,7 +127,7 @@ namespace OmniSharp.MSBuild.Tests
 
                 await NotifyFileChanged(host, ruleFile);
 
-                await emitter.WaitForEvent<ProjectDiagnosticStatusMessage>(x => x.Status == ProjectDiagnosticStatus.Ready);
+                await emitter.WaitForMessage<ProjectInformationResponse>();
 
                 var project = host.Workspace.CurrentSolution.Projects.Single();
                 Assert.Contains(project.CompilationOptions.SpecificDiagnosticOptions, x => x.Key == "CA1021" && x.Value == ReportDiagnostic.Error);
@@ -153,8 +154,7 @@ namespace OmniSharp.MSBuild.Tests
                 await NotifyFileChanged(host, csprojFile);
                 await host.RestoreProject(testProject);
 
-                await emitter.WaitForEvent<ProjectConfigurationMessage>();
-                await emitter.WaitForEvent<ProjectDiagnosticStatusMessage>(x => x.Status == ProjectDiagnosticStatus.Ready);
+                await emitter.WaitForMessage<ProjectInformationResponse>();
 
                 var diagnostics = await host.RequestCodeCheckAsync(Path.Combine(testProject.Directory, "Program.cs"));
 

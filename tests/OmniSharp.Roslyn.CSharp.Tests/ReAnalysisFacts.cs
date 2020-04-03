@@ -71,8 +71,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
                 await reAnalyzeHandler.Handle(new ReAnalyzeRequest());
 
-                await emitter.WaitForEvent<ProjectDiagnosticStatusMessage>(x => x.ProjectFilePath == project.FilePath && x.Status == ProjectDiagnosticStatus.Started);
-                await emitter.WaitForEvent<ProjectDiagnosticStatusMessage>(x => x.ProjectFilePath == project.FilePath && x.Status == ProjectDiagnosticStatus.Ready);
+                await emitter.WaitForMessage<ProjectDiagnosticStatusMessage>(x => x.ProjectFilePath == project.FilePath && x.Status == ProjectDiagnosticStatus.Started);
+                await emitter.WaitForMessage<ProjectDiagnosticStatusMessage>(x => x.ProjectFilePath == project.FilePath && x.Status == ProjectDiagnosticStatus.Ready);
             }
         }
 
@@ -95,8 +95,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     FileName = projectA.Documents.Single(x => x.FilePath.EndsWith("a.cs")).FilePath
                 });
 
-                await emitter.WaitForEvent<ProjectDiagnosticStatusMessage>(x => x.ProjectFilePath == projectA.FilePath && x.Status == ProjectDiagnosticStatus.Started);
-                await emitter.WaitForEvent<ProjectDiagnosticStatusMessage>(x => x.ProjectFilePath == projectA.FilePath && x.Status == ProjectDiagnosticStatus.Ready);
+                await emitter.WaitForMessage<ProjectDiagnosticStatusMessage>(x => x.ProjectFilePath == projectA.FilePath && x.Status == ProjectDiagnosticStatus.Started);
+                await emitter.WaitForMessage<ProjectDiagnosticStatusMessage>(x => x.ProjectFilePath == projectA.FilePath && x.Status == ProjectDiagnosticStatus.Ready);
             }
         }
 
@@ -118,8 +118,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     FileName = project.FilePath
                 });
 
-                await emitter.WaitForEvent<ProjectDiagnosticStatusMessage>(x => x.ProjectFilePath == project.FilePath && x.Status == ProjectDiagnosticStatus.Started);
-                await emitter.WaitForEvent<ProjectDiagnosticStatusMessage>(x => x.ProjectFilePath == project.FilePath && x.Status == ProjectDiagnosticStatus.Ready);
+                await emitter.WaitForMessage<ProjectDiagnosticStatusMessage>(x => x.ProjectFilePath == project.FilePath && x.Status == ProjectDiagnosticStatus.Started);
+                await emitter.WaitForMessage<ProjectDiagnosticStatusMessage>(x => x.ProjectFilePath == project.FilePath && x.Status == ProjectDiagnosticStatus.Ready);
             }
         }
 

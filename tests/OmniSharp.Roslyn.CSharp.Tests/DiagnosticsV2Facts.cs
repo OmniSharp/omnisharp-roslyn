@@ -39,7 +39,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var controller = new DiagnosticsService(forwarder, service);
             var response = await controller.Handle(new DiagnosticsRequest { FileName = testFile.FileName });
 
-            await emitter.WaitForEvent<DiagnosticMessage>(msg => msg.Results.Any(m => m.FileName == filename));
+            await emitter.WaitForMessage<DiagnosticMessage>(msg => msg.Results.Any(m => m.FileName == filename));
         }
 
         private CSharpDiagnosticWorkerWithAnalyzers CreateDiagnosticService(DiagnosticEventForwarder forwarder)
@@ -65,9 +65,9 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var controller = new DiagnosticsService(forwarder, service);
             var response = await controller.Handle(new DiagnosticsRequest());
 
-            await emitter.WaitForEvent<DiagnosticMessage>(msg => msg.Results
+            await emitter.WaitForMessage<DiagnosticMessage>(msg => msg.Results
                 .Any(r => r.FileName == filename1 && r.QuickFixes.Count() == 1));
-            await emitter.WaitForEvent<DiagnosticMessage>(msg => msg.Results
+            await emitter.WaitForMessage<DiagnosticMessage>(msg => msg.Results
                 .Any(r => r.FileName == filename2 && r.QuickFixes.Count() == 1));
         }
 
