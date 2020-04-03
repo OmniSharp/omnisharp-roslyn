@@ -143,11 +143,10 @@ namespace OmniSharp.MSBuild.Tests
             var emitter = host.GetTestEventEmitter();
             emitter.Clear();
 
-            await NotifyFileChanged(host, csprojFile);
-
             await host.RestoreProject(testProject);
-
             await emitter.WaitForMessage<PackageRestoreMessage>(x => x.Succeeded);
+
+            await NotifyFileChanged(host, csprojFile);
             await emitter.WaitForMessage<ProjectInformationResponse>();
 
             var diagnostics = await host.RequestCodeCheckAsync(Path.Combine(testProject.Directory, "Program.cs"));
