@@ -1,6 +1,7 @@
 using Microsoft.Build.Construction;
 using Microsoft.Build.Execution;
 using Microsoft.CodeAnalysis;
+using Microsoft.Extensions.Logging;
 using OmniSharp.Models.Events;
 using OmniSharp.Services;
 using System.Collections.Immutable;
@@ -129,16 +130,18 @@ namespace OmniSharp.MSBuild.Tests
         [Fact]
         public async Task Given_a_restored_project_the_references_are_emitted()
         {
+            var testEventEmitter = new TestEventEmitter();
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("HelloWorld"))
-            using (var host = CreateMSBuildTestHost(testProject.Directory))
             {
-                await host.RestoreProject(testProject);
-                var emitter = host.GetTestEventEmitter();
-                await emitter.WaitForMessage<ProjectConfigurationMessage>();
-                Assert.NotEmpty(emitter.Messages.OfType<ProjectConfigurationMessage>().Last().References.Where(reference => reference == GetHashedReference("system.core")));
+                await new DotNetCliService(new LoggerFactory(), testEventEmitter).RestoreAsync(testProject.Directory);
+                using (var host = CreateMSBuildTestHost(testProject.Directory))
+                {
+                    await host.RestoreProject(testProject);
+                    await testEventEmitter.WaitForMessage<ProjectConfigurationMessage>();
+                    Assert.NotEmpty(testEventEmitter.Messages.OfType<ProjectConfigurationMessage>().Last().References.Where(reference => reference == GetHashedReference("system.core")));
+                }
             }
         }
-
 
         [Fact]
         public async Task If_there_are_multiple_target_frameworks_they_are_emitted()
