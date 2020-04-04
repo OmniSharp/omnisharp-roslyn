@@ -30,14 +30,10 @@ namespace OmniSharp.MSBuild.Tests
 
             await host.RestoreProject(testProject);
 
-            await host
-                .GetTestEventEmitter()
-                .WaitForMessage<PackageRestoreMessage>(x => x.Succeeded);
-
             var diagnostics = await host.RequestCodeCheckAsync(Path.Combine(testProject.Directory, "Program.cs"));
 
             Assert.NotEmpty(diagnostics.QuickFixes);
-            Assert.Contains(diagnostics.QuickFixes.OfType<DiagnosticLocation>(), x => x.Id == "IDE0060"); // Unused args.
+            Assert.Contains(diagnostics.QuickFixes.OfType<DiagnosticLocation>(), x => x.Id == "IDE0060"); // Unused args, if restore doesn't rigger re-analysis there is errors like missing System, not this one.
         }
 
         [Fact]
@@ -47,8 +43,6 @@ namespace OmniSharp.MSBuild.Tests
             using var host = CreateMSBuildTestHost(testProject.Directory, configurationData: TestHelpers.GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled: true));
 
             await host.RestoreProject(testProject);
-            var emitter = host.GetTestEventEmitter();
-            await emitter.WaitForMessage<PackageRestoreMessage>(x => x.Succeeded);
 
             var analyzerReferences = host.Workspace.CurrentSolution.Projects.Single().AnalyzerReferences.ToList();
 
@@ -78,8 +72,6 @@ namespace OmniSharp.MSBuild.Tests
             using var host = CreateMSBuildTestHost(testProject.Directory, configurationData: TestHelpers.GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled: true));
 
             await host.RestoreProject(testProject);
-            var emitter = host.GetTestEventEmitter();
-            await emitter.WaitForMessage<PackageRestoreMessage>(x => x.Succeeded);
 
             var analyzerReferences = host.Workspace.CurrentSolution.Projects.Single().AnalyzerReferences.ToList();
 
@@ -136,19 +128,18 @@ namespace OmniSharp.MSBuild.Tests
             var csprojFile = ModifyXmlFileInPlace(Path.Combine(testProject.Directory, "ProjectWithAnalyzers.csproj"),
                 csprojFileXml =>
                 {
-                    var referencesGroup = csprojFileXml.Descendants("ItemGroup").FirstOrDefault();
+                    var referencesGroup = csprojFileXml.Descendants("ItemGroup").First();
                     referencesGroup.Add(new XElement("PackageReference", new XAttribute("Include", "Roslynator.Analyzers"), new XAttribute("Version", "2.1.0")));
                 });
 
             var emitter = host.GetTestEventEmitter();
             emitter.Clear();
 
-            await host.RestoreProject(testProject);
-            await emitter.WaitForMessage<PackageRestoreMessage>(x => x.Succeeded);
-
             await NotifyFileChanged(host, csprojFile);
-            await emitter.WaitForMessage<ProjectInformationResponse>();
 
+            await host.RestoreProject(testProject);
+
+            await Task.Delay(5000);
             var diagnostics = await host.RequestCodeCheckAsync(Path.Combine(testProject.Directory, "Program.cs"));
 
             Assert.Contains(diagnostics.QuickFixes.OfType<DiagnosticLocation>(), x => x.Id == "RCS1102"); // Analysis result from roslynator.

@@ -2,6 +2,7 @@
 using OmniSharp.FileWatching;
 using OmniSharp.Models;
 using OmniSharp.Models.CodeCheck;
+using OmniSharp.Models.Events;
 using OmniSharp.Models.FilesChanged;
 using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.MSBuild.Models;
@@ -39,6 +40,7 @@ namespace TestUtility
                 });
 
             await host.GetFilesChangedService().Handle(filesChangeRequests);
+            await host.GetTestEventEmitter().WaitForMessage<PackageRestoreMessage>(x => x.Succeeded);
 
             return host;
         }

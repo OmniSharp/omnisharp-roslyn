@@ -84,6 +84,7 @@ namespace OmniSharp.Script.Tests
 
                 var filePath = testProject.AddDisposableFile("main.csx");
                 var service = host.GetRequestHandler<OnFilesChangedService>(OmniSharpEndpoints.FilesChanged);
+
                 await service.Handle(new[]
                 {
                     new FilesChangedRequest
