@@ -29,7 +29,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
 
         public async Task<GotoDefinitionResponse> Handle(GotoDefinitionRequest request)
         {
-            var externalSourceService = _externalSourceServiceFactory.Create(_omnisharpOptions, _workspace.Services.GetLanguageServices(LanguageNames.CSharp));
+            var externalSourceService = _externalSourceServiceFactory.Create(_omnisharpOptions);
             var document = externalSourceService.FindDocumentInCache(request.FileName) ??
                 _workspace.GetDocument(request.FileName);
 

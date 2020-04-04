@@ -19,8 +19,6 @@ using OmniSharp.Mef;
 using OmniSharp.MSBuild.Discovery;
 using OmniSharp.Options;
 using OmniSharp.Roslyn;
-using OmniSharp.Roslyn.CSharp.Services;
-using OmniSharp.Roslyn.CSharp.Services.Decompilation;
 using OmniSharp.Services;
 
 namespace OmniSharp
@@ -54,8 +52,6 @@ namespace OmniSharp
             var config = new ContainerConfiguration();
 
             var fileSystemWatcher = new ManualFileSystemWatcher();
-            var metadataExternalSourceService = new MetadataExternalSourceService(assemblyLoader);
-
             var logger = loggerFactory.CreateLogger<CompositionHostBuilder>();
 
             // We must register an MSBuild instance before composing MEF to ensure that
@@ -81,7 +77,6 @@ namespace OmniSharp
                 .WithProvider(MefValueProvider.From(assemblyLoader))
                 .WithProvider(MefValueProvider.From(analyzerAssemblyLoader))
                 .WithProvider(MefValueProvider.From(dotNetCliService))
-                .WithProvider(MefValueProvider.From(metadataExternalSourceService))
                 .WithProvider(MefValueProvider.From(msbuildLocator))
                 .WithProvider(MefValueProvider.From(eventEmitter));
 

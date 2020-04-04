@@ -28,7 +28,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
 
         public async Task<MetadataResponse> Handle(MetadataRequest request)
         {
-            var externalSourceService = _externalSourceServiceFactory.Create(_omniSharpOptions, _workspace.Services.GetLanguageServices(LanguageNames.CSharp));
+            var externalSourceService = _externalSourceServiceFactory.Create(_omniSharpOptions);
 
             var response = new MetadataResponse();
             foreach (var project in _workspace.CurrentSolution.Projects)

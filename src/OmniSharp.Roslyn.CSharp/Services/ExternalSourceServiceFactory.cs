@@ -18,50 +18,16 @@ namespace OmniSharp.Roslyn.CSharp.Services
     {
         private MetadataExternalSourceService _metadataExternalSourceService;
         private DecompilationExternalSourceService _decompilationExternalSourceService;
-        private readonly IAssemblyLoader _assemblyLoader;
-        private readonly ILoggerFactory _loggerFactory;
-        private static object padlock = new object();
 
         [ImportingConstructor]
-        public ExternalSourceServiceFactory(IAssemblyLoader assemblyLoader, ILoggerFactory loggerFactory)
+        public ExternalSourceServiceFactory(MetadataExternalSourceService metadataExternalSourceService, DecompilationExternalSourceService decompilationExternalSourceService)
         {
-            _assemblyLoader = assemblyLoader;
-            _loggerFactory = loggerFactory;
+            _metadataExternalSourceService = metadataExternalSourceService;
+            _decompilationExternalSourceService = decompilationExternalSourceService;
         }
 
-        public IExternalSourceService Create(OmniSharpOptions omniSharpOptions, HostLanguageServices hostLanguageServices)
-        {
-            var enableDecompilationSupport = omniSharpOptions.RoslynExtensionsOptions.EnableDecompilationSupport;
-
-            if (enableDecompilationSupport)
-            {
-                if (_decompilationExternalSourceService == null)
-                {
-                    lock (padlock)
-                    {
-                        if (_decompilationExternalSourceService == null)
-                        {
-                            _decompilationExternalSourceService = new DecompilationExternalSourceService(_assemblyLoader, _loggerFactory, hostLanguageServices);
-                        }
-                    }
-                }
-
-                return _decompilationExternalSourceService;
-            }
-
-            if (_metadataExternalSourceService == null)
-            {
-                lock (padlock)
-                {
-                    if (_metadataExternalSourceService == null)
-                    {
-                        _metadataExternalSourceService = new MetadataExternalSourceService(_assemblyLoader);
-                    }
-                }
-            }
-
-            return _metadataExternalSourceService;
-        }
+        public IExternalSourceService Create(OmniSharpOptions omniSharpOptions)
+            => omniSharpOptions.RoslynExtensionsOptions.EnableDecompilationSupport ? (IExternalSourceService)_decompilationExternalSourceService: _metadataExternalSourceService;
 
         public CancellationToken CreateCancellationToken(OmniSharpOptions omniSharpOptions, int timeout)
         {

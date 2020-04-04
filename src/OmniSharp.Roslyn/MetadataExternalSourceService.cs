@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Composition;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -13,12 +14,14 @@ using OmniSharp.Utilities;
 
 namespace OmniSharp.Roslyn
 {
+    [Export(typeof(MetadataExternalSourceService)), Shared]
     public class MetadataExternalSourceService : BaseExternalSourceService, IExternalSourceService
     {
         private const string MetadataKey = "$Metadata$";
         private readonly Lazy<Type> _csharpMetadataAsSourceService;
         private const string CSharpMetadataAsSourceService = "Microsoft.CodeAnalysis.CSharp.MetadataAsSource.CSharpMetadataAsSourceService";
 
+        [ImportingConstructor]
         public MetadataExternalSourceService(IAssemblyLoader loader) : base(loader)
         {
             _csharpMetadataAsSourceService = _csharpFeatureAssembly.LazyGetType(CSharpMetadataAsSourceService);
