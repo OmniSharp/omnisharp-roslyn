@@ -9,6 +9,7 @@ using OmniSharp.MSBuild.Models;
 using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
 using OmniSharp.Roslyn.CSharp.Services.Files;
 using OmniSharp.Services;
+using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -28,7 +29,7 @@ namespace TestUtility
 
         public static async Task<OmniSharpTestHost> RestoreProject(this OmniSharpTestHost host, ITestProject testProject)
         {
-            await host.GetExport<IDotNetCliService>().RestoreAsync(testProject.Directory);
+            await host.GetExport<IDotNetCliService>().RestoreAsync(testProject.Directory, onFailure: () => throw new InvalidOperationException($"Failed to restore project on '{testProject.Directory}'"));
 
             var assetPath = Path.Combine(testProject.Directory, "obj");
 

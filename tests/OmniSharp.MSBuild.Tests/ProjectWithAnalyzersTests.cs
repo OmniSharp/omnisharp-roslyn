@@ -9,6 +9,7 @@ using OmniSharp.Models.Diagnostics;
 using OmniSharp.Models.Events;
 using OmniSharp.Models.FilesChanged;
 using OmniSharp.Models.ProjectInformation;
+using OmniSharp.Roslyn.CSharp.Workers.Diagnostics;
 using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
@@ -139,7 +140,8 @@ namespace OmniSharp.MSBuild.Tests
 
             await host.RestoreProject(testProject);
 
-            await Task.Delay(5000);
+            await emitter.WaitForMessage<ProjectDiagnosticStatusMessage>(x => x.Status == ProjectDiagnosticStatus.Ready);
+
             var diagnostics = await host.RequestCodeCheckAsync(Path.Combine(testProject.Directory, "Program.cs"));
 
             Assert.Contains(diagnostics.QuickFixes.OfType<DiagnosticLocation>(), x => x.Id == "RCS1102"); // Analysis result from roslynator.
