@@ -23,13 +23,13 @@ namespace OmniSharp.Roslyn.CSharp.Services.Decompilation
     {
         private const string DecompiledKey = "$Decompiled$";
         private readonly ILoggerFactory _loggerFactory;
-        private readonly OmniSharpCSharpDecompiledSourceService _service;
+        private readonly Lazy<OmniSharpCSharpDecompiledSourceService> _service;
 
         [ImportingConstructor]
         public DecompilationExternalSourceService(IAssemblyLoader loader, ILoggerFactory loggerFactory, OmniSharpWorkspace omniSharpWorkspace) : base(loader)
         {
             _loggerFactory = loggerFactory;
-            _service = new OmniSharpCSharpDecompiledSourceService(omniSharpWorkspace.Services.GetLanguageServices(LanguageNames.CSharp), _loader, _loggerFactory);
+            _service = new Lazy<OmniSharpCSharpDecompiledSourceService>(() => new OmniSharpCSharpDecompiledSourceService(omniSharpWorkspace.Services.GetLanguageServices(LanguageNames.CSharp), _loader, _loggerFactory));
         }
 
         public async Task<(Document document, string documentPath)> GetAndAddExternalSymbolDocument(Project project, ISymbol symbol, CancellationToken cancellationToken)
@@ -62,7 +62,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Decompilation
                 var temporaryDocument = decompilationProject.AddDocument(fileName, string.Empty);
 
                 var compilation = await decompilationProject.GetCompilationAsync();
-                document = await _service.AddSourceToAsync(temporaryDocument, compilation, topLevelSymbol, cancellationToken);
+                document = await _service.Value.AddSourceToAsync(temporaryDocument, compilation, topLevelSymbol, cancellationToken);
 
                 _cache.TryAdd(fileName, document);
             }
