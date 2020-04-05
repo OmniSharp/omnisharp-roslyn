@@ -132,9 +132,8 @@ namespace OmniSharp.MSBuild.Tests
         [Fact]
         public async Task Given_a_restored_project_the_references_are_emitted()
         {
-            // TODO: ProjectConfigurationMessage doesn't get emitted after host startup on restore, should it be sent on every restore too?
-            // without this only when restore is done before host startup you will get references since this message isn't sent after restore.
-            // For this reason because restore must be done before host starts event emitter routine is handled by hand.
+            // TODO: ProjectConfigurationMessage doesn't get emitted after host startup on restore with references, for this reason restore is done
+            // before host startup to support custom event listning
             var testEventEmitter = new TestEventEmitter();
             var descriptor = MefValueProvider.From<IMSBuildEventSink>(new ProjectLoadListener(new LoggerFactory(), testEventEmitter));
 
