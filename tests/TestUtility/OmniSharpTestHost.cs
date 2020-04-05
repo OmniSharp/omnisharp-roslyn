@@ -19,6 +19,7 @@ using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.MSBuild;
 using OmniSharp.MSBuild.Notification;
 using OmniSharp.Roslyn.CSharp.Services;
+using OmniSharp.Roslyn.CSharp.Workers.Diagnostics;
 using OmniSharp.Script;
 using OmniSharp.Services;
 using OmniSharp.Utilities;
@@ -90,6 +91,9 @@ namespace TestUtility
             WorkspaceInitializer.Initialize(serviceProvider, compositionHost);
 
             var host = new OmniSharpTestHost(serviceProvider, compositionHost, callerName);
+
+            // Warmup diagnostics engine so all workspace events got attached.
+            host.GetExport<ICsDiagnosticWorker>();
 
             // Force workspace to be updated
             var service = host.GetWorkspaceInformationService();
