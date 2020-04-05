@@ -134,16 +134,16 @@ namespace OmniSharp.MSBuild.Tests
                 });
 
             var emitter = host.GetTestEventEmitter();
-            emitter.Clear();
 
             await NotifyFileChanged(host, csprojFile);
+            await emitter.WaitForMessage<ProjectDiagnosticStatusMessage>(x => x.Status == ProjectDiagnosticStatus.Ready);
+            emitter.Clear();
 
             await host.RestoreProject(testProject);
 
             await emitter.WaitForMessage<ProjectDiagnosticStatusMessage>(x => x.Status == ProjectDiagnosticStatus.Ready);
 
             var diagnostics = await host.RequestCodeCheckAsync(Path.Combine(testProject.Directory, "Program.cs"));
-
             Assert.Contains(diagnostics.QuickFixes.OfType<DiagnosticLocation>(), x => x.Id == "RCS1102"); // Analysis result from roslynator.
         }
 
