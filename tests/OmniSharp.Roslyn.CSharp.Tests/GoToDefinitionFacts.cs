@@ -587,7 +587,7 @@ class Bar {
                 FileName = source.FileName,
                 Line = point.Line,
                 Column = point.Offset,
-                Timeout = 60000,
+                Timeout = 90000,
                 WantMetadata = wantMetadata
             };
 
