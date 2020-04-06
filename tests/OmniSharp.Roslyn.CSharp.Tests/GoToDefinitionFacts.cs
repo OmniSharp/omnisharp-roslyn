@@ -381,7 +381,8 @@ class Bar {
                     FileName = testFile.FileName,
                     Line = point.Line,
                     Column = point.Offset,
-                    WantMetadata = true
+                    WantMetadata = true,
+                    Timeout = 60000
                 };
                 var gotoDefinitionRequestHandler = GetRequestHandler(host);
                 var gotoDefinitionResponse = await gotoDefinitionRequestHandler.Handle(gotoDefinitionRequest);
@@ -455,7 +456,8 @@ class Bar {
                 FileName = testFile.FileName,
                 Line = point.Line,
                 Column = point.Offset,
-                WantMetadata = true
+                WantMetadata = true,
+                Timeout = 60000
             };
             var gotoDefinitionRequestHandler = GetRequestHandler(host);
             var gotoDefinitionResponse = await gotoDefinitionRequestHandler.Handle(gotoDefinitionRequest);
@@ -467,7 +469,8 @@ class Bar {
                 AssemblyName = gotoDefinitionResponse.MetadataSource.AssemblyName,
                 TypeName = gotoDefinitionResponse.MetadataSource.TypeName,
                 ProjectName = gotoDefinitionResponse.MetadataSource.ProjectName,
-                Language = gotoDefinitionResponse.MetadataSource.Language
+                Language = gotoDefinitionResponse.MetadataSource.Language,
+                Timeout = 60000
             };
             var metadataRequestHandler = host.GetRequestHandler<MetadataService>(OmniSharpEndpoints.Metadata);
             var metadataResponse = await metadataRequestHandler.Handle(metadataRequest);
@@ -587,7 +590,7 @@ class Bar {
                 FileName = source.FileName,
                 Line = point.Line,
                 Column = point.Offset,
-                Timeout = 90000,
+                Timeout = 60000,
                 WantMetadata = wantMetadata
             };
 
