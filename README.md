@@ -1,5 +1,4 @@
-omnisharp-roslyn
-================
+# omnisharp-roslyn
 
 [![Build Status](https://dev.azure.com/omnisharp/Builds/_apis/build/status/OmniSharp.omnisharp-roslyn?branchName=master)](https://dev.azure.com/omnisharp/Builds/_build/latest?definitionId=2&branchName=master)
 
@@ -7,7 +6,7 @@ omnisharp-roslyn
 
 OmniSharp is a .NET development platform based on [Roslyn](https://github.com/dotnet/roslyn) workspaces. It provides project dependencies and C# language services to various IDEs and plugins.
 
-OmniSharp is built with the [.NET Core SDK](https://dot.net/) on Windows and [Mono](http://www.mono-project.com/) on OSX/Linux. It targets the *net472* target framework. For platforms other than Windows, OmniSharp ships with an *embedded Mono* which is based on version *5.18.0*, includes MSBuild *16.3.0* and is provisioned during the build script. If *Mono* is globally installed on the system, OmniSharp will prefer it over the embedded version, however version *>=6.4.0* is required (the lowest version with at least MSBuild *16.3.0*).
+OmniSharp is built with the [.NET Core SDK](https://dot.net/) on Windows and [Mono](http://www.mono-project.com/) on OSX/Linux. It targets the _net472_ target framework. For platforms other than Windows, OmniSharp ships with an _embedded Mono_ which is based on version _5.18.0_, includes MSBuild _16.3.0_ and is provisioned during the build script. If _Mono_ is globally installed on the system, OmniSharp will prefer it over the embedded version, however version _>=6.4.0_ is required (the lowest version with at least MSBuild _16.3.0_).
 
 For Arch Linux users, you need package [msbuild-16-bin](https://aur.archlinux.org/packages/msbuild-16-bin/) (>= 16.3).
 
@@ -21,25 +20,26 @@ See our [change log](https://github.com/OmniSharp/omnisharp-roslyn/blob/master/C
 
 OmniSharp ships in two flavors:
 
-* Stdio server
-* HTTP server 
+-   Stdio server
+-   HTTP server
 
 ### Prerelease Versions
+
 Pre-release versions are available in azure storage, they can be viewed [here](https://roslynomnisharp.blob.core.windows.net/releases?restype=container&comp=list).
 
 All changes to `master` will be pushed to this feed and will be made available with the following convention:
 `https://roslynomnisharp.blob.core.windows.net/releases/{version}/{packagename}-{os/arch}.{ext}`
 
-* Version is auto incremented and is visible in the travis or appveyor build output
-* Package Name would be either `omnisharp` or `omnisharp.http`
-* `os/arch` will be one of the following:
-  * `win-x64`
-  * `win-x86`
-  * `linux-x64`
-  * `linux-x86`
-  * `osx`
-  * `mono`  (Requires global mono installed)
-* Extensions are archive specific, windows will be `zip` and all others will be `tar.gz`.
+-   Version is auto incremented and is visible in the travis or appveyor build output
+-   Package Name would be either `omnisharp` or `omnisharp.http`
+-   `os/arch` will be one of the following:
+    -   `win-x64`
+    -   `win-x86`
+    -   `linux-x64`
+    -   `linux-x86`
+    -   `osx`
+    -   `mono` (Requires global mono installed)
+-   Extensions are archive specific, windows will be `zip` and all others will be `tar.gz`.
 
 ### Building
 
@@ -65,15 +65,16 @@ For more details, see [Build](https://github.com/OmniSharp/omnisharp-roslyn/blob
 
 Add the following setting to your [User Settings or Workspace Settings](https://code.visualstudio.com/Docs/customization/userandworkspace).
 
-``` JSON
+```JSON
 {
   "omnisharp.path": "<Path to the omnisharp executable>"
 }
 ```
 
 The above option can also be set to:
-* "latest" - To consume the latest build from the master branch
-* A specific version number like `1.29.2-beta.60`
+
+-   "latest" - To consume the latest build from the master branch
+-   A specific version number like `1.29.2-beta.60`
 
 In order to be able to attach a debugger, add the following setting:
 
@@ -93,3 +94,22 @@ OmniSharp provides a rich set of hierarchical configuration options, controlled 
 
 We have slack room as well. [Get yourself invited](https://omnisharp.herokuapp.com/): [here](https://omnisharp.herokuapp.com/)
 
+## License
+
+Copyright © .NET Foundation, and contributors.
+
+OmniSharp is provided as-is under the MIT license. For more information see [LICENSE](https://github.com/OmniSharp/omnisharp-roslyn/blob/master/license.md).
+
+## Code of Conduct
+
+This project has adopted the code of conduct defined by the [Contributor Covenant](http://contributor-covenant.org/)
+to clarify expected behavior in our community.
+For more information see the [.NET Foundation Code of Conduct](http://www.dotnetfoundation.org/code-of-conduct).
+
+## Contribution License Agreement
+
+By signing the [CLA](https://cla.dotnetfoundation.org/OmniSharp/omnisharp-roslyn), the community is free to use your contribution to .NET Foundation projects.
+
+## .NET Foundation
+
+This project is supported by the [.NET Foundation](http://www.dotnetfoundation.org).
