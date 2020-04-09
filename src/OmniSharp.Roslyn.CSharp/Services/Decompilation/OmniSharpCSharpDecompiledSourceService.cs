@@ -106,7 +106,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Decompilation
             document = await AddAssemblyInfoRegionAsync(document, symbol, cancellationToken).ConfigureAwait(false);
 
             // Convert XML doc comments to regular comments, just like MAS
-            //var docCommentFormattingService = document.GetLanguageService<IDocumentationCommentFormattingService>();
             var docCommentFormattingService = _csharpDocumentationCommentFormattingService.CreateInstance();
             document = await ConvertDocCommentsToRegularCommentsAsync(document, docCommentFormattingService, cancellationToken).ConfigureAwait(false);
 
