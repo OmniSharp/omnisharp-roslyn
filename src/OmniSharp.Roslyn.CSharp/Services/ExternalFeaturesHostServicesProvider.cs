@@ -2,9 +2,6 @@
 using System.Composition;
 using System.Linq;
 using System.Reflection;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.Host;
-using Microsoft.CodeAnalysis.Host.Mef;
 using OmniSharp.Options;
 using OmniSharp.Services;
 
