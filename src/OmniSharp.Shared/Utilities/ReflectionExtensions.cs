@@ -159,6 +159,22 @@ namespace OmniSharp.Utilities
             return (T)methodInfo.Invoke(null, args);
         }
 
+        public static T InvokeStatic<T>(this Lazy<Type> lazyType, string methodName, object[] args)
+        {
+            if (lazyType == null)
+            {
+                throw new ArgumentNullException(nameof(lazyType));
+            }
+
+            var method = lazyType.Value.GetMethod(methodName);
+            if (method == null)
+            {
+                throw new InvalidOperationException($"Failed to retrieve method {method}");
+            }
+
+            return method.InvokeStatic<T>(args);
+    }
+
         public static T InvokeStatic<T>(this Lazy<MethodInfo> lazyMethodInfo, object[] args)
         {
             if (lazyMethodInfo == null)
