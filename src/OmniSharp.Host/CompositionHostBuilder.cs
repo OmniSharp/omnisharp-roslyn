@@ -52,8 +52,6 @@ namespace OmniSharp
             var config = new ContainerConfiguration();
 
             var fileSystemWatcher = new ManualFileSystemWatcher();
-            var metadataHelper = new MetadataHelper(assemblyLoader);
-
             var logger = loggerFactory.CreateLogger<CompositionHostBuilder>();
 
             // We must register an MSBuild instance before composing MEF to ensure that
@@ -79,7 +77,6 @@ namespace OmniSharp
                 .WithProvider(MefValueProvider.From(assemblyLoader))
                 .WithProvider(MefValueProvider.From(analyzerAssemblyLoader))
                 .WithProvider(MefValueProvider.From(dotNetCliService))
-                .WithProvider(MefValueProvider.From(metadataHelper))
                 .WithProvider(MefValueProvider.From(msbuildLocator))
                 .WithProvider(MefValueProvider.From(eventEmitter));
 
