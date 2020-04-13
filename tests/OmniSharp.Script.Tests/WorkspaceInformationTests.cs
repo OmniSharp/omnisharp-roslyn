@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.Scripting.Hosting;
 using OmniSharp.Models.FilesChanged;
+using OmniSharp.Models.ProjectInformation;
 using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.Roslyn.CSharp.Services.Files;
 using TestUtility;
@@ -94,8 +95,7 @@ namespace OmniSharp.Script.Tests
                     }
                 });
 
-                // back off for 2 seconds to let the watcher and workspace process new projects
-                await Task.Delay(2000);
+                await host.GetTestEventEmitter().WaitForMessage<ProjectInformationResponse>();
 
                 workspaceInfo = await GetWorkspaceInfoAsync(host);
                 var project = Assert.Single(workspaceInfo.Projects);
