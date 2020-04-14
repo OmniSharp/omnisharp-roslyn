@@ -23,7 +23,6 @@ using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Extensions;
 using System.IO;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.Scripting;
 using OmniSharp.Services;
 using System.Reflection;
 using OmniSharp.Utilities;
@@ -34,7 +33,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Decompilation
 {
     public class OmniSharpCSharpDecompiledSourceService
     {
-        private readonly HostLanguageServices _provider;
         private readonly ILoggerFactory _loggerFactory;
         private const string MetadataAsSourceHelpers = "Microsoft.CodeAnalysis.MetadataAsSource.MetadataAsSourceHelpers";
         private const string CSharpDocumentationCommentFormattingService = "Microsoft.CodeAnalysis.CSharp.DocumentationComments.CSharpDocumentationCommentFormattingService";
@@ -48,7 +46,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Decompilation
         private readonly Lazy<MethodInfo> _metadataGetAssemblyInfo;
         private readonly Lazy<MethodInfo> _metadataGetAssemblyDisplay;
 
-        public OmniSharpCSharpDecompiledSourceService(HostLanguageServices provider, IAssemblyLoader loader, ILoggerFactory loggerFactory)
+        public OmniSharpCSharpDecompiledSourceService(IAssemblyLoader loader, ILoggerFactory loggerFactory)
         {
             _roslynFeatureAssembly = loader.LazyLoad(Configuration.RoslynFeatures);
             _csharpFeatureAssembly = loader.LazyLoad(Configuration.RoslynCSharpFeatures);
@@ -58,7 +56,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Decompilation
             _metadataGetAssemblyInfo = _csharpMetadataAsSourceService.LazyGetMethod("GetAssemblyInfo");
             _metadataGetAssemblyDisplay = _csharpMetadataAsSourceService.LazyGetMethod("GetAssemblyDisplay");
 
-            _provider = provider;
             _loggerFactory = loggerFactory;
         }
 
@@ -68,36 +65,11 @@ namespace OmniSharp.Roslyn.CSharp.Services.Decompilation
             var containingOrThis = symbol.GetContainingTypeOrThis();
             var fullName = GetFullReflectionName(containingOrThis);
 
-            string assemblyLocation = null;
-            var isReferenceAssembly = symbol.ContainingAssembly.GetAttributes().Any(attribute => attribute.AttributeClass.Name == nameof(ReferenceAssemblyAttribute)
-                && attribute.AttributeClass.ToNameDisplayString() == typeof(ReferenceAssemblyAttribute).FullName);
-            if (isReferenceAssembly)
-            {
-                try
-                {
-                    var fullAssemblyName = symbol.ContainingAssembly.Identity.GetDisplayName();
-
-                    var globalAssemblyCacheType = typeof(ScriptOptions).Assembly.GetType("Microsoft.CodeAnalysis.GlobalAssemblyCache");
-                    var instance = globalAssemblyCacheType.GetField("Instance", BindingFlags.NonPublic | BindingFlags.Static).GetValue(null);
-
-                    var args = new object[] { fullAssemblyName, assemblyLocation, null, CultureInfo.CurrentCulture };
-                    instance.GetType().InvokeMember("ResolvePartialName", BindingFlags.InvokeMethod, Type.DefaultBinder, instance, args);
-                    assemblyLocation = (string)args[1];
-                }
-                catch (Exception)
-                {
-                    // log
-                }
-            }
-
+            var reference = symbolCompilation.GetMetadataReference(symbol.ContainingAssembly);
+            var assemblyLocation = (reference as PortableExecutableReference)?.FilePath;
             if (assemblyLocation == null)
             {
-                var reference = symbolCompilation.GetMetadataReference(symbol.ContainingAssembly);
-                assemblyLocation = (reference as PortableExecutableReference)?.FilePath;
-                if (assemblyLocation == null)
-                {
-                    throw new NotSupportedException("Cannot_navigate_to_the_symbol_under_the_caret");
-                }
+                throw new NotSupportedException("Cannot_navigate_to_the_symbol_under_the_caret");
             }
 
             // Decompile
