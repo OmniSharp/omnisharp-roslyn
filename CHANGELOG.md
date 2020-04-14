@@ -1,6 +1,9 @@
 # Changelog
 All changes to the project will be documented in this file.
 
+## [1.35.1] - not yet released
+* Fixed not supported exception when trying to decompile a BCL assembly on Mono (PR: [#1767](https://github.com/OmniSharp/omnisharp-roslyn/pull/1767))
+
 ## [1.35.0] - 2020-04-10
 * Support for `<RunAnalyzers />` and `<RunAnalyzersDuringLiveAnalysis />` (PR: [#1739](https://github.com/OmniSharp/omnisharp-roslyn/pull/1739))
 * Add `typeparam` documentation comments to text description ([omnisharp-vscode#3516](https://github.com/OmniSharp/omnisharp-vscode/issues/3516), PR: [#1749](https://github.com/OmniSharp/omnisharp-roslyn/pull/1749))

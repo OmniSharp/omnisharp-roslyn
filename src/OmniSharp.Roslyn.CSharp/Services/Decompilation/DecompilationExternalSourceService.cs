@@ -26,10 +26,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Decompilation
         private readonly Lazy<OmniSharpCSharpDecompiledSourceService> _service;
 
         [ImportingConstructor]
-        public DecompilationExternalSourceService(IAssemblyLoader loader, ILoggerFactory loggerFactory, OmniSharpWorkspace omniSharpWorkspace) : base(loader)
+        public DecompilationExternalSourceService(IAssemblyLoader loader, ILoggerFactory loggerFactory) : base(loader)
         {
             _loggerFactory = loggerFactory;
-            _service = new Lazy<OmniSharpCSharpDecompiledSourceService>(() => new OmniSharpCSharpDecompiledSourceService(omniSharpWorkspace.Services.GetLanguageServices(LanguageNames.CSharp), _loader, _loggerFactory));
+            _service = new Lazy<OmniSharpCSharpDecompiledSourceService>(() => new OmniSharpCSharpDecompiledSourceService(_loader, _loggerFactory));
         }
 
         public async Task<(Document document, string documentPath)> GetAndAddExternalSymbolDocument(Project project, ISymbol symbol, CancellationToken cancellationToken)
