@@ -44,6 +44,7 @@ namespace OmniSharp.DotNetTest.Tests
         [InlineData(NUnitTestProject, TestProgram, 28, 20, true, nunit, NUnitTestMethod, "Main.Test.MainTest.SourceDataDrivenTest")]
         [InlineData(NUnitTestProject, TestProgram, 34, 20, true, nunit, NUnitTestMethod, "Main.Test.MainTest.FailingTest")]
         [InlineData(NUnitTestProject, TestProgram, 47, 20, false, "", "", "")]
+        [InlineData(NUnitTestProject, TestProgram, 60, 20, true, nunit, NUnitTestMethod, "Main.Test.GenericTest`1.TypedTest")]
         public async Task FindTestMethods(string projectName, string fileName, int line, int column, bool expectToFind, string expectedTestFramework, string expectedFeatureName, string expectedMethodName)
         {
             using (var testProject = await this._testAssets.GetTestProjectAsync(projectName))
