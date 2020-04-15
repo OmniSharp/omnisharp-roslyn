@@ -42,7 +42,7 @@ namespace Main.Test
         {
             int a = 1, b = 1;
             Console.WriteLine($"a = {a}, b = {b}");
-            Assert.AreEqual(a,b);
+            Assert.AreEqual(a, b);
         }
 
         public void UtilityFunction()
@@ -51,5 +51,16 @@ namespace Main.Test
         }
 
         private static int[] _items = new int[1] { 1 };
+    }
+
+    [TestFixture(typeof(int))]
+    [TestFixture(typeof(double))]
+    public class GenericTest<T>
+    {
+        [Test]
+        public void TypedTest()
+        {
+            Assert.NotNull(default(T));
+        }
     }
 }

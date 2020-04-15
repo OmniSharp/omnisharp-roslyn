@@ -168,6 +168,18 @@ namespace OmniSharp.DotNetTest.Tests
         }
 
         [Fact]
+        public async Task RunNunitTypedTestRunsTwice()
+        {
+            var response = await RunDotNetTestAsync(
+                NUnitTestProject,
+                methodName: "Main.Test.GenericTest`1.TypedTest",
+                testFramework: "nunit",
+                shouldPass: true);
+
+            Assert.Equal(2, response.Results.Length);
+        }
+
+        [Fact]
         public async Task RunMSTestTest()
         {
             await RunDotNetTestAsync(
