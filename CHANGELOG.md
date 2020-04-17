@@ -10,7 +10,14 @@ All changes to the project will be documented in this file.
 * Support for `<RunAnalyzers />` and `<RunAnalyzersDuringLiveAnalysis />` (PR: [#1739](https://github.com/OmniSharp/omnisharp-roslyn/pull/1739))
 * Add `typeparam` documentation comments to text description ([omnisharp-vscode#3516](https://github.com/OmniSharp/omnisharp-vscode/issues/3516), PR: [#1749](https://github.com/OmniSharp/omnisharp-roslyn/pull/1749))
 * Tag `#region` blocks appropriately in the block structure service ([omnisharp-vscode#2621](https://github.com/OmniSharp/omnisharp-vscode/issues/2621), PR: [#1748](https://github.com/OmniSharp/omnisharp-roslyn/pull/1748))
-* Added support for decompilation based on ILSpy (similar to VS) (PR: [#1751](https://github.com/OmniSharp/omnisharp-roslyn/pull/1751))
+* Added support for decompilation based on ILSpy (similar to VS). The feature is currently opt-into and needs to be enabled using OmniSharp configuration (PR: [#1751](https://github.com/OmniSharp/omnisharp-roslyn/pull/1751))
+    ```JSON
+        {
+            "RoslynExtensionsOptions": {
+                "enableDecompilationSupport": true
+            }
+        }
+    ```
 
 ## [1.34.15] - 2020-03-25
 * Support for .NET Core 3.1 in csx files (PR: [#1731](https://github.com/OmniSharp/omnisharp-roslyn/pull/1731))
