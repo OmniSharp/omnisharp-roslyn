@@ -52,7 +52,6 @@
     <PackageReference Update="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.0" />
     <PackageReference Update="Microsoft.NET.Test.Sdk" Version="15.7.2" />
     <PackageReference Update="Microsoft.TestPlatform.TranslationLayer" Version="15.7.2" />
-    <PackageReference Update="Microsoft.VisualStudio.CodingConventions" Version="1.1.20180503.2" />
     <PackageReference Update="Microsoft.VisualStudio.Setup.Configuration.Interop" Version="1.14.114" />
     <PackageReference Update="Microsoft.VisualStudio.SDK.EmbedInteropTypes" Version="15.0.12" />
 

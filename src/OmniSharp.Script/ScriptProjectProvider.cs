@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using Dotnet.Script.DependencyModel.NuGet;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -10,6 +12,7 @@ using Microsoft.CodeAnalysis.Scripting;
 using Microsoft.CodeAnalysis.Scripting.Hosting;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Helpers;
+using OmniSharp.Roslyn.EditorConfig;
 using OmniSharp.Roslyn.Utilities;
 
 namespace OmniSharp.Script
@@ -158,9 +161,20 @@ namespace OmniSharp.Script
                     Union(references, MetadataReferenceEqualityComparer.Instance);
             }
 
+            var projectId = ProjectId.CreateNewId();
+            var analyzerConfigDocuments = EditorConfigFinder
+                .GetEditorConfigPaths(csxFilePath)
+                .Select(path =>
+                    DocumentInfo.Create(
+                        DocumentId.CreateNewId(projectId),
+                        name: ".editorconfig",
+                        loader: new FileTextLoader(path, Encoding.UTF8),
+                        filePath: path))
+                .ToImmutableArray();
+
             var project = ProjectInfo.Create(
                 filePath: csxFilePath,
-                id: ProjectId.CreateNewId(),
+                id: projectId,
                 version: VersionStamp.Create(),
                 name: csxFileName,
                 assemblyName: $"{csxFileName}.dll",
@@ -171,7 +185,8 @@ namespace OmniSharp.Script
                 metadataReferences: references,
                 parseOptions: ParseOptions,
                 isSubmission: true,
-                hostObjectType: globalsType);
+                hostObjectType: globalsType)
+                .WithAnalyzerConfigDocuments(analyzerConfigDocuments);
 
             return project;
         }

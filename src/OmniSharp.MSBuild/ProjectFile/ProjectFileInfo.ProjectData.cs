@@ -49,6 +49,8 @@ namespace OmniSharp.MSBuild.ProjectFile
             public ImmutableArray<PackageReference> PackageReferences { get; }
             public ImmutableArray<string> Analyzers { get; }
             public ImmutableArray<string> AdditionalFiles { get; }
+            public ImmutableArray<string> AnalyzerConfigFiles { get; }
+
             public RuleSet RuleSet { get; }
             public ImmutableDictionary<string, string> ReferenceAliases { get; }
             public ImmutableDictionary<string, string> ProjectReferenceAliases { get; }
@@ -70,6 +72,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 PackageReferences = ImmutableArray<PackageReference>.Empty;
                 Analyzers = ImmutableArray<string>.Empty;
                 AdditionalFiles = ImmutableArray<string>.Empty;
+                AnalyzerConfigFiles = ImmutableArray<string>.Empty;
                 ReferenceAliases = ImmutableDictionary<string, string>.Empty;
                 ProjectReferenceAliases = ImmutableDictionary<string, string>.Empty;
             }
@@ -154,6 +157,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 ImmutableArray<PackageReference> packageReferences,
                 ImmutableArray<string> analyzers,
                 ImmutableArray<string> additionalFiles,
+                ImmutableArray<string> analyzerConfigFiles,
                 bool treatWarningsAsErrors,
                 string defaultNamespace,
                 bool runAnalyzers,
@@ -171,6 +175,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 PackageReferences = packageReferences.EmptyIfDefault();
                 Analyzers = analyzers.EmptyIfDefault();
                 AdditionalFiles = additionalFiles.EmptyIfDefault();
+                AnalyzerConfigFiles = analyzerConfigFiles.EmptyIfDefault();
                 ReferenceAliases = referenceAliases;
                 ProjectReferenceAliases = projectReferenceAliases;
             }
@@ -317,13 +322,14 @@ namespace OmniSharp.MSBuild.ProjectFile
                 var packageReferences = GetPackageReferences(projectInstance.GetItems(ItemNames.PackageReference));
                 var analyzers = GetFullPaths(projectInstance.GetItems(ItemNames.Analyzer));
                 var additionalFiles = GetFullPaths(projectInstance.GetItems(ItemNames.AdditionalFiles));
+                var editorConfigFiles = GetFullPaths(projectInstance.GetItems(ItemNames.EditorConfigFiles));
 
                 return new ProjectData(guid, name,
                     assemblyName, targetPath, outputPath, intermediateOutputPath, projectAssetsFile,
                     configuration, platform, targetFramework, targetFrameworks,
                     outputKind, languageVersion, nullableContextOptions, allowUnsafeCode, checkForOverflowUnderflow, documentationFile, preprocessorSymbolNames, suppressedDiagnosticIds,
                     signAssembly, assemblyOriginatorKeyFile,
-                    sourceFiles, projectReferences.ToImmutable(), references.ToImmutable(), packageReferences, analyzers, additionalFiles, treatWarningsAsErrors, defaultNamespace, runAnalyzers, runAnalyzersDuringLiveAnalysis, ruleset,
+                    sourceFiles, projectReferences.ToImmutable(), references.ToImmutable(), packageReferences, analyzers, additionalFiles, editorConfigFiles, treatWarningsAsErrors, defaultNamespace, runAnalyzers, runAnalyzersDuringLiveAnalysis, ruleset,
                     referenceAliases.ToImmutableDictionary(), projectReferenceAliases.ToImmutable());
             }
 

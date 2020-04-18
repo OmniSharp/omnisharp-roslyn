@@ -176,7 +176,7 @@ namespace OmniSharp.MSBuild
                     await Task.Delay(LoopDelay, cancellationToken);
                     ProcessQueue(cancellationToken);
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     _logger.LogError($"Error occurred while processing project updates: {ex}");
                 }
@@ -436,6 +436,7 @@ namespace OmniSharp.MSBuild
             UpdateReferences(project, projectFileInfo.ProjectReferences, projectFileInfo.References);
             UpdateAnalyzerReferences(project, projectFileInfo);
             UpdateAdditionalFiles(project, projectFileInfo.AdditionalFiles);
+            UpdateAnalyzerConfigFiles(project, projectFileInfo.AnalyzerConfigFiles);
             UpdateProjectProperties(project, projectFileInfo);
 
             _workspace.TryPromoteMiscellaneousDocumentsToProject(project);
@@ -483,10 +484,27 @@ namespace OmniSharp.MSBuild
 
             foreach (var file in additionalFiles)
             {
-                 if (File.Exists(file))
-                 {
+                if (File.Exists(file))
+                {
                     _workspace.AddAdditionalDocument(project.Id, file);
-                 }
+                }
+            }
+        }
+
+        private void UpdateAnalyzerConfigFiles(Project project, IList<string> analyzerConfigFiles)
+        {
+            var currentAnalyzerConfigDocuments = project.AnalyzerConfigDocuments;
+            foreach (var document in currentAnalyzerConfigDocuments)
+            {
+                _workspace.RemoveAnalyzerConfigDocument(document.Id);
+            }
+
+            foreach (var file in analyzerConfigFiles)
+            {
+                if (File.Exists(file))
+                {
+                    _workspace.AddAnalyzerConfigDocument(project.Id, file);
+                }
             }
         }
 

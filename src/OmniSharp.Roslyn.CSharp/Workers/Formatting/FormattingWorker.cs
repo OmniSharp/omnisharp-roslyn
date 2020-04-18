@@ -1,17 +1,13 @@
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Formatting;
-using Microsoft.CodeAnalysis.Options;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.Extensions.Logging;
-using Microsoft.VisualStudio.CodingConventions;
 using OmniSharp.Models;
 using OmniSharp.Options;
-using OmniSharp.Roslyn.CSharp.Services.Formatting.EditorConfig;
 using OmniSharp.Roslyn.Utilities;
 
 namespace OmniSharp.Roslyn.CSharp.Workers.Formatting
@@ -104,8 +100,8 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Formatting
         private static async Task<Document> FormatDocument(Document document, OmniSharpOptions omnisharpOptions, ILoggerFactory loggerFactory, TextSpan? textSpan = null)
         {
             var optionSet = omnisharpOptions.FormattingOptions.EnableEditorConfigSupport
-                ? await document.Project.Solution.Workspace.Options.WithEditorConfigOptions(document.FilePath, loggerFactory)
-                : document.Project.Solution.Workspace.Options;
+                ? await document.GetOptionsAsync()
+                : document.Project.Solution.Options;
 
             var newDocument = textSpan != null ? await Formatter.FormatAsync(document, textSpan.Value, optionSet) : await Formatter.FormatAsync(document, optionSet);
             if (omnisharpOptions.FormattingOptions.OrganizeImports)

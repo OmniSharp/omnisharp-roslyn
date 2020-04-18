@@ -16,6 +16,7 @@ using Microsoft.Extensions.Logging;
 using OmniSharp.FileSystem;
 using OmniSharp.FileWatching;
 using OmniSharp.Roslyn;
+using OmniSharp.Roslyn.EditorConfig;
 using OmniSharp.Roslyn.Utilities;
 using OmniSharp.Utilities;
 
@@ -103,6 +104,16 @@ namespace OmniSharp
             var projectInfo = miscDocumentsProjectInfos.GetOrAdd(language, (lang) => CreateMiscFilesProject(lang));
             var documentId = AddDocument(projectInfo.Id, filePath);
             _logger.LogInformation($"Miscellaneous file: {filePath} added to workspace");
+
+            var analyzerConfigFiles = projectInfo.AnalyzerConfigDocuments.Select(document => document.FilePath);
+            var newAnalyzerConfigFiles = EditorConfigFinder
+                .GetEditorConfigPaths(filePath)
+                .Except(analyzerConfigFiles);
+            foreach (var analyzerConfigFile in newAnalyzerConfigFiles)
+            {
+                AddAnalyzerConfigDocument(projectInfo.Id, analyzerConfigFile);
+            }
+
             return documentId;
         }
 
@@ -153,7 +164,7 @@ namespace OmniSharp
         public void UpdateDiagnosticOptionsForProject(ProjectId projectId, ImmutableDictionary<string, ReportDiagnostic> rules)
         {
             var project = this.CurrentSolution.GetProject(projectId);
-            OnCompilationOptionsChanged(projectId,  project.CompilationOptions.WithSpecificDiagnosticOptions(rules));
+            OnCompilationOptionsChanged(projectId, project.CompilationOptions.WithSpecificDiagnosticOptions(rules));
         }
 
         private ProjectInfo CreateMiscFilesProject(string language)
@@ -222,7 +233,7 @@ namespace OmniSharp
             // folder computation is best effort. in case of exceptions, we back out because it's not essential for core features
             try
             {
-                // find the relative path from project file to our document 
+                // find the relative path from project file to our document
                 var relativeDocumentPath = FileSystemHelper.GetRelativePath(fullPath, basePath);
 
                 // only set document's folders if
@@ -449,13 +460,13 @@ namespace OmniSharp
             var refsToAdd = analyzerReferences.Where(newRef => project.AnalyzerReferences.All(oldRef => oldRef.Display != newRef.Display));
             var refsToRemove = project.AnalyzerReferences.Where(newRef => analyzerReferences.All(oldRef => oldRef.Display != newRef.Display));
 
-            foreach(var toAdd in refsToAdd)
+            foreach (var toAdd in refsToAdd)
             {
                 _logger.LogInformation($"Adding analyzer reference: {toAdd.FullPath}");
                 base.OnAnalyzerReferenceAdded(id, toAdd);
             }
 
-            foreach(var toRemove in refsToRemove)
+            foreach (var toRemove in refsToRemove)
             {
                 _logger.LogInformation($"Removing analyzer reference: {toRemove.FullPath}");
                 base.OnAnalyzerReferenceRemoved(id, toRemove);
@@ -470,9 +481,22 @@ namespace OmniSharp
             OnAdditionalDocumentAdded(documentInfo);
         }
 
+        public void AddAnalyzerConfigDocument(ProjectId projectId, string filePath)
+        {
+            var documentId = DocumentId.CreateNewId(projectId);
+            var loader = new OmniSharpTextLoader(filePath);
+            var documentInfo = DocumentInfo.Create(documentId, Path.GetFileName(filePath), filePath: filePath, loader: loader);
+            OnAnalyzerConfigDocumentAdded(documentInfo);
+        }
+
         public void RemoveAdditionalDocument(DocumentId documentId)
         {
             OnAdditionalDocumentRemoved(documentId);
+        }
+
+        public void RemoveAnalyzerConfigDocument(DocumentId documentId)
+        {
+            OnAnalyzerConfigDocumentRemoved(documentId);
         }
 
         protected override void ApplyProjectChanges(ProjectChanges projectChanges)
