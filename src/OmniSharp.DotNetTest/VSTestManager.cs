@@ -334,8 +334,32 @@ namespace OmniSharp.DotNetTest
                 }
 
                 testName = testName.Trim();
+
+                // Discovered tests in generic classes come back in the form `Namespace.GenericClass<TParam>.TestName`
+                // however requested test names are sent from the IDE in the form of `Namespace.GenericClass`1.TestName`
+                // to compensate we format each part of the discovered test name to match what the IDE would send.
+                testName = string.Join(".", testName.Split('.').Select(FormatAsMetadata));
+
                 return hashset.Contains(testName, StringComparer.Ordinal);
             };
+
+            static string FormatAsMetadata(string name)
+            {
+                if (!name.EndsWith(">"))
+                {
+                    return name;
+                }
+
+                var genericParamStart = name.IndexOf('<');
+                if (genericParamStart < 0)
+                {
+                    return name;
+                }
+
+                var genericParams = name.Substring(genericParamStart, name.Length - genericParamStart - 1);
+                var paramCount = genericParams.Split(',').Length;
+                return $"{name.Substring(0, genericParamStart)}`{paramCount}";
+            }
         }
 
         private TestCase[] DiscoverTests(string[] methodNames, string runSettings, string targetFrameworkVersion)

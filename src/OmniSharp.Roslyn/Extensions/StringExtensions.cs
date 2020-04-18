@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 
 namespace OmniSharp.Extensions
@@ -16,12 +17,12 @@ namespace OmniSharp.Extensions
 
         public static bool IsValidCompletionStartsWithIgnoreCase(this string completion, string partial)
         {
-            return completion.ToLower().StartsWith(partial.ToLower());
+            return completion.StartsWith(partial, StringComparison.OrdinalIgnoreCase);
         }
 
         public static bool IsCamelCaseMatch(this string completion, string partial)
         {
-            return new string(completion.Where(c => c >= 'A' && c <= 'Z').ToArray()).StartsWith(partial.ToUpper());
+            return new string(completion.Where(c => c >= 'A' && c <= 'Z').ToArray()).StartsWith(partial, StringComparison.OrdinalIgnoreCase);
         }
 
         public static bool IsSubsequenceMatch(this string completion, string partial)
@@ -31,7 +32,7 @@ namespace OmniSharp.Extensions
                 return true;
             }
 
-            if (partial.Length > 1 && completion.ToLowerInvariant().Contains(partial.ToLowerInvariant()))
+            if (partial.Length > 1 && completion.IndexOf(partial, StringComparison.InvariantCultureIgnoreCase) >= 0)
             {
                 return true;
             }
@@ -54,7 +55,7 @@ namespace OmniSharp.Extensions
                 return false;
             }
 
-            return char.ToLowerInvariant(word.First()) == char.ToLowerInvariant(match.First());
+            return char.ToLowerInvariant(word[0]) == char.ToLowerInvariant(match[0]);
         }
     }
 }
