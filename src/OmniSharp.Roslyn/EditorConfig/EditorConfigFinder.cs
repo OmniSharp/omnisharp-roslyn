@@ -44,7 +44,7 @@ namespace OmniSharp.Roslyn.EditorConfig
             return editorConfigPaths.ToImmutableArray();
         }
 
-        private static bool TryGetDirectoryPath(string path, out string directoryPath)
+        public static bool TryGetDirectoryPath(string path, out string directoryPath)
         {
             try
             {
