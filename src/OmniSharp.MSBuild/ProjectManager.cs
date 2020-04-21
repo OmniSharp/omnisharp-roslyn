@@ -377,10 +377,13 @@ namespace OmniSharp.MSBuild
                 QueueProjectUpdate(projectFileInfo.FilePath, allowAutoRestore: true, projectFileInfo.ProjectIdInfo);
             });
 
-            _fileSystemWatcher.Watch(".editorconfig", (file, changeType) =>
+            if (_workspace.EditorConfigEnabled)
             {
-                QueueProjectUpdate(projectFileInfo.FilePath, allowAutoRestore: false, projectFileInfo.ProjectIdInfo);
-            });
+                _fileSystemWatcher.Watch(".editorconfig", (file, changeType) =>
+                {
+                    QueueProjectUpdate(projectFileInfo.FilePath, allowAutoRestore: false, projectFileInfo.ProjectIdInfo);
+                });
+            }
 
             if (projectFileInfo.RuleSet?.FilePath != null)
             {
@@ -498,6 +501,11 @@ namespace OmniSharp.MSBuild
 
         private void UpdateAnalyzerConfigFiles(Project project, IList<string> analyzerConfigFiles)
         {
+            if (!_workspace.EditorConfigEnabled)
+            {
+                return;
+            }
+
             var currentAnalyzerConfigDocuments = project.AnalyzerConfigDocuments;
             foreach (var document in currentAnalyzerConfigDocuments)
             {

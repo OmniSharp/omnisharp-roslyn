@@ -29,6 +29,8 @@ namespace OmniSharp
             projectEventForwarder.Initialize();
             var projectSystems = compositionHost.GetExports<IProjectSystem>();
 
+            workspace.EditorConfigEnabled = options.CurrentValue.FormattingOptions.EnableEditorConfigSupport;
+
             foreach (var projectSystem in projectSystems)
             {
                 try

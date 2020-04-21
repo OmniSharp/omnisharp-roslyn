@@ -26,6 +26,7 @@ namespace OmniSharp
     public class OmniSharpWorkspace : Workspace
     {
         public bool Initialized { get; set; }
+        public bool EditorConfigEnabled { get; set; }
         public BufferManager BufferManager { get; private set; }
 
         private readonly ILogger<OmniSharpWorkspace> _logger;
@@ -104,6 +105,11 @@ namespace OmniSharp
             var projectInfo = miscDocumentsProjectInfos.GetOrAdd(language, (lang) => CreateMiscFilesProject(lang));
             var documentId = AddDocument(projectInfo.Id, filePath);
             _logger.LogInformation($"Miscellaneous file: {filePath} added to workspace");
+
+            if (!EditorConfigEnabled)
+            {
+                return documentId;
+            }
 
             var analyzerConfigFiles = projectInfo.AnalyzerConfigDocuments.Select(document => document.FilePath);
             var newAnalyzerConfigFiles = EditorConfigFinder

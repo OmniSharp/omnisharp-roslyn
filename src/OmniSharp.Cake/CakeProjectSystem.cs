@@ -284,15 +284,17 @@ namespace OmniSharp.Cake
             }
 
             var projectId = ProjectId.CreateNewId(Guid.NewGuid().ToString());
-            var analyzerConfigDocuments = EditorConfigFinder
-                .GetEditorConfigPaths(filePath)
-                .Select(path =>
-                    DocumentInfo.Create(
-                        DocumentId.CreateNewId(projectId),
-                        name: ".editorconfig",
-                        loader: new FileTextLoader(path, Encoding.UTF8),
-                        filePath: path))
-                .ToImmutableArray();
+            var analyzerConfigDocuments = _workspace.EditorConfigEnabled
+                ? EditorConfigFinder
+                    .GetEditorConfigPaths(filePath)
+                    .Select(path =>
+                        DocumentInfo.Create(
+                            DocumentId.CreateNewId(projectId),
+                            name: ".editorconfig",
+                            loader: new FileTextLoader(path, Encoding.UTF8),
+                            filePath: path))
+                    .ToImmutableArray()
+                : ImmutableArray<DocumentInfo>.Empty;
 
             return ProjectInfo.Create(
                 id: projectId,

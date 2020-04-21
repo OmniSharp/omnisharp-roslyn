@@ -51,8 +51,9 @@ namespace OmniSharp.Script
         private readonly IOmniSharpEnvironment _env;
         private readonly ILogger _logger;
         private readonly bool _isDesktopClr;
+        private readonly bool _editorConfigEnabled;
 
-        public ScriptProjectProvider(ScriptOptions scriptOptions, IOmniSharpEnvironment env, ILoggerFactory loggerFactory, bool isDesktopClr)
+        public ScriptProjectProvider(ScriptOptions scriptOptions, IOmniSharpEnvironment env, ILoggerFactory loggerFactory, bool isDesktopClr, bool editorConfigEnabled)
         {
             _scriptOptions = scriptOptions ?? throw new ArgumentNullException(nameof(scriptOptions));
             _env = env ?? throw new ArgumentNullException(nameof(env));
@@ -61,6 +62,7 @@ namespace OmniSharp.Script
             _compilationOptions = new Lazy<CSharpCompilationOptions>(CreateCompilationOptions);
             _commandLineArgs = new Lazy<CSharpCommandLineArguments>(CreateCommandLineArguments);
             _isDesktopClr = isDesktopClr;
+            _editorConfigEnabled = editorConfigEnabled;
         }
 
         private CSharpCommandLineArguments CreateCommandLineArguments()
@@ -162,15 +164,17 @@ namespace OmniSharp.Script
             }
 
             var projectId = ProjectId.CreateNewId();
-            var analyzerConfigDocuments = EditorConfigFinder
-                .GetEditorConfigPaths(csxFilePath)
-                .Select(path =>
-                    DocumentInfo.Create(
-                        DocumentId.CreateNewId(projectId),
-                        name: ".editorconfig",
-                        loader: new FileTextLoader(path, Encoding.UTF8),
-                        filePath: path))
-                .ToImmutableArray();
+            var analyzerConfigDocuments = _editorConfigEnabled
+                ? EditorConfigFinder
+                    .GetEditorConfigPaths(csxFilePath)
+                    .Select(path =>
+                        DocumentInfo.Create(
+                            DocumentId.CreateNewId(projectId),
+                            name: ".editorconfig",
+                            loader: new FileTextLoader(path, Encoding.UTF8),
+                            filePath: path))
+                    .ToImmutableArray()
+                : ImmutableArray<DocumentInfo>.Empty;
 
             var project = ProjectInfo.Create(
                 filePath: csxFilePath,

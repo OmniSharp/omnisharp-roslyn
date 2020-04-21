@@ -99,6 +99,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Formatting
 
         private static async Task<Document> FormatDocument(Document document, OmniSharpOptions omnisharpOptions, ILoggerFactory loggerFactory, TextSpan? textSpan = null)
         {
+            // If we are not using .editorconfig for formatting options then we can avoid any overhead of calculating document options.
             var optionSet = omnisharpOptions.FormattingOptions.EnableEditorConfigSupport
                 ? await document.GetOptionsAsync()
                 : document.Project.Solution.Options;
