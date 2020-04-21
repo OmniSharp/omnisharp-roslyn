@@ -128,15 +128,23 @@ namespace TestUtility
             return instance;
         }
 
-        public static Dictionary<string, string> GetConfigurationDataWithAnalyzerConfig(bool roslynAnalyzersEnabled = false, Dictionary<string, string> existingConfiguration = null)
+        public static Dictionary<string, string> GetConfigurationDataWithAnalyzerConfig(
+            bool roslynAnalyzersEnabled = false,
+            bool editorConfigEnabled = false,
+            Dictionary<string, string> existingConfiguration = null)
         {
             if (existingConfiguration == null)
             {
-                return new Dictionary<string, string>() { { "RoslynExtensionsOptions:EnableAnalyzersSupport", roslynAnalyzersEnabled.ToString() } };
+                return new Dictionary<string, string>()
+                {
+                    { "RoslynExtensionsOptions:EnableAnalyzersSupport", roslynAnalyzersEnabled.ToString() },
+                    { "FormattingOptions:EnableEditorConfigSupport", editorConfigEnabled.ToString() }
+                };
             }
 
             var copyOfExistingConfigs = existingConfiguration.ToDictionary(x => x.Key, x => x.Value);
             copyOfExistingConfigs.Add("RoslynExtensionsOptions:EnableAnalyzersSupport", roslynAnalyzersEnabled.ToString());
+            copyOfExistingConfigs.Add("FormattingOptions:EnableEditorConfigSupport", editorConfigEnabled.ToString());
 
             return copyOfExistingConfigs;
         }

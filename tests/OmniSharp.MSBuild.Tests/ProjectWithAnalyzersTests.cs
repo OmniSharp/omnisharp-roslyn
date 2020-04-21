@@ -75,6 +75,54 @@ namespace OmniSharp.MSBuild.Tests
             }
         }
 
+        [Fact]
+        public async Task WhenProjectIsLoadedThenItContainsAnalyzerConfigurationFromEditorConfig()
+        {
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithAnalyzersAndEditorConfig"))
+            using (var host = CreateMSBuildTestHost(testProject.Directory, configurationData: TestHelpers.GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled: true, editorConfigEnabled: true)))
+            {
+                var diagnostics = await host.RequestCodeCheckAsync(Path.Combine(testProject.Directory, "Program.cs"));
+
+                Assert.NotEmpty(diagnostics.QuickFixes);
+
+                var quickFix = diagnostics.QuickFixes.OfType<DiagnosticLocation>().Single(x => x.Id == "IDE0005");
+                Assert.Equal("Error", quickFix.LogLevel);
+            }
+        }
+
+        [Fact]
+        public async Task WhenProjectEditorConfigIsChangedThenAnalyzerConfigurationUpdates()
+        {
+            var emitter = new ProjectLoadTestEventEmitter();
+
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithAnalyzersAndEditorConfig"))
+            using (var host = CreateMSBuildTestHost(
+                testProject.Directory,
+                emitter.AsExportDescriptionProvider(LoggerFactory),
+                TestHelpers.GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled: true, editorConfigEnabled: true)))
+            {
+                var initialProject = host.Workspace.CurrentSolution.Projects.Single();
+                var analyzerConfigDocument = initialProject.AnalyzerConfigDocuments.Single();
+
+                File.WriteAllText(analyzerConfigDocument.FilePath, @"
+root = true
+
+[*.cs]
+# IDE0005: Unnecessary using
+dotnet_diagnostic.IDE0005.severity = none
+");
+
+                await NotifyFileChanged(host, analyzerConfigDocument.FilePath);
+
+                emitter.WaitForProjectUpdate();
+
+                var diagnostics = await host.RequestCodeCheckAsync(Path.Combine(testProject.Directory, "Program.cs"));
+
+                Assert.NotEmpty(diagnostics.QuickFixes);
+                Assert.DoesNotContain(diagnostics.QuickFixes.OfType<DiagnosticLocation>(), x => x.Id == "IDE0005");
+            }
+        }
+
         [Theory]
         [InlineData("ProjectWithDisabledAnalyzers")]
         [InlineData("ProjectWithDisabledAnalyzers2")]
