@@ -377,6 +377,11 @@ namespace OmniSharp.MSBuild
                 QueueProjectUpdate(projectFileInfo.FilePath, allowAutoRestore: true, projectFileInfo.ProjectIdInfo);
             });
 
+            _fileSystemWatcher.Watch(".editorconfig", (file, changeType) =>
+            {
+                QueueProjectUpdate(projectFileInfo.FilePath, allowAutoRestore: false, projectFileInfo.ProjectIdInfo);
+            });
+
             if (projectFileInfo.RuleSet?.FilePath != null)
             {
                 _fileSystemWatcher.Watch(projectFileInfo.RuleSet.FilePath, (file, changeType) =>
