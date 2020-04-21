@@ -70,7 +70,7 @@ namespace OmniSharp.Script
             });
         }
 
-        public ScriptContext CreateScriptContext(ScriptOptions scriptOptions, string[] allCsxFiles)
+        public ScriptContext CreateScriptContext(ScriptOptions scriptOptions, string[] allCsxFiles, bool editorConfigEnabled)
         {
             var currentDomainAssemblies = AppDomain.CurrentDomain.GetAssemblies();
 
@@ -134,7 +134,7 @@ namespace OmniSharp.Script
                 AddMetadataReference(metadataReferences, inheritedCompileLib.Location);
             }
 
-            var scriptProjectProvider = new ScriptProjectProvider(scriptOptions, _env, _loggerFactory, isDesktopClr);
+            var scriptProjectProvider = new ScriptProjectProvider(scriptOptions, _env, _loggerFactory, isDesktopClr, editorConfigEnabled);
 
             return new ScriptContext(scriptProjectProvider, metadataReferences, compilationDependencies, _defaultGlobalsType);
         }

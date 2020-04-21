@@ -52,6 +52,7 @@ namespace OmniSharp.MSBuild.ProjectFile
         public ImmutableArray<PackageReference> PackageReferences => _data.PackageReferences;
         public ImmutableArray<string> Analyzers => _data.Analyzers;
         public ImmutableArray<string> AdditionalFiles => _data.AdditionalFiles;
+        public ImmutableArray<string> AnalyzerConfigFiles => _data.AnalyzerConfigFiles;
         public ImmutableDictionary<string, string> ReferenceAliases => _data.ReferenceAliases;
         public ImmutableDictionary<string, string> ProjectReferenceAliases => _data.ProjectReferenceAliases;
         public bool TreatWarningsAsErrors => _data.TreatWarningsAsErrors;
@@ -77,7 +78,7 @@ namespace OmniSharp.MSBuild.ProjectFile
         {
             var id = ProjectId.CreateNewId(debugName: filePath);
 
-            return new ProjectFileInfo(new ProjectIdInfo(id, isDefinedInSolution:false), filePath, data: null);
+            return new ProjectFileInfo(new ProjectIdInfo(id, isDefinedInSolution: false), filePath, data: null);
         }
 
         internal static ProjectFileInfo CreateNoBuild(string filePath, ProjectLoader loader)
@@ -85,7 +86,7 @@ namespace OmniSharp.MSBuild.ProjectFile
             var id = ProjectId.CreateNewId(debugName: filePath);
             var project = loader.EvaluateProjectFile(filePath);
             var data = ProjectData.Create(project);
-            //we are not reading the solution here 
+            //we are not reading the solution here
             var projectIdInfo = new ProjectIdInfo(id, isDefinedInSolution: false);
 
             return new ProjectFileInfo(projectIdInfo, filePath, data);
@@ -127,7 +128,7 @@ namespace OmniSharp.MSBuild.ProjectFile
 
             var data = ProjectData.Create(projectInstance);
             var projectFileInfo = new ProjectFileInfo(ProjectIdInfo, FilePath, data);
-            var eventArgs = new ProjectLoadedEventArgs(Id, projectInstance, diagnostics, isReload: true, ProjectIdInfo.IsDefinedInSolution,data.References);
+            var eventArgs = new ProjectLoadedEventArgs(Id, projectInstance, diagnostics, isReload: true, ProjectIdInfo.IsDefinedInSolution, data.References);
 
             return (projectFileInfo, diagnostics, eventArgs);
         }

@@ -63,7 +63,7 @@ namespace OmniSharp.Script
             // Nothing to do if there are no CSX files
             var allCsxFiles = _fileSystemHelper.GetFiles("**/*.csx").ToArray();
 
-            _scriptContext = new Lazy<ScriptContext>(() => _scriptContextProvider.CreateScriptContext(_scriptOptions, allCsxFiles));
+            _scriptContext = new Lazy<ScriptContext>(() => _scriptContextProvider.CreateScriptContext(_scriptOptions, allCsxFiles, _workspace.EditorConfigEnabled));
 
             if (allCsxFiles.Length == 0)
             {
