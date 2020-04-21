@@ -26,6 +26,7 @@ using OmniSharp.Services;
 using OmniSharp.Utilities;
 using System.Reflection;
 using Microsoft.CodeAnalysis.Diagnostics;
+using OmniSharp.Roslyn.EditorConfig;
 
 namespace OmniSharp.MSBuild
 {
@@ -379,10 +380,26 @@ namespace OmniSharp.MSBuild
 
             if (_workspace.EditorConfigEnabled)
             {
+                // Watch beneath the Project folder for changes to .editorconfig files.
                 _fileSystemWatcher.Watch(".editorconfig", (file, changeType) =>
                 {
                     QueueProjectUpdate(projectFileInfo.FilePath, allowAutoRestore: false, projectFileInfo.ProjectIdInfo);
                 });
+
+                // Watch in folders above the Project folder for changes to .editorconfig files.
+                var parentPath = Path.GetDirectoryName(projectFileInfo.FilePath);
+                while (parentPath != Path.GetPathRoot(parentPath))
+                {
+                    if (!EditorConfigFinder.TryGetDirectoryPath(parentPath, out parentPath))
+                    {
+                        break;
+                    }
+
+                    _fileSystemWatcher.Watch(Path.Combine(parentPath, ".editorconfig"), (file, changeType) =>
+                    {
+                        QueueProjectUpdate(projectFileInfo.FilePath, allowAutoRestore: false, projectFileInfo.ProjectIdInfo);
+                    });
+                }
             }
 
             if (projectFileInfo.RuleSet?.FilePath != null)

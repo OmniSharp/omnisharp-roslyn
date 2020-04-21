@@ -42,7 +42,9 @@
         "ProjectWithDisabledAnalyzers2",
         "ProjectWithAnalyzers",
         "NetCore30Project",
-        "Net50Project"
+        "Net50Project",
+        "ProjectWithAnalyzersAndEditorConfig",
+        "ProjectWithParentEditorConfig"
     ],
     "CakeTestAssets": [
         "CakeProject"
