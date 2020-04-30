@@ -55,7 +55,14 @@ namespace OmniSharp.MSBuild.ProjectFile
             var defaultSuppressions = CompilationOptionsHelper.GetDefaultSuppressedDiagnosticOptions(projectFileInfo.SuppressedDiagnosticIds);
             var specificRules = projectFileInfo.RuleSet?.SpecificDiagnosticOptions ?? ImmutableDictionary<string, ReportDiagnostic>.Empty;
 
-            return specificRules.Concat(defaultSuppressions.Where(x => !specificRules.Keys.Contains(x.Key))).ToImmutableDictionary();
+            var combinedRules = specificRules.Concat(defaultSuppressions.Where(x => !specificRules.Keys.Contains(x.Key))).ToDictionary(x => x.Key, x => x.Value);
+
+            foreach (var warningAsError in projectFileInfo.WarningsAsErrors)
+            {
+                combinedRules[warningAsError] = ReportDiagnostic.Error;
+            }
+
+            return combinedRules.ToImmutableDictionary();
         }
 
         public static ProjectInfo CreateProjectInfo(this ProjectFileInfo projectFileInfo, IAnalyzerAssemblyLoader analyzerAssemblyLoader)
