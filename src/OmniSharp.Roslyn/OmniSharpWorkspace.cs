@@ -173,6 +173,11 @@ namespace OmniSharp
             OnCompilationOptionsChanged(projectId, project.CompilationOptions.WithSpecificDiagnosticOptions(rules));
         }
 
+        public void UpdateCompilationOptionsForProject(ProjectId projectId, CompilationOptions options)
+        {
+            OnCompilationOptionsChanged(projectId, options);
+        }
+
         private ProjectInfo CreateMiscFilesProject(string language)
         {
             string assemblyName = Guid.NewGuid().ToString("N");
