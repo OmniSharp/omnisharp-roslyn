@@ -3,7 +3,8 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-    <WarningsAsErrors>CS1998,CS7080</WarningsAsErrors>
+    <WarningsAsErrors>CS1998,CS7080,CS7081</WarningsAsErrors>
+    <NoWarn>CS7081</NoWarn>
   </PropertyGroup>
 
 </Project>

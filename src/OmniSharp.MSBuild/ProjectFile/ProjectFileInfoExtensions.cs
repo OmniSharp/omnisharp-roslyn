@@ -59,7 +59,10 @@ namespace OmniSharp.MSBuild.ProjectFile
 
             foreach (var warningAsError in projectFileInfo.WarningsAsErrors)
             {
-                combinedRules[warningAsError] = ReportDiagnostic.Error;
+                if (!combinedRules.ContainsKey(warningAsError))
+                {
+                    combinedRules[warningAsError] = ReportDiagnostic.Error;
+                }
             }
 
             return combinedRules.ToImmutableDictionary();
