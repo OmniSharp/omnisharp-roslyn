@@ -465,7 +465,7 @@ namespace OmniSharp.MSBuild
             UpdateProjectProperties(project, projectFileInfo);
 
             _workspace.TryPromoteMiscellaneousDocumentsToProject(project);
-            _workspace.UpdateDiagnosticOptionsForProject(project.Id, projectFileInfo.GetDiagnosticOptions());
+            _workspace.UpdateCompilationOptionsForProject(project.Id, projectFileInfo.CreateCompilationOptions());
         }
 
         private void UpdateAnalyzerReferences(Project project, ProjectFileInfo projectFileInfo)
