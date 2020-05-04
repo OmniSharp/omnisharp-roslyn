@@ -1,12 +1,16 @@
 # Changelog
 All changes to the project will be documented in this file.
 
-## [1.35.1] - not yet released
+## [1.35.2] - not yet released
 * Added support for `WarningsAsErrors` in csproj files (PR: [#1779](https://github.com/OmniSharp/omnisharp-roslyn/pull/1779))
+
+## [1.35.1] - 2020-05-04
 * Fixed not supported exception when trying to decompile a BCL assembly on Mono. For now we do not try to resolve implementation assembly from a ref assembly (PR: [#1767](https://github.com/OmniSharp/omnisharp-roslyn/pull/1767))
 * Added support for generic classes in test runner ([omnisharp-vscode#3722](https://github.com/OmniSharp/omnisharp-vscode/issues/3722), PR: [#1768](https://github.com/OmniSharp/omnisharp-roslyn/pull/1768))
 * Improved autocompletion performance (PR: [#1761](https://github.com/OmniSharp/omnisharp-roslyn/pull/1761))
 * Move to Roslyn's .editorconfig support ([#1657](https://github.com/OmniSharp/omnisharp-roslyn/issues/1657), PR: [#1771](https://github.com/OmniSharp/omnisharp-roslyn/pull/1771))
+* Fully update CompilationOptions when project files change (PR: [#1774](https://github.com/OmniSharp/omnisharp-roslyn/pull/1774))
+* Updated to Roslyn [3.6.0-4.20228.5] (PR: [#1778](https://github.com/OmniSharp/omnisharp-roslyn/pull/1778))
 
 ## [1.35.0] - 2020-04-10
 * Support for `<RunAnalyzers />` and `<RunAnalyzersDuringLiveAnalysis />` (PR: [#1739](https://github.com/OmniSharp/omnisharp-roslyn/pull/1739))
