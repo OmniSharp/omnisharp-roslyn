@@ -45,5 +45,6 @@
         public const string TreatWarningsAsErrors = nameof(TreatWarningsAsErrors);
         public const string VisualStudioVersion = nameof(VisualStudioVersion);
         public const string VsInstallRoot = nameof(VsInstallRoot);
+        public const string WarningsAsErrors = nameof(WarningsAsErrors);
     }
 }

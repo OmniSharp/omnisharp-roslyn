@@ -196,5 +196,28 @@ namespace OmniSharp.MSBuild.Tests
                 Assert.Equal(ReportDiagnostic.Default, compilationOptions.GeneralDiagnosticOption);
             }
         }
+
+        [Fact]
+        public async Task WarningsAsErrors()
+        {
+            using (var host = CreateOmniSharpHost())
+            using (var testProject = await _testAssets.GetTestProjectAsync("WarningsAsErrors"))
+            {
+                var projectFilePath = Path.Combine(testProject.Directory, "WarningsAsErrors.csproj");
+                var projectFileInfo = CreateProjectFileInfo(host, testProject, projectFilePath);
+                Assert.NotEmpty(projectFileInfo.WarningsAsErrors);
+                Assert.Contains("CS1998", projectFileInfo.WarningsAsErrors);
+                Assert.Contains("CS7080", projectFileInfo.WarningsAsErrors);
+                Assert.Contains("CS7081", projectFileInfo.WarningsAsErrors);
+
+                var compilationOptions = projectFileInfo.CreateCompilationOptions();
+                Assert.True(compilationOptions.SpecificDiagnosticOptions.ContainsKey("CS1998"), "Specific diagnostic option for CS1998 not found");
+                Assert.True(compilationOptions.SpecificDiagnosticOptions.ContainsKey("CS7080"), "Specific diagnostic option for CS7080 not found");
+                Assert.True(compilationOptions.SpecificDiagnosticOptions.ContainsKey("CS7081"), "Specific diagnostic option for CS7081 not found");
+                Assert.Equal(ReportDiagnostic.Error, compilationOptions.SpecificDiagnosticOptions["CS1998"]);
+                Assert.Equal(ReportDiagnostic.Error, compilationOptions.SpecificDiagnosticOptions["CS7080"]);
+                Assert.Equal(ReportDiagnostic.Suppress, compilationOptions.SpecificDiagnosticOptions["CS7081"]); // NoWarn should be given priority over WarningsAsErrors
+            }
+        }
     }
 }
