@@ -9,7 +9,7 @@ namespace Main.Test
         public void Test()
         {
             Assert.True(true);
-        }
+        } 
 
         [TestCase(0)]
         [TestCase(1)]
@@ -61,6 +61,29 @@ namespace Main.Test
         public void TypedTest()
         {
             Assert.NotNull(default(T));
+        }
+
+        [Test]
+        public void TypedTest2()
+        {
+            Assert.Null(default(T));
+        }
+
+        private class NestedClass
+        {
+
+            public void M()
+            {
+
+            }
+        }
+    }
+
+    public class NoTests
+    {
+        public void M()
+        {
+
         }
     }
 }
