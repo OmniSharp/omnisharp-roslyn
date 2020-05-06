@@ -67,21 +67,18 @@ namespace OmniSharp.DotNetTest
             {
                 throw new NotSupportedException("Legacy .NET SDK is not supported");
             }
-            
+
             return (TestManager)new VSTestManager(project, workingDirectory, dotNetCli, version, eventEmitter, loggerFactory);
         }
 
         protected abstract string GetCliTestArguments(int port, int parentProcessId);
         protected abstract void VersionCheck();
 
-        public abstract RunTestResponse RunTest(string methodName, string runSettings, string testFrameworkName, string targetFrameworkVersion);
+        public abstract Task<RunTestResponse> RunTestAsync(string methodName, string runSettings, string testFrameworkName, string targetFrameworkVersion, CancellationToken cancellationToken);
 
-        public virtual RunTestResponse RunTest(string[] methodNames, string runSettings, string testFrameworkName, string targetFrameworkVersion)
-        { 
-            throw new NotImplementedException();
-        }
+        public abstract Task<RunTestResponse> RunTestAsync(string[] methodNames, string runSettings, string testFrameworkName, string targetFrameworkVersion, CancellationToken cancellationToken);
 
-        public abstract GetTestStartInfoResponse GetTestStartInfo(string methodName, string runSettings, string testFrameworkName, string targetFrameworkVersion);
+        public abstract Task<GetTestStartInfoResponse> GetTestStartInfoAsync(string methodName, string runSettings, string testFrameworkName, string targetFrameworkVersion, CancellationToken cancellationToken);
 
         public abstract Task<DebugTestGetStartInfoResponse> DebugGetStartInfoAsync(string methodName, string runSettings, string testFrameworkName, string targetFrameworkVersion, CancellationToken cancellationToken);
 

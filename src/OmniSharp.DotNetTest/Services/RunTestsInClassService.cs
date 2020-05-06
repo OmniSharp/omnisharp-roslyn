@@ -1,4 +1,6 @@
 ﻿using System.Composition;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 using OmniSharp.DotNetTest.Models;
@@ -17,11 +19,11 @@ namespace OmniSharp.DotNetTest.Services
         {
         }
 
-        protected override RunTestResponse HandleRequest(RunTestsInClassRequest request, TestManager testManager)
+        protected override async Task<RunTestResponse> HandleRequest(RunTestsInClassRequest request, TestManager testManager)
         {
             if (testManager.IsConnected)
             {
-                return testManager.RunTest(request.MethodNames, request.RunSettings, request.TestFrameworkName, request.TargetFrameworkVersion);
+                return await testManager.RunTestAsync(request.MethodNames, request.RunSettings, request.TestFrameworkName, request.TargetFrameworkVersion, CancellationToken.None);
             }
 
             var response = new RunTestResponse

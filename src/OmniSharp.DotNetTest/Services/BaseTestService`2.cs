@@ -17,15 +17,12 @@ namespace OmniSharp.DotNetTest.Services
         {
         }
 
-        protected abstract TResponse HandleRequest(TRequest request, TestManager testManager);
+        protected abstract Task<TResponse> HandleRequest(TRequest request, TestManager testManager);
 
-        public Task<TResponse> Handle(TRequest request)
+        public async Task<TResponse> Handle(TRequest request)
         {
-            using (var testManager = CreateTestManager(request.FileName))
-            {
-                var response = HandleRequest(request, testManager);
-                return Task.FromResult(response);
-            }
+            using var testManager = CreateTestManager(request.FileName);
+            return await HandleRequest(request, testManager);
         }
     }
 }

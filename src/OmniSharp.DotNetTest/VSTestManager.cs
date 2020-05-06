@@ -117,11 +117,11 @@ namespace OmniSharp.DotNetTest
             }
         }
 
-        public override GetTestStartInfoResponse GetTestStartInfo(string methodName, string runSettings, string testFrameworkName, string targetFrameworkVersion)
+        public override async Task<GetTestStartInfoResponse> GetTestStartInfoAsync(string methodName, string runSettings, string testFrameworkName, string targetFrameworkVersion, CancellationToken cancellationToken)
         {
             VerifyTestFramework(testFrameworkName);
 
-            var testCases = DiscoverTests(new string[] { methodName }, runSettings, targetFrameworkVersion);
+            var testCases = await DiscoverTestsAsync(new string[] { methodName }, runSettings, targetFrameworkVersion, cancellationToken);
 
             SendMessage(MessageType.GetTestRunnerProcessStartInfoForRunSelected,
                 new
@@ -202,14 +202,14 @@ namespace OmniSharp.DotNetTest
             }
         }
 
-        public override RunTestResponse RunTest(string methodName, string runSettings, string testFrameworkName, string targetFrameworkVersion)
-            => RunTest(new string[] { methodName }, runSettings, testFrameworkName, targetFrameworkVersion);
+        public override Task<RunTestResponse> RunTestAsync(string methodName, string runSettings, string testFrameworkName, string targetFrameworkVersion, CancellationToken cancellationToken)
+            => RunTestAsync(new string[] { methodName }, runSettings, testFrameworkName, targetFrameworkVersion, cancellationToken);
 
-        public override RunTestResponse RunTest(string[] methodNames, string runSettings, string testFrameworkName, string targetFrameworkVersion)
+        public override async Task<RunTestResponse> RunTestAsync(string[] methodNames, string runSettings, string testFrameworkName, string targetFrameworkVersion, CancellationToken cancellationToken)
         {
             VerifyTestFramework(testFrameworkName);
 
-            var testCases = DiscoverTests(methodNames, runSettings, targetFrameworkVersion);
+            var testCases = await DiscoverTestsAsync(methodNames, runSettings, targetFrameworkVersion, cancellationToken);
 
             var testResults = new List<TestResult>();
 
@@ -360,11 +360,6 @@ namespace OmniSharp.DotNetTest
                 var paramCount = genericParams.Split(',').Length;
                 return $"{name.Substring(0, genericParamStart)}`{paramCount}";
             }
-        }
-
-        private TestCase[] DiscoverTests(string[] methodNames, string runSettings, string targetFrameworkVersion)
-        {
-            return DiscoverTestsAsync(methodNames, runSettings, targetFrameworkVersion, CancellationToken.None).Result;
         }
     }
 }
