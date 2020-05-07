@@ -239,11 +239,6 @@ namespace OmniSharp.DotNetTest
 
             string[]? methodNames = null;
 
-            SymbolDisplayFormat testNameFormat = SymbolDisplayFormat.FullyQualifiedFormat
-                .WithMemberOptions(SymbolDisplayMemberOptions.IncludeContainingType)
-                .WithGlobalNamespaceStyle(SymbolDisplayGlobalNamespaceStyle.Omitted);
-            var testNameBuilder = new StringBuilder();
-
             while (node is object)
             {
                 if (node is MethodDeclarationSyntax methodDeclaration)
