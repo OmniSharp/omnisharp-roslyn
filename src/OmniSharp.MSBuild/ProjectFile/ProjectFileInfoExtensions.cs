@@ -55,8 +55,19 @@ namespace OmniSharp.MSBuild.ProjectFile
             var suppressions = CompilationOptionsHelper.GetDefaultSuppressedDiagnosticOptions(projectFileInfo.SuppressedDiagnosticIds);
             var specificRules = projectFileInfo.RuleSet?.SpecificDiagnosticOptions ?? ImmutableDictionary<string, ReportDiagnostic>.Empty;
 
+            // suppressions capture NoWarn and they have the highest priority
             var combinedRules = specificRules.Concat(suppressions.Where(x => !specificRules.Keys.Contains(x.Key))).ToDictionary(x => x.Key, x => x.Value);
 
+            // 2nd highest priority is for WarningsNotAsErrors
+            foreach (var warningNotAsError in projectFileInfo.WarningsNotAsErrors)
+            {
+                if (!suppressions.ContainsKey(warningNotAsError))
+                {
+                    combinedRules[warningNotAsError] = ReportDiagnostic.Warn;
+                }
+            }
+
+            // lowest priority is for WarningsAsErrors
             foreach (var warningAsError in projectFileInfo.WarningsAsErrors)
             {
                 if (!suppressions.ContainsKey(warningAsError))
