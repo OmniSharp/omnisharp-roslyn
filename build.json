@@ -41,7 +41,7 @@
         "ProjectWithDisabledAnalyzers",
         "ProjectWithDisabledAnalyzers2",
         "ProjectWithAnalyzers",
-        "NetCore30Project",
+        "NetCore31Project",
         "Net50Project",
         "ProjectWithAnalyzersAndEditorConfig",
         "ProjectWithParentEditorConfig"
