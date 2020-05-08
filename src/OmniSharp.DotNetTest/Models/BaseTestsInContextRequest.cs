@@ -1,7 +1,5 @@
-
 #nullable enable
 
-using OmniSharp.Mef;
 using OmniSharp.Models;
 
 namespace OmniSharp.DotNetTest.Models
