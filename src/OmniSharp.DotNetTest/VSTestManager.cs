@@ -4,7 +4,6 @@ using System.Collections.Immutable;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
@@ -148,6 +147,22 @@ namespace OmniSharp.DotNetTest
             };
         }
 
+#nullable enable
+        public override async Task<DebugTestGetStartInfoResponse> DebugGetStartInfoAsync(int line, int column, Document contextDocument, string? runSettings, string? targetFrameworkVersion, CancellationToken cancellationToken)
+        {
+            var (methodNames, testFramework) = await GetContextTestMethodNames(line, column, contextDocument, cancellationToken);
+
+            if (methodNames is null)
+            {
+                throw new InvalidOperationException("Could not find a test to debug");
+            }
+
+            Debug.Assert(testFramework is object);
+
+            return await DebugGetStartInfoAsync(methodNames, runSettings, testFramework, targetFrameworkVersion, cancellationToken);
+        }
+#nullable restore
+
         public override async Task<DebugTestGetStartInfoResponse> DebugGetStartInfoAsync(string methodName, string runSettings, string testFrameworkName, string targetFrameworkVersion, CancellationToken cancellationToken)
          => await DebugGetStartInfoAsync(new string[] { methodName }, runSettings, testFrameworkName, targetFrameworkVersion, cancellationToken);
 
@@ -209,27 +224,19 @@ namespace OmniSharp.DotNetTest
         }
 
 #nullable enable
-        public override async Task<RunTestResponse> RunTestsInContextAsync(int line, int column, Document contextDocument, string? runSettings, string testFrameworkName, string? targetFrameworkVersion, CancellationToken cancellationToken)
+        private async Task<(string[]? MethodNames, string? TestFramework)> GetContextTestMethodNames(int line, int column, Document contextDocument, CancellationToken cancellationToken)
         {
             Logger.LogDebug($"Loading info for {contextDocument.FilePath} {line}:{column}");
             var syntaxTree = await contextDocument.GetSyntaxTreeAsync(cancellationToken);
             if (syntaxTree is null)
             {
-                return new RunTestResponse()
-                {
-                    Pass = false,
-                    Failure = $"Could not get syntax for {contextDocument.FilePath}"
-                };
+                return default;
             }
 
             var semanticModel = await contextDocument.GetSemanticModelAsync(cancellationToken);
             if (semanticModel is null)
             {
-                return new RunTestResponse()
-                {
-                    Pass = false,
-                    Failure = $"Could not get semantic model for {contextDocument.FilePath}"
-                };
+                return default;
             }
 
             var sourceText = await contextDocument.GetTextAsync();
@@ -238,6 +245,7 @@ namespace OmniSharp.DotNetTest
             var node = (await syntaxTree.GetRootAsync()).FindToken(position).Parent;
 
             string[]? methodNames = null;
+            TestFramework? testFramework = null;
 
             while (node is object)
             {
@@ -261,7 +269,7 @@ namespace OmniSharp.DotNetTest
                         continue;
                     }
 
-                    if (isTestMethod(methodSymbol))
+                    if (isTestMethod(methodSymbol, ref testFramework))
                     {
                         methodNames = new[] { methodSymbol.GetMetadataName() };
                         Logger.LogDebug($"Found test method {methodNames[0]}");
@@ -285,7 +293,7 @@ namespace OmniSharp.DotNetTest
 
                     foreach (var member in members)
                     {
-                        if (!(member is IMethodSymbol methodSymbol) || !isTestMethod(methodSymbol))
+                        if (!(member is IMethodSymbol methodSymbol) || !isTestMethod(methodSymbol, ref testFramework))
                         {
                             continue;
                         }
@@ -309,6 +317,32 @@ namespace OmniSharp.DotNetTest
                 node = node.Parent;
             }
 
+            return (methodNames, testFramework?.Name);
+
+            static bool isTestMethod(IMethodSymbol methodSymbol, ref TestFramework? framework)
+            {
+                if (framework is object)
+                {
+                    return framework.IsTestMethod(methodSymbol);
+                }
+
+                foreach (var f in TestFramework.Frameworks)
+                {
+                    if (f.IsTestMethod(methodSymbol))
+                    {
+                        framework = f;
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+        }
+
+        public override async Task<RunTestResponse> RunTestsInContextAsync(int line, int column, Document contextDocument, string? runSettings, string? targetFrameworkVersion, CancellationToken cancellationToken)
+        {
+            var (methodNames, testFrameworkName) = await GetContextTestMethodNames(line, column, contextDocument, cancellationToken);
+
             if (methodNames is null)
             {
                 return new RunTestResponse
@@ -318,9 +352,10 @@ namespace OmniSharp.DotNetTest
                 };
             }
 
+            Debug.Assert(testFrameworkName is object);
+
             return await RunTestAsync(methodNames, runSettings, testFrameworkName, targetFrameworkVersion, cancellationToken);
 
-            static bool isTestMethod(IMethodSymbol methodSymbol) => TestFramework.GetFrameworks().Any(f => f.IsTestMethod(methodSymbol));
         }
 #nullable restore
 

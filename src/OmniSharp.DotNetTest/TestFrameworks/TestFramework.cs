@@ -7,8 +7,6 @@ namespace OmniSharp.DotNetTest.TestFrameworks
 {
     internal abstract class TestFramework
     {
-        private static readonly ImmutableArray<TestFramework> s_frameworks;
-
         static TestFramework()
         {
             var builder = ImmutableArray.CreateBuilder<TestFramework>();
@@ -21,12 +19,12 @@ namespace OmniSharp.DotNetTest.TestFrameworks
             builder.Add(xunit);
             builder.Add(mstest);
 
-            s_frameworks = builder.ToImmutable();
+            Frameworks = builder.ToImmutable();
         }
 
         public static TestFramework GetFramework(string name)
         {
-            foreach (var framework in s_frameworks)
+            foreach (var framework in Frameworks)
             {
                 if (framework.Name == name)
                 {
@@ -37,10 +35,7 @@ namespace OmniSharp.DotNetTest.TestFrameworks
             return null;
         }
 
-        public static IEnumerable<TestFramework> GetFrameworks()
-        {
-            return s_frameworks;
-        }
+        public static ImmutableArray<TestFramework> Frameworks { get; }
 
         public abstract string FeatureName { get; }
         public abstract string Name { get; }

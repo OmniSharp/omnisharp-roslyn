@@ -3,6 +3,7 @@ using System.Composition;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 using OmniSharp.DotNetTest.Models;
 using OmniSharp.Utilities;
@@ -77,9 +78,18 @@ namespace OmniSharp.DotNetTest
             }
         }
 
+#nullable enable
+        public Task<DebugTestGetStartInfoResponse> DebugGetStartInfoAsync(int line, int column, Document contextDocument, string? runSettings, string? targetFrameworkVersion, CancellationToken cancellationToken)
+        {
+            VerifySession(isStarted: true);
+
+            return _testManager.DebugGetStartInfoAsync(line, column, contextDocument, runSettings, targetFrameworkVersion, cancellationToken);
+        }
+#nullable restore
+
         public Task<DebugTestGetStartInfoResponse> DebugGetStartInfoAsync(string methodName, string runSettings, string testFrameworkName, string targetFrameworkVersion, CancellationToken cancellationToken)
             => DebugGetStartInfoAsync(new string[] { methodName }, runSettings, testFrameworkName, targetFrameworkVersion, cancellationToken);
-        
+
         public Task<DebugTestGetStartInfoResponse> DebugGetStartInfoAsync(string[] methodNames, string runSettings, string testFrameworkName, string targetFrameworkVersion, CancellationToken cancellationToken)
         {
             VerifySession(isStarted: true);

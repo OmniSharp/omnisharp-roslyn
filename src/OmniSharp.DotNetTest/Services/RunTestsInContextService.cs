@@ -28,7 +28,7 @@ namespace OmniSharp.DotNetTest.Services
 
             if (testManager.IsConnected)
             {
-                return await testManager.RunTestsInContextAsync(request.Line, request.Column, document, request.RunSettings, request.TestFrameworkName, request.TargetFrameworkVersion, CancellationToken.None);
+                return await testManager.RunTestsInContextAsync(request.Line, request.Column, document, request.RunSettings, request.TargetFrameworkVersion, CancellationToken.None);
             }
 
             var response = new RunTestResponse

@@ -75,7 +75,7 @@ namespace OmniSharp.DotNetTest
         protected abstract void VersionCheck();
 
 #nullable enable
-        public abstract Task<RunTestResponse> RunTestsInContextAsync(int lineNumber, int column, Document contextDocument, string? runSettings, string testFrameWorkName, string? targetFrameworkVersion, CancellationToken cancellationToken);
+        public abstract Task<RunTestResponse> RunTestsInContextAsync(int lineNumber, int column, Document contextDocument, string? runSettings, string? targetFrameworkVersion, CancellationToken cancellationToken);
 #nullable restore
 
         public abstract Task<RunTestResponse> RunTestAsync(string methodName, string runSettings, string testFrameworkName, string targetFrameworkVersion, CancellationToken cancellationToken);
@@ -84,12 +84,13 @@ namespace OmniSharp.DotNetTest
 
         public abstract Task<GetTestStartInfoResponse> GetTestStartInfoAsync(string methodName, string runSettings, string testFrameworkName, string targetFrameworkVersion, CancellationToken cancellationToken);
 
+#nullable enable
+        public abstract Task<DebugTestGetStartInfoResponse> DebugGetStartInfoAsync(int line, int column, Document contextDocument, string? runSettings, string? targetFrameworkVersion, CancellationToken cancellationToken);
+#nullable restore
+
         public abstract Task<DebugTestGetStartInfoResponse> DebugGetStartInfoAsync(string methodName, string runSettings, string testFrameworkName, string targetFrameworkVersion, CancellationToken cancellationToken);
 
-        public virtual Task<DebugTestGetStartInfoResponse> DebugGetStartInfoAsync(string[] methodNames, string runSettings, string testFrameworkName, string targetFrameworkVersion, CancellationToken cancellationToken)
-        {
-            throw new NotImplementedException();
-        }
+        public abstract Task<DebugTestGetStartInfoResponse> DebugGetStartInfoAsync(string[] methodNames, string runSettings, string testFrameworkName, string targetFrameworkVersion, CancellationToken cancellationToken);
 
         public abstract Task DebugLaunchAsync(CancellationToken cancellationToken);
 
