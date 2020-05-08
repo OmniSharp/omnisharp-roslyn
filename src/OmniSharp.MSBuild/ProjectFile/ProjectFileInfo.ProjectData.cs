@@ -129,7 +129,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 PreprocessorSymbolNames = preprocessorSymbolNames.EmptyIfDefault();
                 SuppressedDiagnosticIds = suppressedDiagnosticIds.EmptyIfDefault();
                 WarningsAsErrors = warningsAsErrors.EmptyIfDefault();
-                WarningsNotAsErrors = WarningsNotAsErrors.EmptyIfDefault();
+                WarningsNotAsErrors = warningsNotAsErrors.EmptyIfDefault();
 
                 SignAssembly = signAssembly;
                 AssemblyOriginatorKeyFile = assemblyOriginatorKeyFile;
