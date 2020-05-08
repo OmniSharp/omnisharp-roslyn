@@ -58,21 +58,21 @@ namespace OmniSharp.MSBuild.ProjectFile
             // suppressions capture NoWarn and they have the highest priority
             var combinedRules = specificRules.Concat(suppressions.Where(x => !specificRules.Keys.Contains(x.Key))).ToDictionary(x => x.Key, x => x.Value);
 
-            // 2nd highest priority is for WarningsNotAsErrors
-            foreach (var warningNotAsError in projectFileInfo.WarningsNotAsErrors)
-            {
-                if (!suppressions.ContainsKey(warningNotAsError))
-                {
-                    combinedRules[warningNotAsError] = ReportDiagnostic.Warn;
-                }
-            }
-
-            // lowest priority is for WarningsAsErrors
+            // then handle WarningsAsErrors
             foreach (var warningAsError in projectFileInfo.WarningsAsErrors)
             {
                 if (!suppressions.ContainsKey(warningAsError))
                 {
                     combinedRules[warningAsError] = ReportDiagnostic.Error;
+                }
+            }
+
+            // WarningsNotAsErrors can overwrite WarningsAsErrors
+            foreach (var warningNotAsError in projectFileInfo.WarningsNotAsErrors)
+            {
+                if (!suppressions.ContainsKey(warningNotAsError))
+                {
+                    combinedRules[warningNotAsError] = ReportDiagnostic.Warn;
                 }
             }
 
