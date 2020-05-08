@@ -210,13 +210,21 @@ namespace OmniSharp.MSBuild.Tests
                 Assert.Contains("CS7080", projectFileInfo.WarningsAsErrors);
                 Assert.Contains("CS7081", projectFileInfo.WarningsAsErrors);
 
+                Assert.NotEmpty(projectFileInfo.WarningsNotAsErrors);
+                Assert.Contains("CS7080", projectFileInfo.WarningsNotAsErrors);
+                Assert.Contains("CS7082", projectFileInfo.WarningsNotAsErrors);
+
                 var compilationOptions = projectFileInfo.CreateCompilationOptions();
                 Assert.True(compilationOptions.SpecificDiagnosticOptions.ContainsKey("CS1998"), "Specific diagnostic option for CS1998 not found");
                 Assert.True(compilationOptions.SpecificDiagnosticOptions.ContainsKey("CS7080"), "Specific diagnostic option for CS7080 not found");
                 Assert.True(compilationOptions.SpecificDiagnosticOptions.ContainsKey("CS7081"), "Specific diagnostic option for CS7081 not found");
+                Assert.True(compilationOptions.SpecificDiagnosticOptions.ContainsKey("CS7082"), "Specific diagnostic option for CS7082 not found");
                 Assert.Equal(ReportDiagnostic.Error, compilationOptions.SpecificDiagnosticOptions["CS1998"]);
-                Assert.Equal(ReportDiagnostic.Error, compilationOptions.SpecificDiagnosticOptions["CS7080"]);
-                Assert.Equal(ReportDiagnostic.Suppress, compilationOptions.SpecificDiagnosticOptions["CS7081"]); // NoWarn should be given priority over WarningsAsErrors
+                // CS7080 is both in WarningsAsErrors and WarningsNotAsErrors, but WarningsNotAsErrors are higher priority
+                Assert.Equal(ReportDiagnostic.Warn, compilationOptions.SpecificDiagnosticOptions["CS7080"]); 
+                Assert.Equal(ReportDiagnostic.Warn, compilationOptions.SpecificDiagnosticOptions["CS7082"]);
+                // CS7081 is both WarningsAsErrors and NoWarn, but NoWarn are higher priority
+                Assert.Equal(ReportDiagnostic.Suppress, compilationOptions.SpecificDiagnosticOptions["CS7081"]); 
             }
         }
     }

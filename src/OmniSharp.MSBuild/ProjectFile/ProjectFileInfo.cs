@@ -42,6 +42,7 @@ namespace OmniSharp.MSBuild.ProjectFile
         public ImmutableArray<string> PreprocessorSymbolNames => _data.PreprocessorSymbolNames;
         public ImmutableArray<string> SuppressedDiagnosticIds => _data.SuppressedDiagnosticIds;
         public ImmutableArray<string> WarningsAsErrors => _data.WarningsAsErrors;
+        public ImmutableArray<string> WarningsNotAsErrors => _data.WarningsNotAsErrors;
 
         public bool SignAssembly => _data.SignAssembly;
         public string AssemblyOriginatorKeyFile => _data.AssemblyOriginatorKeyFile;
