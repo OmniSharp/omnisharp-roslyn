@@ -27,7 +27,6 @@ namespace OmniSharp.LanguageServerProtocol
     {
         private readonly LanguageServerOptions _options;
         private IServiceCollection _services;
-        private readonly LoggerFactory _loggerFactory;
         private readonly CommandLineApplication _application;
         private readonly CancellationTokenSource _cancellationTokenSource;
         private CompositionHost _compositionHost;
@@ -43,18 +42,14 @@ namespace OmniSharp.LanguageServerProtocol
             CommandLineApplication application,
             CancellationTokenSource cancellationTokenSource)
         {
-            _loggerFactory = new LoggerFactory();
-            _logger = _loggerFactory.CreateLogger<LanguageServerHost>();
             _options = new LanguageServerOptions()
                 .WithInput(input)
                 .WithOutput(output)
                 .ConfigureLogging(x => x
                     .AddLanguageServer()
                     .SetMinimumLevel(application.LogLevel))
-                .AddDefaultLoggingProvider()
                 .OnInitialize(Initialize)
                 .WithServices(services => {
-                        services.AddSingleton<ILoggerFactory>(_loggerFactory);
                         _services = services;
                     });
 
@@ -65,7 +60,6 @@ namespace OmniSharp.LanguageServerProtocol
         public void Dispose()
         {
             _compositionHost?.Dispose();
-            _loggerFactory?.Dispose();
             _cancellationTokenSource?.Dispose();
         }
 
@@ -96,6 +90,9 @@ namespace OmniSharp.LanguageServerProtocol
             var configurationRoot = new ConfigurationBuilder(_environment).Build();
             _eventEmitter = new LanguageServerEventEmitter();
             _serviceProvider = CompositionHostBuilder.CreateDefaultServiceProvider(_environment, configurationRoot, _eventEmitter, _services);
+
+            var loggerFactory = _serviceProvider.GetService<ILoggerFactory>();
+            _logger = loggerFactory.CreateLogger<LanguageServerHost>();
 
             var options = _serviceProvider.GetRequiredService<IOptionsMonitor<OmniSharpOptions>>();
             var plugins = _application.CreatePluginAssemblies(options.CurrentValue, _environment);
