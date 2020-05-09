@@ -21,7 +21,7 @@ namespace OmniSharp.Utilities
 
             private readonly object _gate = new object();
             private int _nextCallbackId = 1;
-            private Dictionary<int, Action<object>> _callbacks;
+            private Dictionary<int, Action> _callbacks;
 
             public PollingFileChangeToken(string filePath)
             {
@@ -80,7 +80,7 @@ namespace OmniSharp.Utilities
                                     foreach (var kvp in callbacks)
                                     {
                                         _callbacks.Remove(kvp.Key);
-                                        kvp.Value(null);
+                                        kvp.Value();
                                     }
                                 }
                             }
@@ -118,20 +118,15 @@ namespace OmniSharp.Utilities
 
             public IDisposable RegisterChangeCallback(Action<object> callback, object state)
             {
-                if (state != null)
-                {
-                    throw new ArgumentException($"Stateful callbacks are not supported for {nameof(PollingFileChangeToken)}", nameof(state));
-                }
-
                 lock (_gate)
                 {
                     if (_callbacks == null)
                     {
-                        _callbacks = new Dictionary<int, Action<object>>();
+                        _callbacks = new Dictionary<int, Action>();
                     }
 
                     var callbackId = _nextCallbackId++;
-                    _callbacks.Add(callbackId, callback);
+                    _callbacks.Add(callbackId, () => callback(state));
 
                     // Ensure that we're polling when we've got a callback.
                     if (_callbacks.Count == 1)
