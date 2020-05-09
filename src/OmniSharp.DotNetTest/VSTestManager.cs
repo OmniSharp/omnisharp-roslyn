@@ -147,22 +147,6 @@ namespace OmniSharp.DotNetTest
             };
         }
 
-#nullable enable
-        public override async Task<DebugTestGetStartInfoResponse> DebugGetStartInfoAsync(int line, int column, Document contextDocument, string? runSettings, string? targetFrameworkVersion, CancellationToken cancellationToken)
-        {
-            var (methodNames, testFramework) = await GetContextTestMethodNames(line, column, contextDocument, cancellationToken);
-
-            if (methodNames is null)
-            {
-                throw new InvalidOperationException("Could not find a test to debug");
-            }
-
-            Debug.Assert(testFramework is object);
-
-            return await DebugGetStartInfoAsync(methodNames, runSettings, testFramework, targetFrameworkVersion, cancellationToken);
-        }
-#nullable restore
-
         public override async Task<DebugTestGetStartInfoResponse> DebugGetStartInfoAsync(string methodName, string runSettings, string testFrameworkName, string targetFrameworkVersion, CancellationToken cancellationToken)
          => await DebugGetStartInfoAsync(new string[] { methodName }, runSettings, testFrameworkName, targetFrameworkVersion, cancellationToken);
 
@@ -188,7 +172,8 @@ namespace OmniSharp.DotNetTest
                 FileName = startInfo.FileName,
                 Arguments = startInfo.Arguments,
                 WorkingDirectory = startInfo.WorkingDirectory,
-                EnvironmentVariables = startInfo.EnvironmentVariables
+                EnvironmentVariables = startInfo.EnvironmentVariables,
+                Succeeded = true
             };
         }
 
@@ -224,7 +209,7 @@ namespace OmniSharp.DotNetTest
         }
 
 #nullable enable
-        private async Task<(string[]? MethodNames, string? TestFramework)> GetContextTestMethodNames(int line, int column, Document contextDocument, CancellationToken cancellationToken)
+        public override async Task<(string[]? MethodNames, string? TestFramework)> GetContextTestMethodNames(int line, int column, Document contextDocument, CancellationToken cancellationToken)
         {
             Logger.LogDebug($"Loading info for {contextDocument.FilePath} {line}:{column}");
             var syntaxTree = await contextDocument.GetSyntaxTreeAsync(cancellationToken);
@@ -338,25 +323,6 @@ namespace OmniSharp.DotNetTest
                 return false;
             }
         }
-
-        public override async Task<RunTestResponse> RunTestsInContextAsync(int line, int column, Document contextDocument, string? runSettings, string? targetFrameworkVersion, CancellationToken cancellationToken)
-        {
-            var (methodNames, testFrameworkName) = await GetContextTestMethodNames(line, column, contextDocument, cancellationToken);
-
-            if (methodNames is null)
-            {
-                return new RunTestResponse
-                {
-                    Pass = false,
-                    Failure = "Could not find any tests to run"
-                };
-            }
-
-            Debug.Assert(testFrameworkName is object);
-
-            return await RunTestAsync(methodNames, runSettings, testFrameworkName, targetFrameworkVersion, cancellationToken);
-
-        }
 #nullable restore
 
         public override Task<RunTestResponse> RunTestAsync(string methodName, string runSettings, string testFrameworkName, string targetFrameworkVersion, CancellationToken cancellationToken)
@@ -426,7 +392,8 @@ namespace OmniSharp.DotNetTest
             return new RunTestResponse
             {
                 Results = results.ToArray(),
-                Pass = !testResults.Any(r => r.Outcome == TestOutcome.Failed)
+                Pass = !testResults.Any(r => r.Outcome == TestOutcome.Failed),
+                ContextHadNoTests = false
             };
         }
 

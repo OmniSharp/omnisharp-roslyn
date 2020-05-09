@@ -24,17 +24,42 @@ namespace OmniSharp.DotNetTest.Services
         public async Task<RunTestResponse> Handle(RunTestsInContextRequest request)
         {
             var document = Workspace.GetDocument(request.FileName);
-            using var testManager = TestManager.Start(document.Project, DotNetCli, EventEmitter, LoggerFactory);
+            if (document is null)
+            {
+                return new RunTestResponse
+                {
+                    Failure = "File is not part of a C# project in the loaded solution.",
+                    Pass = false,
+                    ContextHadNoTests = true
+                };
+            }
+
+            using var testManager = TestManager.Create(document.Project, DotNetCli, EventEmitter, LoggerFactory);
+
+            var (methodNames, testFramework) = await testManager.GetContextTestMethodNames(request.Line, request.Column, document, CancellationToken.None);
+
+            if (methodNames is null)
+            {
+                return new RunTestResponse
+                {
+                    Pass = false,
+                    Failure = "Could not find any tests to run",
+                    ContextHadNoTests = true
+                };
+            }
+
+            testManager.Connect();
 
             if (testManager.IsConnected)
             {
-                return await testManager.RunTestsInContextAsync(request.Line, request.Column, document, request.RunSettings, request.TargetFrameworkVersion, CancellationToken.None);
+                return await testManager.RunTestAsync(methodNames, request.RunSettings, testFramework, request.TargetFrameworkVersion, CancellationToken.None);
             }
 
             var response = new RunTestResponse
             {
                 Failure = "Failed to connect to 'dotnet test' process",
-                Pass = false
+                Pass = false,
+                ContextHadNoTests = false
             };
 
             return response;

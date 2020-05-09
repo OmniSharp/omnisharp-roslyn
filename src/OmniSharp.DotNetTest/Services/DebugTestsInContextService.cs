@@ -27,19 +27,47 @@ namespace OmniSharp.DotNetTest.Services
             _debugSessionManager = debugSessionManager;
         }
 
-        public Task<DebugTestGetStartInfoResponse> Handle(DebugTestsInContextGetStartInfoRequest request)
+        public async Task<DebugTestGetStartInfoResponse> Handle(DebugTestsInContextGetStartInfoRequest request)
         {
-            var testManager = CreateTestManager(request.FileName);
+            var document = Workspace.GetDocument(request.FileName);
+            if (document is null)
+            {
+                return new DebugTestGetStartInfoResponse
+                {
+                    Succeeded = false,
+                    FailureReason = "File is not part of a C# project in the loaded solution.",
+                    ContextHadNoTests = true,
+                };
+            }
+
+            var testManager = TestManager.Create(document.Project, DotNetCli, EventEmitter, LoggerFactory);
+
+            var (methodNames, testFramework) = await testManager.GetContextTestMethodNames(request.Line, request.Column, document, CancellationToken.None);
+
+            if (methodNames is null)
+            {
+                return new DebugTestGetStartInfoResponse
+                {
+                    Succeeded = false,
+                    FailureReason = "Could not find any tests to run",
+                    ContextHadNoTests = true,
+
+                };
+            }
+
+            testManager.Connect();
+
             if (testManager.IsConnected)
             {
                 _debugSessionManager.StartSession(testManager);
-                return _debugSessionManager.DebugGetStartInfoAsync(
-                    request.Line, request.Column, Workspace.GetDocument(request.FileName),
-                    request.RunSettings, request.TargetFrameworkVersion,
-                    CancellationToken.None);
+                return await _debugSessionManager.DebugGetStartInfoAsync(methodNames, request.RunSettings, testFramework, request.TargetFrameworkVersion, CancellationToken.None);
             }
 
-            throw new InvalidOperationException("The debugger could not be started");
+            return new DebugTestGetStartInfoResponse
+            {
+                FailureReason = "Failed to connect to the 'dotnet test' process",
+                Succeeded = false
+            };
         }
     }
 }

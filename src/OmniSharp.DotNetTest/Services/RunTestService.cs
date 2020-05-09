@@ -29,7 +29,8 @@ namespace OmniSharp.DotNetTest.Services
             var response = new RunTestResponse
             {
                 Failure = "Failed to connect to 'dotnet test' process",
-                Pass = false
+                Pass = false,
+                ContextHadNoTests = false
             };
 
             return Task.FromResult(response);

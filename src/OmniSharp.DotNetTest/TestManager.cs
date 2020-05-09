@@ -75,7 +75,7 @@ namespace OmniSharp.DotNetTest
         protected abstract void VersionCheck();
 
 #nullable enable
-        public abstract Task<RunTestResponse> RunTestsInContextAsync(int lineNumber, int column, Document contextDocument, string? runSettings, string? targetFrameworkVersion, CancellationToken cancellationToken);
+        public abstract Task<(string[]? MethodNames, string? TestFramework)> GetContextTestMethodNames(int line, int column, Document contextDocument, CancellationToken cancellationToken);
 #nullable restore
 
         public abstract Task<RunTestResponse> RunTestAsync(string methodName, string runSettings, string testFrameworkName, string targetFrameworkVersion, CancellationToken cancellationToken);
@@ -83,10 +83,6 @@ namespace OmniSharp.DotNetTest
         public abstract Task<RunTestResponse> RunTestAsync(string[] methodNames, string runSettings, string testFrameworkName, string targetFrameworkVersion, CancellationToken cancellationToken);
 
         public abstract Task<GetTestStartInfoResponse> GetTestStartInfoAsync(string methodName, string runSettings, string testFrameworkName, string targetFrameworkVersion, CancellationToken cancellationToken);
-
-#nullable enable
-        public abstract Task<DebugTestGetStartInfoResponse> DebugGetStartInfoAsync(int line, int column, Document contextDocument, string? runSettings, string? targetFrameworkVersion, CancellationToken cancellationToken);
-#nullable restore
 
         public abstract Task<DebugTestGetStartInfoResponse> DebugGetStartInfoAsync(string methodName, string runSettings, string testFrameworkName, string targetFrameworkVersion, CancellationToken cancellationToken);
 
@@ -100,7 +96,7 @@ namespace OmniSharp.DotNetTest
             return true;
         }
 
-        private void Connect()
+        internal void Connect()
         {
             if (_isConnected)
             {
