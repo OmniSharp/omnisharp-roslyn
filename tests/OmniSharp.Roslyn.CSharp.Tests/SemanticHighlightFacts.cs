@@ -154,6 +154,42 @@ class C1
             );
         }
 
+        [Fact]
+        public async Task SemanticHighlightWithNullable()
+        {
+            var testFile = new TestFile("a.cs", @"
+class C1
+{
+    string s1 = ""hello"";
+    int[]? example;
+    string s2 = ""world"";
+}");
+
+            var highlights = await GetSemanticHighlightsForFileAsync(testFile);
+
+            AssertSyntax(highlights, testFile.Content.Code, 0,
+                Keyword("class"),
+                ClassName("C1"),
+                Punctuation("{"),
+                Keyword("string"),
+                Field("s1"),
+                Operator("="),
+                String("\"hello\""),
+                Punctuation(";"),
+                Keyword("int"),
+                Punctuation("["),
+                Punctuation("]"),
+                Operator("?"),
+                Field("example"),
+                Punctuation(";"),
+                Keyword("string"),
+                Field("s2"),
+                Operator("="),
+                String("\"world\""),
+                Punctuation(";"),
+                Punctuation("}")
+            );
+        }
 
         [Fact]
         public async Task SemanticHighlightStaticModifiers()
