@@ -22,8 +22,8 @@ namespace OmniSharp.Tests
                 var version = dotNetCli.GetVersion();
 
                 Assert.Equal(3, version.Major);
-                Assert.Equal(0, version.Minor);
-                Assert.Equal(100, version.Patch);
+                Assert.Equal(1, version.Minor);
+                Assert.Equal(201, version.Patch);
                 Assert.Equal("", version.Release);
             }
         }
