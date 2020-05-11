@@ -38,8 +38,8 @@ namespace OmniSharp.Tests
                 var info = dotNetCli.GetInfo();
 
                 Assert.Equal(3, info.Version.Major);
-                Assert.Equal(0, info.Version.Minor);
-                Assert.Equal(100, info.Version.Patch);
+                Assert.Equal(1, info.Version.Minor);
+                Assert.Equal(201, info.Version.Patch);
                 Assert.Equal("", info.Version.Release);
             }
         }
