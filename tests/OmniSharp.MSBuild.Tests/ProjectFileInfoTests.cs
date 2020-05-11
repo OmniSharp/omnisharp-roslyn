@@ -130,7 +130,7 @@ namespace OmniSharp.MSBuild.Tests
                 Assert.NotNull(projectFileInfo);
                 Assert.Equal(projectFilePath, projectFileInfo.FilePath);
                 var targetFramework = Assert.Single(projectFileInfo.TargetFrameworks);
-                Assert.Equal("netcoreapp3.0", targetFramework);
+                Assert.Equal("netcoreapp3.1", targetFramework);
                 Assert.Equal(LanguageVersion.CSharp8, projectFileInfo.LanguageVersion);
                 Assert.Equal(NullableContextOptions.Enable, projectFileInfo.NullableContextOptions);
                 Assert.Equal("Debug", projectFileInfo.Configuration);

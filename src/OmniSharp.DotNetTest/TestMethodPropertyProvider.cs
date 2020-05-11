@@ -15,7 +15,7 @@ namespace OmniSharp.DotNetTest
         {
             if (symbol is IMethodSymbol methodSymbol)
             {
-                foreach (var framework in TestFramework.GetFrameworks())
+                foreach (var framework in TestFramework.Frameworks)
                 {
                     if (framework.IsTestMethod(methodSymbol))
                     {
