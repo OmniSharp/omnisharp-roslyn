@@ -1,11 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Text;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
@@ -15,6 +19,7 @@ using NuGet.Versioning;
 using OmniSharp.DotNetTest.Models;
 using OmniSharp.DotNetTest.TestFrameworks;
 using OmniSharp.Eventing;
+using OmniSharp.Extensions;
 using OmniSharp.Services;
 
 namespace OmniSharp.DotNetTest
@@ -117,11 +122,11 @@ namespace OmniSharp.DotNetTest
             }
         }
 
-        public override GetTestStartInfoResponse GetTestStartInfo(string methodName, string runSettings, string testFrameworkName, string targetFrameworkVersion)
+        public override async Task<GetTestStartInfoResponse> GetTestStartInfoAsync(string methodName, string runSettings, string testFrameworkName, string targetFrameworkVersion, CancellationToken cancellationToken)
         {
             VerifyTestFramework(testFrameworkName);
 
-            var testCases = DiscoverTests(new string[] { methodName }, runSettings, targetFrameworkVersion);
+            var testCases = await DiscoverTestsAsync(new string[] { methodName }, runSettings, targetFrameworkVersion, cancellationToken);
 
             SendMessage(MessageType.GetTestRunnerProcessStartInfoForRunSelected,
                 new
@@ -167,7 +172,8 @@ namespace OmniSharp.DotNetTest
                 FileName = startInfo.FileName,
                 Arguments = startInfo.Arguments,
                 WorkingDirectory = startInfo.WorkingDirectory,
-                EnvironmentVariables = startInfo.EnvironmentVariables
+                EnvironmentVariables = startInfo.EnvironmentVariables,
+                Succeeded = true
             };
         }
 
@@ -202,14 +208,131 @@ namespace OmniSharp.DotNetTest
             }
         }
 
-        public override RunTestResponse RunTest(string methodName, string runSettings, string testFrameworkName, string targetFrameworkVersion)
-            => RunTest(new string[] { methodName }, runSettings, testFrameworkName, targetFrameworkVersion);
+#nullable enable
+        public override async Task<(string[]? MethodNames, string? TestFramework)> GetContextTestMethodNames(int line, int column, Document contextDocument, CancellationToken cancellationToken)
+        {
+            Logger.LogDebug($"Loading info for {contextDocument.FilePath} {line}:{column}");
+            var syntaxTree = await contextDocument.GetSyntaxTreeAsync(cancellationToken);
+            if (syntaxTree is null)
+            {
+                return default;
+            }
 
-        public override RunTestResponse RunTest(string[] methodNames, string runSettings, string testFrameworkName, string targetFrameworkVersion)
+            var semanticModel = await contextDocument.GetSemanticModelAsync(cancellationToken);
+            if (semanticModel is null)
+            {
+                return default;
+            }
+
+            var sourceText = await contextDocument.GetTextAsync();
+
+            var position = sourceText.Lines.GetPosition(new LinePosition(line, column));
+            var node = (await syntaxTree.GetRootAsync()).FindToken(position).Parent;
+
+            string[]? methodNames = null;
+            TestFramework? testFramework = null;
+
+            while (node is object)
+            {
+                if (node is MethodDeclarationSyntax methodDeclaration)
+                {
+                    // If a user invokes a test before or after a test method, it's likely that
+                    // they meant the context to be the entire containing type, not the current
+                    // methodsyntax to which the trivia was attached to. If we're in that scenario,
+                    // just continue searching up.
+                    if (position < methodDeclaration.SpanStart || position >= methodDeclaration.Span.End)
+                    {
+                        node = node.Parent;
+                        continue;
+                    }
+
+                    var methodSymbol = semanticModel.GetDeclaredSymbol(methodDeclaration, cancellationToken);
+                    if (methodSymbol is null)
+                    {
+                        Logger.LogWarning($"Could not find method symbol for method syntax {node} {contextDocument.FilePath} {node.SpanStart}:{node.Span.End}. This should not be possible.");
+                        Debug.Fail($"Did not find method symbol");
+                        continue;
+                    }
+
+                    if (isTestMethod(methodSymbol, ref testFramework))
+                    {
+                        methodNames = new[] { methodSymbol.GetMetadataName() };
+                        Logger.LogDebug($"Found test method {methodNames[0]}");
+                        break;
+                    }
+
+                    Logger.LogDebug($"Method {methodSymbol.Name} is not a test method, searching containing type");
+                }
+                else if (node is ClassDeclarationSyntax classDeclaration)
+                {
+                    var typeSymbol = semanticModel.GetDeclaredSymbol(classDeclaration);
+                    if (typeSymbol is null)
+                    {
+                        Logger.LogWarning($"Could not find type symbol for class declaration syntax {node} {contextDocument.FilePath} {node.SpanStart}:{node.Span.End}. This should not be possible.");
+                        Debug.Fail($"Did not find class symbol symbol");
+                        continue;
+                    }
+
+                    var members = typeSymbol.GetMembers();
+                    ImmutableArray<string>.Builder? nameBuilder = null;
+
+                    foreach (var member in members)
+                    {
+                        if (!(member is IMethodSymbol methodSymbol) || !isTestMethod(methodSymbol, ref testFramework))
+                        {
+                            continue;
+                        }
+
+                        // This might be longer than the members we end up needing, but at least we won't do expensive
+                        // array reallocation during search.
+                        nameBuilder ??= ImmutableArray.CreateBuilder<string>(members.Length);
+                        nameBuilder.Add(member.GetMetadataName());
+                    }
+
+                    if (nameBuilder is object)
+                    {
+                        methodNames = nameBuilder.ToArray();
+                        Logger.LogDebug($"Found test methods {string.Join(", ", methodNames)}");
+                        break;
+                    }
+
+                    Logger.LogDebug($"Class {typeSymbol.Name} does not contain test methods, searching containing type (if applicable)");
+                }
+
+                node = node.Parent;
+            }
+
+            return (methodNames, testFramework?.Name);
+
+            static bool isTestMethod(IMethodSymbol methodSymbol, ref TestFramework? framework)
+            {
+                if (framework is object)
+                {
+                    return framework.IsTestMethod(methodSymbol);
+                }
+
+                foreach (var f in TestFramework.Frameworks)
+                {
+                    if (f.IsTestMethod(methodSymbol))
+                    {
+                        framework = f;
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+        }
+#nullable restore
+
+        public override Task<RunTestResponse> RunTestAsync(string methodName, string runSettings, string testFrameworkName, string targetFrameworkVersion, CancellationToken cancellationToken)
+            => RunTestAsync(new string[] { methodName }, runSettings, testFrameworkName, targetFrameworkVersion, cancellationToken);
+
+        public override async Task<RunTestResponse> RunTestAsync(string[] methodNames, string runSettings, string testFrameworkName, string targetFrameworkVersion, CancellationToken cancellationToken)
         {
             VerifyTestFramework(testFrameworkName);
 
-            var testCases = DiscoverTests(methodNames, runSettings, targetFrameworkVersion);
+            var testCases = await DiscoverTestsAsync(methodNames, runSettings, targetFrameworkVersion, cancellationToken);
 
             var testResults = new List<TestResult>();
 
@@ -269,7 +392,8 @@ namespace OmniSharp.DotNetTest
             return new RunTestResponse
             {
                 Results = results.ToArray(),
-                Pass = !testResults.Any(r => r.Outcome == TestOutcome.Failed)
+                Pass = !testResults.Any(r => r.Outcome == TestOutcome.Failed),
+                ContextHadNoTests = false
             };
         }
 
@@ -360,11 +484,6 @@ namespace OmniSharp.DotNetTest
                 var paramCount = genericParams.Split(',').Length;
                 return $"{name.Substring(0, genericParamStart)}`{paramCount}";
             }
-        }
-
-        private TestCase[] DiscoverTests(string[] methodNames, string runSettings, string targetFrameworkVersion)
-        {
-            return DiscoverTestsAsync(methodNames, runSettings, targetFrameworkVersion, CancellationToken.None).Result;
         }
     }
 }
