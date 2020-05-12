@@ -3,7 +3,7 @@
     "DotNetChannel": "Preview",
     "DotNetVersions": [
         "3.1.201",
-        "5.0.100-preview.2.20169.1"
+        "5.0.100-preview.3.20216.6"
     ],
     "RequiredMonoVersion": "6.6.0",
     "DownloadURL": "https://roslynomnisharp.blob.core.windows.net/ext",
