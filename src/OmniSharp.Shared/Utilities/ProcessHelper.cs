@@ -56,8 +56,8 @@ namespace OmniSharp.Utilities
                 CreateNoWindow = true,
                 UseShellExecute = false,
                 WorkingDirectory = workingDirectory ?? string.Empty,
-                StandardErrorEncoding = Encoding.GetEncoding(CultureInfo.CurrentCulture.TextInfo.OEMCodePage),
-                StandardOutputEncoding = Encoding.GetEncoding(CultureInfo.CurrentCulture.TextInfo.OEMCodePage)
+                StandardErrorEncoding = GetProcessEncoding(),
+                StandardOutputEncoding = GetProcessEncoding()
             };
 
             updateEnvironment(startInfo.Environment);
@@ -123,6 +123,24 @@ namespace OmniSharp.Utilities
             process.WaitForExit();
 
             return new ProcessExitStatus(process.ExitCode);
+        }
+
+        public static Encoding GetProcessEncoding()
+        {
+            var encoding = Console.OutputEncoding;
+            try
+            {
+                if (PlatformHelper.IsWindows)
+                {
+                    encoding = Encoding.GetEncoding(CultureInfo.CurrentCulture.TextInfo.OEMCodePage);
+                }
+
+            } catch (Exception)
+            {
+                // fallback
+            }
+
+            return encoding;
         }
     }
 }

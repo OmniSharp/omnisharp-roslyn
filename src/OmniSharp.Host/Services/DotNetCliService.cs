@@ -88,8 +88,8 @@ namespace OmniSharp.Services
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
-                StandardErrorEncoding = Encoding.GetEncoding(CultureInfo.CurrentCulture.TextInfo.OEMCodePage),
-                StandardOutputEncoding = Encoding.GetEncoding(CultureInfo.CurrentCulture.TextInfo.OEMCodePage)
+                StandardErrorEncoding = ProcessHelper.GetProcessEncoding(),
+                StandardOutputEncoding = ProcessHelper.GetProcessEncoding()
             };
 
             RemoveMSBuildEnvironmentVariables(startInfo.Environment);
