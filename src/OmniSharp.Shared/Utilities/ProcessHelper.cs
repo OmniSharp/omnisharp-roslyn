@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace OmniSharp.Utilities
@@ -54,6 +56,8 @@ namespace OmniSharp.Utilities
                 CreateNoWindow = true,
                 UseShellExecute = false,
                 WorkingDirectory = workingDirectory ?? string.Empty,
+                StandardErrorEncoding = Encoding.GetEncoding(CultureInfo.CurrentCulture.TextInfo.OEMCodePage),
+                StandardOutputEncoding = Encoding.GetEncoding(CultureInfo.CurrentCulture.TextInfo.OEMCodePage)
             };
 
             updateEnvironment(startInfo.Environment);
