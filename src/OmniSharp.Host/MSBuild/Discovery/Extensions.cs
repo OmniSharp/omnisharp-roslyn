@@ -66,7 +66,8 @@ namespace OmniSharp.MSBuild.Discovery
 
                 invalidVSFound = invalidVSFound || instance.IsInvalidVisualStudio();
 
-                if (score > bestMatchScore ||
+                if (bestMatchInstance == null ||
+                    score > bestMatchScore ||
                     score == bestMatchScore && instance.Version > bestMatchInstance?.Version)
                 {
                     bestMatchInstance = instance;

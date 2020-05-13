@@ -169,7 +169,7 @@ namespace OmniSharp.MSBuild.Tests
         }
 
         [Fact]
-        public void RegisterDefaultInstanceStillPrefersTheFirstInstance()
+        public void RegisterDefaultInstancePrefersSupportedVSLowerVersionInstanceOverStandAlone()
         {
             var msBuildInstances = new[]
             {
@@ -178,18 +178,45 @@ namespace OmniSharp.MSBuild.Tests
                     TestIO.GetRandomTempFolderPath(),
                     Version.Parse("16.3.2.3"),
                     DiscoveryType.VisualStudioSetup
-                ),
+                ).AddDotNetCoreToFakeInstance(),
                 GetStandAloneMSBuildInstance()
             };
 
             var msbuildLocator = new MSFakeLocator(msBuildInstances);
-            var logger = LoggerFactory.CreateLogger(nameof(RegisterDefaultInstanceStillPrefersTheFirstInstance));
+            var logger = LoggerFactory.CreateLogger(nameof(RegisterDefaultInstancePrefersSupportedVSLowerVersionInstanceOverStandAlone));
 
             // test
             msbuildLocator.RegisterDefaultInstance(logger);
 
             Assert.NotNull(msbuildLocator.RegisteredInstance);
             Assert.Same(msBuildInstances[0], msbuildLocator.RegisteredInstance);
+
+            // clean up
+            msbuildLocator.DeleteFakeInstancesFolders();
+        }
+
+        [Fact]
+        public void RegisterDefaultInstancePrefersStandAloneOverSupportedVSLowerVersionInstanceWithoutDotnetCore()
+        {
+            var msBuildInstances = new[]
+            {
+                new MSBuildInstance(
+                    "Test Instance",
+                    TestIO.GetRandomTempFolderPath(),
+                    Version.Parse("16.2.2.3"),
+                    DiscoveryType.VisualStudioSetup
+                ),
+                GetStandAloneMSBuildInstance()
+            };
+
+            var msbuildLocator = new MSFakeLocator(msBuildInstances);
+            var logger = LoggerFactory.CreateLogger(nameof(RegisterDefaultInstancePrefersStandAloneOverSupportedVSLowerVersionInstanceWithoutDotnetCore));
+
+            // test
+            msbuildLocator.RegisterDefaultInstance(logger);
+
+            Assert.NotNull(msbuildLocator.RegisteredInstance);
+            Assert.Same(msBuildInstances[1], msbuildLocator.RegisteredInstance);
 
             // clean up
             msbuildLocator.DeleteFakeInstancesFolders();
