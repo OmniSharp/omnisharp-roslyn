@@ -81,6 +81,46 @@ namespace OmniSharp.MSBuild.Tests
             msbuildLocator.DeleteFakeInstancesFolders();
         }
 
+
+        [Fact]
+        public void RegisterDefaultInstanceFindsTheNewestInstanceAvailableEvenWithOtherValidInstances()
+        {
+            var msBuildInstances = new[]
+            {
+                new MSBuildInstance(
+                    "Valid Test Instance",
+                    TestIO.GetRandomTempFolderPath(),
+                    Version.Parse("16.5.1.0"),
+                    DiscoveryType.VisualStudioSetup
+                ).AddDotNetCoreToFakeInstance(),
+                GetInvalidMsBuildInstance(),
+
+                // same but newer minor version
+                new MSBuildInstance(
+                    "Another Valid Test Instance",
+                    TestIO.GetRandomTempFolderPath(),
+                    Version.Parse("16.6.1.0"),
+                    DiscoveryType.VisualStudioSetup
+                ).AddDotNetCoreToFakeInstance(),
+                GetStandAloneMSBuildInstance()
+            };
+
+            var msbuildLocator = new MSFakeLocator(msBuildInstances);
+
+            var logger = LoggerFactory.CreateLogger(
+                nameof(RegisterDefaultInstanceFindsTheBestInstanceAvailableEvenWithOtherValidInstances)
+            );
+
+            // test
+            msbuildLocator.RegisterDefaultInstance(logger);
+
+            Assert.NotNull(msbuildLocator.RegisteredInstance);
+            Assert.Same(msBuildInstances[2], msbuildLocator.RegisteredInstance);
+
+            // clean up
+            msbuildLocator.DeleteFakeInstancesFolders();
+        }
+
         [Fact]
         public void RegisterDefaultInstanceFindsUserOverrideAvailableEvenWithOtherValidInstances()
         {
