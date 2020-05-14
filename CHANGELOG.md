@@ -2,6 +2,8 @@
 All changes to the project will be documented in this file.
 
 ## [1.35.2] - not yet released
+* Added LSP handler for `textDocument/codeAction` request. (PR: [#1795](https://github.com/OmniSharp/omnisharp-roslyn/pull/1795))
+* Updated LSP libraries to 0.14.2 which fixes problems with document synchronisation. (PR: [#1791](https://github.com/OmniSharp/omnisharp-roslyn/pull/1791))
 * Added support for `WarningsAsErrors` in csproj files (PR: [#1779](https://github.com/OmniSharp/omnisharp-roslyn/pull/1779))
 * Added support for `WarningsNotAsErrors` in csproj files ([#1681](https://github.com/OmniSharp/omnisharp-roslyn/issues/1681), PR: [#1784](https://github.com/OmniSharp/omnisharp-roslyn/pull/1784))
 
