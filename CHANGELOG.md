@@ -30,6 +30,7 @@ All changes to the project will be documented in this file.
 * Support for .NET Core 3.1 in csx files (PR: [#1731](https://github.com/OmniSharp/omnisharp-roslyn/pull/1731))
 * Update the minimal MSBuild to better support .NET 5 Previews ([omnisharp-vscode#3653](https://github.com/OmniSharp/omnisharp-vscode/issues/3653), PR: [#1746](https://github.com/OmniSharp/omnisharp-roslyn/pull/1746))
 * Updated to Roslyn [3.6.0-3.20170.19] (PR: [#1745](https://github.com/OmniSharp/omnisharp-roslyn/pull/1745))
+* Added semantic highlighting endpoint `/v2/highlight` (PR: [#1734](https://github.com/OmniSharp/omnisharp-roslyn/pull/1734))
 
 ## [1.34.14] - 2020-03-09
 * Added support for `annotations` value of `Nullable` csproj property ([#1721](https://github.com/OmniSharp/omnisharp-roslyn/issues/1721), PR: [#1722](https://github.com/OmniSharp/omnisharp-roslyn/pull/1722))
