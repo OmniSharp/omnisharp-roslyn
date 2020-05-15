@@ -68,7 +68,7 @@ namespace OmniSharp.MSBuild.Discovery
 
                 if (bestMatchInstance == null ||
                     score > bestMatchScore ||
-                    score == bestMatchScore && instance.Version > bestMatchInstance?.Version)
+                    score == bestMatchScore && instance.Version > bestMatchInstance.Version)
                 {
                     bestMatchInstance = instance;
                     bestMatchScore = score;
