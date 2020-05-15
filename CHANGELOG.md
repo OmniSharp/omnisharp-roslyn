@@ -4,6 +4,7 @@ All changes to the project will be documented in this file.
 ## [1.35.2] - not yet released
 * Added support for `WarningsAsErrors` in csproj files (PR: [#1779](https://github.com/OmniSharp/omnisharp-roslyn/pull/1779))
 * Added support for `WarningsNotAsErrors` in csproj files ([#1681](https://github.com/OmniSharp/omnisharp-roslyn/issues/1681), PR: [#1784](https://github.com/OmniSharp/omnisharp-roslyn/pull/1784))
+* Improved MSBuild scoring system ([#1783](https://github.com/OmniSharp/omnisharp-roslyn/issues/1783), PR: [#1795](https://github.com/OmniSharp/omnisharp-roslyn/pull/1795))
 
 ## [1.35.1] - 2020-05-04
 * Fixed not supported exception when trying to decompile a BCL assembly on Mono. For now we do not try to resolve implementation assembly from a ref assembly (PR: [#1767](https://github.com/OmniSharp/omnisharp-roslyn/pull/1767))
