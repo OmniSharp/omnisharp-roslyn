@@ -30,7 +30,18 @@ namespace OmniSharp.DotNetTest
         {
             if (runSettingsPath != null)
             {
-                return File.ReadAllText(runSettingsPath);
+                try
+                {
+                    return File.ReadAllText(runSettingsPath);
+                }
+                catch (FileNotFoundException)
+                {
+                    EmitTestMessage(TestMessageLevel.Warning, $"RunSettings file {runSettingsPath} not found. Continuing with default settings...");
+                }
+                catch (Exception e)
+                {
+                    EmitTestMessage(TestMessageLevel.Warning, $"There was an error loading runsettings at {runSettingsPath}: {e}. Continuing with default settings...");
+                }
             }
 
             if (!string.IsNullOrWhiteSpace(targetFrameworkVersion))

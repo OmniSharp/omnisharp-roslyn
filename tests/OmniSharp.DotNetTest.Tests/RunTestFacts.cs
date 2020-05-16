@@ -238,12 +238,16 @@ namespace OmniSharp.DotNetTest.Tests
         [Fact]
         public async Task RunMSTestWithoutRunSettings()
         {
-            await RunDotNetTestAsync(
+            var response = await RunDotNetTestAsync(
                 MSTestProject,
                 methodName: "Main.Test.MainTest.CheckRunSettings",
                 testFramework: "mstest",
                 shouldPass: false,
                 useRunSettings: false);
+
+            Assert.Single(response.Results);
+            Assert.NotEmpty(response.Results[0].ErrorMessage);
+            Assert.NotEmpty(response.Results[0].ErrorStackTrace);
         }
     }
 }
