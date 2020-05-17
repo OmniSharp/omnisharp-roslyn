@@ -2,6 +2,7 @@
 All changes to the project will be documented in this file.
 
 ## [1.35.2] - not yet released
+* Added LSP handler for the `workspace/symbol` request. (PR: [#1799](https://github.com/OmniSharp/omnisharp-roslyn/pull/1799))
 * Added support for `WarningsAsErrors` in csproj files (PR: [#1779](https://github.com/OmniSharp/omnisharp-roslyn/pull/1779))
 * Added support for `WarningsNotAsErrors` in csproj files ([#1681](https://github.com/OmniSharp/omnisharp-roslyn/issues/1681), PR: [#1784](https://github.com/OmniSharp/omnisharp-roslyn/pull/1784))
 
