@@ -9,7 +9,7 @@ namespace Main.Test
         public void Test()
         {
             Assert.True(true);
-        }
+        } // This is here for boundary testing
 
         [Theory]
         [InlineData(0)]
@@ -62,6 +62,22 @@ namespace Main.Test
             int a = 1, b = 1;
             Console.WriteLine($"a = {a}, b = {b}");
             Assert.Equal(a,b);
+        }
+
+        private class NestedClass
+        {
+            public void M()
+            {
+
+            }
+        }
+    }
+
+    public class NoTests
+    {
+        public void M()
+        {
+
         }
     }
 }

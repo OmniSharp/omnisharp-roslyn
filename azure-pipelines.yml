@@ -22,7 +22,7 @@ resources:
 
 variables:
   Verbosity: Diagnostic
-  DotNetVersion: "3.0.100"
+  DotNetVersion: "3.1.201"
   CakeVersion: "0.32.1"
   NuGetVersion: "4.9.2"
   GitVersionVersion: "5.0.1"
@@ -44,7 +44,7 @@ jobs:
 
   - job: macOS
     pool:
-      vmImage: "macOS-10.13"
+      vmImage: "macOS-10.15"
     dependsOn: GitVersion
     variables:
       MONO_VERSION: 6.8.0
@@ -105,7 +105,7 @@ jobs:
 
   - job: Windows
     pool:
-      vmImage: "VS2017-Win2016"
+      vmImage: "windows-latest"
     dependsOn: GitVersion
     steps:
       - template: ./.pipelines/init.yml

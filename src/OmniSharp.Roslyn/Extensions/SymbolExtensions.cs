@@ -1,15 +1,50 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
+using System.Linq;
+using System.Text;
 using Microsoft.CodeAnalysis;
 using OmniSharp.Models.V2;
+using OmniSharp.Roslyn.Utilities;
 using OmniSharp.Utilities;
 
 namespace OmniSharp.Extensions
 {
     public static class SymbolExtensions
     {
+        private static readonly SymbolDisplayFormat NameFormat =
+            new SymbolDisplayFormat(
+                globalNamespaceStyle: SymbolDisplayGlobalNamespaceStyle.Omitted,
+                typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces,
+                propertyStyle: SymbolDisplayPropertyStyle.NameOnly,
+                genericsOptions: SymbolDisplayGenericsOptions.IncludeTypeParameters | SymbolDisplayGenericsOptions.IncludeVariance,
+                memberOptions: SymbolDisplayMemberOptions.IncludeParameters | SymbolDisplayMemberOptions.IncludeExplicitInterface,
+                parameterOptions:
+                    SymbolDisplayParameterOptions.IncludeParamsRefOut |
+                    SymbolDisplayParameterOptions.IncludeExtensionThis |
+                    SymbolDisplayParameterOptions.IncludeType |
+                    SymbolDisplayParameterOptions.IncludeName,
+                miscellaneousOptions:
+                    SymbolDisplayMiscellaneousOptions.EscapeKeywordIdentifiers |
+                    SymbolDisplayMiscellaneousOptions.UseSpecialTypes);
+
         private readonly static CachedStringBuilder s_cachedBuilder;
+
+        public static string ToNameDisplayString(this ISymbol symbol)
+        {
+            return symbol.ToDisplayString(NameFormat);
+        }
+
+        public static INamedTypeSymbol GetContainingTypeOrThis(this ISymbol symbol)
+        {
+            if (symbol is INamedTypeSymbol namedType)
+            {
+                return namedType;
+            }
+
+            return symbol.ContainingType;
+        }
 
         public static string GetMetadataName(this ISymbol symbol)
         {
@@ -215,5 +250,52 @@ namespace OmniSharp.Extensions
 
             return (INamedTypeSymbol)topLevelNamedType;
         }
+
+        public static string GetSymbolName(this ISymbol symbol)
+        {
+            var topLevelSymbol = symbol.GetTopLevelContainingNamedType();
+            return GetTypeDisplayString(topLevelSymbol);
+        }
+
+        private static string GetTypeDisplayString(INamedTypeSymbol symbol)
+        {
+            if (symbol.SpecialType != SpecialType.None)
+            {
+                var specialType = symbol.SpecialType;
+                var name = Enum.GetName(typeof(SpecialType), symbol.SpecialType).Replace("_", ".");
+                return name;
+            }
+
+            if (symbol.IsGenericType)
+            {
+                symbol = symbol.ConstructUnboundGenericType();
+            }
+
+            if (symbol.IsUnboundGenericType)
+            {
+                // TODO: Is this the best to get the fully metadata name?
+                var parts = symbol.ToDisplayParts();
+                var filteredParts = parts.Where(x => x.Kind != SymbolDisplayPartKind.Punctuation).ToArray();
+                var typeName = new StringBuilder();
+                foreach (var part in filteredParts.Take(filteredParts.Length - 1))
+                {
+                    typeName.Append(part.Symbol.Name);
+                    typeName.Append(".");
+                }
+                typeName.Append(symbol.MetadataName);
+
+                return typeName.ToString();
+            }
+
+            return symbol.ToDisplayString();
+        }
+
+        internal static string GetFilePathForExternalSymbol(this ISymbol symbol, Project project)
+        {
+            var topLevelSymbol = symbol.GetTopLevelContainingNamedType();
+            return $"$metadata$/Project/{Folderize(project.Name)}/Assembly/{Folderize(topLevelSymbol.ContainingAssembly.Name)}/Symbol/{Folderize(GetTypeDisplayString(topLevelSymbol))}.cs".Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
+        }
+
+        private static string Folderize(string path) => string.Join("/", path.Split('.'));
     }
 }

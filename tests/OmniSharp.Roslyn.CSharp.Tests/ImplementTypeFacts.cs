@@ -120,7 +120,7 @@ public class Foo : I$$Foo
                     Column = point.Offset,
                     FileName = testFile.FileName,
                     Buffer = testFile.Content.Code,
-                    Identifier = "False;False;AssemblyName;global::IFoo;Microsoft.CodeAnalysis.ImplementInterface.AbstractImplementInterfaceService+ImplementInterfaceCodeAction",
+                    Identifier = "False;False;True:AssemblyName;global::IFoo;Microsoft.CodeAnalysis.ImplementInterface.AbstractImplementInterfaceService+ImplementInterfaceCodeAction",
                     WantsTextChanges = true,
                     WantsAllCodeActionOperations = true
                 };

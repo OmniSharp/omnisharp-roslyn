@@ -42,7 +42,7 @@ namespace OmniSharp.MSBuild.ProjectFile
             }
 
             var builder = ImmutableArray.CreateBuilder<string>();
-            var values = propertyValue.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+            var values = propertyValue.Split(new[] { separator }, StringSplitOptions.RemoveEmptyEntries);
 
             foreach (var value in values)
             {

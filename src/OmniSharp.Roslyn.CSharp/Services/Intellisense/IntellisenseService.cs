@@ -51,7 +51,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
 
                     // get recommended symbols to match them up later with SymbolCompletionProvider
                     var semanticModel = await document.GetSemanticModelAsync();
-                    var recommendedSymbols = await Recommender.GetRecommendedSymbolsAtPositionAsync(semanticModel, position, _workspace);
+                    var recommendedSymbols = (await Recommender.GetRecommendedSymbolsAtPositionAsync(semanticModel, position, _workspace)).ToArray();
 
                     var isSuggestionMode = completionList.SuggestionModeItem != null;
                     foreach (var item in completionList.Items)

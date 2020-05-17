@@ -41,6 +41,30 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             Assert.Equal(expected, lineSpans);
         }
 
+        [Fact]
+        public async Task SupportsRegionBlocks()
+        {
+            var testFile = new TestFile("foo.cs", @"
+[|#region Code Region Here
+class Foo[|
+{
+    void M()[|
+    {
+        if (false)[|
+        {
+        }|]
+    }|]
+}|]
+#endregion|]");
+
+            var regionSpan = Assert.Single((await GetResponseAsync(testFile)).Spans,
+                span => span.Kind == CodeFoldingBlockKinds.Region);
+            Assert.Equal(1, regionSpan.Range.Start.Line);
+            Assert.Equal(0, regionSpan.Range.Start.Column);
+            Assert.Equal(11, regionSpan.Range.End.Line);
+            Assert.Equal(10, regionSpan.Range.End.Column);
+        }
+
         private Task<BlockStructureResponse> GetResponseAsync(TestFile testFile)
         {
             SharedOmniSharpTestHost.AddFilesToWorkspace(testFile);

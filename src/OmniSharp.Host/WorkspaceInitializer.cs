@@ -29,6 +29,8 @@ namespace OmniSharp
             projectEventForwarder.Initialize();
             var projectSystems = compositionHost.GetExports<IProjectSystem>();
 
+            workspace.EditorConfigEnabled = options.CurrentValue.FormattingOptions.EnableEditorConfigSupport;
+
             foreach (var projectSystem in projectSystems)
             {
                 try
@@ -82,8 +84,11 @@ namespace OmniSharp
 
                 try
                 {
-                    LoggerExtensions.LogInformation(logger, $"Invoking Workspace Options Provider: {providerName}, Order: {workspaceOptionsProvider.Order}");
-                    workspace.Options = workspaceOptionsProvider.Process(workspace.Options, options.CurrentValue, omnisharpEnvironment);
+                    logger.LogInformation($"Invoking Workspace Options Provider: {providerName}, Order: {workspaceOptionsProvider.Order}");
+                    if (!workspace.TryApplyChanges(workspace.CurrentSolution.WithOptions(workspaceOptionsProvider.Process(workspace.Options, options.CurrentValue, omnisharpEnvironment))))
+                    {
+                        logger.LogWarning($"Couldn't apply options from Workspace Options Provider: {providerName}");
+                    }
                 }
                 catch (Exception e)
                 {

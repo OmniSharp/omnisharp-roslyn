@@ -20,7 +20,7 @@ namespace OmniSharp.DotNetTest.Services
         IRequestHandler<DebugTestLaunchRequest, DebugTestLaunchResponse>,
         IRequestHandler<DebugTestStopRequest, DebugTestStopResponse>
     {
-        private DebugSessionManager _debugSessionManager;
+        private readonly DebugSessionManager _debugSessionManager;
 
         [ImportingConstructor]
         public DebugTestService(DebugSessionManager debugSessionManager, OmniSharpWorkspace workspace, IDotNetCliService dotNetCli, IEventEmitter eventEmitter, ILoggerFactory loggerFactory)

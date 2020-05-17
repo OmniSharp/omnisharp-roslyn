@@ -9,7 +9,7 @@ mono_cmd=${bin_dir}/mono
 omnisharp_cmd=${omnisharp_dir}/OmniSharp.exe
 config_file=${etc_dir}/config
 
-chmod 755 ${mono_cmd}
+chmod 755 "${mono_cmd}"
 
 no_omnisharp=false
 

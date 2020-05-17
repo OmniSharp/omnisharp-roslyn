@@ -67,30 +67,28 @@ namespace OmniSharp.DotNetTest
             {
                 throw new NotSupportedException("Legacy .NET SDK is not supported");
             }
-            
+
             return (TestManager)new VSTestManager(project, workingDirectory, dotNetCli, version, eventEmitter, loggerFactory);
         }
 
         protected abstract string GetCliTestArguments(int port, int parentProcessId);
         protected abstract void VersionCheck();
 
-        public abstract RunTestResponse RunTest(string methodName, string runSettings, string testFrameworkName, string targetFrameworkVersion);
+#nullable enable
+        public abstract Task<(string[]? MethodNames, string? TestFramework)> GetContextTestMethodNames(int line, int column, Document contextDocument, CancellationToken cancellationToken);
+#nullable restore
 
-        public virtual RunTestResponse RunTest(string[] methodNames, string runSettings, string testFrameworkName, string targetFrameworkVersion)
-        { 
-            throw new NotImplementedException();
-        }
+        public abstract Task<RunTestResponse> RunTestAsync(string methodName, string runSettings, string testFrameworkName, string targetFrameworkVersion, CancellationToken cancellationToken);
 
-        public abstract DiscoverTestsResponse DiscoverTests(string runSettings, string testFrameworkName, string targetFrameworkVersion);
+        public abstract Task<RunTestResponse> RunTestAsync(string[] methodNames, string runSettings, string testFrameworkName, string targetFrameworkVersion, CancellationToken cancellationToken);
 
-        public abstract GetTestStartInfoResponse GetTestStartInfo(string methodName, string runSettings, string testFrameworkName, string targetFrameworkVersion);
+        public abstract DiscoverTestsResponse DiscoverTestsAsync(string runSettings, string testFrameworkName, string targetFrameworkVersion, CancellationToken cancellationToken);
+        
+        public abstract Task<GetTestStartInfoResponse> GetTestStartInfoAsync(string methodName, string runSettings, string testFrameworkName, string targetFrameworkVersion, CancellationToken cancellationToken);
 
         public abstract Task<DebugTestGetStartInfoResponse> DebugGetStartInfoAsync(string methodName, string runSettings, string testFrameworkName, string targetFrameworkVersion, CancellationToken cancellationToken);
 
-        public virtual Task<DebugTestGetStartInfoResponse> DebugGetStartInfoAsync(string[] methodNames, string runSettings, string testFrameworkName, string targetFrameworkVersion, CancellationToken cancellationToken)
-        {
-            throw new NotImplementedException();
-        }
+        public abstract Task<DebugTestGetStartInfoResponse> DebugGetStartInfoAsync(string[] methodNames, string runSettings, string testFrameworkName, string targetFrameworkVersion, CancellationToken cancellationToken);
 
         public abstract Task DebugLaunchAsync(CancellationToken cancellationToken);
 
@@ -100,7 +98,7 @@ namespace OmniSharp.DotNetTest
             return true;
         }
 
-        private void Connect(bool noBuild)
+        internal void Connect(bool noBuild)
         {
             if (_isConnected)
             {

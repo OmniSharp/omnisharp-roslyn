@@ -69,6 +69,12 @@ namespace OmniSharp.Roslyn.CSharp.Services.Documentation
                                     ret.Append(xml["name"]);
                                     ret.Append(" ");
                                     break;
+                                case "typeparam":
+                                    ret.Append(lineEnding);
+                                    ret.Append("<");
+                                    ret.Append(TrimMultiLineString(xml["name"], lineEnding));
+                                    ret.Append(">: ");
+                                    break;
                                 case "param":
                                     ret.Append(lineEnding);
                                     ret.Append(TrimMultiLineString(xml["name"], lineEnding));
