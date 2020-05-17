@@ -18,11 +18,11 @@ namespace OmniSharp.DotNetTest.Services
         {
         }
 
-        protected override DiscoverTestsResponse HandleRequest(DiscoverTestsRequest request, TestManager testManager)
+        protected override async Task<DiscoverTestsResponse> HandleRequest(DiscoverTestsRequest request, TestManager testManager)
         {
             if (testManager.IsConnected)
             {
-                return testManager.DiscoverTests(request.RunSettings, request.TestFrameworkName, request.TargetFrameworkVersion);
+                return await testManager.DiscoverTestsAsync(request.RunSettings, request.TestFrameworkName, request.TargetFrameworkVersion, default(CancellationToken));
             }
             
             throw new InvalidOperationException("The debugger could not be started");
