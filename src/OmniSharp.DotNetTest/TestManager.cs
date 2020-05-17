@@ -82,7 +82,7 @@ namespace OmniSharp.DotNetTest
 
         public abstract Task<RunTestResponse> RunTestAsync(string[] methodNames, string runSettings, string testFrameworkName, string targetFrameworkVersion, CancellationToken cancellationToken);
 
-        public abstract DiscoverTestsResponse DiscoverTestsAsync(string runSettings, string testFrameworkName, string targetFrameworkVersion, CancellationToken cancellationToken);
+        public abstract Task<DiscoverTestsResponse> DiscoverTestsAsync(string runSettings, string testFrameworkName, string targetFrameworkVersion, CancellationToken cancellationToken);
         
         public abstract Task<GetTestStartInfoResponse> GetTestStartInfoAsync(string methodName, string runSettings, string testFrameworkName, string targetFrameworkVersion, CancellationToken cancellationToken);
 

@@ -127,9 +127,9 @@ namespace OmniSharp.DotNetTest
             }
         }
 
-        public override DiscoverTestsResponse DiscoverTests(string runSettings, string testFrameworkName, string targetFrameworkVersion)
+        public override async Task<DiscoverTestsResponse> DiscoverTestsAsync(string runSettings, string testFrameworkName, string targetFrameworkVersion)
         {
-            var testCases = DiscoverTestsAsync(null, runSettings, targetFrameworkVersion, CancellationToken.None).Result;
+            var testCases = await DiscoverTestsAsync(null, runSettings, targetFrameworkVersion, CancellationToken.None);
             return new DiscoverTestsResponse
             {
                 Tests = testCases.Select(o => new Test
