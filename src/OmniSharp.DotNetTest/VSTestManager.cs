@@ -334,7 +334,8 @@ namespace OmniSharp.DotNetTest
 
             var testCases = await DiscoverTestsAsync(methodNames, runSettings, targetFrameworkVersion, cancellationToken);
 
-            var testResults = new List<TestResult>();
+            var passed = true;
+            var results = new List<DotNetTestResult>();
 
             if (testCases.Length > 0)
             {
@@ -360,14 +361,26 @@ namespace OmniSharp.DotNetTest
 
                         case MessageType.TestRunStatsChange:
                             var testRunChange = message.DeserializePayload<TestRunChangedEventArgs>();
-                            testResults.AddRange(testRunChange.NewTestResults);
+                            var newResults = ConvertResults(testRunChange.NewTestResults);
+                            passed = passed &&  testRunChange.NewTestResults.Any(o => o.Outcome == TestOutcome.Failed);
+                            results.AddRange(newResults);
+                            foreach (var result in newResults)
+                            {
+                                EmitTestComletedEvent(result);
+                            }
                             break;
 
                         case MessageType.ExecutionComplete:
                             var payload = message.DeserializePayload<TestRunCompletePayload>();
                             if (payload.LastRunTests != null && payload.LastRunTests.NewTestResults != null)
                             {
-                                testResults.AddRange(payload.LastRunTests.NewTestResults);
+                                var lastRunResults = ConvertResults(payload.LastRunTests.NewTestResults);
+                                passed = passed && payload.LastRunTests.NewTestResults.Any(o => o.Outcome == TestOutcome.Failed);
+                                results.AddRange(lastRunResults);
+                                foreach (var result in lastRunResults)
+                                {
+                                    EmitTestComletedEvent(result);
+                                }
                             }
                             done = true;
                             break;
@@ -375,26 +388,28 @@ namespace OmniSharp.DotNetTest
                 }
             }
 
-            var results = testResults.Select(testResult =>
-                new DotNetTestResult
-                {
-                    MethodName = testResult.TestCase.FullyQualifiedName,
-                    Outcome = testResult.Outcome.ToString().ToLowerInvariant(),
-                    ErrorMessage = testResult.ErrorMessage,
-                    ErrorStackTrace = testResult.ErrorStackTrace,
-                    StandardOutput = testResult.Messages
-                        .Where(message => message.Category == TestResultMessage.StandardOutCategory)
-                        .Select(message => message.Text).ToArray(),
-                    StandardError = testResult.Messages.Where(message => message.Category == TestResultMessage.StandardErrorCategory)
-                        .Select(message => message.Text).ToArray()
-                });
-
             return new RunTestResponse
             {
                 Results = results.ToArray(),
-                Pass = !testResults.Any(r => r.Outcome == TestOutcome.Failed),
+                Pass = passed,
                 ContextHadNoTests = false
             };
+        }
+
+        private static IEnumerable<DotNetTestResult> ConvertResults(IEnumerable<TestResult> results)
+        {
+            return results.Select(testResult => new DotNetTestResult
+            {
+                MethodName = testResult.TestCase.FullyQualifiedName,
+                Outcome = testResult.Outcome.ToString().ToLowerInvariant(),
+                ErrorMessage = testResult.ErrorMessage,
+                ErrorStackTrace = testResult.ErrorStackTrace,
+                StandardOutput = testResult.Messages
+                    .Where(message => message.Category == TestResultMessage.StandardOutCategory)
+                    .Select(message => message.Text).ToArray(),
+                StandardError = testResult.Messages.Where(message => message.Category == TestResultMessage.StandardErrorCategory)
+                    .Select(message => message.Text).ToArray()
+            });
         }
 
         private async Task<TestCase[]> DiscoverTestsAsync(string[] methodNames, string runSettings, string targetFrameworkVersion, CancellationToken cancellationToken)
