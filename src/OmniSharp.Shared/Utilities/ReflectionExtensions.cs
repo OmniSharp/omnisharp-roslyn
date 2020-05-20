@@ -110,7 +110,12 @@ namespace OmniSharp.Utilities
                 throw new ArgumentNullException(nameof(lazyType));
             }
 
-            return Activator.CreateInstance(lazyType.Value, args);
+            return Activator.CreateInstance(
+                lazyType.Value,
+                BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
+                binder: null,
+                args,
+                culture: null);
         }
 
         public static T CreateInstance<T>(this Type type) where T : class
@@ -173,7 +178,7 @@ namespace OmniSharp.Utilities
             }
 
             return method.InvokeStatic<T>(args);
-    }
+        }
 
         public static T InvokeStatic<T>(this Lazy<MethodInfo> lazyMethodInfo, object[] args)
         {
