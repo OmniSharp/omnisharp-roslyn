@@ -56,7 +56,7 @@ namespace OmniSharp.Roslyn
                 var topLevelSymbol = symbol.GetTopLevelContainingNamedType();
 
                 var temporaryDocument = metadataProject.AddDocument(fileName, string.Empty);
-                var service = _csharpMetadataAsSourceService.CreateInstance(temporaryDocument.Project.LanguageServices);
+                var service = _csharpMetadataAsSourceService.CreateInstance();
                 var method = _csharpMetadataAsSourceService.GetMethod(AddSourceToAsync);
 
                 var documentTask = method.Invoke<Task<Document>>(service, new object[] { temporaryDocument, await metadataProject.GetCompilationAsync(), topLevelSymbol, cancellationToken });
