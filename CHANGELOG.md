@@ -1,7 +1,8 @@
 # Changelog
 All changes to the project will be documented in this file.
 
-## [1.35.3] - Not yet released
+## [1.35.3] - not yet released
+* Added LSP handler for `textDocument/codeAction` request. (PR: [#1795](https://github.com/OmniSharp/omnisharp-roslyn/pull/1795))
 
 ## [1.35.2] - 2020-05-20
 * Added support for `WarningsAsErrors` in csproj files (PR: [#1779](https://github.com/OmniSharp/omnisharp-roslyn/pull/1779))
