@@ -1,11 +1,16 @@
 # Changelog
 All changes to the project will be documented in this file.
 
-## [1.35.2] - not yet released
+## [1.35.3] - not yet released
 * Added LSP handler for `textDocument/codeAction` request. (PR: [#1795](https://github.com/OmniSharp/omnisharp-roslyn/pull/1795))
-* Updated LSP libraries to 0.14.2 which fixes problems with document synchronisation. (PR: [#1791](https://github.com/OmniSharp/omnisharp-roslyn/pull/1791))
+
+## [1.35.2] - 2020-05-20
 * Added support for `WarningsAsErrors` in csproj files (PR: [#1779](https://github.com/OmniSharp/omnisharp-roslyn/pull/1779))
 * Added support for `WarningsNotAsErrors` in csproj files ([#1681](https://github.com/OmniSharp/omnisharp-roslyn/issues/1681), PR: [#1784](https://github.com/OmniSharp/omnisharp-roslyn/pull/1784))
+* Improved MSBuild scoring system ([#1783](https://github.com/OmniSharp/omnisharp-roslyn/issues/1783), PR: [#1797](https://github.com/OmniSharp/omnisharp-roslyn/pull/1797))
+* Updated OmniSharp.Extensions.LanguageServer to `0.14.2` to fix synchronisation (PR: [#1791](https://github.com/OmniSharp/omnisharp-roslyn/pull/1791))
+* Add test discovery and NoBuild option to test requests (PR: [#1719](https://github.com/OmniSharp/omnisharp-roslyn/pull/1719))
+* Update to Roslyn `3.7.0-2.20269.10` (PR: [#1804](https://github.com/OmniSharp/omnisharp-roslyn/pull/1804))
 
 ## [1.35.1] - 2020-05-04
 * Fixed not supported exception when trying to decompile a BCL assembly on Mono. For now we do not try to resolve implementation assembly from a ref assembly (PR: [#1767](https://github.com/OmniSharp/omnisharp-roslyn/pull/1767))

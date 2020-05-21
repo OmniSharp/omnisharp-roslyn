@@ -48,7 +48,7 @@ namespace OmniSharp.DotNetTest.Services
                 };
             }
 
-            testManager.Connect();
+            testManager.Connect(request.NoBuild);
 
             if (testManager.IsConnected)
             {

@@ -58,6 +58,7 @@ namespace OmniSharp
             public const string DebugTestsInContextGetStartInfo = "/v2/debugtestsincontext/getstartinfo";
             public const string DebugTestStop = "/v2/debugtest/stop";
             public const string DebugTestsInClassGetStartInfo = "/v2/debugtestsinclass/getstartinfo";
+            public const string DiscoverTests = "/v2/discovertests";
             public const string RunTestsInContext = "/v2/runtestsincontext";
 
             public const string BlockStructure = "/v2/blockstructure";
