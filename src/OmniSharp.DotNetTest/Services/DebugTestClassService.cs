@@ -25,7 +25,7 @@ namespace OmniSharp.DotNetTest.Services
 
         public async Task<DebugTestGetStartInfoResponse> Handle(DebugTestClassGetStartInfoRequest request)
         {
-            var testManager = CreateTestManager(request.FileName);
+            var testManager = CreateTestManager(request.FileName, request.NoBuild);
             _debugSessionManager.StartSession(testManager);
 
             return await _debugSessionManager.DebugGetStartInfoAsync(request.MethodNames, request.RunSettings, request.TestFrameworkName, request.TargetFrameworkVersion, CancellationToken.None);

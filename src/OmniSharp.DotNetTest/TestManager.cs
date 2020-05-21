@@ -50,10 +50,10 @@ namespace OmniSharp.DotNetTest
             Logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        public static TestManager Start(Project project, IDotNetCliService dotNetCli, IEventEmitter eventEmitter, ILoggerFactory loggerFactory)
+        public static TestManager Start(Project project, IDotNetCliService dotNetCli, IEventEmitter eventEmitter, ILoggerFactory loggerFactory, bool noBuild)
         {
             var manager = Create(project, dotNetCli, eventEmitter, loggerFactory);
-            manager.Connect();
+            manager.Connect(noBuild);
             return manager;
         }
 
@@ -82,6 +82,8 @@ namespace OmniSharp.DotNetTest
 
         public abstract Task<RunTestResponse> RunTestAsync(string[] methodNames, string runSettings, string testFrameworkName, string targetFrameworkVersion, CancellationToken cancellationToken);
 
+        public abstract Task<DiscoverTestsResponse> DiscoverTestsAsync(string runSettings, string testFrameworkName, string targetFrameworkVersion, CancellationToken cancellationToken);
+        
         public abstract Task<GetTestStartInfoResponse> GetTestStartInfoAsync(string methodName, string runSettings, string testFrameworkName, string targetFrameworkVersion, CancellationToken cancellationToken);
 
         public abstract Task<DebugTestGetStartInfoResponse> DebugGetStartInfoAsync(string methodName, string runSettings, string testFrameworkName, string targetFrameworkVersion, CancellationToken cancellationToken);
@@ -90,20 +92,20 @@ namespace OmniSharp.DotNetTest
 
         public abstract Task DebugLaunchAsync(CancellationToken cancellationToken);
 
-        protected virtual bool PrepareToConnect()
+        protected virtual bool PrepareToConnect(bool noBuild)
         {
             // Descendents can override.
             return true;
         }
 
-        internal void Connect()
+        internal void Connect(bool noBuild)
         {
             if (_isConnected)
             {
                 throw new InvalidOperationException("Already connected.");
             }
 
-            if (!PrepareToConnect())
+            if (!PrepareToConnect(noBuild))
             {
                 return;
             }
