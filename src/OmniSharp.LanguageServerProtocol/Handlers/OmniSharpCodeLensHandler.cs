@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Serialization;
 using OmniSharp.Extensions.JsonRpc;
 using OmniSharp.Extensions.LanguageServer.Protocol;
 using OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities;
@@ -78,10 +80,23 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
 
             var length = omnisharpResponse?.QuickFixes?.Count() ?? 0;
 
+            var jsonCamelCaseContract = new JsonSerializer {
+                ContractResolver = new CamelCasePropertyNamesContractResolver()
+            };
+
             request.Command = new Command
             {
-                Title = length == 1 ? "1 reference" : $"{length} references"
-                // TODO: Hook up command.
+                Title = length == 1 ? "1 reference" : $"{length} references",
+                Name = "omnisharp/client/findReferences",
+                Arguments = new JArray(
+                    new [] {
+                        JObject.FromObject(
+                            new Location {
+                                Uri = request.Data.ToObject<Uri>(),
+                                Range = request.Range,
+                            },
+                            jsonCamelCaseContract)
+                    }),
             };
 
             return request;
