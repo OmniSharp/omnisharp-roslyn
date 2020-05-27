@@ -9,6 +9,7 @@ namespace OmniSharp.MSBuild.Notification
     public class ProjectLoadedEventArgs
     {
         public ProjectId Id { get; }
+        public MSB.Evaluation.Project Project { get; }
         public MSB.Execution.ProjectInstance ProjectInstance { get; }
         public ImmutableArray<MSBuildDiagnostic> Diagnostics { get; }
         public bool IsReload { get; }
@@ -18,6 +19,7 @@ namespace OmniSharp.MSBuild.Notification
 
         public ProjectLoadedEventArgs(
             ProjectId id,
+            MSB.Evaluation.Project project,
             MSB.Execution.ProjectInstance projectInstance,
             ImmutableArray<MSBuildDiagnostic> diagnostics,
             bool isReload,
@@ -26,6 +28,7 @@ namespace OmniSharp.MSBuild.Notification
             IEnumerable<string> references = null)
         {
             Id = id;
+            Project = project;
             ProjectInstance = projectInstance;
             Diagnostics = diagnostics;
             IsReload = isReload;

@@ -32,8 +32,8 @@ namespace OmniSharp
         private readonly ILogger<OmniSharpWorkspace> _logger;
 
         private readonly ConcurrentBag<Func<string, Task>> _waitForProjectModelReadyHandlers = new ConcurrentBag<Func<string, Task>>();
-
         private readonly ConcurrentDictionary<string, ProjectInfo> miscDocumentsProjectInfos = new ConcurrentDictionary<string, ProjectInfo>();
+        private readonly ConcurrentDictionary<ProjectId, Predicate<string>> documentExclusionRulesPerProject = new ConcurrentDictionary<ProjectId, Predicate<string>>();
 
         [ImportingConstructor]
         public OmniSharpWorkspace(HostServicesAggregator aggregator, ILoggerFactory loggerFactory, IFileSystemWatcher fileSystemWatcher)
@@ -75,6 +75,11 @@ namespace OmniSharp
         public void AddProject(ProjectInfo projectInfo)
         {
             OnProjectAdded(projectInfo);
+        }
+
+        public void AddDocumentExclusionRuleForProject(ProjectId projectId, Predicate<string> documentPathFilter)
+        {
+            documentExclusionRulesPerProject[projectId] = documentPathFilter;
         }
 
         public void AddProjectReference(ProjectId projectId, ProjectReference projectReference)
@@ -338,6 +343,14 @@ namespace OmniSharp
         {
             if (string.IsNullOrWhiteSpace(project.FilePath) ||
                 string.IsNullOrWhiteSpace(fileName))
+            {
+                return false;
+            }
+
+            // fileName needs to be checked against any ProjectSystem defined rules (e.g. MSBuild DefaultItemExcludes)
+            // for workspace to allow the newly found documents to be added to the project.
+            if (documentExclusionRulesPerProject.TryGetValue(project.Id, out Predicate<string> documentExclusionFilter)
+                && documentExclusionFilter(fileName))
             {
                 return false;
             }
