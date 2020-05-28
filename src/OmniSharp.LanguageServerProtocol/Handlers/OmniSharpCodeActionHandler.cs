@@ -1,4 +1,3 @@
-using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Threading;
@@ -6,8 +5,8 @@ using System.Threading.Tasks;
 using OmniSharp.Extensions.JsonRpc;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OmniSharp.Extensions.LanguageServer.Protocol.Server;
-using OmniSharp.Models;
 using OmniSharp.Models.V2.CodeActions;
+using Newtonsoft.Json.Linq;
 
 namespace OmniSharp.LanguageServerProtocol.Handlers
 {
@@ -15,20 +14,17 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
     {
         public static IEnumerable<IJsonRpcHandler> Enumerate(RequestHandlers handlers)
         {
-            foreach (var (selector, getActionsHandler, runActionHandler) in handlers
-                     .OfType<Mef.IRequestHandler<GetCodeActionsRequest, GetCodeActionsResponse>,
-                             Mef.IRequestHandler<RunCodeActionRequest, RunCodeActionResponse>>())
+            foreach (var (selector, getActionsHandler) in handlers
+                     .OfType<Mef.IRequestHandler<GetCodeActionsRequest, GetCodeActionsResponse>>())
             {
-                yield return new OmniSharpCodeActionHandler(getActionsHandler, runActionHandler, selector);
+                yield return new OmniSharpCodeActionHandler(getActionsHandler, selector);
             }
         }
 
         private readonly Mef.IRequestHandler<GetCodeActionsRequest, GetCodeActionsResponse> _getActionsHandler;
-        private readonly Mef.IRequestHandler<RunCodeActionRequest, RunCodeActionResponse> _runActionHandler;
 
         public OmniSharpCodeActionHandler(
             Mef.IRequestHandler<GetCodeActionsRequest, GetCodeActionsResponse> getActionsHandler,
-            Mef.IRequestHandler<RunCodeActionRequest, RunCodeActionResponse> runActionHandler,
             DocumentSelector documentSelector)
             : base(new CodeActionRegistrationOptions()
             {
@@ -40,7 +36,6 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             })
         {
             _getActionsHandler = getActionsHandler;
-            _runActionHandler = runActionHandler;
         }
 
         public async override Task<CommandOrCodeActionContainer> Handle(CodeActionParams request, CancellationToken cancellationToken)
@@ -58,26 +53,6 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
 
             foreach (var ca in omnisharpResponse.CodeActions)
             {
-                var omnisharpCaRequest = new RunCodeActionRequest {
-                    Identifier = ca.Identifier,
-                    FileName = Helpers.FromUri(request.TextDocument.Uri),
-                    Column = Convert.ToInt32(request.Range.Start.Character),
-                    Line = Convert.ToInt32(request.Range.Start.Line),
-                    Selection = Helpers.FromRange(request.Range),
-                    ApplyTextChanges = false,
-                    WantsTextChanges = true,
-                };
-
-                var omnisharpCaResponse = await _runActionHandler.Handle(omnisharpCaRequest);
-
-                var changes = omnisharpCaResponse.Changes.ToDictionary(
-                    x => Helpers.ToUri(x.FileName),
-                    x => ((ModifiedFileResponse)x).Changes.Select(edit => new TextEdit
-                    {
-                        NewText = edit.NewText,
-                        Range = Helpers.ToRange((edit.StartColumn, edit.StartLine), (edit.EndColumn, edit.EndLine))
-                    }));
-
                 CodeActionKind kind;
                 if (ca.Identifier.StartsWith("using ")) { kind = CodeActionKind.SourceOrganizeImports; }
                 else if (ca.Identifier.StartsWith("Inline ")) { kind = CodeActionKind.RefactorInline; }
@@ -86,11 +61,22 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                 else { kind = CodeActionKind.Refactor; }
 
                 codeActions.Add(
-                    new CodeAction {
+                    new CodeAction
+                    {
                         Title = ca.Name,
                         Kind = kind,
                         Diagnostics = new Container<Diagnostic>(),
-                        Edit = new WorkspaceEdit { Changes = changes, }
+                        Edit = new WorkspaceEdit(),
+                        Command = new Command
+                        {
+                            Title = ca.Name,
+                            Name = "omnisharp/executeCodeAction",
+                            Arguments = new JArray(
+                                request.TextDocument.Uri,
+                                ca.Identifier,
+                                ca.Name,
+                                JObject.FromObject(request.Range)),
+                        }
                     });
             }
 
