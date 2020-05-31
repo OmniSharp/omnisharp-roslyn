@@ -54,7 +54,7 @@ namespace OmniSharp
                 }
             }
 
-            logger.LogDebug("Starting with OmniSharp options: {options}", options.CurrentValue.ToString());
+            logger.LogDebug("Starting with OmniSharp options: {options}", options.CurrentValue);
             ProvideWorkspaceOptions(compositionHost, workspace, options, logger, omnisharpEnvironment);
 
             // Mark the workspace as initialized
@@ -64,7 +64,7 @@ namespace OmniSharp
             // run workspace options providers automatically
             options.OnChange(o =>
             {
-                logger.LogDebug("OmniSharp options changed: {options}", options.CurrentValue.ToString());
+                logger.LogDebug("OmniSharp options changed: {options}", options.CurrentValue);
                 ProvideWorkspaceOptions(compositionHost, workspace, options, logger, omnisharpEnvironment);
             });
 
