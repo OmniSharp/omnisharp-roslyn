@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using OmniSharp.Extensions.LanguageServer.Protocol;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OmniSharp.Models;
 using OmniSharp.Models.Diagnostics;
@@ -80,26 +81,8 @@ namespace OmniSharp.LanguageServerProtocol
             return DiagnosticSeverity.Information;
         }
 
-        public static Uri ToUri(string fileName)
-        {
-            fileName = fileName.Replace(":", "%3A").Replace("\\", "/");
-            if (!fileName.StartsWith("/")) return new Uri($"file:///{fileName}");
-            return new Uri($"file://{fileName}");
-        }
-
-        public static string FromUri(Uri uri)
-        {
-            if (uri.Segments.Length > 1)
-            {
-                // On windows of the Uri contains %3a local path
-                // doesn't come out as a proper windows path
-                if (uri.Segments[1].IndexOf("%3a", StringComparison.OrdinalIgnoreCase) > -1)
-                {
-                    return FromUri(new Uri(uri.AbsoluteUri.Replace("%3a", ":").Replace("%3A", ":")));
-                }
-            }
-            return uri.LocalPath;
-        }
+        public static DocumentUri ToUri(string fileName) => DocumentUri.File(fileName);
+        public static string FromUri(DocumentUri uri) => uri.GetFileSystemPath();
 
         public static Range ToRange((int column, int line) location)
         {

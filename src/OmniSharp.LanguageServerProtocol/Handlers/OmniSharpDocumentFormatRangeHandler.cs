@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using OmniSharp.Extensions.JsonRpc;
+using OmniSharp.Extensions.LanguageServer.Protocol.Document;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OmniSharp.Extensions.LanguageServer.Protocol.Server;
 using OmniSharp.Models.Format;
@@ -22,10 +23,11 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
 
         private readonly Mef.IRequestHandler<FormatRangeRequest, FormatRangeResponse> _formatRangeHandler;
 
-        public OmniSharpDocumentFormatRangeHandler(Mef.IRequestHandler<FormatRangeRequest, FormatRangeResponse> formatRangeHandler, DocumentSelector documentSelector) : base(new TextDocumentRegistrationOptions()
-        {
-            DocumentSelector = documentSelector,
-        })
+        public OmniSharpDocumentFormatRangeHandler(Mef.IRequestHandler<FormatRangeRequest, FormatRangeResponse> formatRangeHandler, DocumentSelector documentSelector) : base(
+            new DocumentRangeFormattingRegistrationOptions()
+            {
+                DocumentSelector = documentSelector,
+            })
         {
             _formatRangeHandler = formatRangeHandler;
         }

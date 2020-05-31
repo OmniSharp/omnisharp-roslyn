@@ -490,7 +490,7 @@ namespace OmniSharp.DotNetTest
                 testName = string.Join(".", testName.Split('.').Select(FormatAsMetadata));
 
                 return hashset.Contains(testName, StringComparer.Ordinal);
-            };
+            }
 
             static string FormatAsMetadata(string name)
             {

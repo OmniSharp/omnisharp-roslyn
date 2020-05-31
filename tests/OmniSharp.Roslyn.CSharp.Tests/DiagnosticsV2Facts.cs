@@ -71,10 +71,10 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 .Any(r => r.FileName == filename2 && r.QuickFixes.Count() == 1));
         }
 
-        [Theory(Skip = "Test needs to be updated for service changes")]
-        [InlineData("a.cs", "b.cs")]
-        [InlineData("a.csx", "b.csx")]
-        public async Task EnablesWhenEndPointIsHit(string filename1, string filename2)
+            [Theory(Skip = "Test needs to be updated for service changes")]
+            [InlineData("a.cs", "b.cs")]
+            [InlineData("a.csx", "b.csx")]
+            public async Task EnablesWhenEndPointIsHit(string filename1, string filename2)
         {
             SharedOmniSharpTestHost.ClearWorkspace();
 

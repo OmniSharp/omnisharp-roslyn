@@ -9,6 +9,7 @@ using Newtonsoft.Json.Serialization;
 using OmniSharp.Extensions.JsonRpc;
 using OmniSharp.Extensions.LanguageServer.Protocol;
 using OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities;
+using OmniSharp.Extensions.LanguageServer.Protocol.Document;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OmniSharp.Extensions.LanguageServer.Protocol.Server;
 using OmniSharp.Models;
@@ -80,7 +81,8 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
 
             var length = omnisharpResponse?.QuickFixes?.Count() ?? 0;
 
-            var jsonCamelCaseContract = new JsonSerializer {
+            var jsonCamelCaseContract = new JsonSerializer
+            {
                 ContractResolver = new CamelCasePropertyNamesContractResolver()
             };
 
@@ -89,7 +91,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                 Title = length == 1 ? "1 reference" : $"{length} references",
                 Name = "omnisharp/client/findReferences",
                 Arguments = new JArray(
-                    new [] {
+                    new[] {
                         JObject.FromObject(
                             new Location {
                                 Uri = request.Data.ToObject<Uri>(),
