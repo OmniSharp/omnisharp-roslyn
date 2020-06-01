@@ -55,7 +55,7 @@
     <PackageReference Update="Microsoft.VisualStudio.Setup.Configuration.Interop" Version="1.14.114" />
     <PackageReference Update="Microsoft.VisualStudio.SDK.EmbedInteropTypes" Version="15.0.12" />
 
-    <PackageReference Update="Newtonsoft.Json" Version="9.0.1" />
+    <PackageReference Update="Newtonsoft.Json" Version="12.0.3" />
 
     <PackageReference Update="Nuget.Packaging" Version="$(NuGetPackageVersion)" />
     <PackageReference Update="Nuget.Packaging.Core" Version="$(NuGetPackageVersion)" />
