@@ -12,8 +12,8 @@
   <ItemGroup>
     <PackageReference Update="Cake.Scripting.Transport" Version="0.3.0" />
 
-    <PackageReference Update="Dotnet.Script.DependencyModel" Version="0.52.0" />
-    <PackageReference Update="Dotnet.Script.DependencyModel.NuGet" Version="0.52.0" />
+    <PackageReference Update="Dotnet.Script.DependencyModel" Version="0.53.0" />
+    <PackageReference Update="Dotnet.Script.DependencyModel.NuGet" Version="0.53.0" />
     <PackageReference Update="ICSharpCode.Decompiler" Version="5.0.2.5153" />
     <PackageReference Update="McMaster.Extensions.CommandLineUtils" Version="2.2.4" />
 
