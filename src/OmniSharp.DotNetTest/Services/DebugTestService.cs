@@ -20,7 +20,7 @@ namespace OmniSharp.DotNetTest.Services
         IRequestHandler<DebugTestLaunchRequest, DebugTestLaunchResponse>,
         IRequestHandler<DebugTestStopRequest, DebugTestStopResponse>
     {
-        private DebugSessionManager _debugSessionManager;
+        private readonly DebugSessionManager _debugSessionManager;
 
         [ImportingConstructor]
         public DebugTestService(DebugSessionManager debugSessionManager, OmniSharpWorkspace workspace, IDotNetCliService dotNetCli, IEventEmitter eventEmitter, ILoggerFactory loggerFactory)
@@ -31,7 +31,7 @@ namespace OmniSharp.DotNetTest.Services
 
         public Task<DebugTestGetStartInfoResponse> Handle(DebugTestGetStartInfoRequest request)
         {
-            var testManager = CreateTestManager(request.FileName);
+            var testManager = CreateTestManager(request.FileName, request.NoBuild);
             if (testManager.IsConnected)
             {
                 //only if the test manager connected successfully, shall we proceed with the request

@@ -5,6 +5,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
@@ -13,6 +14,7 @@ using Microsoft.Extensions.Logging;
 using OmniSharp;
 using OmniSharp.FileWatching;
 using OmniSharp.MSBuild.Discovery;
+using OmniSharp.Roslyn.EditorConfig;
 using OmniSharp.Script;
 using OmniSharp.Services;
 
@@ -30,7 +32,7 @@ namespace TestUtility
         public static void AddCsxProjectToWorkspace(OmniSharpWorkspace workspace, TestFile testFile)
         {
             var references = GetReferences();
-            var scriptHelper = new ScriptProjectProvider(new ScriptOptions(), new OmniSharpEnvironment(), new LoggerFactory(), true);
+            var scriptHelper = new ScriptProjectProvider(new ScriptOptions(), new OmniSharpEnvironment(), new LoggerFactory(), isDesktopClr: true, editorConfigEnabled: true);
             var project = scriptHelper.CreateProject(testFile.FileName, references.Union(new[] { MetadataReference.CreateFromFile(typeof(CommandLineScriptGlobals).GetTypeInfo().Assembly.Location) }), testFile.FileName, typeof(CommandLineScriptGlobals), Enumerable.Empty<string>());
             workspace.AddProject(project);
 
@@ -49,18 +51,30 @@ namespace TestUtility
             var references = GetReferences();
             frameworks = frameworks ?? new[] { string.Empty };
             var projectsIds = new List<ProjectId>();
+            var editorConfigPaths = EditorConfigFinder.GetEditorConfigPaths(filePath);
 
             foreach (var framework in frameworks)
             {
+                var projectId = ProjectId.CreateNewId();
+                var analyzerConfigDocuments = editorConfigPaths.Select(path =>
+                        DocumentInfo.Create(
+                            DocumentId.CreateNewId(projectId),
+                            name: ".editorconfig",
+                            loader: new FileTextLoader(path, Encoding.UTF8),
+                            filePath: path))
+                    .ToImmutableArray();
+
                 var projectInfo = ProjectInfo.Create(
-                    id: ProjectId.CreateNewId(),
+                    id: projectId,
                     version: versionStamp,
                     name: "OmniSharp+" + framework,
                     assemblyName: "AssemblyName",
                     language: LanguageNames.CSharp,
                     filePath: filePath,
                     metadataReferences: references,
-                    analyzerReferences: analyzerRefs).WithDefaultNamespace("OmniSharpTest");
+                    analyzerReferences: analyzerRefs)
+                    .WithDefaultNamespace("OmniSharpTest")
+                    .WithAnalyzerConfigDocuments(analyzerConfigDocuments);
 
                 workspace.AddProject(projectInfo);
 
@@ -114,15 +128,23 @@ namespace TestUtility
             return instance;
         }
 
-        public static Dictionary<string, string> GetConfigurationDataWithAnalyzerConfig(bool roslynAnalyzersEnabled = false, Dictionary<string, string> existingConfiguration = null)
+        public static Dictionary<string, string> GetConfigurationDataWithAnalyzerConfig(
+            bool roslynAnalyzersEnabled = false,
+            bool editorConfigEnabled = false,
+            Dictionary<string, string> existingConfiguration = null)
         {
             if (existingConfiguration == null)
             {
-                return new Dictionary<string, string>() { { "RoslynExtensionsOptions:EnableAnalyzersSupport", roslynAnalyzersEnabled.ToString() } };
+                return new Dictionary<string, string>()
+                {
+                    { "RoslynExtensionsOptions:EnableAnalyzersSupport", roslynAnalyzersEnabled.ToString() },
+                    { "FormattingOptions:EnableEditorConfigSupport", editorConfigEnabled.ToString() }
+                };
             }
 
             var copyOfExistingConfigs = existingConfiguration.ToDictionary(x => x.Key, x => x.Value);
             copyOfExistingConfigs.Add("RoslynExtensionsOptions:EnableAnalyzersSupport", roslynAnalyzersEnabled.ToString());
+            copyOfExistingConfigs.Add("FormattingOptions:EnableEditorConfigSupport", editorConfigEnabled.ToString());
 
             return copyOfExistingConfigs;
         }

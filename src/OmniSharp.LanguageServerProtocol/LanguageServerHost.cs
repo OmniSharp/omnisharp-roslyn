@@ -16,7 +16,6 @@ using OmniSharp.Extensions.LanguageServer.Server;
 using OmniSharp.LanguageServerProtocol.Eventing;
 using OmniSharp.LanguageServerProtocol.Handlers;
 using OmniSharp.Mef;
-using OmniSharp.Models.Diagnostics;
 using OmniSharp.Options;
 using OmniSharp.Roslyn;
 using OmniSharp.Services;
@@ -28,7 +27,6 @@ namespace OmniSharp.LanguageServerProtocol
     {
         private readonly LanguageServerOptions _options;
         private IServiceCollection _services;
-        private readonly LoggerFactory _loggerFactory;
         private readonly CommandLineApplication _application;
         private readonly CancellationTokenSource _cancellationTokenSource;
         private CompositionHost _compositionHost;
@@ -44,16 +42,17 @@ namespace OmniSharp.LanguageServerProtocol
             CommandLineApplication application,
             CancellationTokenSource cancellationTokenSource)
         {
-            _loggerFactory = new LoggerFactory();
-            _logger = _loggerFactory.CreateLogger<LanguageServerHost>();
             _options = new LanguageServerOptions()
                 .WithInput(input)
                 .WithOutput(output)
-                .WithLoggerFactory(_loggerFactory)
-                .AddDefaultLoggingProvider()
+                .ConfigureLogging(x => x
+                    .AddLanguageServer()
+                    .SetMinimumLevel(application.LogLevel))
                 .OnInitialize(Initialize)
-                .WithMinimumLogLevel(application.LogLevel)
-                .WithServices(services => _services = services);
+                .WithServices(services => {
+                        _services = services;
+                    });
+
             _application = application;
             _cancellationTokenSource = cancellationTokenSource;
         }
@@ -61,7 +60,6 @@ namespace OmniSharp.LanguageServerProtocol
         public void Dispose()
         {
             _compositionHost?.Dispose();
-            _loggerFactory?.Dispose();
             _cancellationTokenSource?.Dispose();
         }
 
@@ -92,6 +90,9 @@ namespace OmniSharp.LanguageServerProtocol
             var configurationRoot = new ConfigurationBuilder(_environment).Build();
             _eventEmitter = new LanguageServerEventEmitter();
             _serviceProvider = CompositionHostBuilder.CreateDefaultServiceProvider(_environment, configurationRoot, _eventEmitter, _services);
+
+            var loggerFactory = _serviceProvider.GetService<ILoggerFactory>();
+            _logger = loggerFactory.CreateLogger<LanguageServerHost>();
 
             var options = _serviceProvider.GetRequiredService<IOptionsMonitor<OmniSharpOptions>>();
             var plugins = _application.CreatePluginAssemblies(options.CurrentValue, _environment);
@@ -165,8 +166,10 @@ namespace OmniSharp.LanguageServerProtocol
                 .Concat(OmniSharpDocumentSymbolHandler.Enumerate(_handlers))
                 .Concat(OmniSharpReferencesHandler.Enumerate(_handlers))
                 .Concat(OmniSharpCodeLensHandler.Enumerate(_handlers))
+                .Concat(OmniSharpCodeActionHandler.Enumerate(_handlers))
                 .Concat(OmniSharpDocumentFormattingHandler.Enumerate(_handlers))
                 .Concat(OmniSharpDocumentFormatRangeHandler.Enumerate(_handlers))
+                .Concat(OmniSharpExecuteCommandHandler.Enumerate(_handlers))
                 .Concat(OmniSharpDocumentOnTypeFormatHandler.Enumerate(_handlers)))
             {
                 server.AddHandlers(handler);
