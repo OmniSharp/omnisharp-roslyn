@@ -5,6 +5,7 @@
         Unspecified = 0,
         Change,
         Create,
-        Delete
+        Delete,
+        FolderDelete
     }
 }

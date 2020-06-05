@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace OmniSharp.FileWatching
 {
@@ -8,6 +9,7 @@ namespace OmniSharp.FileWatching
     {
         private readonly object _gate = new object();
         private readonly Dictionary<string, Callbacks> _callbacksMap;
+        private readonly Callbacks _folderCallbacks = new Callbacks();
 
         public ManualFileSystemWatcher()
         {
@@ -18,6 +20,16 @@ namespace OmniSharp.FileWatching
         {
             lock (_gate)
             {
+                if(changeType == FileChangeType.FolderDelete)
+                {
+                    foreach(var matchingCallback in _callbacksMap.AsEnumerable().Where(x => x.Key.StartsWith(filePath)))
+                    {
+                        matchingCallback.Value.Invoke(matchingCallback.Key, FileChangeType.Delete);
+                    }
+
+                    _folderCallbacks.Invoke(filePath, FileChangeType.FolderDelete);
+                }
+
                 if (_callbacksMap.TryGetValue(filePath, out var fileCallbacks))
                 {
                     fileCallbacks.Invoke(filePath, changeType);
@@ -36,6 +48,11 @@ namespace OmniSharp.FileWatching
                     extensionCallbacks.Invoke(filePath, changeType);
                 }
             }
+        }
+
+        public void WatchFolders(FileSystemNotificationCallback callback)
+        {
+            _folderCallbacks.Add(callback);
         }
 
         public void Watch(string pathOrExtension, FileSystemNotificationCallback callback)

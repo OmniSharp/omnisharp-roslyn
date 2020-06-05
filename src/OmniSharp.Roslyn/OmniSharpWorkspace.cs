@@ -41,9 +41,28 @@ namespace OmniSharp
         {
             BufferManager = new BufferManager(this, fileSystemWatcher);
             _logger = loggerFactory.CreateLogger<OmniSharpWorkspace>();
+            fileSystemWatcher.WatchFolders(OnDirectoryRemoved);
         }
 
         public override bool CanOpenDocuments => true;
+
+
+        private void OnDirectoryRemoved(string path, FileChangeType changeType)
+        {
+            if(changeType == FileChangeType.FolderDelete)
+            {
+                var docs = CurrentSolution
+                    .Projects
+                    .SelectMany(x => x.Documents)
+                    .Where(x => x.FilePath.StartsWith(path, StringComparison.OrdinalIgnoreCase))
+                    .Select(x => x.Id);
+
+                foreach(var doc in docs)
+                {
+                    OnDocumentRemoved(doc);
+                }
+            }
+        }
 
         public void AddWaitForProjectModelReadyHandler(Func<string, Task> handler)
         {
