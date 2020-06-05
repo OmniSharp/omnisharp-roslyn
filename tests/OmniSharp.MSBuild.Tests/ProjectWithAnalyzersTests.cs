@@ -9,7 +9,6 @@ using OmniSharp.Models.Diagnostics;
 using OmniSharp.Models.Events;
 using OmniSharp.Models.FilesChanged;
 using OmniSharp.Models.ProjectInformation;
-using OmniSharp.Roslyn.CSharp.Workers.Diagnostics;
 using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
@@ -82,13 +81,10 @@ namespace OmniSharp.MSBuild.Tests
         [Fact]
         public async Task WhenProjectEditorConfigIsChangedThenAnalyzerConfigurationUpdates()
         {
-            var emitter = new ProjectLoadTestEventEmitter();
-
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithAnalyzersAndEditorConfig"))
             using (var host = CreateMSBuildTestHost(
                 testProject.Directory,
-                emitter.AsExportDescriptionProvider(LoggerFactory),
-                TestHelpers.GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled: true, editorConfigEnabled: true)))
+                configurationData: TestHelpers.GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled: true, editorConfigEnabled: true)))
             {
                 var initialProject = host.Workspace.CurrentSolution.Projects.Single();
                 var analyzerConfigDocument = initialProject.AnalyzerConfigDocuments.Single();
@@ -103,7 +99,7 @@ dotnet_diagnostic.IDE0005.severity = none
 
                 await NotifyFileChanged(host, analyzerConfigDocument.FilePath);
 
-                emitter.WaitForProjectUpdate();
+                await host.GetTestEventEmitter().WaitForMessage<ProjectInformationResponse>();
 
                 var diagnostics = await host.RequestCodeCheckAsync(Path.Combine(testProject.Directory, "Program.cs"));
 
@@ -150,14 +146,10 @@ dotnet_diagnostic.IDE0005.severity = none
         [Fact]
         public async Task WhenProjectParentEditorConfigIsChangedThenAnalyzerConfigurationUpdates()
         {
-            var emitter = new ProjectLoadTestEventEmitter();
-
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithParentEditorConfig"))
-            using (var host = CreateMSBuildTestHost(
-                testProject.Directory,
-                emitter.AsExportDescriptionProvider(LoggerFactory),
-                TestHelpers.GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled: true, editorConfigEnabled: true)))
+            using (var host = CreateMSBuildTestHost(testProject.Directory, configurationData: TestHelpers.GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled: true, editorConfigEnabled: true)))
             {
+                var emitter = host.GetTestEventEmitter();
                 var initialProject = host.Workspace.CurrentSolution.Projects.Single();
                 var analyzerConfigDocument = initialProject.AnalyzerConfigDocuments.Single();
 
@@ -171,7 +163,7 @@ dotnet_diagnostic.IDE0005.severity = none
 
                 await NotifyFileChanged(host, analyzerConfigDocument.FilePath);
 
-                emitter.WaitForProjectUpdate();
+                await host.GetTestEventEmitter().WaitForMessage<ProjectInformationResponse>();
 
                 var project = host.Workspace.CurrentSolution.Projects.Single();
                 var projectFolderPath = Path.GetDirectoryName(project.FilePath);
