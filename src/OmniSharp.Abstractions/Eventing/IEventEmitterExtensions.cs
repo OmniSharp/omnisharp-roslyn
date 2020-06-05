@@ -47,16 +47,24 @@ namespace OmniSharp.Eventing
 
         public static void ProjectInformation(this IEventEmitter emitter,
                                               HashedString projectId,
+                                              HashedString sessionId,
+                                              int outputKind,
                                               IEnumerable<string> targetFrameworks,
+                                              HashedString sdkVersion,
                                               IEnumerable<HashedString> references,
-                                              IEnumerable<HashedString> fileExtensions)
+                                              IEnumerable<HashedString> fileExtensions,
+                                              IEnumerable<int> fileCounts)
         {
             var projectConfiguration = new ProjectConfigurationMessage()
             {
                 TargetFrameworks = targetFrameworks,
+                SdkVersion = sdkVersion.Value,
+                OutputKind = outputKind,
                 ProjectId = projectId.Value,
+                SessionId = sessionId.Value,
                 References = references.Select(hashed => hashed.Value),
-                FileExtensions = fileExtensions.Select(hashed => hashed.Value)
+                FileExtensions = fileExtensions.Select(hashed => hashed.Value),
+                FileCounts = fileCounts
             };
 
             emitter.Emit(
