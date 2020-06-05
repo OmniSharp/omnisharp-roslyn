@@ -7,7 +7,7 @@ namespace OmniSharp.MSBuild.Discovery
     {
         public static void RegisterDefaultInstance(this IMSBuildLocator msbuildLocator, ILogger logger)
         {
-            var bestInstanceFound = GetBestInstance(msbuildLocator, out var invalidVSFound);
+            var bestInstanceFound = GetBestInstance(msbuildLocator, logger, out var invalidVSFound);
 
             if (bestInstanceFound != null)
             {
@@ -16,8 +16,8 @@ namespace OmniSharp.MSBuild.Discovery
                 if (invalidVSFound && bestInstanceFound.DiscoveryType == DiscoveryType.StandAlone)
                 {
                     logger.LogWarning(
-                        @"It looks like you have Visual Studio 2017 RTM installed.
- Try updating Visual Studio 2017 to the most recent release to enable better MSBuild support."
+                        @"It looks like you have Visual Studio 2019 RTM installed.
+ Try updating Visual Studio 2019 to the most recent release to enable better MSBuild support."
                     );
                 }
 
@@ -52,7 +52,7 @@ namespace OmniSharp.MSBuild.Discovery
                 && (instance.DiscoveryType == DiscoveryType.DeveloperConsole
                     || instance.DiscoveryType == DiscoveryType.VisualStudioSetup);
 
-        public static MSBuildInstance GetBestInstance(this IMSBuildLocator msbuildLocator, out bool invalidVSFound)
+        public static MSBuildInstance GetBestInstance(this IMSBuildLocator msbuildLocator, ILogger logger, out bool invalidVSFound)
         {
             invalidVSFound = false;
             MSBuildInstance bestMatchInstance = null;
@@ -62,10 +62,13 @@ namespace OmniSharp.MSBuild.Discovery
             {
                 var score = GetInstanceFeatureScore(instance);
 
+                logger.LogDebug($"MSBuild instance {instance.Name} {instance.Version} scored at {score}");
+
                 invalidVSFound = invalidVSFound || instance.IsInvalidVisualStudio();
 
-                if (score > bestMatchScore
-                    || (score == bestMatchScore && instance.Version.Major > (bestMatchInstance?.Version.Major ?? 0)))
+                if (bestMatchInstance == null ||
+                    score > bestMatchScore ||
+                    score == bestMatchScore && instance.Version > bestMatchInstance.Version)
                 {
                     bestMatchInstance = instance;
                     bestMatchScore = score;

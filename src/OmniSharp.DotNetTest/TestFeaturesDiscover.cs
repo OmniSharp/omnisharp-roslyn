@@ -18,7 +18,7 @@ namespace OmniSharp.DotNetTest
         {
             if (node is MethodDeclarationSyntax method)
             {
-                foreach (var framework in TestFramework.GetFrameworks())
+                foreach (var framework in TestFramework.Frameworks)
                 {
                     if (framework.IsTestMethod(method, semanticModel))
                     {

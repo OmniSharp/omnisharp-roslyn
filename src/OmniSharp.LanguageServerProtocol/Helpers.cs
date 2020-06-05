@@ -40,6 +40,23 @@ namespace OmniSharp.LanguageServerProtocol
             };
         }
 
+        public static OmniSharp.Models.V2.Range FromRange(Range range)
+        {
+            return new OmniSharp.Models.V2.Range
+            {
+                Start = new OmniSharp.Models.V2.Point
+                {
+                    Column = Convert.ToInt32(range.Start.Character),
+                    Line = Convert.ToInt32(range.Start.Line),
+                },
+                End = new OmniSharp.Models.V2.Point
+                {
+                    Column = Convert.ToInt32(range.End.Character),
+                    Line = Convert.ToInt32(range.End.Line),
+                },
+            };
+        }
+
         public static DiagnosticSeverity ToDiagnosticSeverity(string logLevel)
         {
             // We stringify this value and pass to clients
