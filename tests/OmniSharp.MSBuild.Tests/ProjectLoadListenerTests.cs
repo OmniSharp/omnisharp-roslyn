@@ -196,7 +196,7 @@ namespace OmniSharp.MSBuild.Tests
             using (var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory)))
             {
                 Assert.Single(emitter.ReceivedMessages);
-                Assert.Equal(3, emitter.ReceivedMessages[0].OutputKind);
+                Assert.Equal((int)OutputKind.ConsoleApplication, emitter.ReceivedMessages[0].OutputKind);
             }
         }
 
@@ -223,7 +223,7 @@ namespace OmniSharp.MSBuild.Tests
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("Net50Project"))
             using (var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory)))
             {
-                Assert.Single(emitter.ReceivedMessages);
+                Assert.Equal(2, emitter.ReceivedMessages.Length);
                 Assert.Equal(GetHashedFileExtension("5.0.100-preview.4.20258.7"), emitter.ReceivedMessages[0].SdkVersion);
             }
         }
