@@ -22,7 +22,7 @@ namespace OmniSharp.FileWatching
             {
                 if(changeType == FileChangeType.DirectoryDelete)
                 {
-                    foreach(var matchingCallback in _callbacksMap.AsEnumerable().Where(x => x.Key.StartsWith(filePath)))
+                    foreach(var matchingCallback in _callbacksMap.AsEnumerable().Where(x => x.Key.StartsWith(filePath + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)))
                     {
                         matchingCallback.Value.Invoke(matchingCallback.Key, FileChangeType.Delete);
                     }
