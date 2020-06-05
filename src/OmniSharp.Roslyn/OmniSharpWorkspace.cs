@@ -51,15 +51,12 @@ namespace OmniSharp
         {
             if(changeType == FileChangeType.FolderDelete)
             {
-                var docs = CurrentSolution
-                    .Projects
-                    .SelectMany(x => x.Documents)
-                    .Where(x => x.FilePath.StartsWith(path, StringComparison.OrdinalIgnoreCase))
-                    .Select(x => x.Id);
+                var docs = CurrentSolution.Projects.SelectMany(x => x.Documents)
+                    .Where(x => x.FilePath.StartsWith(path, StringComparison.OrdinalIgnoreCase));
 
                 foreach(var doc in docs)
                 {
-                    OnDocumentRemoved(doc);
+                    OnDocumentRemoved(doc.Id);
                 }
             }
         }
