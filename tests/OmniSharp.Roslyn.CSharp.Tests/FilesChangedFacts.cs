@@ -26,11 +26,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             {
                 var watcher = host.GetExport<IFileSystemWatcher>();
 
-                var path = Path.GetDirectoryName(host.Workspace.CurrentSolution.Projects.First().FilePath);
-                var filePath = Path.Combine(path, "FileName.cs");
-                File.WriteAllText(filePath, "text");
-                var handler = GetRequestHandler(host);
-                await handler.Handle(new[] { new FilesChangedRequest() { FileName = filePath, ChangeType = FileChangeType.Create } });
+                var filePath = await AddFile(host);
 
                 Assert.Contains(host.Workspace.CurrentSolution.Projects.First().Documents, d => d.FilePath == filePath && d.Name == "FileName.cs");
             }
@@ -46,22 +42,18 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
                 var projectDirectory = Path.GetDirectoryName(host.Workspace.CurrentSolution.Projects.First().FilePath);
 
-                const string filename = "FileName.cs";
-                var filePath = Path.Combine(projectDirectory, filename);
-                File.WriteAllText(filePath, "text");
-                var handler = GetRequestHandler(host);
-                await handler.Handle(new[] { new FilesChangedRequest() { FileName = filePath, ChangeType = FileChangeType.Create } });
+                var filePath = await AddFile(host);
 
                 Assert.Contains(host.Workspace.CurrentSolution.Projects.First().Documents, d => d.FilePath == filePath && d.Name == "FileName.cs");
 
                 var nestedDirectory = Path.Combine(projectDirectory, "Nested");
                 Directory.CreateDirectory(nestedDirectory);
 
-                var destinationPath = Path.Combine(nestedDirectory, filename);
+                var destinationPath = Path.Combine(nestedDirectory, Path.GetFileName(filePath));
                 File.Move(filePath, destinationPath);
 
-                await handler.Handle(new[] { new FilesChangedRequest() { FileName = filePath, ChangeType = FileChangeType.Delete } });
-                await handler.Handle(new[] { new FilesChangedRequest() { FileName = destinationPath, ChangeType = FileChangeType.Create } });
+                await GetRequestHandler(host).Handle(new[] { new FilesChangedRequest() { FileName = filePath, ChangeType = FileChangeType.Delete } });
+                await GetRequestHandler(host).Handle(new[] { new FilesChangedRequest() { FileName = destinationPath, ChangeType = FileChangeType.Create } });
 
                 Assert.Contains(host.Workspace.CurrentSolution.Projects.First().Documents, d => d.FilePath == destinationPath && d.Name == "FileName.cs");
                 Assert.DoesNotContain(host.Workspace.CurrentSolution.Projects.First().Documents, d => d.FilePath == filePath && d.Name == "FileName.cs");
