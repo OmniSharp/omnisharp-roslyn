@@ -2,8 +2,8 @@
     "DotNetInstallScriptURL": "https://dot.net/v1",
     "DotNetChannel": "Preview",
     "DotNetVersions": [
-        "3.0.100",
-        "5.0.100-preview.2.20169.1"
+        "3.1.201",
+        "5.0.100-preview.4.20258.7"
     ],
     "RequiredMonoVersion": "6.6.0",
     "DownloadURL": "https://roslynomnisharp.blob.core.windows.net/ext",
@@ -41,8 +41,10 @@
         "ProjectWithDisabledAnalyzers",
         "ProjectWithDisabledAnalyzers2",
         "ProjectWithAnalyzers",
-        "NetCore30Project",
-        "Net50Project"
+        "NetCore31Project",
+        "Net50Project",
+        "ProjectWithAnalyzersAndEditorConfig",
+        "ProjectWithParentEditorConfig"
     ],
     "CakeTestAssets": [
         "CakeProject"

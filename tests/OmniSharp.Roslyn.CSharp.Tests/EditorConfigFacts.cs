@@ -282,7 +282,7 @@ class Foo
 
                 var getResponse = await getRequestHandler.Handle(getRequest);
                 Assert.NotNull(getResponse.CodeActions);
-                Assert.Contains(getResponse.CodeActions, f => f.Name == "Create and initialize field 'xxx_something'");
+                Assert.Contains(getResponse.CodeActions, f => f.Name == "Create and assign field 'xxx_something'");
             }
         }
 
@@ -324,7 +324,7 @@ class Foo
                     Line = point.Line,
                     Column = point.Offset,
                     FileName = testFile.FileName,
-                    Identifier = "Create and initialize field 'xxx_something'",
+                    Identifier = "Create and assign field 'xxx_something'",
                     WantsTextChanges = false,
                     WantsAllCodeActionOperations = true,
                     Buffer = testFile.Content.Code

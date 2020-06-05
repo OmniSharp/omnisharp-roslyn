@@ -1,7 +1,7 @@
 parameters:
   # Configuration: Release
   Verbosity: Normal
-  DotNetVersion: "3.0.100"
+  DotNetVersion: "3.1.201"
   CakeVersion: "0.32.1"
   NuGetVersion: "4.9.2"
 steps:

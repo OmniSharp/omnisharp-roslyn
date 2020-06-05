@@ -16,8 +16,6 @@ using System.Threading.Tasks;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Decompilation
 {
-    // due to dependency on Microsoft.CodeAnalysis.Editor.CSharp
-    // this class supports only net472
     [Export(typeof(DecompilationExternalSourceService)), Shared]
     public class DecompilationExternalSourceService : BaseExternalSourceService, IExternalSourceService
     {

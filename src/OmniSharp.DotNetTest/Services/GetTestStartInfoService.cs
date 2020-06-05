@@ -1,4 +1,5 @@
 using System.Composition;
+using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 using OmniSharp.DotNetTest.Models;
@@ -17,9 +18,9 @@ namespace OmniSharp.DotNetTest.Services
         {
         }
 
-        protected override GetTestStartInfoResponse HandleRequest(GetTestStartInfoRequest request, TestManager testManager)
+        protected override Task<GetTestStartInfoResponse> HandleRequest(GetTestStartInfoRequest request, TestManager testManager)
         {
-            return testManager.GetTestStartInfo(request.MethodName, request.RunSettings, request.TestFrameworkName, request.TargetFrameworkVersion);
+            return testManager.GetTestStartInfoAsync(request.MethodName, request.RunSettings, request.TestFrameworkName, request.TargetFrameworkVersion, cancellationToken: default);
         }
     }
 }

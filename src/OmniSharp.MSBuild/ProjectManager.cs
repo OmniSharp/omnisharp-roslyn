@@ -22,6 +22,7 @@ using OmniSharp.Roslyn.Utilities;
 using OmniSharp.Services;
 using OmniSharp.Utilities;
 using Microsoft.CodeAnalysis.Diagnostics;
+using OmniSharp.Roslyn.EditorConfig;
 
 namespace OmniSharp.MSBuild
 {
@@ -369,6 +370,30 @@ namespace OmniSharp.MSBuild
                 QueueProjectUpdate(projectFileInfo.FilePath, allowAutoRestore: true, projectFileInfo.ProjectIdInfo, changeType);
             });
 
+            if (_workspace.EditorConfigEnabled)
+            {
+                // Watch beneath the Project folder for changes to .editorconfig files.
+                _fileSystemWatcher.Watch(".editorconfig", (file, changeType) =>
+                {
+                    QueueProjectUpdate(projectFileInfo.FilePath, allowAutoRestore: false, projectFileInfo.ProjectIdInfo);
+                });
+
+                // Watch in folders above the Project folder for changes to .editorconfig files.
+                var parentPath = Path.GetDirectoryName(projectFileInfo.FilePath);
+                while (parentPath != Path.GetPathRoot(parentPath))
+                {
+                    if (!EditorConfigFinder.TryGetDirectoryPath(parentPath, out parentPath))
+                    {
+                        break;
+                    }
+
+                    _fileSystemWatcher.Watch(Path.Combine(parentPath, ".editorconfig"), (file, changeType) =>
+                    {
+                        QueueProjectUpdate(projectFileInfo.FilePath, allowAutoRestore: false, projectFileInfo.ProjectIdInfo);
+                    });
+                }
+            }
+
             if (projectFileInfo.RuleSet?.FilePath != null)
             {
                 _fileSystemWatcher.Watch(projectFileInfo.RuleSet.FilePath, (file, changeType) =>
@@ -440,10 +465,11 @@ namespace OmniSharp.MSBuild
             UpdateReferences(project, projectFileInfo.ProjectReferences, projectFileInfo.References);
             UpdateAnalyzerReferences(project, projectFileInfo);
             UpdateAdditionalFiles(project, projectFileInfo.AdditionalFiles);
+            UpdateAnalyzerConfigFiles(project, projectFileInfo.AnalyzerConfigFiles);
             UpdateProjectProperties(project, projectFileInfo);
 
             _workspace.TryPromoteMiscellaneousDocumentsToProject(project);
-            _workspace.UpdateDiagnosticOptionsForProject(project.Id, projectFileInfo.GetDiagnosticOptions());
+            _workspace.UpdateCompilationOptionsForProject(project.Id, projectFileInfo.CreateCompilationOptions());
         }
 
         private void UpdateAnalyzerReferences(Project project, ProjectFileInfo projectFileInfo)
@@ -490,6 +516,28 @@ namespace OmniSharp.MSBuild
                 if (File.Exists(file))
                 {
                     _workspace.AddAdditionalDocument(project.Id, file);
+                }
+            }
+        }
+
+        private void UpdateAnalyzerConfigFiles(Project project, IList<string> analyzerConfigFiles)
+        {
+            if (!_workspace.EditorConfigEnabled)
+            {
+                return;
+            }
+
+            var currentAnalyzerConfigDocuments = project.AnalyzerConfigDocuments;
+            foreach (var document in currentAnalyzerConfigDocuments)
+            {
+                _workspace.RemoveAnalyzerConfigDocument(document.Id);
+            }
+
+            foreach (var file in analyzerConfigFiles)
+            {
+                if (File.Exists(file))
+                {
+                    _workspace.AddAnalyzerConfigDocument(project.Id, file);
                 }
             }
         }

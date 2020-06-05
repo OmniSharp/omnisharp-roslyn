@@ -1,4 +1,6 @@
 using System.Composition;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 using OmniSharp.DotNetTest.Models;
@@ -17,20 +19,21 @@ namespace OmniSharp.DotNetTest.Services
         {
         }
 
-        protected override RunTestResponse HandleRequest(RunTestRequest request, TestManager testManager)
+        protected override Task<RunTestResponse> HandleRequest(RunTestRequest request, TestManager testManager)
         {
             if (testManager.IsConnected)
             {
-                return testManager.RunTest(request.MethodName, request.RunSettings, request.TestFrameworkName, request.TargetFrameworkVersion);
+                return testManager.RunTestAsync(request.MethodName, request.RunSettings, request.TestFrameworkName, request.TargetFrameworkVersion, CancellationToken.None);
             }
 
             var response = new RunTestResponse
             {
                 Failure = "Failed to connect to 'dotnet test' process",
-                Pass = false
+                Pass = false,
+                ContextHadNoTests = false
             };
 
-            return response;
+            return Task.FromResult(response);
         }
     }
 }
