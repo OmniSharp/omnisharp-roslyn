@@ -52,7 +52,7 @@ namespace OmniSharp
             if(changeType == FileChangeType.DirectoryDelete)
             {
                 var docs = CurrentSolution.Projects.SelectMany(x => x.Documents)
-                    .Where(x => x.FilePath.StartsWith(path, StringComparison.OrdinalIgnoreCase));
+                    .Where(x => x.FilePath.StartsWith(path + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase));
 
                 foreach(var doc in docs)
                 {
