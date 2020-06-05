@@ -6,6 +6,6 @@
         Change,
         Create,
         Delete,
-        FolderDelete
+        DirectoryDelete
     }
 }

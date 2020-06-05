@@ -20,14 +20,14 @@ namespace OmniSharp.FileWatching
         {
             lock (_gate)
             {
-                if(changeType == FileChangeType.FolderDelete)
+                if(changeType == FileChangeType.DirectoryDelete)
                 {
                     foreach(var matchingCallback in _callbacksMap.AsEnumerable().Where(x => x.Key.StartsWith(filePath)))
                     {
                         matchingCallback.Value.Invoke(matchingCallback.Key, FileChangeType.Delete);
                     }
 
-                    _folderCallbacks.Invoke(filePath, FileChangeType.FolderDelete);
+                    _folderCallbacks.Invoke(filePath, FileChangeType.DirectoryDelete);
                 }
 
                 if (_callbacksMap.TryGetValue(filePath, out var fileCallbacks))
@@ -50,7 +50,7 @@ namespace OmniSharp.FileWatching
             }
         }
 
-        public void WatchFolders(FileSystemNotificationCallback callback)
+        public void WatchDirectories(FileSystemNotificationCallback callback)
         {
             _folderCallbacks.Add(callback);
         }
