@@ -225,7 +225,7 @@ dotnet_diagnostic.IDE0005.severity = none
         }
 
         // Unstable with MSBuild 16.3 on *nix
-        [Fact(Timeout = 60*1000)]
+        [ConditionalFact(typeof(WindowsOnly))]
         public async Task WhenNewAnalyzerReferenceIsAdded_ThenAutomaticallyUseItWithoutRestart()
         {
             using var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithAnalyzers");
