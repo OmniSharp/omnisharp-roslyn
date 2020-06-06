@@ -7,6 +7,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Cake.Utilities;
+using OmniSharp.FileWatching;
 using OmniSharp.Services;
 using OmniSharp.Utilities;
 using Xunit;
@@ -59,7 +60,7 @@ namespace OmniSharp.Cake.Tests
             var workspace = new OmniSharpWorkspace(
                 new HostServicesAggregator(
                     Enumerable.Empty<IHostServicesProvider>(), new LoggerFactory()),
-                new LoggerFactory(), null);
+                new LoggerFactory(), new DummyFileSystemWatcher());
 
             var projectInfo = ProjectInfo.Create(ProjectId.CreateNewId(), VersionStamp.Create(),
                 "ProjectNameVal", "AssemblyNameVal", LanguageNames.CSharp);
@@ -146,6 +147,17 @@ namespace OmniSharp.Cake.Tests
             var (actualIndex, _) = await LineIndexHelper.TranslateFromGenerated(fileName, index, workspace, true);
 
             Assert.Equal(expected, actualIndex);
+        }
+
+        private class DummyFileSystemWatcher : IFileSystemWatcher
+        {
+            public void Watch(string pathOrExtension, FileSystemNotificationCallback callback)
+            {
+            }
+
+            public void WatchDirectories(FileSystemNotificationCallback callback)
+            {
+            }
         }
     }
 }

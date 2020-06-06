@@ -26,11 +26,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             {
                 var watcher = host.GetExport<IFileSystemWatcher>();
 
-                var path = Path.GetDirectoryName(host.Workspace.CurrentSolution.Projects.First().FilePath);
-                var filePath = Path.Combine(path, "FileName.cs");
-                File.WriteAllText(filePath, "text");
-                var handler = GetRequestHandler(host);
-                await handler.Handle(new[] { new FilesChangedRequest() { FileName = filePath, ChangeType = FileChangeType.Create } });
+                var filePath = await AddFile(host);
 
                 Assert.Contains(host.Workspace.CurrentSolution.Projects.First().Documents, d => d.FilePath == filePath && d.Name == "FileName.cs");
             }
@@ -45,22 +41,19 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 var watcher = host.GetExport<IFileSystemWatcher>();
 
                 var projectDirectory = Path.GetDirectoryName(host.Workspace.CurrentSolution.Projects.First().FilePath);
-                const string filename = "FileName.cs";
-                var filePath = Path.Combine(projectDirectory, filename);
-                File.WriteAllText(filePath, "text");
-                var handler = GetRequestHandler(host);
-                await handler.Handle(new[] { new FilesChangedRequest() { FileName = filePath, ChangeType = FileChangeType.Create } });
+
+                var filePath = await AddFile(host);
 
                 Assert.Contains(host.Workspace.CurrentSolution.Projects.First().Documents, d => d.FilePath == filePath && d.Name == "FileName.cs");
 
                 var nestedDirectory = Path.Combine(projectDirectory, "Nested");
                 Directory.CreateDirectory(nestedDirectory);
 
-                var destinationPath = Path.Combine(nestedDirectory, filename);
+                var destinationPath = Path.Combine(nestedDirectory, Path.GetFileName(filePath));
                 File.Move(filePath, destinationPath);
 
-                await handler.Handle(new[] { new FilesChangedRequest() { FileName = filePath, ChangeType = FileChangeType.Delete } });
-                await handler.Handle(new[] { new FilesChangedRequest() { FileName = destinationPath, ChangeType = FileChangeType.Create } });
+                await GetRequestHandler(host).Handle(new[] { new FilesChangedRequest() { FileName = filePath, ChangeType = FileChangeType.Delete } });
+                await GetRequestHandler(host).Handle(new[] { new FilesChangedRequest() { FileName = destinationPath, ChangeType = FileChangeType.Create } });
 
                 Assert.Contains(host.Workspace.CurrentSolution.Projects.First().Documents, d => d.FilePath == destinationPath && d.Name == "FileName.cs");
                 Assert.DoesNotContain(host.Workspace.CurrentSolution.Projects.First().Documents, d => d.FilePath == filePath && d.Name == "FileName.cs");
@@ -68,7 +61,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         }
 
         [Fact]
-        public void TestMultipleDirectoryWatchers()
+        public async Task TestMultipleDirectoryWatchers()
         {
             using (var host = CreateEmptyOmniSharpHost())
             {
@@ -80,7 +73,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 watcher.Watch("", (path, changeType) => { secondWatcherCalled = true; });
 
                 var handler = GetRequestHandler(host);
-                handler.Handle(new[] { new FilesChangedRequest() { FileName = "FileName.cs", ChangeType = FileChangeType.Create } });
+                await handler.Handle(new[] { new FilesChangedRequest() { FileName = "FileName.cs", ChangeType = FileChangeType.Create } });
 
                 Assert.True(firstWatcherCalled);
                 Assert.True(secondWatcherCalled);
@@ -88,7 +81,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         }
 
         [Fact]
-        public void TestFileExtensionWatchers()
+        public async Task TestFileExtensionWatchers()
         {
             using (var host = CreateEmptyOmniSharpHost())
             {
@@ -98,10 +91,38 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 watcher.Watch(".cs", (path, changeType) => { extensionWatcherCalled = true; });
 
                 var handler = GetRequestHandler(host);
-                handler.Handle(new[] { new FilesChangedRequest() { FileName = "FileName.cs", ChangeType = FileChangeType.Create } });
+                await handler.Handle(new[] { new FilesChangedRequest() { FileName = "FileName.cs", ChangeType = FileChangeType.Create } });
 
                 Assert.True(extensionWatcherCalled);
             }
+        }
+
+        [Fact]
+        // This is specifically added to workaround VScode broken file remove notifications on folder removals/moves/renames.
+        // It's by design at VsCode and will probably not get fixed any time soon if ever.
+        public async Task TestThatOnFolderRemovalFilesUnderFolderAreRemoved()
+        {
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectAndSolution"))
+            using (var host = CreateOmniSharpHost(testProject.Directory))
+            {
+                var watcher = host.GetExport<IFileSystemWatcher>();
+
+                var filePath = await AddFile(host);
+
+                await GetRequestHandler(host).Handle(new[] { new FilesChangedRequest() { FileName = Path.GetDirectoryName(filePath), ChangeType = FileChangeType.DirectoryDelete } });
+
+                Assert.DoesNotContain(host.Workspace.CurrentSolution.Projects.First().Documents, d => d.FilePath == filePath && d.Name == Path.GetFileName(filePath));
+            }
+        }
+
+        private async Task<string> AddFile(OmniSharpTestHost host)
+        {
+            var projectDirectory = Path.GetDirectoryName(host.Workspace.CurrentSolution.Projects.First().FilePath);
+            const string filename = "FileName.cs";
+            var filePath = Path.Combine(projectDirectory, filename);
+            File.WriteAllText(filePath, "text");
+            await GetRequestHandler(host).Handle(new[] { new FilesChangedRequest() { FileName = filePath, ChangeType = FileChangeType.Create } });
+            return filePath;
         }
     }
 }
