@@ -151,6 +151,10 @@ namespace OmniSharp.Cake.Tests
 
         private class DummyFileSystemWatcher : IFileSystemWatcher
         {
+            public void Unwatch(string pathOrExtension)
+            {
+            }
+
             public void Watch(string pathOrExtension, FileSystemNotificationCallback callback)
             {
             }
