@@ -7,6 +7,7 @@ using OmniSharp.Mef;
 using OmniSharp.Models;
 using OmniSharp.Models.FindSymbols;
 using static OmniSharp.Cake.Constants;
+using SymbolFilter = Microsoft.CodeAnalysis.SymbolFilter;
 
 namespace OmniSharp.Cake.Services.RequestHandlers.Navigation
 {
@@ -26,7 +27,7 @@ namespace OmniSharp.Cake.Services.RequestHandlers.Navigation
                 return Task.FromResult(new QuickFixResponse { QuickFixes = Array.Empty<QuickFix>() });
             }
 
-            var symbolFilter = (Microsoft.CodeAnalysis.SymbolFilter)(request?.SymbolFilter ?? OmniSharpSymbolFilter.TypeAndMember);
+            var symbolFilter = (SymbolFilter)(request?.SymbolFilter ?? OmniSharpSymbolFilter.TypeAndMember);
             int maxItemsToReturn = (request?.MaxItemsToReturn).GetValueOrDefault();
             return Workspace.CurrentSolution.FindSymbols(request?.Filter, LanguageNames.Cake, maxItemsToReturn, symbolFilter);
         }

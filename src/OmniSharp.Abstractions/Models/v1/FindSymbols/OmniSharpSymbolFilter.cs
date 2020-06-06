@@ -9,7 +9,7 @@ namespace OmniSharp.Models.FindSymbols
         Namespace = 1,
         Type = 2,
         Member = 4,
-        TypeAndMember = 6,
-        All = 7,
+        TypeAndMember = Type | Member,
+        All = Type | Member | Namespace,
     }
 }

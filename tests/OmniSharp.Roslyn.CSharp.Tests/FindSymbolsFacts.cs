@@ -227,7 +227,7 @@ public partial class MyClass
                     }";
 
             code = WrapInNamespaceIfNeeded(code, filename);
-            var usages = await FindSymbolsWithFilterAsync(code, filename, "meth", minFilterLength: null, maxItemsToReturn: null);
+            var usages = await FindSymbolsWithFilterAsync(code, filename, "meth", minFilterLength: null, maxItemsToReturn: null, symbolFilter: null);
             var symbols = usages.QuickFixes.Select(q => q.Text);
 
             var expected = new[]
@@ -252,7 +252,7 @@ public partial class MyClass
                     public class ConfigurationOptions : IConfigurationOptions { }";
 
             code = WrapInNamespaceIfNeeded(code, filename);
-            var usages = await FindSymbolsWithFilterAsync(code, filename, "opti", minFilterLength: 0, maxItemsToReturn: 0);
+            var usages = await FindSymbolsWithFilterAsync(code, filename, "opti", minFilterLength: 0, maxItemsToReturn: 0, symbolFilter: null);
             var symbols = usages.QuickFixes.Select(q => q.Text);
 
             var expected = new[]
@@ -268,13 +268,41 @@ public partial class MyClass
         [Theory]
         [InlineData("dummy.cs")]
         [InlineData("dummy.csx")]
+        public async Task Only_returns_symbols_matching_symbolfilter(string filename)
+        {
+            string code = @"
+                public class Options {
+                    public bool Property { get; }
+                }
+                public interface IConfigurationOptions {
+                    public bool InterfaceProperty { get; set; }
+                }
+                public enum WeekDays { Monday }";
+
+            code = WrapInNamespaceIfNeeded(code, filename);
+            var usages = await FindSymbolsWithFilterAsync(code, filename, string.Empty, minFilterLength: 0, maxItemsToReturn: 0, OmniSharpSymbolFilter.Type);
+            var symbols = usages.QuickFixes.Select(q => q.Text);
+
+            var expected = new[]
+            {
+                "Options",
+                "IConfigurationOptions",
+                "WeekDays"
+            };
+
+            Assert.Equal(expected, symbols);
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
         public async Task no_symbols_returned_when_filter_too_short(string filename)
         {
             string code = @"
                     public class Options {}";
 
             code = WrapInNamespaceIfNeeded(code, filename);
-            var usages = await FindSymbolsWithFilterAsync(code, filename, "op", minFilterLength: 3, maxItemsToReturn: 0);
+            var usages = await FindSymbolsWithFilterAsync(code, filename, "op", minFilterLength: 3, maxItemsToReturn: 0, symbolFilter: null);
             var symbols = usages.QuickFixes.Select(q => q.Text);
 
             Assert.Empty(symbols);
@@ -291,7 +319,7 @@ public partial class MyClass
                     public class Options3 {}";
 
             code = WrapInNamespaceIfNeeded(code, filename);
-            var usages = await FindSymbolsWithFilterAsync(code, filename, "op", minFilterLength: 0, maxItemsToReturn: 2);
+            var usages = await FindSymbolsWithFilterAsync(code, filename, "op", minFilterLength: 0, maxItemsToReturn: 2, symbolFilter: null);
             var symbols = usages.QuickFixes.Select(q => q.Text);
 
             Assert.Equal(2, symbols.Count());
@@ -308,7 +336,7 @@ public partial class MyClass
                     public class ProbabilityManager {}";
 
             code = WrapInNamespaceIfNeeded(code, filename);
-            var usages = await FindSymbolsWithFilterAsync(code, filename, "ProjMana", minFilterLength: 0, maxItemsToReturn: 0);
+            var usages = await FindSymbolsWithFilterAsync(code, filename, "ProjMana", minFilterLength: 0, maxItemsToReturn: 0, symbolFilter: null);
             var symbols = usages.QuickFixes.Select(q => q.Text);
             Assert.Contains("ProjectManager", symbols);
             Assert.Contains("CoolProjectManager", symbols);
@@ -324,7 +352,7 @@ public partial class MyClass
             return await requestHandler.Handle(null);
         }
 
-        private async Task<QuickFixResponse> FindSymbolsWithFilterAsync(string code, string filename, string filter, int? minFilterLength, int? maxItemsToReturn)
+        private async Task<QuickFixResponse> FindSymbolsWithFilterAsync(string code, string filename, string filter, int? minFilterLength, int? maxItemsToReturn, OmniSharpSymbolFilter? symbolFilter)
         {
             var testFile = new TestFile(filename, code);
             SharedOmniSharpTestHost.AddFilesToWorkspace(testFile);
@@ -333,7 +361,8 @@ public partial class MyClass
             return await requestHandler.Handle(new FindSymbolsRequest {
                 Filter = filter,
                 MinFilterLength = minFilterLength,
-                MaxItemsToReturn = maxItemsToReturn
+                MaxItemsToReturn = maxItemsToReturn,
+                SymbolFilter = symbolFilter
             });
         }
 
