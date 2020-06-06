@@ -13,7 +13,8 @@ namespace OmniSharp.Extensions
         public static async Task<QuickFixResponse> FindSymbols(this Solution solution,
             string pattern,
             string projectFileExtension,
-            int maxItemsToReturn)
+            int maxItemsToReturn,
+            SymbolFilter symbolFilter = SymbolFilter.TypeAndMember)
         {
             var projects = solution.Projects.Where(p =>
                 (p.FilePath?.EndsWith(projectFileExtension, StringComparison.OrdinalIgnoreCase) ?? false) ||
@@ -24,8 +25,8 @@ namespace OmniSharp.Extensions
             foreach (var project in projects)
             {
                 var symbols = !string.IsNullOrEmpty(pattern) ?
-                    await SymbolFinder.FindSourceDeclarationsWithPatternAsync(project, pattern, SymbolFilter.TypeAndMember) :
-                    await SymbolFinder.FindSourceDeclarationsAsync(project, candidate => true, SymbolFilter.TypeAndMember);
+                    await SymbolFinder.FindSourceDeclarationsWithPatternAsync(project, pattern, symbolFilter) :
+                    await SymbolFinder.FindSourceDeclarationsAsync(project, candidate => true, symbolFilter);
 
                 foreach (var symbol in symbols)
                 {
