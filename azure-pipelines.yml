@@ -76,7 +76,7 @@ jobs:
 
   - job: Linux
     pool:
-      vmImage: "Ubuntu-16.04"
+      vmImage: "Ubuntu-18.04"
     dependsOn: GitVersion
     variables:
       MONO_VERSION: 6.8.0
