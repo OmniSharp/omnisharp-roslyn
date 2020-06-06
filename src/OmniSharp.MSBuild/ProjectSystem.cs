@@ -86,7 +86,7 @@ namespace OmniSharp.MSBuild
         public void Initalize(IConfiguration configuration)
         {
             if (Initialized) return;
-            
+
             _options = new MSBuildOptions();
             ConfigurationBinder.Bind(configuration, _options);
 
@@ -123,9 +123,47 @@ namespace OmniSharp.MSBuild
 
                 _manager.QueueProjectUpdate(projectFilePath, allowAutoRestore: true, projectIdInfo);
             }
+
+            if(!string.IsNullOrEmpty(_solutionFileOrRootPath))
+            {
+                _fileSystemWatcher.Watch(_solutionFileOrRootPath, OnSolutionFileUpdate);
+            }
         }
 
-        private IEnumerable<(string, ProjectIdInfo)> GetInitialProjectPathsAndIds()
+        private void OnSolutionFileUpdate(string filePath, FileChangeType changeType)
+        {
+            if(changeType == FileChangeType.Change)
+            {
+                var afterChange = GetProjectPathsAndIdsFromSolution(filePath);
+                var current = _manager.GetAllProjects().Select(x => x.ProjectIdInfo);
+
+                var projectsToAdd = afterChange
+                    .Select(x => x.info.Id)
+                        .Except(current.Select(x => x.Id))
+                    .Select(projectId => afterChange.Single(af => af.info.Id == projectId));
+
+                var projectsToRemove = current
+                    .Select(x => x.Id)
+                        .Except(afterChange.Select(x => x.info.Id))
+                    .Select(projectId => current.Single(af => af.Id == projectId));
+
+                foreach(var (path, info) in projectsToAdd)
+                {
+                    _logger.LogInformation($"Project {path} added to solution, adding project to queue.");
+                    _manager.QueueProjectUpdate(path, true, info);
+                }
+
+                // foreach(var projectToRemove in projectsToRemove)
+                // {
+                //     _manager.QueueProjectUpdate(path, true, info);
+                // }
+            }
+            else if(changeType == FileChangeType.Delete)
+            {
+            }
+        }
+
+        private IEnumerable<(string path, ProjectIdInfo info)> GetInitialProjectPathsAndIds()
         {
             // If a solution was provided, use it.
             if (!string.IsNullOrEmpty(_environment.SolutionFilePath))
@@ -153,7 +191,7 @@ namespace OmniSharp.MSBuild
             });
         }
 
-        private IEnumerable<(string, ProjectIdInfo)> GetProjectPathsAndIdsFromSolution(string solutionFilePath)
+        private IEnumerable<(string path, ProjectIdInfo info)> GetProjectPathsAndIdsFromSolution(string solutionFilePath)
         {
             _logger.LogInformation($"Detecting projects in '{solutionFilePath}'.");
 
