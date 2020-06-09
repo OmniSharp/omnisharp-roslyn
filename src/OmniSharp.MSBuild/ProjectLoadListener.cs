@@ -4,10 +4,12 @@ using System.Composition;
 using System.IO;
 using System.Linq;
 using Microsoft.Build.Execution;
+using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Eventing;
 using OmniSharp.Models;
 using OmniSharp.MSBuild.Notification;
+using OmniSharp.MSBuild.ProjectFile;
 
 namespace OmniSharp.MSBuild
 {
@@ -35,7 +37,10 @@ namespace OmniSharp.MSBuild
             try
             {
                 var projectId = GetProjectId(args);
+                var sessionId = GetSessionId(args);
                 var targetFrameworks = GetTargetFrameworks(args.ProjectInstance);
+                var sdkVersion = GetSdkVersion(args);
+                var outputKind = GetOutputKind(args);
 
                 if (args.References == null)
                 {
@@ -43,9 +48,9 @@ namespace OmniSharp.MSBuild
                 }
 
                 var hashedReferences = GetHashedReferences(args);
-                var hashedFileExtensions = GetUniqueHashedFileExtensions(args);
+                var (hashedFileExtensions, fileCounts) = GetUniqueHashedFileExtensionsAndCounts(args);
 
-                _eventEmitter.ProjectInformation(projectId, targetFrameworks, hashedReferences, hashedFileExtensions);
+                _eventEmitter.ProjectInformation(projectId, sessionId, (int)outputKind, targetFrameworks, sdkVersion, hashedReferences, hashedFileExtensions, fileCounts);
             }
             catch (Exception ex)
             {
@@ -53,10 +58,16 @@ namespace OmniSharp.MSBuild
             }
         }
 
-        private static IEnumerable<HashedString> GetUniqueHashedFileExtensions(ProjectLoadedEventArgs args)
+        private static (IEnumerable<HashedString> Extensions, IEnumerable<int> Counts) GetUniqueHashedFileExtensionsAndCounts(ProjectLoadedEventArgs args)
         {
-            IEnumerable<string> sourceFileExtensions = args.SourceFiles.Select(file => Path.GetExtension(file)).Distinct();
-            return sourceFileExtensions.Select(_tfmAndFileHashingAlgorithm.HashInput);
+            var contentFiles = args.ProjectInstance
+                .GetItems(ItemNames.Content)
+                .Select(item => item.GetMetadataValue(MetadataNames.FullPath));
+            var allFiles = args.SourceFiles.Concat(contentFiles);
+            var filesCounts = allFiles.GroupBy(file => Path.GetExtension(file)).ToDictionary(kvp => kvp.Key, kvp => kvp.Count());
+            IEnumerable<string> fileExtensions = filesCounts.Select(kvp => kvp.Key);
+            IEnumerable<int> fileCounts = filesCounts.Select(kvp => kvp.Value);
+            return (fileExtensions.Select(_tfmAndFileHashingAlgorithm.HashInput), fileCounts);
         }
 
         private static HashedString GetProjectId(ProjectLoadedEventArgs args)
@@ -71,6 +82,21 @@ namespace OmniSharp.MSBuild
             var content = File.ReadAllText(projectFilePath);
             //create a hash from the filename and the content
             return _referenceHashingAlgorithm.HashInput($"Filename: {Path.GetFileName(projectFilePath)}\n{content}");
+        }
+
+        private static HashedString GetSdkVersion(ProjectLoadedEventArgs args)
+        {
+            return _tfmAndFileHashingAlgorithm.HashInput(args.SdkVersion.ToString());
+        }
+
+        private static HashedString GetSessionId(ProjectLoadedEventArgs args)
+        {
+            return _tfmAndFileHashingAlgorithm.HashInput(args.SessionId.ToString());
+        }
+
+        private static OutputKind GetOutputKind(ProjectLoadedEventArgs args)
+        {
+            return PropertyConverter.ToOutputKind(args.ProjectInstance.GetPropertyValue(PropertyNames.OutputType));
         }
 
         private static IEnumerable<HashedString> GetHashedReferences(ProjectLoadedEventArgs args)
