@@ -1,20 +1,17 @@
 using System;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using Microsoft.CodeAnalysis;
-using Microsoft.Extensions.Logging;
-using OmniSharp.Eventing;
 using OmniSharp.FileWatching;
 using OmniSharp.Models.Diagnostics;
+using OmniSharp.Models.Events;
 using OmniSharp.Models.FilesChanged;
-using OmniSharp.Services;
+using OmniSharp.Models.ProjectInformation;
 using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
-using static OmniSharp.MSBuild.Tests.ProjectLoadListenerTests;
 
 namespace OmniSharp.MSBuild.Tests
 {
@@ -28,83 +25,71 @@ namespace OmniSharp.MSBuild.Tests
         [Fact]
         public async Task WhenProjectIsRestoredThenReanalyzeProject()
         {
-            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithAnalyzers"))
-            using (var host = CreateMSBuildTestHost(testProject.Directory, configurationData: TestHelpers.GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled: true)))
-            {
-                await host.RestoreProject(testProject);
+            using var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithAnalyzers");
+            using var host = CreateMSBuildTestHost(testProject.Directory, configurationData: TestHelpers.GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled: true));
 
-                await Task.Delay(2000);
+            await host.RestoreProject(testProject);
 
-                var diagnostics = await host.RequestCodeCheckAsync(Path.Combine(testProject.Directory, "Program.cs"));
+            var diagnostics = await host.RequestCodeCheckAsync(Path.Combine(testProject.Directory, "Program.cs"));
 
-                Assert.NotEmpty(diagnostics.QuickFixes);
-                Assert.Contains(diagnostics.QuickFixes.OfType<DiagnosticLocation>(), x => x.Id == "IDE0060"); // Unused args.
-            }
+            Assert.NotEmpty(diagnostics.QuickFixes);
+            Assert.Contains(diagnostics.QuickFixes.OfType<DiagnosticLocation>(), x => x.Id == "IDE0060"); // Unused args, if restore doesn't rigger re-analysis there is errors like missing System, not this one.
         }
 
         [Fact]
         public async Task WhenProjectHasAnalyzersItDoesntLockAnalyzerDlls()
         {
-            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithAnalyzers"))
-            {
-                // TODO: Restore when host is running doesn't reload new analyzer references yet, move this
-                // after host start after that is fixed.
-                await RestoreProject(testProject);
+            using var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithAnalyzers");
+            using var host = CreateMSBuildTestHost(testProject.Directory, configurationData: TestHelpers.GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled: true));
 
-                using (var host = CreateMSBuildTestHost(testProject.Directory, configurationData: TestHelpers.GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled: true)))
-                {
-                    var analyzerReferences = host.Workspace.CurrentSolution.Projects.Single().AnalyzerReferences.ToList();
+            await host.RestoreProject(testProject);
 
-                    Assert.NotEmpty(analyzerReferences);
+            var analyzerReferences = host.Workspace.CurrentSolution.Projects.Single().AnalyzerReferences.ToList();
 
-                    // This should not throw when analyzers are shadow copied.
-                    Directory.Delete(Path.Combine(testProject.Directory, "./nugets"), true);
-                }
-            }
+            Assert.NotEmpty(analyzerReferences);
+
+            // This should not throw when analyzers are shadow copied.
+            Directory.Delete(Path.Combine(testProject.Directory, "./nugets"), true);
         }
 
         [Fact]
         public async Task WhenProjectIsLoadedThenItContainsCustomRulesetsFromCsproj()
         {
-            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithAnalyzers"))
-            using (var host = CreateMSBuildTestHost(testProject.Directory, configurationData: TestHelpers.GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled: true)))
-            {
-                var project = host.Workspace.CurrentSolution.Projects.Single();
+            using var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithAnalyzers");
+            using var host = CreateMSBuildTestHost(testProject.Directory, configurationData: TestHelpers.GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled: true));
 
-                Assert.Contains(project.CompilationOptions.SpecificDiagnosticOptions, x => x.Key == "CA1021" && x.Value == ReportDiagnostic.Warn);
-            }
+            var project = host.Workspace.CurrentSolution.Projects.Single();
+
+            Assert.Contains(project.CompilationOptions.SpecificDiagnosticOptions, x => x.Key == "CA1021" && x.Value == ReportDiagnostic.Warn);
         }
 
         [Fact]
         public async Task WhenProjectIsLoadedThenItContainsAnalyzerConfigurationFromEditorConfig()
         {
-            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithAnalyzersAndEditorConfig"))
-            using (var host = CreateMSBuildTestHost(testProject.Directory, configurationData: TestHelpers.GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled: true, editorConfigEnabled: true)))
-            {
-                var diagnostics = await host.RequestCodeCheckAsync(Path.Combine(testProject.Directory, "Program.cs"));
+            using var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithAnalyzersAndEditorConfig");
+            using var host = CreateMSBuildTestHost(testProject.Directory, configurationData: TestHelpers.GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled: true, editorConfigEnabled: true));
 
-                Assert.NotEmpty(diagnostics.QuickFixes);
+            var diagnostics = await host.RequestCodeCheckAsync(Path.Combine(testProject.Directory, "Program.cs"));
 
-                var quickFix = diagnostics.QuickFixes.OfType<DiagnosticLocation>().Single(x => x.Id == "IDE0005");
-                Assert.Equal("Error", quickFix.LogLevel);
-            }
+            Assert.NotEmpty(diagnostics.QuickFixes);
+
+            var quickFix = diagnostics.QuickFixes.OfType<DiagnosticLocation>().Single(x => x.Id == "IDE0005");
+            Assert.Equal("Error", quickFix.LogLevel);
         }
 
         [Fact]
         public async Task WhenProjectEditorConfigIsChangedThenAnalyzerConfigurationUpdates()
         {
-            var emitter = new ProjectLoadTestEventEmitter();
+            using var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithAnalyzersAndEditorConfig");
 
-            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithAnalyzersAndEditorConfig"))
-            using (var host = CreateMSBuildTestHost(
+            using var host = CreateMSBuildTestHost(
                 testProject.Directory,
-                emitter.AsExportDescriptionProvider(LoggerFactory),
-                TestHelpers.GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled: true, editorConfigEnabled: true)))
-            {
-                var initialProject = host.Workspace.CurrentSolution.Projects.Single();
-                var analyzerConfigDocument = initialProject.AnalyzerConfigDocuments.Single();
+                configurationData: TestHelpers.GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled: true, editorConfigEnabled: true));
 
-                File.WriteAllText(analyzerConfigDocument.FilePath, @"
+            var initialProject = host.Workspace.CurrentSolution.Projects.Single();
+            var analyzerConfigDocument = initialProject.AnalyzerConfigDocuments.Single();
+
+            File.WriteAllText(analyzerConfigDocument.FilePath, @"
 root = true
 
 [*.cs]
@@ -112,67 +97,59 @@ root = true
 dotnet_diagnostic.IDE0005.severity = none
 ");
 
-                await NotifyFileChanged(host, analyzerConfigDocument.FilePath);
+            await NotifyFileChanged(host, analyzerConfigDocument.FilePath);
 
-                emitter.WaitForProjectUpdate();
+            await host.GetTestEventEmitter().WaitForMessage<ProjectInformationResponse>();
 
-                var diagnostics = await host.RequestCodeCheckAsync(Path.Combine(testProject.Directory, "Program.cs"));
+            var diagnostics = await host.RequestCodeCheckAsync(Path.Combine(testProject.Directory, "Program.cs"));
 
-                Assert.NotEmpty(diagnostics.QuickFixes);
-                Assert.DoesNotContain(diagnostics.QuickFixes.OfType<DiagnosticLocation>(), x => x.Id == "IDE0005");
-            }
+            Assert.NotEmpty(diagnostics.QuickFixes);
+            Assert.DoesNotContain(diagnostics.QuickFixes.OfType<DiagnosticLocation>(), x => x.Id == "IDE0005");
         }
 
         [Fact]
         public async Task WhenProjectIsLoadedThenItContainsAnalyzerConfigurationFromParentFolder()
         {
-            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithParentEditorConfig"))
-            using (var host = CreateMSBuildTestHost(testProject.Directory, configurationData: TestHelpers.GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled: true, editorConfigEnabled: true)))
-            {
-                var project = host.Workspace.CurrentSolution.Projects.Single();
-                var projectFolderPath = Path.GetDirectoryName(project.FilePath);
-                var projectParentFolderPath = Path.GetDirectoryName(projectFolderPath);
+            using var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithParentEditorConfig");
+            using var host = CreateMSBuildTestHost(testProject.Directory, configurationData: TestHelpers.GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled: true, editorConfigEnabled: true));
 
-                var analyzerConfigDocument = project.AnalyzerConfigDocuments.Single();
-                var editorConfigFolderPath = Path.GetDirectoryName(analyzerConfigDocument.FilePath);
+            var project = host.Workspace.CurrentSolution.Projects.Single();
+            var projectFolderPath = Path.GetDirectoryName(project.FilePath);
+            var projectParentFolderPath = Path.GetDirectoryName(projectFolderPath);
 
-                Assert.Equal(projectParentFolderPath, editorConfigFolderPath);
-            }
+            var analyzerConfigDocument = project.AnalyzerConfigDocuments.Single();
+            var editorConfigFolderPath = Path.GetDirectoryName(analyzerConfigDocument.FilePath);
+
+            Assert.Equal(projectParentFolderPath, editorConfigFolderPath);
         }
 
         [Fact]
         public async Task WhenProjectIsLoadedThenItContainsAnalyzerConfigurationFromParentEditorConfig()
         {
-            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithParentEditorConfig"))
-            using (var host = CreateMSBuildTestHost(testProject.Directory, configurationData: TestHelpers.GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled: true, editorConfigEnabled: true)))
-            {
-                var project = host.Workspace.CurrentSolution.Projects.Single();
-                var projectFolderPath = Path.GetDirectoryName(project.FilePath);
+            using var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithParentEditorConfig");
+            using var host = CreateMSBuildTestHost(testProject.Directory, configurationData: TestHelpers.GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled: true, editorConfigEnabled: true));
 
-                var diagnostics = await host.RequestCodeCheckAsync(Path.Combine(projectFolderPath, "Program.cs"));
+            var project = host.Workspace.CurrentSolution.Projects.Single();
+            var projectFolderPath = Path.GetDirectoryName(project.FilePath);
 
-                Assert.NotEmpty(diagnostics.QuickFixes);
+            var diagnostics = await host.RequestCodeCheckAsync(Path.Combine(projectFolderPath, "Program.cs"));
 
-                var quickFix = diagnostics.QuickFixes.OfType<DiagnosticLocation>().Single(x => x.Id == "IDE0005");
-                Assert.Equal("Error", quickFix.LogLevel);
-            }
+            Assert.NotEmpty(diagnostics.QuickFixes);
+
+            var quickFix = diagnostics.QuickFixes.OfType<DiagnosticLocation>().Single(x => x.Id == "IDE0005");
+            Assert.Equal("Error", quickFix.LogLevel);
         }
 
         [Fact]
         public async Task WhenProjectParentEditorConfigIsChangedThenAnalyzerConfigurationUpdates()
         {
-            var emitter = new ProjectLoadTestEventEmitter();
+            using var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithParentEditorConfig");
+            using var host = CreateMSBuildTestHost(testProject.Directory, configurationData: TestHelpers.GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled: true, editorConfigEnabled: true));
 
-            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithParentEditorConfig"))
-            using (var host = CreateMSBuildTestHost(
-                testProject.Directory,
-                emitter.AsExportDescriptionProvider(LoggerFactory),
-                TestHelpers.GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled: true, editorConfigEnabled: true)))
-            {
-                var initialProject = host.Workspace.CurrentSolution.Projects.Single();
-                var analyzerConfigDocument = initialProject.AnalyzerConfigDocuments.Single();
+            var initialProject = host.Workspace.CurrentSolution.Projects.Single();
+            var analyzerConfigDocument = initialProject.AnalyzerConfigDocuments.Single();
 
-                File.WriteAllText(analyzerConfigDocument.FilePath, @"
+            File.WriteAllText(analyzerConfigDocument.FilePath, @"
 root = true
 
 [*.cs]
@@ -180,17 +157,16 @@ root = true
 dotnet_diagnostic.IDE0005.severity = none
 ");
 
-                await NotifyFileChanged(host, analyzerConfigDocument.FilePath);
+            await NotifyFileChanged(host, analyzerConfigDocument.FilePath);
 
-                emitter.WaitForProjectUpdate();
+            await host.GetTestEventEmitter().WaitForMessage<ProjectInformationResponse>();
 
-                var project = host.Workspace.CurrentSolution.Projects.Single();
-                var projectFolderPath = Path.GetDirectoryName(project.FilePath);
-                var diagnostics = await host.RequestCodeCheckAsync(Path.Combine(projectFolderPath, "Program.cs"));
+            var project = host.Workspace.CurrentSolution.Projects.Single();
+            var projectFolderPath = Path.GetDirectoryName(project.FilePath);
+            var diagnostics = await host.RequestCodeCheckAsync(Path.Combine(projectFolderPath, "Program.cs"));
 
-                Assert.NotEmpty(diagnostics.QuickFixes);
-                Assert.DoesNotContain(diagnostics.QuickFixes.OfType<DiagnosticLocation>(), x => x.Id == "IDE0005");
-            }
+            Assert.NotEmpty(diagnostics.QuickFixes);
+            Assert.DoesNotContain(diagnostics.QuickFixes.OfType<DiagnosticLocation>(), x => x.Id == "IDE0005");
         }
 
         [Theory]
@@ -199,9 +175,10 @@ dotnet_diagnostic.IDE0005.severity = none
         public async Task WhenProjectWithRunAnalyzersDisabledIsLoadedThenAnalyzersAreIgnored(string projectName)
         {
             using var testProject = await TestAssets.Instance.GetTestProjectAsync(projectName);
-            await RestoreProject(testProject);
-
             using var host = CreateMSBuildTestHost(testProject.Directory, configurationData: TestHelpers.GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled: true));
+
+            await host.RestoreProject(testProject);
+
             var analyzerReferences = host.Workspace.CurrentSolution.Projects.Single().AnalyzerReferences.ToList();
 
             Assert.Empty(analyzerReferences);
@@ -210,71 +187,69 @@ dotnet_diagnostic.IDE0005.severity = none
         [Fact]
         public async Task WhenProjectRulesetFileIsChangedThenUpdateRulesAccordingly()
         {
-            var emitter = new ProjectLoadTestEventEmitter();
+            using var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithAnalyzers");
+            using var host = CreateMSBuildTestHost(testProject.Directory);
 
-            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithAnalyzers"))
-            using (var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory)))
-            {
-                var csprojFile = ModifyXmlFileInPlace(Path.Combine(testProject.Directory, "ProjectWithAnalyzers.csproj"),
-                    csprojFileXml => csprojFileXml.Descendants("CodeAnalysisRuleSet").Single().Value = "witherrorlevel.ruleset");
+            var csprojFile = ModifyXmlFileInPlace(Path.Combine(testProject.Directory, "ProjectWithAnalyzers.csproj"),
+                csprojFileXml => csprojFileXml.Descendants("CodeAnalysisRuleSet").Single().Value = "witherrorlevel.ruleset");
 
-                await NotifyFileChanged(host, csprojFile);
+            var emitter = host.GetTestEventEmitter();
+            emitter.Clear();
 
-                emitter.WaitForProjectUpdate();
+            await NotifyFileChanged(host, csprojFile);
 
-                var project = host.Workspace.CurrentSolution.Projects.Single();
-                Assert.Contains(project.CompilationOptions.SpecificDiagnosticOptions, x => x.Key == "CA1021" && x.Value == ReportDiagnostic.Error);
-            }
+            await emitter.WaitForMessage<ProjectInformationResponse>();
+
+            var project = host.Workspace.CurrentSolution.Projects.Single();
+            Assert.Contains(project.CompilationOptions.SpecificDiagnosticOptions, x => x.Key == "CA1021" && x.Value == ReportDiagnostic.Error);
         }
 
         [Fact]
         public async Task WhenProjectRulesetFileRuleIsUpdatedThenUpdateRulesAccordingly()
         {
-            var emitter = new ProjectLoadTestEventEmitter();
+            using var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithAnalyzers");
+            using var host = CreateMSBuildTestHost(testProject.Directory);
 
-            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithAnalyzers"))
-            using (var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory)))
-            {
-                var ruleFile = ModifyXmlFileInPlace(Path.Combine(testProject.Directory, "default.ruleset"),
-                    ruleXml => ruleXml.Descendants("Rule").Single().Attribute("Action").Value = "Error");
+            var ruleFile = ModifyXmlFileInPlace(Path.Combine(testProject.Directory, "default.ruleset"),
+                ruleXml => ruleXml.Descendants("Rule").Single().Attribute("Action").Value = "Error");
 
-                await NotifyFileChanged(host, ruleFile);
+            var emitter = host.GetTestEventEmitter();
+            emitter.Clear();
 
-                emitter.WaitForProjectUpdate();
+            await NotifyFileChanged(host, ruleFile);
 
-                var project = host.Workspace.CurrentSolution.Projects.Single();
-                Assert.Contains(project.CompilationOptions.SpecificDiagnosticOptions, x => x.Key == "CA1021" && x.Value == ReportDiagnostic.Error);
-            }
+            await emitter.WaitForMessage<ProjectInformationResponse>();
+
+            var project = host.Workspace.CurrentSolution.Projects.Single();
+            Assert.Contains(project.CompilationOptions.SpecificDiagnosticOptions, x => x.Key == "CA1021" && x.Value == ReportDiagnostic.Error);
         }
 
         // Unstable with MSBuild 16.3 on *nix
         [ConditionalFact(typeof(WindowsOnly))]
         public async Task WhenNewAnalyzerReferenceIsAdded_ThenAutomaticallyUseItWithoutRestart()
         {
-            var emitter = new ProjectLoadTestEventEmitter();
+            using var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithAnalyzers");
+            using var host = CreateMSBuildTestHost(testProject.Directory, configurationData: TestHelpers.GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled: true));
 
-            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithAnalyzers"))
-            using (var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory), configurationData: TestHelpers.GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled: true)))
-            {
-                var csprojFile = ModifyXmlFileInPlace(Path.Combine(testProject.Directory, "ProjectWithAnalyzers.csproj"),
-                    csprojFileXml =>
-                    {
-                        var referencesGroup = csprojFileXml.Descendants("ItemGroup").FirstOrDefault();
-                        referencesGroup.Add(new XElement("PackageReference", new XAttribute("Include", "Roslynator.Analyzers"), new XAttribute("Version", "2.1.0")));
-                    });
+            var csprojFile = ModifyXmlFileInPlace(Path.Combine(testProject.Directory, "ProjectWithAnalyzers.csproj"),
+                csprojFileXml =>
+                {
+                    var referencesGroup = csprojFileXml.Descendants("ItemGroup").First();
+                    referencesGroup.Add(new XElement("PackageReference", new XAttribute("Include", "Roslynator.Analyzers"), new XAttribute("Version", "2.1.0")));
+                });
 
-                await NotifyFileChanged(host, csprojFile);
+            var emitter = host.GetTestEventEmitter();
 
-                emitter.WaitForProjectUpdate();
-                await host.RestoreProject(testProject);
+            await NotifyFileChanged(host, csprojFile);
+            await emitter.WaitForMessage<ProjectDiagnosticStatusMessage>(x => x.Status == ProjectDiagnosticStatus.Ready);
+            emitter.Clear();
 
-                // Todo: This can be removed and replaced with wait for event (project analyzed eg.) once they are available.
-                await Task.Delay(2000);
+            await host.RestoreProject(testProject);
 
-                var diagnostics = await host.RequestCodeCheckAsync(Path.Combine(testProject.Directory, "Program.cs"));
+            await emitter.WaitForMessage<ProjectDiagnosticStatusMessage>(x => x.Status == ProjectDiagnosticStatus.Ready);
 
-                Assert.Contains(diagnostics.QuickFixes.OfType<DiagnosticLocation>(), x => x.Id == "RCS1102"); // Analysis result from roslynator.
-            }
+            var diagnostics = await host.RequestCodeCheckAsync(Path.Combine(testProject.Directory, "Program.cs"));
+            Assert.Contains(diagnostics.QuickFixes.OfType<DiagnosticLocation>(), x => x.Id == "RCS1102"); // Analysis result from roslynator.
         }
 
         private string ModifyXmlFileInPlace(string file, Action<XDocument> docUpdateAction)
@@ -293,11 +268,6 @@ dotnet_diagnostic.IDE0005.severity = none
                     ChangeType = FileChangeType.Change
                     }
                 });
-        }
-
-        private static async Task RestoreProject(ITestProject testProject)
-        {
-            await new DotNetCliService(new LoggerFactory(), NullEventEmitter.Instance).RestoreAsync(testProject.Directory);
         }
     }
 }

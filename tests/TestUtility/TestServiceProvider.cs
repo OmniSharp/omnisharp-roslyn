@@ -56,13 +56,12 @@ namespace TestUtility
             ITestOutputHelper testOutput,
             IOmniSharpEnvironment environment,
             IEnumerable<KeyValuePair<string, string>> configurationData = null,
-            DotNetCliVersion dotNetCliVersion = DotNetCliVersion.Current,
-            IEventEmitter eventEmitter = null)
+            DotNetCliVersion dotNetCliVersion = DotNetCliVersion.Current)
         {
             var loggerFactory = new LoggerFactory()
                 .AddXunit(testOutput);
 
-            eventEmitter = eventEmitter ?? NullEventEmitter.Instance;
+            var eventEmitter = new TestEventEmitter();
 
             var assemblyLoader = CreateAssemblyLoader(loggerFactory);
             var dotNetCliService = CreateDotNetCliService(dotNetCliVersion, loggerFactory, eventEmitter);
@@ -86,10 +85,9 @@ namespace TestUtility
             IAnalyzerAssemblyLoader analyzerAssemblyLoader,
             IMSBuildLocator msbuildLocator,
             IEnumerable<KeyValuePair<string, string>> configurationData = null,
-            DotNetCliVersion dotNetCliVersion = DotNetCliVersion.Current,
-            IEventEmitter eventEmitter = null)
+            DotNetCliVersion dotNetCliVersion = DotNetCliVersion.Current)
         {
-            eventEmitter = eventEmitter ?? NullEventEmitter.Instance;
+            var eventEmitter = new TestEventEmitter();
 
             var dotNetCliService = CreateDotNetCliService(dotNetCliVersion, loggerFactory, eventEmitter);
             var configuration = CreateConfiguration(configurationData, dotNetCliService);
@@ -148,7 +146,7 @@ namespace TestUtility
                 throw new InvalidOperationException($"Local .NET CLI path does not exist. Did you run build.(ps1|sh) from the command line?");
             }
 
-            return new DotNetCliService(loggerFactory, NullEventEmitter.Instance, dotnetPath);
+            return new DotNetCliService(loggerFactory, eventEmitter, dotnetPath);
         }
 
         private static IMemoryCache CreateMemoryCache()

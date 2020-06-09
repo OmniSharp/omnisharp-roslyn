@@ -17,7 +17,9 @@ using OmniSharp.Eventing;
 using OmniSharp.Mef;
 using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.MSBuild;
+using OmniSharp.MSBuild.Notification;
 using OmniSharp.Roslyn.CSharp.Services;
+using OmniSharp.Roslyn.CSharp.Workers.Diagnostics;
 using OmniSharp.Script;
 using OmniSharp.Services;
 using OmniSharp.Utilities;
@@ -82,12 +84,16 @@ namespace TestUtility
             IEnumerable<ExportDescriptorProvider> additionalExports = null,
             [CallerMemberName] string callerName = "")
         {
+            additionalExports = AddEventEmitterToDescriptors(serviceProvider, additionalExports);
             var compositionHost = new CompositionHostBuilder(serviceProvider, s_lazyAssemblies.Value, additionalExports)
                 .Build();
 
             WorkspaceInitializer.Initialize(serviceProvider, compositionHost);
 
             var host = new OmniSharpTestHost(serviceProvider, compositionHost, callerName);
+
+            // Warmup diagnostics engine so all workspace events got attached.
+            host.GetExport<ICsDiagnosticWorker>();
 
             // Force workspace to be updated
             var service = host.GetWorkspaceInformationService();
@@ -102,18 +108,17 @@ namespace TestUtility
             IEnumerable<KeyValuePair<string, string>> configurationData = null,
             DotNetCliVersion dotNetCliVersion = DotNetCliVersion.Current,
             IEnumerable<ExportDescriptorProvider> additionalExports = null,
-            [CallerMemberName] string callerName = "",
-            IEventEmitter eventEmitter = null)
+            [CallerMemberName] string callerName = "")
         {
             var environment = new OmniSharpEnvironment(path, logLevel: LogLevel.Trace);
 
-            var serviceProvider = TestServiceProvider.Create(testOutput, environment, configurationData, dotNetCliVersion, eventEmitter);
+            var serviceProvider = TestServiceProvider.Create(testOutput, environment, configurationData, dotNetCliVersion);
 
             return Create(serviceProvider, additionalExports, callerName);
         }
 
         public T GetExport<T>()
-            => this._compositionHost.GetExport<T>();
+            => _compositionHost.GetExport<T>();
 
         public THandler GetRequestHandler<THandler>(string name, string languageName = LanguageNames.CSharp) where THandler : IRequestHandler
         {
@@ -157,11 +162,31 @@ namespace TestUtility
             }
         }
 
+        public TestEventEmitter GetTestEventEmitter()
+        {
+            return (TestEventEmitter)_compositionHost.GetExport<IEventEmitter>();
+        }
+
         public Task<TResponse> GetResponse<TRequest, TResponse>(
            string endpoint, TRequest request)
         {
             var service = GetRequestHandler<IRequestHandler<TRequest, TResponse>>(endpoint);
             return service.Handle(request);
         }
+
+        private static IEnumerable<ExportDescriptorProvider> AddEventEmitterToDescriptors(IServiceProvider serviceProvider, IEnumerable<ExportDescriptorProvider> descriptorsIfAny)
+        {
+            var descriptor = MefValueProvider.From<IMSBuildEventSink>(new ProjectLoadListener(serviceProvider.GetService<ILoggerFactory>(), serviceProvider.GetService<IEventEmitter>()));
+
+            if (descriptorsIfAny == null)
+            {
+                return new[] { descriptor };
+            }
+            else
+            {
+                return descriptorsIfAny.Concat(new[] { descriptor });
+            }
+        }
+
     }
 }

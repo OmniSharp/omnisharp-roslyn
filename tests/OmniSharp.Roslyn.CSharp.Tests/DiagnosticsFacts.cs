@@ -66,7 +66,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
                 await TestHelpers.WaitUntil(async () => (
                     await host.RequestCodeCheckAsync()).QuickFixes.Any(x => x.FileName == "a.cs") &&
-                    (await host.RequestCodeCheckAsync()).QuickFixes.Any(x => x.FileName == "b.cs"), frequency: 100, timeout: 10000);
+                    (await host.RequestCodeCheckAsync()).QuickFixes.Any(x => x.FileName == "b.cs"), frequency: 100, timeoutMs: 10000);
 
                 var quickFixes = await host.RequestCodeCheckAsync();
 

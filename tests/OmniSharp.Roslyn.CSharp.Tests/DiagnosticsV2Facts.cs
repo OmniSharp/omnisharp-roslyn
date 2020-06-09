@@ -27,7 +27,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             var testFile = new TestFile(filename, "class C { int n = true; }");
 
-            var emitter = new TestEventEmitter<DiagnosticMessage>();
+            var emitter = new TestEventEmitter();
             var forwarder = new DiagnosticEventForwarder(emitter)
             {
                 IsEnabled = true
@@ -39,7 +39,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var controller = new DiagnosticsService(forwarder, service);
             var response = await controller.Handle(new DiagnosticsRequest { FileName = testFile.FileName });
 
-            await emitter.ExpectForEmitted(msg => msg.Results.Any(m => m.FileName == filename));
+            await emitter.WaitForMessage<DiagnosticMessage>(msg => msg.Results.Any(m => m.FileName == filename));
         }
 
         private CSharpDiagnosticWorkerWithAnalyzers CreateDiagnosticService(DiagnosticEventForwarder forwarder)
@@ -58,16 +58,16 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var testFile2 = new TestFile(filename2, "class C2 { int n = true; }");
 
             SharedOmniSharpTestHost.AddFilesToWorkspace(testFile1, testFile2);
-            var emitter = new TestEventEmitter<DiagnosticMessage>();
+            var emitter = new TestEventEmitter();
             var forwarder = new DiagnosticEventForwarder(emitter);
             var service = CreateDiagnosticService(forwarder);
 
             var controller = new DiagnosticsService(forwarder, service);
             var response = await controller.Handle(new DiagnosticsRequest());
 
-            await emitter.ExpectForEmitted(msg => msg.Results
+            await emitter.WaitForMessage<DiagnosticMessage>(msg => msg.Results
                 .Any(r => r.FileName == filename1 && r.QuickFixes.Count() == 1));
-            await emitter.ExpectForEmitted(msg => msg.Results
+            await emitter.WaitForMessage<DiagnosticMessage>(msg => msg.Results
                 .Any(r => r.FileName == filename2 && r.QuickFixes.Count() == 1));
         }
 
@@ -82,7 +82,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var testFile2 = new TestFile(filename2, "class C2 { int n = true; }");
             SharedOmniSharpTestHost.AddFilesToWorkspace(testFile1, testFile2);
 
-            var emitter = new TestEventEmitter<DiagnosticMessage>();
+            var emitter = new TestEventEmitter();
             var forwarder = new DiagnosticEventForwarder(emitter);
             var service = CreateDiagnosticService(forwarder);
 
