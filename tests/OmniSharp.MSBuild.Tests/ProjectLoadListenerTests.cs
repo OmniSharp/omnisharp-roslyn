@@ -167,7 +167,7 @@ namespace OmniSharp.MSBuild.Tests
                 var tfm = emitter.ReceivedMessages[0].TargetFrameworks.ToArray();
                 Assert.Equal(2, tfm.Count());
                 Assert.Equal("netstandard1.3", tfm[0]);
-                Assert.Equal("netstandard2.0",tfm[1]);
+                Assert.Equal("netstandard2.0", tfm[1]);
             }
         }
 
@@ -183,6 +183,48 @@ namespace OmniSharp.MSBuild.Tests
                 Assert.Single(emitter.ReceivedMessages);
                 Assert.Single(emitter.ReceivedMessages[0].FileExtensions);
                 Assert.Equal(emitter.ReceivedMessages[0].FileExtensions.First(), GetHashedFileExtension(".cs"));
+            }
+        }
+
+        [Fact]
+        public async Task The_output_kind_is_emitted()
+        {
+            // Arrange
+            var emitter = new ProjectLoadTestEventEmitter();
+
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("NetCore31Project"))
+            using (var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory)))
+            {
+                Assert.Single(emitter.ReceivedMessages);
+                Assert.Equal((int)OutputKind.ConsoleApplication, emitter.ReceivedMessages[0].OutputKind);
+            }
+        }
+
+        [Fact]
+        public async Task The_correct_sdk_version_is_emitted()
+        {
+            // Arrange
+            var emitter = new ProjectLoadTestEventEmitter();
+
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("NetCore31Project"))
+            using (var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory)))
+            {
+                Assert.Single(emitter.ReceivedMessages);
+                Assert.Equal(GetHashedFileExtension("3.1.201"), emitter.ReceivedMessages[0].SdkVersion);
+            }
+        }
+
+        [Fact]
+        public async Task The_correct_sdk_version_is_emitted_2()
+        {
+            // Arrange
+            var emitter = new ProjectLoadTestEventEmitter();
+
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("Net50Project"))
+            using (var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory)))
+            {
+                Assert.Equal(2, emitter.ReceivedMessages.Length);
+                Assert.Equal(GetHashedFileExtension("5.0.100-preview.4.20258.7"), emitter.ReceivedMessages[0].SdkVersion);
             }
         }
 
