@@ -41,6 +41,7 @@ namespace OmniSharp.MSBuild
                 var targetFrameworks = GetTargetFrameworks(args.ProjectInstance);
                 var sdkVersion = GetSdkVersion(args);
                 var outputKind = GetOutputKind(args);
+                var projectCapabilities = GetProjectCapabilities(args.ProjectInstance);
 
                 if (args.References == null)
                 {
@@ -50,7 +51,7 @@ namespace OmniSharp.MSBuild
                 var hashedReferences = GetHashedReferences(args);
                 var (hashedFileExtensions, fileCounts) = GetUniqueHashedFileExtensionsAndCounts(args);
 
-                _eventEmitter.ProjectInformation(projectId, sessionId, (int)outputKind, targetFrameworks, sdkVersion, hashedReferences, hashedFileExtensions, fileCounts);
+                _eventEmitter.ProjectInformation(projectId, sessionId, (int)outputKind, projectCapabilities, targetFrameworks, sdkVersion, hashedReferences, hashedFileExtensions, fileCounts);
             }
             catch (Exception ex)
             {
@@ -103,6 +104,11 @@ namespace OmniSharp.MSBuild
         {
             var referenceNames = args.References.Select(reference => Path.GetFileNameWithoutExtension(reference).ToLower());
             return referenceNames.Select(_referenceHashingAlgorithm.HashInput);
+        }
+
+        private IEnumerable<string> GetProjectCapabilities(ProjectInstance projectInstance)
+        {
+            return projectInstance.GetItems(ItemNames.ProjectCapability).Select(item => item.ToString());
         }
 
         // Internal for testing
