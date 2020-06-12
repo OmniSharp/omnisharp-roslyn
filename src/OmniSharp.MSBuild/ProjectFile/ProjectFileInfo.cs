@@ -110,7 +110,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 return (null, ImmutableArray<MSBuildDiagnostic>.Empty, null);
             }
 
-            var (projectInstance, diagnostics) = loader.BuildProject(filePath);
+            var (projectInstance, diagnostics) = loader.BuildProject(filePath, projectIdInfo?.ConfigurationsInSolution);
             if (projectInstance == null)
             {
                 return (null, diagnostics, null);
@@ -135,7 +135,7 @@ namespace OmniSharp.MSBuild.ProjectFile
 
         public (ProjectFileInfo, ImmutableArray<MSBuildDiagnostic>, ProjectLoadedEventArgs) Reload(ProjectLoader loader)
         {
-            var (projectInstance, diagnostics) = loader.BuildProject(FilePath);
+            var (projectInstance, diagnostics) = loader.BuildProject(FilePath, ProjectIdInfo?.ConfigurationsInSolution);
             if (projectInstance == null)
             {
                 return (null, diagnostics, null);

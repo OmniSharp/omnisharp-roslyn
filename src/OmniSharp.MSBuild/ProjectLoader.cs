@@ -67,11 +67,12 @@ namespace OmniSharp.MSBuild
             return globalProperties;
         }
 
-        public (MSB.Execution.ProjectInstance projectInstance, ImmutableArray<MSBuildDiagnostic> diagnostics) BuildProject(string filePath)
+        public (MSB.Execution.ProjectInstance projectInstance, ImmutableArray<MSBuildDiagnostic> diagnostics) BuildProject(
+            string filePath, Dictionary<string, string> configurationsInSolution)
         {
             using (_sdksPathResolver.SetSdksPathEnvironmentVariable(filePath))
             {
-                var evaluatedProject = EvaluateProjectFileCore(filePath);
+                var evaluatedProject = EvaluateProjectFileCore(filePath, configurationsInSolution);
 
                 SetTargetFrameworkIfNeeded(evaluatedProject);
 
@@ -115,10 +116,37 @@ namespace OmniSharp.MSBuild
             }
         }
 
-        private MSB.Evaluation.Project EvaluateProjectFileCore(string filePath)
+        private MSB.Evaluation.Project EvaluateProjectFileCore(string filePath, Dictionary<string, string> projectConfigurationsInSolution = null)
         {
+            var localProperties = new Dictionary<string, string>(_globalProperties);
+            if (projectConfigurationsInSolution != null
+                && localProperties.TryGetValue(PropertyNames.Configuration, out string solutionConfiguration))
+            {
+                if (!localProperties.TryGetValue(PropertyNames.Platform, out string solutionPlatform))
+                {
+                    solutionPlatform = "Any CPU";
+                }
+
+                var solutionSelector = $"{solutionConfiguration}|{solutionPlatform}.ActiveCfg";
+                _logger.LogDebug($"Found configuration `{solutionSelector}` in solution for '{filePath}'.");
+
+                if (projectConfigurationsInSolution.TryGetValue(solutionSelector, out string projectSelector))
+                {
+                    var splitted = projectSelector.Split('|');
+                    if (splitted.Length == 2)
+                    {
+                        var projectConfiguration = splitted[0];
+                        localProperties[PropertyNames.Configuration] = projectConfiguration;
+                        // NOTE: Solution often defines configuration as `Any CPU` wheras project relies on `AnyCPU`
+                        var projectPlatform = splitted[1].Replace("Any CPU", "AnyCPU");
+                        localProperties[PropertyNames.Platform] = projectPlatform;
+                        _logger.LogInformation($"Using configuration from solution: `{projectConfiguration}|{projectPlatform}`");
+                    }
+                }
+            }
+
             // Evaluate the MSBuild project
-            var projectCollection = new MSB.Evaluation.ProjectCollection(_globalProperties);
+            var projectCollection = new MSB.Evaluation.ProjectCollection(localProperties);
 
             var toolsVersion = _options.ToolsVersion;
             if (string.IsNullOrEmpty(toolsVersion) || Version.TryParse(toolsVersion, out _))

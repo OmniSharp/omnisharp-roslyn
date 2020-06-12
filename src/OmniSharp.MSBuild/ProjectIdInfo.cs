@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Microsoft.CodeAnalysis;
 
 namespace OmniSharp.MSBuild
@@ -13,5 +14,6 @@ namespace OmniSharp.MSBuild
 
         public ProjectId Id { get; set; }
         public bool IsDefinedInSolution { get; set; }
+        public Dictionary<string, string> ConfigurationsInSolution { get; set; }
     }
 }
