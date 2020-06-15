@@ -161,7 +161,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             var usages = await FindSymbolsAsync(code, filename);
             var symbols = usages.QuickFixes.Cast<SymbolLocation>().Select(q => q.Kind);
-            Assert.Equal("Struct", symbols.First());
+            Assert.Equal("Structure", symbols.First());
         }
 
         [Theory]
@@ -182,12 +182,12 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         public async Task Finds_partial_method_with_body(string filename)
         {
             const string code = @"
-public partial class MyClass  
+public partial class MyClass
 {
     partial void Method();
 }
 
-public partial class MyClass 
+public partial class MyClass
 {
     partial void Method()
     {
@@ -330,7 +330,8 @@ public partial class MyClass
             SharedOmniSharpTestHost.AddFilesToWorkspace(testFile);
             var requestHandler = GetRequestHandler(SharedOmniSharpTestHost);
 
-            return await requestHandler.Handle(new FindSymbolsRequest {
+            return await requestHandler.Handle(new FindSymbolsRequest
+            {
                 Filter = filter,
                 MinFilterLength = minFilterLength,
                 MaxItemsToReturn = maxItemsToReturn

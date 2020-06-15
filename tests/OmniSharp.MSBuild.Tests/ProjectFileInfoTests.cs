@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
@@ -6,6 +7,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using OmniSharp.MSBuild.Discovery;
 using OmniSharp.MSBuild.ProjectFile;
 using OmniSharp.Options;
+using OmniSharp.Services;
 using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
@@ -26,6 +28,7 @@ namespace OmniSharp.MSBuild.Tests
         {
             var msbuildLocator = host.GetExport<IMSBuildLocator>();
             var sdksPathResolver = host.GetExport<SdksPathResolver>();
+            var dotNetCli = host.GetExport<IDotNetCliService>();
 
             var loader = new ProjectLoader(
                 options: new MSBuildOptions(),
@@ -35,7 +38,7 @@ namespace OmniSharp.MSBuild.Tests
                 sdksPathResolver: sdksPathResolver);
 
             var projectIdInfo = new ProjectIdInfo(ProjectId.CreateNewId(), false);
-            var (projectFileInfo, _, _) = ProjectFileInfo.Load(projectFilePath, projectIdInfo, loader);
+            var (projectFileInfo, _, _) = ProjectFileInfo.Load(projectFilePath, projectIdInfo, loader, sessionId: Guid.NewGuid(), dotNetCli);
 
             return projectFileInfo;
         }
@@ -130,7 +133,7 @@ namespace OmniSharp.MSBuild.Tests
                 Assert.NotNull(projectFileInfo);
                 Assert.Equal(projectFilePath, projectFileInfo.FilePath);
                 var targetFramework = Assert.Single(projectFileInfo.TargetFrameworks);
-                Assert.Equal("netcoreapp3.0", targetFramework);
+                Assert.Equal("netcoreapp3.1", targetFramework);
                 Assert.Equal(LanguageVersion.CSharp8, projectFileInfo.LanguageVersion);
                 Assert.Equal(NullableContextOptions.Enable, projectFileInfo.NullableContextOptions);
                 Assert.Equal("Debug", projectFileInfo.Configuration);
@@ -150,7 +153,7 @@ namespace OmniSharp.MSBuild.Tests
                 var projectFilePath = Path.Combine(testProject.Directory, "ExternAlias.App", "ExternAlias.App.csproj");
                 var projectFileInfo = CreateProjectFileInfo(host, testProject, projectFilePath);
                 Assert.Single(projectFileInfo.ReferenceAliases);
-                foreach(var kv in projectFileInfo.ReferenceAliases)
+                foreach (var kv in projectFileInfo.ReferenceAliases)
                 {
                     TestOutput.WriteLine($"{kv.Key} = {kv.Value}");
                 }
@@ -170,7 +173,7 @@ namespace OmniSharp.MSBuild.Tests
                 var projectFilePath = Path.Combine(testProject.Directory, "ExternAlias.App2", "ExternAlias.App2.csproj");
                 var projectFileInfo = CreateProjectFileInfo(host, testProject, projectFilePath);
                 Assert.Single(projectFileInfo.ProjectReferenceAliases);
-                foreach(var kv in projectFileInfo.ProjectReferenceAliases)
+                foreach (var kv in projectFileInfo.ProjectReferenceAliases)
                 {
                     TestOutput.WriteLine($"{kv.Key} = {kv.Value}");
                 }
@@ -210,13 +213,21 @@ namespace OmniSharp.MSBuild.Tests
                 Assert.Contains("CS7080", projectFileInfo.WarningsAsErrors);
                 Assert.Contains("CS7081", projectFileInfo.WarningsAsErrors);
 
+                Assert.NotEmpty(projectFileInfo.WarningsNotAsErrors);
+                Assert.Contains("CS7080", projectFileInfo.WarningsNotAsErrors);
+                Assert.Contains("CS7082", projectFileInfo.WarningsNotAsErrors);
+
                 var compilationOptions = projectFileInfo.CreateCompilationOptions();
                 Assert.True(compilationOptions.SpecificDiagnosticOptions.ContainsKey("CS1998"), "Specific diagnostic option for CS1998 not found");
                 Assert.True(compilationOptions.SpecificDiagnosticOptions.ContainsKey("CS7080"), "Specific diagnostic option for CS7080 not found");
                 Assert.True(compilationOptions.SpecificDiagnosticOptions.ContainsKey("CS7081"), "Specific diagnostic option for CS7081 not found");
+                Assert.True(compilationOptions.SpecificDiagnosticOptions.ContainsKey("CS7082"), "Specific diagnostic option for CS7082 not found");
                 Assert.Equal(ReportDiagnostic.Error, compilationOptions.SpecificDiagnosticOptions["CS1998"]);
-                Assert.Equal(ReportDiagnostic.Error, compilationOptions.SpecificDiagnosticOptions["CS7080"]);
-                Assert.Equal(ReportDiagnostic.Suppress, compilationOptions.SpecificDiagnosticOptions["CS7081"]); // NoWarn should be given priority over WarningsAsErrors
+                // CS7080 is both in WarningsAsErrors and WarningsNotAsErrors, but WarningsNotAsErrors are higher priority
+                Assert.Equal(ReportDiagnostic.Warn, compilationOptions.SpecificDiagnosticOptions["CS7080"]);
+                Assert.Equal(ReportDiagnostic.Warn, compilationOptions.SpecificDiagnosticOptions["CS7082"]);
+                // CS7081 is both WarningsAsErrors and NoWarn, but NoWarn are higher priority
+                Assert.Equal(ReportDiagnostic.Suppress, compilationOptions.SpecificDiagnosticOptions["CS7081"]);
             }
         }
     }

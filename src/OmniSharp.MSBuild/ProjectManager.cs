@@ -64,7 +64,9 @@ namespace OmniSharp.MSBuild
         private readonly CancellationTokenSource _processLoopCancellation;
         private readonly Task _processLoopTask;
         private readonly IAnalyzerAssemblyLoader _analyzerAssemblyLoader;
+        private readonly IDotNetCliService _dotNetCli;
         private bool _processingQueue;
+        private readonly Guid _sessionId = Guid.NewGuid();
 
         private readonly FileSystemNotificationCallback _onDirectoryFileChanged;
 
@@ -78,7 +80,8 @@ namespace OmniSharp.MSBuild
             ProjectLoader projectLoader,
             OmniSharpWorkspace workspace,
             IAnalyzerAssemblyLoader analyzerAssemblyLoader,
-            ImmutableArray<IMSBuildEventSink> eventSinks)
+            ImmutableArray<IMSBuildEventSink> eventSinks,
+            IDotNetCliService dotNetCliService)
         {
             _logger = loggerFactory.CreateLogger<ProjectManager>();
             _options = options ?? new MSBuildOptions();
@@ -92,6 +95,7 @@ namespace OmniSharp.MSBuild
             _projectLoader = projectLoader;
             _workspace = workspace;
             _eventSinks = eventSinks;
+            _dotNetCli = dotNetCliService;
             _queue = new BufferBlock<ProjectToUpdate>();
             _processLoopCancellation = new CancellationTokenSource();
             _processLoopTask = Task.Run(() => ProcessLoopAsync(_processLoopCancellation.Token));
@@ -295,7 +299,7 @@ namespace OmniSharp.MSBuild
         }
 
         private (ProjectFileInfo, ProjectLoadedEventArgs) LoadProject(string projectFilePath, ProjectIdInfo idInfo)
-            => LoadOrReloadProject(projectFilePath, () => ProjectFileInfo.Load(projectFilePath, idInfo, _projectLoader));
+            => LoadOrReloadProject(projectFilePath, () => ProjectFileInfo.Load(projectFilePath, idInfo, _projectLoader, _sessionId, _dotNetCli));
 
         private (ProjectFileInfo, ProjectLoadedEventArgs) ReloadProject(ProjectFileInfo projectFileInfo)
             => LoadOrReloadProject(projectFileInfo.FilePath, () => projectFileInfo.Reload(_projectLoader));
@@ -646,7 +650,7 @@ namespace OmniSharp.MSBuild
 
                         // We've found a project reference that we didn't know about already, but it exists on disk.
                         // This is likely a project that is outside of OmniSharp's TargetDirectory.
-                        referencedProject = ProjectFileInfo.CreateNoBuild(projectReferencePath, _projectLoader);
+                        referencedProject = ProjectFileInfo.CreateNoBuild(projectReferencePath, _projectLoader, _dotNetCli);
                         AddProject(referencedProject);
 
                         QueueProjectUpdate(projectReferencePath, allowAutoRestore: true, referencedProject.ProjectIdInfo);

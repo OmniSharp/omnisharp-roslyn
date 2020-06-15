@@ -1,8 +1,23 @@
 # Changelog
 All changes to the project will be documented in this file.
 
-## [1.35.2] - not yet released
+## [1.35.4] - Not yet released
+* Added LSP handler for the `workspace/symbol` request. (PR: [#1799](https://github.com/OmniSharp/omnisharp-roslyn/pull/1799))
+
+## [1.35.3] - 2020-06-11
+* Added LSP handler for `textDocument/codeAction` request. (PR: [#1795](https://github.com/OmniSharp/omnisharp-roslyn/pull/1795))
+* Expose a custom LSP `omnisharp/client/findReferences` command via code lens (meant to be handled by LSP client). (PR: [#1807](https://github.com/OmniSharp/omnisharp-roslyn/pull/1807))
+* Added `DirectoryDelete` option to `FileChangeType` allowing clients to report deleted directories that need to be removed (along all the files) from the workspace (PR: [#1821](https://github.com/OmniSharp/omnisharp-roslyn/pull/1821))
+* Do not crash when plugin assembly cannot be loaded ([#1307](https://github.com/OmniSharp/omnisharp-roslyn/issues/1307), PR: [#1827](https://github.com/OmniSharp/omnisharp-roslyn/pull/1827))
+* Update to Roslyn `3.7.0-4.20311.4` (PR: [#1832](https://github.com/OmniSharp/omnisharp-roslyn/pull/1832))
+
+## [1.35.2] - 2020-05-20
 * Added support for `WarningsAsErrors` in csproj files (PR: [#1779](https://github.com/OmniSharp/omnisharp-roslyn/pull/1779))
+* Added support for `WarningsNotAsErrors` in csproj files ([#1681](https://github.com/OmniSharp/omnisharp-roslyn/issues/1681), PR: [#1784](https://github.com/OmniSharp/omnisharp-roslyn/pull/1784))
+* Improved MSBuild scoring system ([#1783](https://github.com/OmniSharp/omnisharp-roslyn/issues/1783), PR: [#1797](https://github.com/OmniSharp/omnisharp-roslyn/pull/1797))
+* Updated OmniSharp.Extensions.LanguageServer to `0.14.2` to fix synchronisation (PR: [#1791](https://github.com/OmniSharp/omnisharp-roslyn/pull/1791))
+* Add test discovery and NoBuild option to test requests (PR: [#1719](https://github.com/OmniSharp/omnisharp-roslyn/pull/1719))
+* Update to Roslyn `3.7.0-2.20269.10` (PR: [#1804](https://github.com/OmniSharp/omnisharp-roslyn/pull/1804))
 
 ## [1.35.1] - 2020-05-04
 * Fixed not supported exception when trying to decompile a BCL assembly on Mono. For now we do not try to resolve implementation assembly from a ref assembly (PR: [#1767](https://github.com/OmniSharp/omnisharp-roslyn/pull/1767))
@@ -29,6 +44,7 @@ All changes to the project will be documented in this file.
 * Support for .NET Core 3.1 in csx files (PR: [#1731](https://github.com/OmniSharp/omnisharp-roslyn/pull/1731))
 * Update the minimal MSBuild to better support .NET 5 Previews ([omnisharp-vscode#3653](https://github.com/OmniSharp/omnisharp-vscode/issues/3653), PR: [#1746](https://github.com/OmniSharp/omnisharp-roslyn/pull/1746))
 * Updated to Roslyn [3.6.0-3.20170.19] (PR: [#1745](https://github.com/OmniSharp/omnisharp-roslyn/pull/1745))
+* Added semantic highlighting endpoint `/v2/highlight` (PR: [#1734](https://github.com/OmniSharp/omnisharp-roslyn/pull/1734))
 
 ## [1.34.14] - 2020-03-09
 * Added support for `annotations` value of `Nullable` csproj property ([#1721](https://github.com/OmniSharp/omnisharp-roslyn/issues/1721), PR: [#1722](https://github.com/OmniSharp/omnisharp-roslyn/pull/1722))

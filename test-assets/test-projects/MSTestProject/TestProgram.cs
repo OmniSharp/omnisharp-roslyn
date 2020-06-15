@@ -12,7 +12,7 @@ namespace Main.Test
         public void Test()
         {
             Assert.IsTrue(true);
-        }
+        } // This is here for boundary testing
 
         [TestMethod]
         [DataRow(0)]
@@ -52,7 +52,23 @@ namespace Main.Test
 
         private void UtilityFunction()
         {
-            
+
+        }
+
+        private class NestedClass
+        {
+            public void M()
+            {
+
+            }
+        }
+    }
+
+    public class NoTests
+    {
+        public void M()
+        {
+
         }
     }
 }
