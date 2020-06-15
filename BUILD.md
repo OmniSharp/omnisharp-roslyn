@@ -34,7 +34,7 @@ Note: The arguments below should prefixed with a single hyphen on Windows (Power
     Defaults to `Default`.
 
   `-configuration (Release|Debug)`: The configuration to build.
-    Defaults to `Release`.
+    Defaults to `Debug`.
 
   `-test-configuration (Release|Debug)`: The configuration to use for the unit tests.
     Defaults to `Debug`.
@@ -42,7 +42,7 @@ Note: The arguments below should prefixed with a single hyphen on Windows (Power
   `-install-path Path`: Path used for the **Install** target.
     Defaults to `(%USERPROFILE%|$HOME)/.omnisharp`
 
-  `-all-publish`: Publishes all platforms for the current OS. On Windows, specifying this argument would produce win7-x86 and win7-x64 builds. On OSX/Linux, this argument causes osx, linux-x86, and linux-x64 builds to be published.
+  `-publish-all`: Publishes all platforms for the current OS. On Windows, specifying this argument would produce win7-x86 and win7-x64 builds. On OSX/Linux, this argument causes osx, linux-x86, and linux-x64 builds to be published.
 
   `-archive`: Enable the generation of publishable archives after a build.
 

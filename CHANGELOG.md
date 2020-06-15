@@ -1,9 +1,14 @@
 # Changelog
 All changes to the project will be documented in this file.
 
-## [1.35.3] - not yet released
+## [1.35.4] - Not yet released
+
+## [1.35.3] - 2020-06-11
 * Added LSP handler for `textDocument/codeAction` request. (PR: [#1795](https://github.com/OmniSharp/omnisharp-roslyn/pull/1795))
 * Expose a custom LSP `omnisharp/client/findReferences` command via code lens (meant to be handled by LSP client). (PR: [#1807](https://github.com/OmniSharp/omnisharp-roslyn/pull/1807))
+* Added `DirectoryDelete` option to `FileChangeType` allowing clients to report deleted directories that need to be removed (along all the files) from the workspace (PR: [#1821](https://github.com/OmniSharp/omnisharp-roslyn/pull/1821))
+* Do not crash when plugin assembly cannot be loaded ([#1307](https://github.com/OmniSharp/omnisharp-roslyn/issues/1307), PR: [#1827](https://github.com/OmniSharp/omnisharp-roslyn/pull/1827))
+* Update to Roslyn `3.7.0-4.20311.4` (PR: [#1832](https://github.com/OmniSharp/omnisharp-roslyn/pull/1832))
 
 ## [1.35.2] - 2020-05-20
 * Added support for `WarningsAsErrors` in csproj files (PR: [#1779](https://github.com/OmniSharp/omnisharp-roslyn/pull/1779))
