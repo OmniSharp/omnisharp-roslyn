@@ -122,7 +122,7 @@ namespace OmniSharp.MSBuild.ProjectFile
 
             var dotNetInfo = dotNetCli.GetInfo(Path.GetDirectoryName(projectInstance.FullPath));
 
-            var data = ProjectData.Create(project);
+            var data = ProjectData.Create(projectInstance, project);
             var projectFileInfo = new ProjectFileInfo(projectIdInfo, filePath, data, sessionId, dotNetInfo);
             var eventArgs = new ProjectLoadedEventArgs(projectIdInfo.Id,
                                                        project,

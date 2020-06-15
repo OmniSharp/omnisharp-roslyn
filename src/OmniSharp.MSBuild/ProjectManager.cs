@@ -364,6 +364,7 @@ namespace OmniSharp.MSBuild
             var projectInfo = projectFileInfo.CreateProjectInfo(_analyzerAssemblyLoader);
 
             var newSolution = _workspace.CurrentSolution.AddProject(projectInfo);
+            _workspace.AddDocumentInclusionRuleForProject(projectInfo.Id, (filePath) => projectFileInfo.IsFileIncluded(filePath));
 
             if (!_workspace.TryApplyChanges(newSolution))
             {
