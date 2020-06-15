@@ -174,8 +174,11 @@ namespace OmniSharp.MSBuild.ProjectFile
 
         public bool IsFileIncluded(string filePath)
         {
-            filePath = FileSystemHelper.GetRelativePath(filePath, Directory);
-            return IncludeGlobs.Any(glob => glob.IsMatch(filePath));
+            if (SourceFiles.Contains(filePath))
+                return true;
+
+            var relativePath = FileSystemHelper.GetRelativePath(filePath, Directory);
+            return IncludeGlobs.Any(glob => glob.IsMatch(relativePath));
         }
     }
 }
