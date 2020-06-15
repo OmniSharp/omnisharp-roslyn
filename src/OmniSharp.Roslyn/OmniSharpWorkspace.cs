@@ -33,7 +33,7 @@ namespace OmniSharp
 
         private readonly ConcurrentBag<Func<string, Task>> _waitForProjectModelReadyHandlers = new ConcurrentBag<Func<string, Task>>();
         private readonly ConcurrentDictionary<string, ProjectInfo> miscDocumentsProjectInfos = new ConcurrentDictionary<string, ProjectInfo>();
-        private readonly ConcurrentDictionary<ProjectId, Predicate<string>> documentExclusionRulesPerProject = new ConcurrentDictionary<ProjectId, Predicate<string>>();
+        private readonly ConcurrentDictionary<ProjectId, Predicate<string>> documentInclusionRulesPerProject = new ConcurrentDictionary<ProjectId, Predicate<string>>();
 
         [ImportingConstructor]
         public OmniSharpWorkspace(HostServicesAggregator aggregator, ILoggerFactory loggerFactory, IFileSystemWatcher fileSystemWatcher)
@@ -93,9 +93,9 @@ namespace OmniSharp
             OnProjectAdded(projectInfo);
         }
 
-        public void AddDocumentExclusionRuleForProject(ProjectId projectId, Predicate<string> documentPathFilter)
+        public void AddDocumentInclusionRuleForProject(ProjectId projectId, Predicate<string> documentPathFilter)
         {
-            documentExclusionRulesPerProject[projectId] = documentPathFilter;
+            documentInclusionRulesPerProject[projectId] = documentPathFilter;
         }
 
         public void AddProjectReference(ProjectId projectId, ProjectReference projectReference)
@@ -363,29 +363,30 @@ namespace OmniSharp
                 return false;
             }
 
-            // fileName needs to be checked against any ProjectSystem defined rules (e.g. MSBuild DefaultItemExcludes)
-            // for workspace to allow the newly found documents to be added to the project.
-            if (documentExclusionRulesPerProject.TryGetValue(project.Id, out Predicate<string> documentExclusionFilter)
-                && documentExclusionFilter(fileName))
+            // File path needs to be checked against any rules defined by the specific project system. (e.g. MSBuild default excluded folders)
+            if (documentInclusionRulesPerProject.TryGetValue(project.Id, out Predicate<string> documentInclusionFilter))
             {
-                return false;
+                return documentInclusionFilter(fileName);
             }
-
-            var fileDirectory = new FileInfo(fileName).Directory;
-            var projectPath = project.FilePath;
-            var projectDirectory = new FileInfo(projectPath).Directory.FullName;
-
-            while (fileDirectory != null)
+            else
             {
-                if (string.Equals(fileDirectory.FullName, projectDirectory, StringComparison.OrdinalIgnoreCase))
+                // if no custom rule set for this ProjectId, fallback to simple directory check.
+                var fileDirectory = new FileInfo(fileName).Directory;
+                var projectPath = project.FilePath;
+                var projectDirectory = new FileInfo(projectPath).Directory.FullName;
+
+                while (fileDirectory != null)
                 {
-                    return true;
+                    if (string.Equals(fileDirectory.FullName, projectDirectory, StringComparison.OrdinalIgnoreCase))
+                    {
+                        return true;
+                    }
+
+                    fileDirectory = fileDirectory.Parent;
                 }
 
-                fileDirectory = fileDirectory.Parent;
+                return false;
             }
-
-            return false;
         }
 
         protected override void ApplyDocumentRemoved(DocumentId documentId)

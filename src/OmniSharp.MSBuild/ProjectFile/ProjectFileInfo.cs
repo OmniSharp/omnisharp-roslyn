@@ -171,10 +171,11 @@ namespace OmniSharp.MSBuild.ProjectFile
                         || string.Equals(fileName, "UnityEditor.dll", StringComparison.OrdinalIgnoreCase);
                 });
 
-        public bool IsFileExcluded(string filePath)
+
+        public bool IsFileIncluded(string filePath)
         {
             filePath = FileSystemHelper.GetRelativePath(filePath, Directory);
-            return !IncludeGlobs.Any(glob => glob.IsMatch(filePath));
+            return IncludeGlobs.Any(glob => glob.IsMatch(filePath));
         }
     }
 }

@@ -468,7 +468,7 @@ namespace OmniSharp.MSBuild
             UpdateAnalyzerConfigFiles(project, projectFileInfo.AnalyzerConfigFiles);
             UpdateProjectProperties(project, projectFileInfo);
 
-            _workspace.AddDocumentExclusionRuleForProject(project.Id, (path) => projectFileInfo.IsFileExcluded(path));
+            _workspace.AddDocumentInclusionRuleForProject(project.Id, (path) => projectFileInfo.IsFileIncluded(path));
             _workspace.TryPromoteMiscellaneousDocumentsToProject(project);
             _workspace.UpdateCompilationOptionsForProject(project.Id, projectFileInfo.CreateCompilationOptions());
         }
