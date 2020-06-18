@@ -368,9 +368,9 @@ namespace OmniSharp
             {
                 return documentInclusionFilter(fileName);
             }
+            // if no custom rule set for this ProjectId, fallback to simple directory heuristic.
             else
             {
-                // if no custom rule set for this ProjectId, fallback to simple directory check.
                 var fileDirectory = new FileInfo(fileName).Directory;
                 var projectPath = project.FilePath;
                 var projectDirectory = new FileInfo(projectPath).Directory.FullName;
@@ -380,6 +380,13 @@ namespace OmniSharp
                     if (string.Equals(fileDirectory.FullName, projectDirectory, StringComparison.OrdinalIgnoreCase))
                     {
                         return true;
+                    }
+
+                    // if any project is closer to the file, file should belong to that project.
+                    if (CurrentSolution.Projects.Any(p => !string.IsNullOrWhiteSpace(p.FilePath) &&
+                        string.Equals(fileDirectory.FullName, Path.GetDirectoryName(p.FilePath), StringComparison.OrdinalIgnoreCase)))
+                    {
+                        return false;
                     }
 
                     fileDirectory = fileDirectory.Parent;

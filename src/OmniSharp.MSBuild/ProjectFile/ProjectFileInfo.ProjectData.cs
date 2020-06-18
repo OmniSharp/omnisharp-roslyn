@@ -45,7 +45,7 @@ namespace OmniSharp.MSBuild.ProjectFile
             public bool SignAssembly { get; }
             public string AssemblyOriginatorKeyFile { get; }
 
-            public ImmutableArray<IMSBuildGlob> IncludeGlobs { get; }
+            public ImmutableArray<IMSBuildGlob> FileInclusionGlobs { get; }
             public ImmutableArray<string> SourceFiles { get; }
             public ImmutableArray<string> ProjectReferences { get; }
             public ImmutableArray<string> References { get; }
@@ -80,7 +80,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 ReferenceAliases = ImmutableDictionary<string, string>.Empty;
                 ProjectReferenceAliases = ImmutableDictionary<string, string>.Empty;
                 WarningsAsErrors = ImmutableArray<string>.Empty;
-                IncludeGlobs = ImmutableArray<IMSBuildGlob>.Empty;
+                FileInclusionGlobs = ImmutableArray<IMSBuildGlob>.Empty;
                 WarningsNotAsErrors = ImmutableArray<string>.Empty;
             }
 
@@ -178,7 +178,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 RuleSet ruleset,
                 ImmutableDictionary<string, string> referenceAliases,
                 ImmutableDictionary<string, string> projectReferenceAliases,
-                ImmutableArray<IMSBuildGlob> globs)
+                ImmutableArray<IMSBuildGlob> fileInclusionGlobs)
                 : this(guid, name, assemblyName, targetPath, outputPath, intermediateOutputPath, projectAssetsFile,
                       configuration, platform, targetFramework, targetFrameworks, outputKind, languageVersion, nullableContextOptions, allowUnsafeCode, checkForOverflowUnderflow,
                       documentationFile, preprocessorSymbolNames, suppressedDiagnosticIds, warningsAsErrors, warningsNotAsErrors, signAssembly, assemblyOriginatorKeyFile, treatWarningsAsErrors, defaultNamespace, runAnalyzers, runAnalyzersDuringLiveAnalysis, ruleset)
@@ -192,7 +192,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 AnalyzerConfigFiles = analyzerConfigFiles.EmptyIfDefault();
                 ReferenceAliases = referenceAliases;
                 ProjectReferenceAliases = projectReferenceAliases;
-                IncludeGlobs = globs;
+                FileInclusionGlobs = fileInclusionGlobs;
             }
 
             public static ProjectData Create(MSB.Evaluation.Project project)

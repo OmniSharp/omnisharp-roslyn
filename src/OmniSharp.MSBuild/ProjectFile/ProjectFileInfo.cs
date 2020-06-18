@@ -65,7 +65,7 @@ namespace OmniSharp.MSBuild.ProjectFile
         public bool RunAnalyzers => _data.RunAnalyzers;
         public bool RunAnalyzersDuringLiveAnalysis => _data.RunAnalyzersDuringLiveAnalysis;
         public string DefaultNamespace => _data.DefaultNamespace;
-        public ImmutableArray<IMSBuildGlob> IncludeGlobs => _data.IncludeGlobs;
+        public ImmutableArray<IMSBuildGlob> FileInclusionGlobPatterns => _data.FileInclusionGlobs;
 
         public ProjectIdInfo ProjectIdInfo { get; }
         public DotNetInfo DotNetInfo { get; }
@@ -178,7 +178,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 return true;
 
             var relativePath = FileSystemHelper.GetRelativePath(filePath, FilePath);
-            return IncludeGlobs.Any(glob => glob.IsMatch(relativePath));
+            return FileInclusionGlobPatterns.Any(glob => glob.IsMatch(relativePath));
         }
     }
 }
