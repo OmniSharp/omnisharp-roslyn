@@ -374,6 +374,10 @@ namespace OmniSharp
                 var fileDirectory = new FileInfo(fileName).Directory;
                 var projectPath = project.FilePath;
                 var projectDirectory = new FileInfo(projectPath).Directory.FullName;
+                var otherProjectDirectories = CurrentSolution.Projects
+                    .Where(p => p != project && !string.IsNullOrWhiteSpace(p.FilePath))
+                    .Select(p => new FileInfo(p.FilePath).Directory.FullName)
+                    .ToImmutableArray();
 
                 while (fileDirectory != null)
                 {
@@ -383,8 +387,7 @@ namespace OmniSharp
                     }
 
                     // if any project is closer to the file, file should belong to that project.
-                    if (CurrentSolution.Projects.Any(p => !string.IsNullOrWhiteSpace(p.FilePath) &&
-                        string.Equals(fileDirectory.FullName, Path.GetDirectoryName(p.FilePath), StringComparison.OrdinalIgnoreCase)))
+                    if (otherProjectDirectories.Contains(fileDirectory.FullName, StringComparer.OrdinalIgnoreCase))
                     {
                         return false;
                     }
