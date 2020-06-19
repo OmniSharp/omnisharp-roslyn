@@ -25,7 +25,7 @@ All changes to the project will be documented in this file.
 * Improved autocompletion performance (PR: [#1761](https://github.com/OmniSharp/omnisharp-roslyn/pull/1761))
 * Move to Roslyn's .editorconfig support ([#1657](https://github.com/OmniSharp/omnisharp-roslyn/issues/1657), PR: [#1771](https://github.com/OmniSharp/omnisharp-roslyn/pull/1771))
 * Fully update CompilationOptions when project files change (PR: [#1774](https://github.com/OmniSharp/omnisharp-roslyn/pull/1774))
-* Updated to Roslyn [3.6.0-4.20228.5] (PR: [#1778](https://github.com/OmniSharp/omnisharp-roslyn/pull/1778))
+* Updated to Roslyn `3.6.0-4.20228.5` (PR: [#1778](https://github.com/OmniSharp/omnisharp-roslyn/pull/1778))
 
 ## [1.35.0] - 2020-04-10
 * Support for `<RunAnalyzers />` and `<RunAnalyzersDuringLiveAnalysis />` (PR: [#1739](https://github.com/OmniSharp/omnisharp-roslyn/pull/1739))
@@ -43,7 +43,7 @@ All changes to the project will be documented in this file.
 ## [1.34.15] - 2020-03-25
 * Support for .NET Core 3.1 in csx files (PR: [#1731](https://github.com/OmniSharp/omnisharp-roslyn/pull/1731))
 * Update the minimal MSBuild to better support .NET 5 Previews ([omnisharp-vscode#3653](https://github.com/OmniSharp/omnisharp-vscode/issues/3653), PR: [#1746](https://github.com/OmniSharp/omnisharp-roslyn/pull/1746))
-* Updated to Roslyn [3.6.0-3.20170.19] (PR: [#1745](https://github.com/OmniSharp/omnisharp-roslyn/pull/1745))
+* Updated to Roslyn `3.6.0-3.20170.1` (PR: [#1745](https://github.com/OmniSharp/omnisharp-roslyn/pull/1745))
 * Added semantic highlighting endpoint `/v2/highlight` (PR: [#1734](https://github.com/OmniSharp/omnisharp-roslyn/pull/1734))
 
 ## [1.34.14] - 2020-03-09
