@@ -368,35 +368,33 @@ namespace OmniSharp
             {
                 return documentInclusionFilter(fileName);
             }
+
             // if no custom rule set for this ProjectId, fallback to simple directory heuristic.
-            else
+            var fileDirectory = new FileInfo(fileName).Directory;
+            var projectPath = project.FilePath;
+            var projectDirectory = new FileInfo(projectPath).Directory.FullName;
+            var otherProjectDirectories = CurrentSolution.Projects
+                .Where(p => p != project && !string.IsNullOrWhiteSpace(p.FilePath))
+                .Select(p => new FileInfo(p.FilePath).Directory.FullName)
+                .ToImmutableArray();
+
+            while (fileDirectory != null)
             {
-                var fileDirectory = new FileInfo(fileName).Directory;
-                var projectPath = project.FilePath;
-                var projectDirectory = new FileInfo(projectPath).Directory.FullName;
-                var otherProjectDirectories = CurrentSolution.Projects
-                    .Where(p => p != project && !string.IsNullOrWhiteSpace(p.FilePath))
-                    .Select(p => new FileInfo(p.FilePath).Directory.FullName)
-                    .ToImmutableArray();
-
-                while (fileDirectory != null)
+                if (string.Equals(fileDirectory.FullName, projectDirectory, StringComparison.OrdinalIgnoreCase))
                 {
-                    if (string.Equals(fileDirectory.FullName, projectDirectory, StringComparison.OrdinalIgnoreCase))
-                    {
-                        return true;
-                    }
-
-                    // if any project is closer to the file, file should belong to that project.
-                    if (otherProjectDirectories.Contains(fileDirectory.FullName, StringComparer.OrdinalIgnoreCase))
-                    {
-                        return false;
-                    }
-
-                    fileDirectory = fileDirectory.Parent;
+                    return true;
                 }
 
-                return false;
+                // if any project is closer to the file, file should belong to that project.
+                if (otherProjectDirectories.Contains(fileDirectory.FullName, StringComparer.OrdinalIgnoreCase))
+                {
+                    return false;
+                }
+
+                fileDirectory = fileDirectory.Parent;
             }
+
+            return false;
         }
 
         protected override void ApplyDocumentRemoved(DocumentId documentId)
