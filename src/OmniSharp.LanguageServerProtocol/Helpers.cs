@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OmniSharp.Models;
@@ -142,6 +143,31 @@ namespace OmniSharp.LanguageServerProtocol
             if (markdown == null)
                 return null;
             return Regex.Replace(markdown, @"([\\`\*_\{\}\[\]\(\)#+\-\.!])", @"\$1");
+        }
+
+        private static readonly IDictionary<string, SymbolKind> Kinds = new Dictionary<string, SymbolKind>
+        {
+            { OmniSharp.Models.V2.SymbolKinds.Class, SymbolKind.Class },
+            { OmniSharp.Models.V2.SymbolKinds.Delegate, SymbolKind.Class },
+            { OmniSharp.Models.V2.SymbolKinds.Enum, SymbolKind.Enum },
+            { OmniSharp.Models.V2.SymbolKinds.Interface, SymbolKind.Interface },
+            { OmniSharp.Models.V2.SymbolKinds.Struct, SymbolKind.Struct },
+            { OmniSharp.Models.V2.SymbolKinds.Constant, SymbolKind.Constant },
+            { OmniSharp.Models.V2.SymbolKinds.Destructor, SymbolKind.Method },
+            { OmniSharp.Models.V2.SymbolKinds.EnumMember, SymbolKind.EnumMember },
+            { OmniSharp.Models.V2.SymbolKinds.Event, SymbolKind.Event },
+            { OmniSharp.Models.V2.SymbolKinds.Field, SymbolKind.Field },
+            { OmniSharp.Models.V2.SymbolKinds.Indexer, SymbolKind.Property },
+            { OmniSharp.Models.V2.SymbolKinds.Method, SymbolKind.Method },
+            { OmniSharp.Models.V2.SymbolKinds.Operator, SymbolKind.Operator },
+            { OmniSharp.Models.V2.SymbolKinds.Property, SymbolKind.Property },
+            { OmniSharp.Models.V2.SymbolKinds.Namespace, SymbolKind.Namespace },
+            { OmniSharp.Models.V2.SymbolKinds.Unknown, SymbolKind.Class },
+        };
+
+        public static SymbolKind ToSymbolKind(string omnisharpKind)
+        {
+            return Kinds.TryGetValue(omnisharpKind.ToLowerInvariant(), out var symbolKind) ? symbolKind : SymbolKind.Class;
         }
     }
 }

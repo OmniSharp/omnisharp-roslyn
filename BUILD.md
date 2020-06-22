@@ -34,7 +34,7 @@ Note: The arguments below should prefixed with a single hyphen on Windows (Power
     Defaults to `Default`.
 
   `-configuration (Release|Debug)`: The configuration to build.
-    Defaults to `Release`.
+    Defaults to `Debug`.
 
   `-test-configuration (Release|Debug)`: The configuration to use for the unit tests.
     Defaults to `Debug`.

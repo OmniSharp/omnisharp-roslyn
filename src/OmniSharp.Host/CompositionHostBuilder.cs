@@ -86,6 +86,7 @@ namespace OmniSharp
             }
 
             var parts = _assemblies
+                .Where(a => a != null)
                 .Concat(new[] { typeof(OmniSharpWorkspace).GetTypeInfo().Assembly, typeof(IRequest).GetTypeInfo().Assembly, typeof(FileSystemHelper).GetTypeInfo().Assembly })
                 .Distinct()
                 .SelectMany(a => SafeGetTypes(a))

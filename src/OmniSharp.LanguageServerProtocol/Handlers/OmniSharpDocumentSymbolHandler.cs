@@ -24,26 +24,6 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
 
         private readonly Mef.IRequestHandler<CodeStructureRequest, CodeStructureResponse> _codeStructureHandler;
 
-        private static readonly IDictionary<string, SymbolKind> Kinds = new Dictionary<string, SymbolKind>
-        {
-            { OmniSharp.Models.V2.SymbolKinds.Class, SymbolKind.Class },
-            { OmniSharp.Models.V2.SymbolKinds.Delegate, SymbolKind.Class },
-            { OmniSharp.Models.V2.SymbolKinds.Enum, SymbolKind.Enum },
-            { OmniSharp.Models.V2.SymbolKinds.Interface, SymbolKind.Interface },
-            { OmniSharp.Models.V2.SymbolKinds.Struct, SymbolKind.Struct },
-            { OmniSharp.Models.V2.SymbolKinds.Constant, SymbolKind.Constant },
-            { OmniSharp.Models.V2.SymbolKinds.Destructor, SymbolKind.Method },
-            { OmniSharp.Models.V2.SymbolKinds.EnumMember, SymbolKind.EnumMember },
-            { OmniSharp.Models.V2.SymbolKinds.Event, SymbolKind.Event },
-            { OmniSharp.Models.V2.SymbolKinds.Field, SymbolKind.Field },
-            { OmniSharp.Models.V2.SymbolKinds.Indexer, SymbolKind.Property },
-            { OmniSharp.Models.V2.SymbolKinds.Method, SymbolKind.Method },
-            { OmniSharp.Models.V2.SymbolKinds.Operator, SymbolKind.Operator },
-            { OmniSharp.Models.V2.SymbolKinds.Property, SymbolKind.Property },
-            { OmniSharp.Models.V2.SymbolKinds.Namespace, SymbolKind.Namespace },
-            { OmniSharp.Models.V2.SymbolKinds.Unknown, SymbolKind.Class },
-        };
-
         public OmniSharpDocumentSymbolHandler(Mef.IRequestHandler<CodeStructureRequest, CodeStructureResponse> codeStructureHandler, DocumentSelector documentSelector)
             : base(new TextDocumentRegistrationOptions()
             {
@@ -76,7 +56,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             return new DocumentSymbol
             {
                 Name = node.Name,
-                Kind = Kinds.ContainsKey(node.Kind) ? Kinds[node.Kind] : SymbolKind.Class,
+                Kind = Helpers.ToSymbolKind(node.Kind),
                 Range = Helpers.ToRange(node.Ranges[OmniSharp.Models.V2.SymbolRangeNames.Full]),
                 SelectionRange = Helpers.ToRange(node.Ranges[OmniSharp.Models.V2.SymbolRangeNames.Name]),
                 Children = new Container<DocumentSymbol>(node.Children?.Select(ToDocumentSymbol) ?? Enumerable.Empty<DocumentSymbol>())
