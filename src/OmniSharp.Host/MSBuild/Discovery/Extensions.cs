@@ -16,8 +16,8 @@ namespace OmniSharp.MSBuild.Discovery
                 if (invalidVSFound && bestInstanceFound.DiscoveryType == DiscoveryType.StandAlone)
                 {
                     logger.LogWarning(
-                        @"It looks like you have Visual Studio 2019 lower than 16.3 installed.
- Try updating Visual Studio 2019 to the most recent release to enable better MSBuild support."
+                        @"It looks like you have Visual Studio lower than VS 2019 16.3 installed.
+ Try updating Visual Studio to the most recent release to enable better MSBuild support."
                     );
                 }
 
