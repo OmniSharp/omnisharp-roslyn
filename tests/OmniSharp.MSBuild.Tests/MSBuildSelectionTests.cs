@@ -226,6 +226,7 @@ namespace OmniSharp.MSBuild.Tests
 
         [Theory]
         [InlineData("15.1.2.3")]
+        [InlineData("15.9.2.3")]
         [InlineData("16.1.2.3")]
         [InlineData("16.2.2.3")]
         public void StandAloneIsPreferredOverUnsupportedVS(string vsVersion)
