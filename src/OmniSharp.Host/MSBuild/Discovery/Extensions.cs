@@ -7,7 +7,7 @@ namespace OmniSharp.MSBuild.Discovery
     {
         public static void RegisterDefaultInstance(this IMSBuildLocator msbuildLocator, ILogger logger)
         {
-            var bestInstanceFound = GetBestInstance(msbuildLocator, logger, out var invalidVSFound);
+            var bestInstanceFound = GetBestInstance(msbuildLocator, logger, out var invalidVSFound, out var vsWithoutSdkResolver);
 
             if (bestInstanceFound != null)
             {
@@ -18,6 +18,14 @@ namespace OmniSharp.MSBuild.Discovery
                     logger.LogWarning(
                         @"It looks like you have Visual Studio 2019 RTM installed.
  Try updating Visual Studio 2019 to the most recent release to enable better MSBuild support."
+                    );
+                }
+
+                if (vsWithoutSdkResolver && bestInstanceFound.DiscoveryType == DiscoveryType.StandAlone)
+                {
+                    logger.LogWarning(
+                        @"It looks like you have Visual Studio 2019 RTM installed without .NET Core SDK support which is required by OmniSharp.
+ Try updating Visual Studio 2019 installation with .NET Core SDK to enable better MSBuild support."
                     );
                 }
 
@@ -52,9 +60,10 @@ namespace OmniSharp.MSBuild.Discovery
                 && (instance.DiscoveryType == DiscoveryType.DeveloperConsole
                     || instance.DiscoveryType == DiscoveryType.VisualStudioSetup);
 
-        public static MSBuildInstance GetBestInstance(this IMSBuildLocator msbuildLocator, ILogger logger, out bool invalidVSFound)
+        public static MSBuildInstance GetBestInstance(this IMSBuildLocator msbuildLocator, ILogger logger, out bool invalidVSFound, out bool vsWithoutSdkResolver)
         {
             invalidVSFound = false;
+            vsWithoutSdkResolver = false;
             MSBuildInstance bestMatchInstance = null;
             var bestMatchScore = 0;
 
@@ -64,6 +73,7 @@ namespace OmniSharp.MSBuild.Discovery
 
                 logger.LogDebug($"MSBuild instance {instance.Name} {instance.Version} scored at {score}");
 
+                vsWithoutSdkResolver = vsWithoutSdkResolver || instance.HasDotNetSdksResolvers();
                 invalidVSFound = invalidVSFound || instance.IsInvalidVisualStudio();
 
                 if (bestMatchInstance == null ||
@@ -86,8 +96,11 @@ namespace OmniSharp.MSBuild.Discovery
             if (i.DiscoveryType == DiscoveryType.UserOverride)
                 return int.MaxValue;
 
+            // dotnet SDK resolvers are mandatory to use a VS instance
             if (i.HasDotNetSdksResolvers())
                 score++;
+            else
+                return int.MinValue;
 
             if (i.IsInvalidVisualStudio())
                 return int.MinValue;
