@@ -3,6 +3,7 @@ All changes to the project will be documented in this file.
 
 ## [1.35.4] - Not yet released
 * Added LSP handler for the `workspace/symbol` request. (PR: [#1799](https://github.com/OmniSharp/omnisharp-roslyn/pull/1799))
+* Do not use Visual Studio MSBuild if it doesn't have .NET SDK resolver ([#1842](https://github.com/OmniSharp/omnisharp-roslyn/issues/1842), [#1730](https://github.com/OmniSharp/omnisharp-roslyn/issues/1730), PR: [#1845](https://github.com/OmniSharp/omnisharp-roslyn/pull/1845))
 
 ## [1.35.3] - 2020-06-11
 * Added LSP handler for `textDocument/codeAction` request. (PR: [#1795](https://github.com/OmniSharp/omnisharp-roslyn/pull/1795))
