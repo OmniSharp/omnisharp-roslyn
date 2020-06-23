@@ -96,16 +96,16 @@ namespace OmniSharp.MSBuild.Discovery
             if (i.DiscoveryType == DiscoveryType.UserOverride)
                 return int.MaxValue;
 
+            if (i.IsInvalidVisualStudio())
+                return int.MinValue;
+            else
+                score++;
+
             // dotnet SDK resolvers are mandatory to use a VS instance
             if (i.HasDotNetSdksResolvers())
                 score++;
             else
                 return int.MinValue;
-
-            if (i.IsInvalidVisualStudio())
-                return int.MinValue;
-            else
-                score++;
 
             if (i.DiscoveryType == DiscoveryType.StandAlone)
                 score--;
