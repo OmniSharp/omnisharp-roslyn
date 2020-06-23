@@ -16,7 +16,7 @@ namespace OmniSharp.MSBuild.Discovery
                 if (invalidVSFound && bestInstanceFound.DiscoveryType == DiscoveryType.StandAlone)
                 {
                     logger.LogWarning(
-                        @"It looks like you have Visual Studio 2019 RTM installed.
+                        @"It looks like you have Visual Studio 2019 lower than 16.3 installed.
  Try updating Visual Studio 2019 to the most recent release to enable better MSBuild support."
                     );
                 }
@@ -24,7 +24,7 @@ namespace OmniSharp.MSBuild.Discovery
                 if (vsWithoutSdkResolver && bestInstanceFound.DiscoveryType == DiscoveryType.StandAlone)
                 {
                     logger.LogWarning(
-                        @"It looks like you have Visual Studio 2019 RTM installed without .NET Core SDK support which is required by OmniSharp.
+                        @"It looks like you have Visual Studio 2019 installed without .NET Core SDK support which is required by OmniSharp.
  Try updating Visual Studio 2019 installation with .NET Core SDK to enable better MSBuild support."
                     );
                 }
@@ -55,8 +55,8 @@ namespace OmniSharp.MSBuild.Discovery
         /// Checks if it is MSBuild from Visual Studio 2017 RTM that cannot be used.
         /// </summary>
         public static bool IsInvalidVisualStudio(this MSBuildInstance instance)
-            => instance.Version.Major == 15
-                && instance.Version.Minor == 0
+            => (instance.Version.Major < 16 ||
+                (instance.Version.Major == 16 && instance.Version.Minor < 3))
                 && (instance.DiscoveryType == DiscoveryType.DeveloperConsole
                     || instance.DiscoveryType == DiscoveryType.VisualStudioSetup);
 
@@ -73,8 +73,8 @@ namespace OmniSharp.MSBuild.Discovery
 
                 logger.LogDebug($"MSBuild instance {instance.Name} {instance.Version} scored at {score}");
 
-                vsWithoutSdkResolver = vsWithoutSdkResolver || instance.HasDotNetSdksResolvers();
                 invalidVSFound = invalidVSFound || instance.IsInvalidVisualStudio();
+                vsWithoutSdkResolver = vsWithoutSdkResolver || (!instance.IsInvalidVisualStudio() && !instance.HasDotNetSdksResolvers());
 
                 if (bestMatchInstance == null ||
                     score > bestMatchScore ||
@@ -108,12 +108,6 @@ namespace OmniSharp.MSBuild.Discovery
                 score++;
 
             if (i.DiscoveryType == DiscoveryType.StandAlone)
-                score--;
-
-            // VS 2019 should be preferred
-            if (i.Version.Major >= 16 && i.Version.Minor >= 3)
-                score++;
-            else
                 score--;
 
             return score;
