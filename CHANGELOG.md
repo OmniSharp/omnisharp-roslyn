@@ -3,6 +3,7 @@ All changes to the project will be documented in this file.
 
 ## [1.35.4] - Not yet released
 * Added LSP handler for the `workspace/symbol` request. (PR: [#1799](https://github.com/OmniSharp/omnisharp-roslyn/pull/1799))
+* Use global MSBuild property when resetting target framework ([#1738](https://github.com/OmniSharp/omnisharp-roslyn/issues/1738), PR: [#1846](https://github.com/OmniSharp/omnisharp-roslyn/pull/1846))
 * Do not use Visual Studio MSBuild if it doesn't have .NET SDK resolver ([#1842](https://github.com/OmniSharp/omnisharp-roslyn/issues/1842), [#1730](https://github.com/OmniSharp/omnisharp-roslyn/issues/1730), PR: [#1845](https://github.com/OmniSharp/omnisharp-roslyn/pull/1845))
 
 ## [1.35.3] - 2020-06-11
