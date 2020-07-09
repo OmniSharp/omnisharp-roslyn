@@ -21,6 +21,7 @@ namespace OmniSharp
         private readonly CommandOption _logLevel;
         private readonly CommandOption _applicationRoot;
         private readonly CommandOption _debug;
+        private readonly CommandOption _noTelemetryInfo;
 
         public CommandLineApplication()
         {
@@ -34,6 +35,7 @@ namespace OmniSharp
             _zeroBasedIndices = Application.Option("-z | --zero-based-indices", "Use zero based indices in request/responses (defaults to 'false').", CommandOptionType.NoValue);
             _plugin = Application.Option("-pl | --plugin", "Plugin name(s).", CommandOptionType.MultipleValue);
             _debug = Application.Option("-d | --debug", "Wait for debugger to attach", CommandOptionType.NoValue);
+            _noTelemetryInfo = Application.Option("-nt | --no-telemetry-info", "Do not gather extra telemetry information", CommandOptionType.NoValue);
         }
 
         public int Execute(string[] args)
@@ -105,5 +107,7 @@ namespace OmniSharp
                 }
             }
         }
+
+        public bool NoTelemetryInfo => _noTelemetryInfo.HasValue();
     }
 }

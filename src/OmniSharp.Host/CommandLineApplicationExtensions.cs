@@ -13,7 +13,8 @@ namespace OmniSharp
                 application.ApplicationRoot,
                 application.HostPid,
                 application.LogLevel,
-                application.OtherArgs.ToArray<string>());
+                application.OtherArgs.ToArray<string>(),
+                application.NoTelemetryInfo);
         }
 
         public static PluginAssemblies CreatePluginAssemblies(this CommandLineApplication application,

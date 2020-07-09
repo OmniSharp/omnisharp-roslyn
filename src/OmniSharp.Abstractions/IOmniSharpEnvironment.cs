@@ -10,5 +10,6 @@ namespace OmniSharp
         string SolutionFilePath { get; }
         string SharedDirectory { get; }
         string[] AdditionalArguments { get; }
+        bool NoTelemetryInfo { get; }
     }
 }
