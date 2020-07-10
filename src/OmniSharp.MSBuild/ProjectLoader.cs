@@ -148,7 +148,7 @@ namespace OmniSharp.MSBuild
                 // For now, we'll just pick the first target framework. Eventually, we'll need to
                 // do better and potentially allow OmniSharp hosts to select a target framework.
                 targetFramework = targetFrameworks[0];
-                evaluatedProject.SetProperty(PropertyNames.TargetFramework, targetFramework);
+                evaluatedProject.SetGlobalProperty(PropertyNames.TargetFramework, targetFramework);
                 evaluatedProject.ReevaluateIfNecessary();
             }
         }
