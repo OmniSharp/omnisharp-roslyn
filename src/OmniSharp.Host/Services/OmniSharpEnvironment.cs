@@ -12,14 +12,14 @@ namespace OmniSharp.Services
         public int HostProcessId { get; }
         public LogLevel LogLevel { get; }
         public string[] AdditionalArguments { get; }
-        public bool NoTelemetryInfo { get; }
+        public bool WantTelemetryInfo { get; }
 
         public OmniSharpEnvironment(
             string path = null,
             int hostPid = -1,
             LogLevel logLevel = LogLevel.None,
             string[] additionalArguments = null,
-            bool noTelemetryInfo = false)
+            bool wantTelemetryInfo = false)
         {
             if (string.IsNullOrEmpty(path))
             {
@@ -42,7 +42,7 @@ namespace OmniSharp.Services
 
             HostProcessId = hostPid;
             LogLevel = logLevel;
-            NoTelemetryInfo = noTelemetryInfo;
+            WantTelemetryInfo = wantTelemetryInfo;
             AdditionalArguments = additionalArguments;
 
             // First look at OMNISHARPHOME to allow users to set custom location, then

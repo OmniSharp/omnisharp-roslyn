@@ -102,7 +102,7 @@ namespace OmniSharp.MSBuild
             _packageDependencyChecker = new PackageDependencyChecker(_loggerFactory, _eventEmitter, _dotNetCli, _options);
             _loader = new ProjectLoader(_options, _environment.TargetDirectory, _propertyOverrides, _loggerFactory, _sdksPathResolver);
 
-            var dotNetCli = !_environment.NoTelemetryInfo ? _dotNetCli : null;
+            var dotNetCli = _environment.WantTelemetryInfo ? _dotNetCli : null;
             _manager = new ProjectManager(_loggerFactory, _options, _eventEmitter, _fileSystemWatcher, _metadataFileReferenceCache, _packageDependencyChecker, _loader, _workspace, _assemblyLoader, _eventSinks, dotNetCli);
             Initialized = true;
 

@@ -14,7 +14,7 @@ namespace OmniSharp
                 application.HostPid,
                 application.LogLevel,
                 application.OtherArgs.ToArray<string>(),
-                application.NoTelemetryInfo);
+                application.WantTelemetryInfo);
         }
 
         public static PluginAssemblies CreatePluginAssemblies(this CommandLineApplication application,
