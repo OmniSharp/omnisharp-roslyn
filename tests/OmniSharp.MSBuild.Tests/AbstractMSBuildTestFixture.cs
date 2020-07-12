@@ -37,7 +37,7 @@ namespace OmniSharp.MSBuild.Tests
         protected OmniSharpTestHost CreateMSBuildTestHost(string path, IEnumerable<ExportDescriptorProvider> additionalExports = null,
             IEnumerable<KeyValuePair<string, string>> configurationData = null)
         {
-            var environment = new OmniSharpEnvironment(path, logLevel: LogLevel.Trace);
+            var environment = new OmniSharpEnvironment(path, logLevel: LogLevel.Trace, wantTelemetryInfo: true);
             var serviceProvider = TestServiceProvider.Create(this.TestOutput, environment, this.LoggerFactory, _assemblyLoader, _analyzerAssemblyLoader, _msbuildLocator,
                 configurationData);
 
