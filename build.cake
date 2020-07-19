@@ -225,7 +225,7 @@ Task("CreateMSBuildFolder")
         "Microsoft.CSharp.Mono.targets",
         "Microsoft.CSharp.targets",
         "Microsoft.Data.Entity.targets",
-        "Microsoft.Managed.After.targets
+        "Microsoft.Managed.After.targets",
         "Microsoft.Managed.targets",
         "Microsoft.Managed.Before.targets",
         "Microsoft.NET.props",
