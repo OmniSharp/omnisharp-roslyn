@@ -848,7 +848,7 @@ Task("ExecuteRunScript")
         var projectFolder = CombinePaths(env.Folders.Source, project);
 
         var scriptPath = GetScriptPath(env.Folders.ArtifactsScripts, project);
-        var didNotExitWithError = Run(env.ShellCommand, $"{env.ShellArgument}  \"{scriptPath}\" -s \"{projectFolder}\"",
+        var didNotExitWithError = Run(env.ShellCommand, $"{env.ShellArgument} \"{scriptPath}\" -s \"{projectFolder}\"",
                                     new RunOptions(waitForIdle: true))
                                 .WasIdle;
         if (!didNotExitWithError)
