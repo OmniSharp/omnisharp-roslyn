@@ -8,6 +8,7 @@ All changes to the project will be documented in this file.
 * Added LSP handler for the `workspace/symbol` request. (PR: [#1799](https://github.com/OmniSharp/omnisharp-roslyn/pull/1799))
 * Use global MSBuild property when resetting target framework ([#1738](https://github.com/OmniSharp/omnisharp-roslyn/issues/1738), PR: [#1846](https://github.com/OmniSharp/omnisharp-roslyn/pull/1846))
 * Do not use Visual Studio MSBuild if it doesn't have .NET SDK resolver ([#1842](https://github.com/OmniSharp/omnisharp-roslyn/issues/1842), [#1730](https://github.com/OmniSharp/omnisharp-roslyn/issues/1730), PR: [#1845](https://github.com/OmniSharp/omnisharp-roslyn/pull/1845))
+* Only request dotnet info once for the solution or directory ([#1844](https://github.com/OmniSharp/omnisharp-roslyn/issues/1844), PR: [#1857](https://github.com/OmniSharp/omnisharp-roslyn/pull/1857))
 * Allow client to specify symbol filter for FindSymbols Endpoint. (PR: [#1823](https://github.com/OmniSharp/omnisharp-roslyn/pull/1823))
 * Exclude additive classifications from "/highlight" requests ([#1576](https://github.com/OmniSharp/omnisharp-roslyn/issues/1576), PR: [#1726](https://github.com/OmniSharp/omnisharp-roslyn/pull/1726))
 * Upgraded to Mono 6.10.0.105, msbuild 16.6 and added missing targets (PR: [#1854](https://github.com/OmniSharp/omnisharp-roslyn/pull/1854))
