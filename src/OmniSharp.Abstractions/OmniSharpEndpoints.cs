@@ -44,6 +44,7 @@ namespace OmniSharp
         public const string Diagnostics = "/diagnostics";
 
         public const string ReAnalyze = "/reanalyze";
+        public const string QuickInfo = "/quickinfo";
 
         public static class V2
         {
@@ -66,7 +67,6 @@ namespace OmniSharp
 
             public const string Highlight = "/v2/highlight";
 
-            public const string QuickInfo = "/v2/quickinfo";
         }
     }
 }

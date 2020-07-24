@@ -1,22 +1,14 @@
 ﻿#nullable enable
-namespace OmniSharp.Models.v2
+using System.Collections.Immutable;
+
+namespace OmniSharp.Models
 {
     public class QuickInfoResponse
     {
         /// <summary>
-        /// Description of the symbol under the cursor. This is expected to be rendered as a C# codeblock
-        /// </summary>
-        public string? Description { get; set; }
-
-        /// <summary>
-        /// Documentation of the symbol under the cursor, if present. It is expected to be rendered as markdown.
-        /// </summary>
-        public string? Summary { get; set; }
-
-        /// <summary>
         /// Other relevant information to the symbol under the cursor.
         /// </summary>
-        public QuickInfoResponseSection[]? RemainingSections { get; set; }
+        public ImmutableArray<QuickInfoResponseSection> Sections { get; set; }
     }
 
     public struct QuickInfoResponseSection
