@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text.RegularExpressions;
 using OmniSharp.Extensions.LanguageServer.Protocol;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
@@ -82,7 +83,7 @@ namespace OmniSharp.LanguageServerProtocol
         }
 
         public static DocumentUri ToUri(string fileName) => DocumentUri.File(fileName);
-        public static string FromUri(DocumentUri uri) => uri.GetFileSystemPath();
+        public static string FromUri(DocumentUri uri) => uri.GetFileSystemPath().Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
 
         public static Range ToRange((int column, int line) location)
         {

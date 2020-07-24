@@ -42,7 +42,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                 Column = Convert.ToInt32(request.Position.Character),
                 Line = Convert.ToInt32(request.Position.Line),
                 OnlyThisFile = false,
-                ExcludeDefinition = !request.Context.IncludeDeclaration
+                ExcludeDefinition = (request.Context?.IncludeDeclaration ?? true) == false
             };
 
             var omnisharpResponse = await _findUsagesHandler.Handle(omnisharpRequest);
