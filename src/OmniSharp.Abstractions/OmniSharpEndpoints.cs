@@ -65,6 +65,8 @@ namespace OmniSharp
             public const string CodeStructure = "/v2/codestructure";
 
             public const string Highlight = "/v2/highlight";
+
+            public const string QuickInfo = "/v2/quickinfo";
         }
     }
 }
