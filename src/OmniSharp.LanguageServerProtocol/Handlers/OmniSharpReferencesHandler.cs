@@ -34,7 +34,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             _findUsagesHandler = findUsagesHandler;
         }
 
-        public async override Task<LocationContainer> Handle(ReferenceParams request, CancellationToken token)
+        public override async Task<LocationContainer> Handle(ReferenceParams request, CancellationToken token)
         {
             var omnisharpRequest = new FindUsagesRequest
             {
@@ -51,7 +51,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             {
                 Uri = Helpers.ToUri(x.FileName),
                 Range = x.ToRange()
-            }).ToArray();
+            }).ToArray() ?? new LocationContainer();
         }
     }
 }

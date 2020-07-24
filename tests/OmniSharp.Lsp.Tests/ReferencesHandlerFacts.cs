@@ -160,6 +160,18 @@ namespace OmniSharp.Lsp.Tests
         }
 
         [Fact]
+        public async Task Cannot_Find_References_For_Empty_Files()
+        {
+            var response = await Client.TextDocument.RequestReferences(new ReferenceParams()
+            {
+                Position = (0, 0),
+                TextDocument = "notfound.cs"
+            }, CancellationToken);
+
+            Assert.Empty(response);
+        }
+
+        [Fact]
         public async Task CanFindReferencesOfMethodParameter()
         {
             const string code = @"
@@ -317,7 +329,7 @@ namespace OmniSharp.Lsp.Tests
                     @"// hello"));
             }
 
-            var usages = await FindUsagesAsync(testFiles.ToArray(), onlyThisFile: false);
+            var usages = await FindUsagesAsync(testFiles.ToArray());
             Assert.Equal(2, usages.Count());
 
             var regularResult = usages.ElementAt(0);
@@ -366,7 +378,7 @@ namespace OmniSharp.Lsp.Tests
             testFiles.Add(new TestFile("b.cs",
                 @"// hello"));
 
-            var usages = await FindUsagesAsync(testFiles.ToArray(), onlyThisFile: false);
+            var usages = await FindUsagesAsync(testFiles.ToArray());
             Assert.Equal(2, usages.Count());
 
             var regularResult = usages.ElementAt(0);
@@ -511,60 +523,12 @@ namespace OmniSharp.Lsp.Tests
             Assert.Equal(2, usages.Count());
         }
 
-        [Fact]
-        public async Task LimitReferenceSearchToThisFile()
-        {
-            var testFiles = new[]
-            {
-                new TestFile("a.cs", @"
-                    public class F$$oo {
-                        public Foo Clone() {
-                            return null;
-                        }
-                    }"),
-                new TestFile("b.cs",
-                    @"public class Bar : Foo { }")
-            };
-
-            var usages = await FindUsagesAsync(testFiles, onlyThisFile: false);
-            Assert.Equal(3, usages.Count());
-            Assert.Equal("a.cs", usages.ElementAt(0).Uri);
-            Assert.Equal("a.cs", usages.ElementAt(1).Uri);
-            Assert.Equal("b.cs", usages.ElementAt(2).Uri);
-
-            usages = await FindUsagesAsync(testFiles, onlyThisFile: true);
-            Assert.Equal(2, usages.Count());
-            Assert.Equal("a.cs", usages.ElementAt(0).Uri);
-            Assert.Equal("a.cs", usages.ElementAt(1).Uri);
-        }
-
-        [Fact]
-        public async Task DontFindDefinitionInAnotherFile()
-        {
-            var testFiles = new[]
-            {
-                new TestFile("a.cs",
-                    @"public class Bar : F$$oo {}"),
-                new TestFile("b.cs", @"
-                    public class Foo {
-                        public Foo Clone() {
-                            return null;
-                        }
-                    }")
-            };
-
-            var usages = await FindUsagesAsync(testFiles, onlyThisFile: true);
-            Assert.Single(usages);
-            Assert.Equal("a.cs", usages.ElementAt(0).Uri);
-        }
-
         private Task<LocationContainer> FindUsagesAsync(string code, bool excludeDefinition = false)
         {
-            return FindUsagesAsync(new[] {new TestFile("dummy.cs", code)}, false, excludeDefinition);
+            return FindUsagesAsync(new[] {new TestFile("dummy.cs", code)}, excludeDefinition);
         }
 
-        private async Task<LocationContainer> FindUsagesAsync(TestFile[] testFiles, bool onlyThisFile,
-            bool excludeDefinition = false)
+        private async Task<LocationContainer> FindUsagesAsync(TestFile[] testFiles, bool excludeDefinition = false)
         {
             SharedOmniSharpTestHost.AddFilesToWorkspace(testFiles
                 .Select(f =>
@@ -592,6 +556,12 @@ namespace OmniSharp.Lsp.Tests
             {
                 Position = new Position(point.Line, point.Offset),
                 TextDocument = new TextDocumentIdentifier(DocumentUri.From(file.FileName)),
+                Context = excludeDefinition
+                    ? new ReferenceContext()
+                    {
+                        IncludeDeclaration = false
+                    }
+                    : null
             }, CancellationToken);
         }
     }
