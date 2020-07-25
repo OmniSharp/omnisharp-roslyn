@@ -1,143 +1,23 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Composition.Hosting.Core;
+﻿using System.Collections.Generic;
 using System.IO;
-using System.IO.Pipelines;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using OmniSharp.Extensions.JsonRpc.Testing;
-using OmniSharp.Extensions.LanguageProtocol.Testing;
 using OmniSharp.Extensions.LanguageServer.Protocol;
-using OmniSharp.Extensions.LanguageServer.Protocol.Client;
 using OmniSharp.Extensions.LanguageServer.Protocol.Document;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
-using OmniSharp.Extensions.LanguageServer.Server;
-using OmniSharp.LanguageServerProtocol;
 using OmniSharp.Models;
 using OmniSharp.Models.FindUsages;
 using OmniSharp.Roslyn.CSharp.Services.Navigation;
 using TestUtility;
-using TestUtility.Logging;
 using Xunit;
 using Xunit.Abstractions;
 
 namespace OmniSharp.Lsp.Tests
 {
-    public abstract class AbstractLanguageServerTestFixture : LanguageServerTestBase, IDisposable,
-        IClassFixture<SharedOmniSharpHostFixture>, IAsyncLifetime
-    {
-        private readonly ITestOutputHelper _output;
-        private LanguageServerHost _host;
-
-        protected AbstractLanguageServerTestFixture(ITestOutputHelper output,
-            SharedOmniSharpHostFixture sharedOmniSharpHostFixture) : base(
-            new JsonRpcTestOptions()
-                .WithClientLoggerFactory(new LoggerFactory().AddXunit(output))
-                .WithServerLoggerFactory(new LoggerFactory().AddXunit(output))
-        )
-        {
-            _output = output;
-
-            if (sharedOmniSharpHostFixture.OmniSharpTestHost == null)
-            {
-                sharedOmniSharpHostFixture.OmniSharpTestHost = CreateSharedOmniSharpTestHost();
-            }
-            else
-            {
-                sharedOmniSharpHostFixture.OmniSharpTestHost.ClearWorkspace();
-            }
-
-            SharedOmniSharpTestHost = sharedOmniSharpHostFixture.OmniSharpTestHost;
-        }
-
-        protected override (Stream clientOutput, Stream serverInput) SetupServer()
-        {
-            var clientPipe = new Pipe(TestOptions.DefaultPipeOptions);
-            var serverPipe = new Pipe(TestOptions.DefaultPipeOptions);
-
-            _host = new LanguageServerHost(
-                clientPipe.Reader.AsStream(),
-                serverPipe.Writer.AsStream(),
-                options => options
-                    .ConfigureLogging(x => x.AddLanguageProtocolLogging()).WithServices(services =>
-                    {
-                        services.AddSingleton(new LoggerFactory().AddXunit(_output));
-                    })
-                    .OnInitialize((server, request, token) =>
-                    {
-                        var handlers =
-                            LanguageServerHost.ConfigureCompositionHost(server,
-                                SharedOmniSharpTestHost.CompositionHost);
-                        LanguageServerHost.RegisterHandlers(server, SharedOmniSharpTestHost.CompositionHost, handlers);
-                        return Task.CompletedTask;
-                    }),
-                CancellationTokenSource.CreateLinkedTokenSource(CancellationToken)
-            );
-            _host.Start();
-
-            return (serverPipe.Reader.AsStream(), clientPipe.Writer.AsStream());
-        }
-
-        public async Task InitializeAsync()
-        {
-            Client = await InitializeClient(x => { });
-        }
-
-        protected ILanguageClient Client { get; private set; }
-
-        public Task DisposeAsync()
-        {
-            return Task.CompletedTask;
-        }
-
-        public void Dispose()
-        {
-            _host.Dispose();
-        }
-
-        protected OmniSharpTestHost SharedOmniSharpTestHost { get; }
-
-        protected virtual OmniSharpTestHost CreateSharedOmniSharpTestHost() => CreateOmniSharpHost();
-
-        protected OmniSharpTestHost CreateEmptyOmniSharpHost()
-        {
-            var host = OmniSharpTestHost.Create(path: null, testOutput: this._output);
-            host.AddFilesToWorkspace();
-            return host;
-        }
-
-        protected OmniSharpTestHost CreateOmniSharpHost(
-            string path = null,
-            IEnumerable<KeyValuePair<string, string>> configurationData = null,
-            DotNetCliVersion dotNetCliVersion = DotNetCliVersion.Current,
-            IEnumerable<ExportDescriptorProvider> additionalExports = null)
-            => OmniSharpTestHost.Create(path, this._output, configurationData, dotNetCliVersion, additionalExports);
-
-        protected OmniSharpTestHost CreateOmniSharpHost(params TestFile[] testFiles) =>
-            CreateOmniSharpHost(testFiles, null);
-
-        protected OmniSharpTestHost CreateOmniSharpHost(TestFile[] testFiles,
-            IEnumerable<KeyValuePair<string, string>> configurationData, string path = null)
-        {
-            var host = OmniSharpTestHost.Create(path: path, testOutput: this._output,
-                configurationData: configurationData);
-
-            if (testFiles.Length > 0)
-            {
-                host.AddFilesToWorkspace(path, testFiles);
-            }
-
-            return host;
-        }
-    }
-
     public class ReferencesHandlerFacts : AbstractLanguageServerTestFixture
     {
-        public ReferencesHandlerFacts(ITestOutputHelper output, SharedOmniSharpHostFixture sharedOmniSharpHostFixture)
-            : base(output, sharedOmniSharpHostFixture)
+        public ReferencesHandlerFacts(ITestOutputHelper output)
+            : base(output)
         {
         }
 
@@ -530,7 +410,7 @@ namespace OmniSharp.Lsp.Tests
 
         private async Task<LocationContainer> FindUsagesAsync(TestFile[] testFiles, bool excludeDefinition = false)
         {
-            SharedOmniSharpTestHost.AddFilesToWorkspace(testFiles
+            OmniSharpTestHost.AddFilesToWorkspace(testFiles
                 .Select(f =>
                     new TestFile(
                         ((f.FileName.StartsWith("/") || f.FileName.StartsWith("\\")) ? f.FileName : ("/" + f.FileName))

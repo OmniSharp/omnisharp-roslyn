@@ -140,6 +140,7 @@ namespace OmniSharp
             // Setup the options from configuration
             services.Configure<OmniSharpOptions>(configuration);
             services.AddSingleton(configuration);
+            services.AddSingleton<IConfiguration>(configuration);
 
             services.AddLogging(builder =>
             {

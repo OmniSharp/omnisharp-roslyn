@@ -8,6 +8,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OmniSharp;
@@ -23,6 +24,7 @@ using OmniSharp.Script;
 using OmniSharp.Services;
 using OmniSharp.Utilities;
 using Xunit.Abstractions;
+using ConfigurationBuilder = Microsoft.Extensions.Configuration.ConfigurationBuilder;
 
 namespace TestUtility
 {
@@ -103,7 +105,7 @@ namespace TestUtility
         public static OmniSharpTestHost Create(
             string path = null,
             ITestOutputHelper testOutput = null,
-            IEnumerable<KeyValuePair<string, string>> configurationData = null,
+            IConfiguration configurationData = null,
             DotNetCliVersion dotNetCliVersion = DotNetCliVersion.Current,
             IEnumerable<ExportDescriptorProvider> additionalExports = null,
             [CallerMemberName] string callerName = "",

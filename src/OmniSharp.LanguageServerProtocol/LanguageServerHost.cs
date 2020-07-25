@@ -32,7 +32,7 @@ using OmniSharp.Utilities;
 
 namespace OmniSharp.LanguageServerProtocol
 {
-    internal class LanguageServerHost : IDisposable
+    public class LanguageServerHost : IDisposable
     {
         private readonly LanguageServerOptions _options;
         private IServiceCollection _services;
@@ -55,10 +55,7 @@ namespace OmniSharp.LanguageServerProtocol
                     // .SetMinimumLevel(application.LogLevel)
                 )
                 .OnInitialize(Initialize)
-                .WithServices(services =>
-                {
-                    _services = services;
-                });
+                .WithServices(ConfigureServices);
 
             _application = application;
             _cancellationTokenSource = cancellationTokenSource;
@@ -80,14 +77,24 @@ namespace OmniSharp.LanguageServerProtocol
             _options = new LanguageServerOptions()
                 .WithInput(input)
                 .WithOutput(output)
-                .WithServices(services =>
-                {
-                    _services = services;
-                });
+                .WithServices(ConfigureServices);
 
             configureServer(_options);
 
             _cancellationTokenSource = cancellationTokenSource;
+        }
+
+        private void ConfigureServices(IServiceCollection services)
+        {
+            _services = services;
+            services.AddSingleton(new ConfigurationItem()
+            {
+                Section = "csharp"
+            });
+            services.AddSingleton(new ConfigurationItem()
+            {
+                Section = "omnisharp"
+            });
         }
 
         public void Dispose()
@@ -98,7 +105,7 @@ namespace OmniSharp.LanguageServerProtocol
 
         public async Task Start()
         {
-            var server = await LanguageServer.From(_options);
+            var server = Server = await LanguageServer.From(_options);
             server.Exit.Subscribe(Observer.Create<int>(i => _cancellationTokenSource.Cancel()));
 
             WorkspaceInitializer.Initialize(_serviceProvider, _compositionHost);
@@ -131,6 +138,8 @@ namespace OmniSharp.LanguageServerProtocol
             }
         }
 
+        internal LanguageServer Server { get; set; }
+
         private static LogLevel GetLogLevel(InitializeTrace initializeTrace)
         {
             switch (initializeTrace)
@@ -161,9 +170,12 @@ namespace OmniSharp.LanguageServerProtocol
                 application.LogLevel < logLevel ? application.LogLevel : logLevel,
                 application.OtherArgs.ToArray());
 
-            var configurationRoot = new ConfigurationBuilder(environment)
-                .AddConfiguration(server.Configuration)
-                .Build();
+            var configurationRoot = new Microsoft.Extensions.Configuration.ConfigurationBuilder()
+                .AddConfiguration(new ConfigurationBuilder(environment).Build())
+                .AddConfiguration(server.Configuration.GetSection("csharp"))
+                .AddConfiguration(server.Configuration.GetSection("omnisharp"))
+                .Build()
+            ;
 
             var eventEmitter = new LanguageServerEventEmitter(server);
 
@@ -267,6 +279,12 @@ namespace OmniSharp.LanguageServerProtocol
             RegisterHandlers(server, _compositionHost, handlers);
 
             return Task.CompletedTask;
+        }
+
+        internal void UnderTest(IServiceProvider serviceProvider, CompositionHost compositionHost)
+        {
+            _serviceProvider = serviceProvider;
+            _compositionHost = compositionHost;
         }
 
         internal static void RegisterHandlers(ILanguageServer server, CompositionHost compositionHost, RequestHandlers handlers)

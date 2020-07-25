@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Scripting.Hosting;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using OmniSharp;
 using OmniSharp.FileWatching;
@@ -128,7 +129,7 @@ namespace TestUtility
             return instance;
         }
 
-        public static Dictionary<string, string> GetConfigurationDataWithAnalyzerConfig(
+        public static IConfiguration GetConfigurationDataWithAnalyzerConfig(
             bool roslynAnalyzersEnabled = false,
             bool editorConfigEnabled = false,
             Dictionary<string, string> existingConfiguration = null)
@@ -139,14 +140,14 @@ namespace TestUtility
                 {
                     { "RoslynExtensionsOptions:EnableAnalyzersSupport", roslynAnalyzersEnabled.ToString() },
                     { "FormattingOptions:EnableEditorConfigSupport", editorConfigEnabled.ToString() }
-                };
+                }.ToConfiguration();
             }
 
             var copyOfExistingConfigs = existingConfiguration.ToDictionary(x => x.Key, x => x.Value);
             copyOfExistingConfigs.Add("RoslynExtensionsOptions:EnableAnalyzersSupport", roslynAnalyzersEnabled.ToString());
             copyOfExistingConfigs.Add("FormattingOptions:EnableEditorConfigSupport", editorConfigEnabled.ToString());
 
-            return copyOfExistingConfigs;
+            return copyOfExistingConfigs.ToConfiguration();
         }
 
         public static async Task WaitUntil(Func<Task<bool>> condition, int frequency = 25, int timeout = -1)
