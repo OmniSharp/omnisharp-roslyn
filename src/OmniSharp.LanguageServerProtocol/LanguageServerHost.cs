@@ -8,6 +8,7 @@ using System.Reactive;
 using System.Reactive.Threading.Tasks;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -160,7 +161,10 @@ namespace OmniSharp.LanguageServerProtocol
                 application.LogLevel < logLevel ? application.LogLevel : logLevel,
                 application.OtherArgs.ToArray());
 
-            var configurationRoot = new ConfigurationBuilder(environment).Build();
+            var configurationRoot = new ConfigurationBuilder(environment)
+                .AddConfiguration(server.Configuration)
+                .Build();
+
             var eventEmitter = new LanguageServerEventEmitter(server);
 
             services.AddSingleton(server);
