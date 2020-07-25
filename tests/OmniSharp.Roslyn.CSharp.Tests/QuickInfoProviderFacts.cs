@@ -43,7 +43,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var request = new QuickInfoRequest { FileName = testFile.FileName, Line = 7, Column = 17 };
             var response = await requestHandler.Handle(request);
 
-            AssertContents(response.Sections, "(parameter) int i", "Some content `C`");
+            Assert.Equal("```csharp\n(parameter) int i\n```\n\nSome content `C`", response.Markdown);
         }
 
         [Fact]
@@ -57,7 +57,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var controller = new QuickInfoProvider(workspace, new FormattingOptions(), null);
             var response = await controller.Handle(new QuickInfoRequest { FileName = testFile.FileName, Line = 0, Column = 7 });
 
-            AssertContents(response.Sections, "class Foo");
+            Assert.Equal("```csharp\nclass Foo\n```", response.Markdown);
         }
 
         [Fact]
@@ -77,7 +77,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var controller = new QuickInfoProvider(workspace, new FormattingOptions(), null);
             var response = await controller.Handle(new QuickInfoRequest { FileName = testFile.FileName, Line = position.Line, Column = position.Offset });
 
-            AssertContents(response.Sections, "class ClassLibraryWithDocumentation.DocumentedClass", "This class performs an important function.");
+            Assert.Equal("```csharp\nclass ClassLibraryWithDocumentation.DocumentedClass\n```\n\nThis class performs an important function.", response.Markdown);
         }
 
         [Fact]
@@ -98,8 +98,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var requestInGlobalNamespace = new QuickInfoRequest { FileName = testFile.FileName, Line = 3, Column = 19 };
             var responseInGlobalNamespace = await requestHandler.Handle(requestInGlobalNamespace);
 
-            AssertContents(responseInNormalNamespace.Sections, "class Bar.Foo");
-            AssertContents(responseInGlobalNamespace.Sections, "class Baz");
+            Assert.Equal("```csharp\nclass Bar.Foo\n```", responseInNormalNamespace.Markdown);
+            Assert.Equal("```csharp\nclass Baz\n```", responseInGlobalNamespace.Markdown);
         }
 
         [Fact]
@@ -116,7 +116,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var request = new QuickInfoRequest { FileName = testFile.FileName, Line = 1, Column = 19 };
             var response = await requestHandler.Handle(request);
 
-            AssertContents(response.Sections, "class Bar.Foo");
+            Assert.Equal("```csharp\nclass Bar.Foo\n```", response.Markdown);
         }
 
         [Fact]
@@ -135,7 +135,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var request = new QuickInfoRequest { FileName = testFile.FileName, Line = 2, Column = 27 };
             var response = await requestHandler.Handle(request);
 
-            AssertContents(response.Sections, "class Bar.Foo.Xyz");
+            Assert.Equal("```csharp\nclass Bar.Foo.Xyz\n```", response.Markdown);
         }
 
         [Fact]
@@ -152,7 +152,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var request = new QuickInfoRequest { FileName = testFile.FileName, Line = 1, Column = 23 };
             var response = await controller.Handle(request);
 
-            AssertContents(response.Sections, "class Foo.Bar");
+            Assert.Equal("```csharp\nclass Foo.Bar\n```", response.Markdown);
         }
 
         private static TestFile s_testFile = new TestFile("dummy.cs",
@@ -197,86 +197,84 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         {
             var response = await GetTypeLookUpResponse(line: 6, column: 35);
 
-            AssertContents(response.Sections, "void Console.WriteLine(string value) (+ 18 overloads)");
+            Assert.Equal("```csharp\nvoid Console.WriteLine(string value) (+ 18 overloads)\n```", response.Markdown);
         }
 
         [Fact]
         public async Task DisplayFormatForMethodSymbol_Declaration()
         {
             var response = await GetTypeLookUpResponse(line: 9, column: 35);
-            AssertContents(response.Sections, "void Foo.MyMethod(string name, Foo foo, Foo2 foo2)");
+            Assert.Equal("```csharp\nvoid Foo.MyMethod(string name, Foo foo, Foo2 foo2)\n```", response.Markdown);
         }
 
         [Fact]
         public async Task DisplayFormatFor_TypeSymbol_Primitive()
         {
             var response = await GetTypeLookUpResponse(line: 9, column: 46);
-            AssertContents(response.Sections, "class System.String");
+            Assert.Equal("```csharp\nclass System.String\n```", response.Markdown);
         }
 
         [Fact]
         public async Task DisplayFormatFor_TypeSymbol_ComplexType_SameNamespace()
         {
             var response = await GetTypeLookUpResponse(line: 9, column: 56);
-            AssertContents(response.Sections, "class Bar.Foo");
+            Assert.Equal("```csharp\nclass Bar.Foo\n```", response.Markdown);
         }
 
         [Fact]
         public async Task DisplayFormatFor_TypeSymbol_ComplexType_DifferentNamespace()
         {
             var response = await GetTypeLookUpResponse(line: 9, column: 67);
-            AssertContents(response.Sections, "class Bar2.Foo2");
+            Assert.Equal("```csharp\nclass Bar2.Foo2\n```", response.Markdown);
         }
 
         [Fact]
         public async Task DisplayFormatFor_TypeSymbol_WithGenerics()
         {
             var response = await GetTypeLookUpResponse(line: 15, column: 36);
-            AssertContents(response.Sections, "interface System.Collections.Generic.IDictionary<TKey, TValue>",
-                new QuickInfoResponseSection { IsCSharpCode = true, Text = $"TKey is string" },
-                new QuickInfoResponseSection { IsCSharpCode = true, Text = $"TValue is IEnumerable<int>" });
+            Assert.Equal("```csharp\ninterface System.Collections.Generic.IDictionary<TKey, TValue>\n```\n```csharp\n\nTKey is string\nTValue is IEnumerable<int>\n```", response.Markdown);
         }
 
         [Fact]
         public async Task DisplayFormatForParameterSymbol_Name_Primitive()
         {
             var response = await GetTypeLookUpResponse(line: 9, column: 51);
-            AssertContents(response.Sections, "(parameter) string name");
+            Assert.Equal("```csharp\n(parameter) string name\n```", response.Markdown);
         }
 
         [Fact]
         public async Task DisplayFormatFor_ParameterSymbol_ComplexType_SameNamespace()
         {
             var response = await GetTypeLookUpResponse(line: 9, column: 60);
-            AssertContents(response.Sections, "(parameter) Foo foo");
+            Assert.Equal("```csharp\n(parameter) Foo foo\n```", response.Markdown);
         }
 
         [Fact]
         public async Task DisplayFormatFor_ParameterSymbol_Name_ComplexType_DifferentNamespace()
         {
             var response = await GetTypeLookUpResponse(line: 9, column: 71);
-            AssertContents(response.Sections, "(parameter) Foo2 foo2");
+            Assert.Equal("```csharp\n(parameter) Foo2 foo2\n```", response.Markdown);
         }
 
         [Fact]
         public async Task DisplayFormatFor_ParameterSymbol_Name_WithDefaultValue()
         {
             var response = await GetTypeLookUpResponse(line: 17, column: 48);
-            AssertContents(response.Sections, "(parameter) int index = 2");
+            Assert.Equal("```csharp\n(parameter) int index = 2\n```", response.Markdown);
         }
 
         [Fact]
         public async Task DisplayFormatFor_FieldSymbol()
         {
             var response = await GetTypeLookUpResponse(line: 11, column: 38);
-            AssertContents(response.Sections, "(field) Foo2 Foo._someField");
+            Assert.Equal("```csharp\n(field) Foo2 Foo._someField\n```", response.Markdown);
         }
 
         [Fact]
         public async Task DisplayFormatFor_FieldSymbol_WithConstantValue()
         {
             var response = await GetTypeLookUpResponse(line: 19, column: 41);
-            AssertContents(response.Sections, "(constant) int Foo.foo = 1");
+            Assert.Equal("```csharp\n(constant) int Foo.foo = 1\n```", response.Markdown);
         }
 
         [Fact]
@@ -289,14 +287,14 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         public async Task DisplayFormatFor_PropertySymbol()
         {
             var response = await GetTypeLookUpResponse(line: 13, column: 38);
-            AssertContents(response.Sections, "Foo2 Foo.SomeProperty { get; }");
+            Assert.Equal("```csharp\nFoo2 Foo.SomeProperty { get; }\n```", response.Markdown);
         }
 
         [Fact]
         public async Task DisplayFormatFor_PropertySymbol_WithGenerics()
         {
             var response = await GetTypeLookUpResponse(line: 15, column: 70);
-            AssertContents(response.Sections, "IDictionary<string, IEnumerable<int>> Foo.SomeDict { get; }");
+            Assert.Equal("```csharp\nIDictionary<string, IEnumerable<int>> Foo.SomeDict { get; }\n```", response.Markdown);
         }
 
         [Fact]
@@ -312,8 +310,7 @@ class testissue
     }
 }";
             var response = await GetTypeLookUpResponse(content);
-            AssertContents(response.Sections, "bool testissue.Compare(int gameObject, string tagName)",
-                new QuickInfoResponseSection { IsCSharpCode = false, Text = "You may have some additional information about this class here." });
+            Assert.Equal("```csharp\nbool testissue.Compare(int gameObject, string tagName)\n```\n\nYou may have some additional information about this class here.", response.Markdown);
         }
 
         [Fact]
@@ -328,7 +325,7 @@ class testissue
     }
 }";
             var response = await GetTypeLookUpResponse(content);
-            AssertContents(response.Sections, "bool testissue.Compare(int gameObject, string tagName)", "Checks if object is tagged with the tag.");
+            Assert.Equal("```csharp\nbool testissue.Compare(int gameObject, string tagName)\n```\n\nChecks if object is tagged with the tag.", response.Markdown);
         }
 
         [Fact]
@@ -343,8 +340,7 @@ class testissue
     }
 }";
             var response = await GetTypeLookUpResponse(content);
-            AssertContents(response.Sections, "bool testissue.Compare(int gameObject, string tagName)",
-                new QuickInfoResponseSection { IsCSharpCode = false, Text = "Returns:\n\n  Returns true if object is tagged with tag." });
+            Assert.Equal("```csharp\nbool testissue.Compare(int gameObject, string tagName)\n```\n\nReturns:\n\n  Returns true if object is tagged with tag.", response.Markdown);
         }
 
         [Fact]
@@ -359,7 +355,7 @@ class testissue
     }
 }";
             var response = await GetTypeLookUpResponse(content);
-            AssertContents(response.Sections, "bool testissue.Compare(int gameObject, string tagName)");
+            Assert.Equal("```csharp\nbool testissue.Compare(int gameObject, string tagName)\n```", response.Markdown);
         }
 
         [Fact]
@@ -375,8 +371,7 @@ class testissue
     }
 }";
             var response = await GetTypeLookUpResponse(content);
-            AssertContents(response.Sections, "bool testissue.Compare(int gameObject, string tagName)",
-                new QuickInfoResponseSection { IsCSharpCode = false, Text = "Exceptions:\n\n  A\n\n  B" });
+            Assert.Equal("```csharp\nbool testissue.Compare(int gameObject, string tagName)\n```\n\nExceptions:\n\n  A\n\n  B", response.Markdown);
         }
 
         [Fact]
@@ -392,7 +387,7 @@ class testissue
     }
 }";
             var response = await GetTypeLookUpResponse(content);
-            AssertContents(response.Sections, "bool testissue.Compare(int gameObject, string tagName)");
+            Assert.Equal("```csharp\nbool testissue.Compare(int gameObject, string tagName)\n```", response.Markdown);
         }
 
         [Fact]
@@ -412,8 +407,7 @@ public class TestClass
     }
 }";
             var response = await GetTypeLookUpResponse(content);
-            AssertContents(response.Sections, "T[] TestClass.mkArray<T>(int n, List<X> list)",
-                "Creates a new array of arbitrary type `T` and adds the elements of incoming list to it if possible");
+            Assert.Equal("```csharp\nT[] TestClass.mkArray<T>(int n, List<X> list)\n```\n\nCreates a new array of arbitrary type `T` and adds the elements of incoming list to it if possible", response.Markdown);
         }
 
         [Fact]
@@ -433,8 +427,7 @@ public class TestClass
     }
 }";
             var response = await GetTypeLookUpResponse(content);
-            AssertContents(response.Sections, "T in TestClass.mkArray<T>",
-                "The element type of the array");
+            Assert.Equal("```csharp\nT in TestClass.mkArray<T>\n```\n\nThe element type of the array", response.Markdown);
         }
 
         [Fact]
@@ -454,7 +447,7 @@ public class TestClass
     }
 }";
             var response = await GetTypeLookUpResponse(content);
-            Assert.Empty(response.Sections);
+            Assert.Empty(response.Markdown);
         }
 
         [Fact]
@@ -473,8 +466,7 @@ public class TestClass
 }
 ";
             var response = await GetTypeLookUpResponse(content);
-            AssertContents(response.Sections, "string Employee.Name { }", "The Name property represents the employee's name.",
-                new QuickInfoResponseSection { IsCSharpCode = false, Text = "Value:\n\n  The Name property gets/sets the value of the string field, _name." });
+            Assert.Equal("```csharp\nstring Employee.Name { }\n```\n\nThe Name property represents the employee's name.\n\nValue:\n\n  The Name property gets/sets the value of the string field, _name.", response.Markdown);
         }
 
         [Fact]
@@ -489,7 +481,7 @@ public class TestClass
     }
 }";
             var response = await GetTypeLookUpResponse(content);
-            AssertContents(response.Sections, "void TestClass.DoWork(int Int1)", "DoWork is a method in the TestClass class. `System.Console.WriteLine(string)` for information about output statements.");
+            Assert.Equal("```csharp\nvoid TestClass.DoWork(int Int1)\n```\n\nDoWork is a method in the TestClass class. `System.Console.WriteLine(string)` for information about output statements.", response.Markdown);
         }
 
         [Fact]
@@ -506,7 +498,7 @@ public class TestClass
     }
 }";
             var response = await GetTypeLookUpResponse(content);
-            AssertContents(response.Sections, "T[] TestClass.mkArray<T>(int n)", "Creates a new array of arbitrary type `T`");
+            Assert.Equal("```csharp\nT[] TestClass.mkArray<T>(int n)\n```\n\nCreates a new array of arbitrary type `T`", response.Markdown);
         }
 
         [Fact]
@@ -532,7 +524,7 @@ public class TestClass
     }
 }";
             var response = await GetTypeLookUpResponse(content);
-            AssertContents(response.Sections, "int TestClass.GetZero()");
+            Assert.Equal("```csharp\nint TestClass.GetZero()\n```", response.Markdown);
         }
 
         [Fact]
@@ -550,7 +542,7 @@ public class TestClass
 }
             ";
             var response = await GetTypeLookUpResponse(content);
-            AssertContents(response.Sections, "void TestClass.DoWork(int Int1)", "DoWork is a method in the TestClass class.\n\n\n\nHere's how you could make a second paragraph in a description.");
+            Assert.Equal("```csharp\nvoid TestClass.DoWork(int Int1)\n```\n\nDoWork is a method in the TestClass class.\n\n\n\nHere's how you could make a second paragraph in a description.", response.Markdown);
         }
 
         [Fact]
@@ -571,7 +563,7 @@ public class TestClass
             }
 }";
             var response = await GetTypeLookUpResponse(content);
-            AssertContents(response.Sections, "void TestClass.DoWork(int Int1)", "DoWork is a method in the TestClass class. `TestClass.Main()`");
+            Assert.Equal("```csharp\nvoid TestClass.DoWork(int Int1)\n```\n\nDoWork is a method in the TestClass class. `TestClass.Main()`", response.Markdown);
         }
 
         [Fact]
@@ -588,7 +580,7 @@ class testissue
     }
 }";
             var response = await GetTypeLookUpResponse(content);
-            AssertContents(response.Sections, "bool testissue.Compare(int gameObject, string tagName)", "Checks if object is tagged with the tag.");
+            Assert.Equal("```csharp\nbool testissue.Compare(int gameObject, string tagName)\n```\n\nChecks if object is tagged with the tag.", response.Markdown);
         }
 
         [Fact]
@@ -609,10 +601,9 @@ class testissue
     }
 }";
             var response = await GetTypeLookUpResponse(content);
-            AssertContents(response.Sections, "T[] testissue.Compare(int gameObject)", "Checks if object is tagged with the tag.",
-                new QuickInfoResponseSection { IsCSharpCode = false, Text = "You may have some additional information about this class here." },
-                new QuickInfoResponseSection { IsCSharpCode = false, Text = "Returns:\n\n  Returns an array of type `T`." },
-                new QuickInfoResponseSection { IsCSharpCode = false, Text = "Exceptions:\n\n  `System.Exception`" });
+            Assert.Equal(
+                "```csharp\nT[] testissue.Compare(int gameObject)\n```\n\nChecks if object is tagged with the tag.\n\nYou may have some additional information about this class here.\n\nReturns:\n\n  Returns an array of type `T`.\n\n\n\nExceptions:\n\n  `System.Exception`",
+                response.Markdown);
         }
 
         [Fact]
@@ -627,7 +618,7 @@ public class TestClass
     }
 }";
             var response = await GetTypeLookUpResponse(content);
-            AssertContents(response.Sections, "void TestClass.DoWork(int Int1)", "DoWork is a method in the TestClass class.");
+            Assert.Equal("```csharp\nvoid TestClass.DoWork(int Int1)\n```\n\nDoWork is a method in the TestClass class.", response.Markdown);
         }
 
         [Fact]
@@ -643,7 +634,7 @@ class testissue
     }
 }";
             var response = await GetTypeLookUpResponse(content);
-            AssertContents(response.Sections, "(parameter) int gameObject", "The game object.");
+            Assert.Equal("```csharp\n(parameter) int gameObject\n```\n\nThe game object.", response.Markdown);
         }
 
         [Fact]
@@ -659,7 +650,7 @@ class testissue
     }
 }";
             var response = await GetTypeLookUpResponse(content);
-            AssertContents(response.Sections, "(parameter) string tagName", "Name of the tag.");
+            Assert.Equal("```csharp\n(parameter) string tagName\n```\n\nName of the tag.", response.Markdown);
         }
 
         [Fact]
@@ -676,9 +667,7 @@ class C
     }
 }";
             var response = await GetTypeLookUpResponse(content);
-            AssertContents(response.Sections, "void C.M1<'a>('a t)",
-                new QuickInfoResponseSection { IsCSharpCode = false, Text = "Anonymous Types:" },
-                new QuickInfoResponseSection { IsCSharpCode = true, Text = $"    'a is new {{ int X, int Y }}" });
+            Assert.Equal("```csharp\nvoid C.M1<'a>('a t)\n```\n\nAnonymous Types:\n```csharp\n    'a is new { int X, int Y }\n```", response.Markdown);
         }
 
         [Fact]
@@ -700,7 +689,7 @@ class Program
     }
 }";
             var response = await GetTypeLookUpResponse(content);
-            AssertContents(response.Sections, "void Program.B()", "Hello World");
+            Assert.Equal("```csharp\nvoid Program.B()\n```\n\nHello World", response.Markdown);
         }
 
         private async Task<QuickInfoResponse> GetTypeLookUpResponse(string content)
@@ -721,25 +710,6 @@ class Program
             var request = new QuickInfoRequest { FileName = s_testFile.FileName, Line = line, Column = column };
 
             return await requestHandler.Handle(request);
-        }
-
-        private void AssertContents(ImmutableArray<QuickInfoResponseSection> actual, string description, params QuickInfoResponseSection[] otherSections)
-        {
-            AssertContents(actual, description, summary: null, otherSections);
-        }
-
-        private void AssertContents(ImmutableArray<QuickInfoResponseSection> actual, string description, string? summary = null, params QuickInfoResponseSection[] otherSections)
-        {
-            var expected = new List<QuickInfoResponseSection>();
-            expected.Add(new QuickInfoResponseSection { IsCSharpCode = true, Text = description });
-            if (summary is object)
-            {
-                expected.Add(new QuickInfoResponseSection { IsCSharpCode = false, Text = summary });
-            }
-
-            expected.AddRange(otherSections);
-
-            Assert.Equal(expected, actual);
         }
     }
 }
