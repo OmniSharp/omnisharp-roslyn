@@ -99,7 +99,7 @@ jobs:
           chmod 755 ./build.sh
           ./build.sh --configuration Debug --verbosity Verbose --target Test --test-project="$TEST_PROJECT"
         displayName: 'Build'
-      - template: ./.pipelines/artifacts.yml
+      - template: ./.pipelines/logs.yml
         parameters:
           Artifacts: $(Artifacts)
 
@@ -144,7 +144,7 @@ jobs:
           chmod 755 ./build.sh
           ./build.sh --configuration Debug --verbosity Verbose --target Test --test-project="$TEST_PROJECT"
         displayName: 'Build'
-      - template: ./.pipelines/artifacts.yml
+      - template: ./.pipelines/logs.yml
         parameters:
           Artifacts: $(Artifacts)
 
@@ -183,7 +183,7 @@ jobs:
           NuGetVersion: $(NuGetVersion)
       - powershell: .\build.ps1 -configuration Debug -verbosity Verbose -target Test -test-project="$ENV:TEST_PROJECT"
         displayName: 'Build'
-      - template: ./.pipelines/artifacts.yml
+      - template: ./.pipelines/logs.yml
         parameters:
           Artifacts: $(Artifacts)
 
