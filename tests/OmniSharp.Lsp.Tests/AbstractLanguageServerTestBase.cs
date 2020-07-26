@@ -87,13 +87,9 @@ namespace OmniSharp.Lsp.Tests
 
         public Task DisposeAsync()
         {
-            return Task.CompletedTask;
-        }
-
-        public void Dispose()
-        {
             _host.Dispose();
             OmniSharpTestHost.Dispose();
+            return Task.CompletedTask;
         }
 
         protected OmniSharpTestHost OmniSharpTestHost { get; private set; }
