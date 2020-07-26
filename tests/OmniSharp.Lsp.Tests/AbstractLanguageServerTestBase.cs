@@ -93,6 +93,7 @@ namespace OmniSharp.Lsp.Tests
         public void Dispose()
         {
             _host.Dispose();
+            OmniSharpTestHost.Dispose();
         }
 
         protected OmniSharpTestHost OmniSharpTestHost { get; private set; }

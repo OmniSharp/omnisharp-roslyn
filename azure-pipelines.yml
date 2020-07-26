@@ -97,7 +97,7 @@ jobs:
       - script: |
           echo $PATH
           chmod 755 ./build.sh
-          ./build.sh --configuration Release --verbosity Verbose --target CI --publish-all --archive --test-project $TEST_PROJECT
+          ./build.sh --configuration Debug --verbosity Verbose --target Test --test-project="$TEST_PROJECT"
         displayName: 'Build'
       - template: ./.pipelines/artifacts.yml
         parameters:
@@ -142,7 +142,7 @@ jobs:
           MonoVersion: $(MonoVersion)
       - script: |
           chmod 755 ./build.sh
-          ./build.sh --configuration Release --verbosity Verbose --target CI --publish-all --archive --test-project $TEST_PROJECT
+          ./build.sh --configuration Debug --verbosity Verbose --target Test --test-project="$TEST_PROJECT"
         displayName: 'Build'
       - template: ./.pipelines/artifacts.yml
         parameters:
@@ -181,7 +181,7 @@ jobs:
           CakeVersion: $(CakeVersion)
           DotNetVersion: $(DotNetVersion)
           NuGetVersion: $(NuGetVersion)
-      - powershell: .\build.ps1 -configuration Release -verbosity Verbose -target CI -publish-all -archive -test-project $TEST_PROJECT
+      - powershell: .\build.ps1 -configuration Debug -verbosity Verbose -target Test -test-project="$ENV:TEST_PROJECT"
         displayName: 'Build'
       - template: ./.pipelines/artifacts.yml
         parameters:
