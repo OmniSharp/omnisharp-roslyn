@@ -1,6 +1,5 @@
 parameters:
-  - displayName: Test Projects
-    name: testProjects
+  - name: testProjects
     type: object
     default:
       - OmniSharp.Cake.Tests
