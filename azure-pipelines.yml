@@ -80,6 +80,7 @@ jobs:
   - job: macOS_tests
     pool:
       vmImage: "macOS-latest"
+    dependsOn: GitVersion
     strategy:
       matrix:
         ${{ each project in parameters.testProjects }}:
@@ -125,6 +126,7 @@ jobs:
   - job: Linux_tests
     pool:
       vmImage: "ubuntu-latest"
+    dependsOn: GitVersion
     strategy:
       matrix:
         ${{ each project in parameters.testProjects }}:
@@ -166,6 +168,7 @@ jobs:
   - job: Windows_tests
     pool:
       vmImage: "windows-latest"
+    dependsOn: GitVersion
     strategy:
       matrix:
         ${{ each project in parameters.testProjects }}:
