@@ -25,6 +25,7 @@ namespace TestUtility
     {
         private readonly ILogger<TestServiceProvider> _logger;
         private readonly ServiceProvider _serviceProvider;
+        private readonly IServiceCollection _services;
 
         private TestServiceProvider(
             IOmniSharpEnvironment environment,
@@ -38,7 +39,7 @@ namespace TestUtility
             IConfigurationRoot configuration)
         {
             _logger = loggerFactory.CreateLogger<TestServiceProvider>();
-            var services = new ServiceCollection();
+            var services = _services = new ServiceCollection();
             services
                 .AddLogging()
                 .AddOptions()
@@ -177,6 +178,13 @@ namespace TestUtility
         protected override void DisposeCore(bool disposing)
         {
             _serviceProvider.Dispose();
+            foreach (var service in _services)
+            {
+                if (service.ImplementationInstance is IDisposable disposable)
+                {
+                    disposable.Dispose();
+                }
+            }
         }
 
         public object GetService(Type serviceType)

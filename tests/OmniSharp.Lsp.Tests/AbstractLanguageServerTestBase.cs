@@ -23,36 +23,6 @@ using Xunit.Abstractions;
 
 namespace OmniSharp.Lsp.Tests
 {
-
-    /// <summary>
-    /// TODO: Make this public in LSP
-    /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <typeparam name="R"></typeparam>
-    class SettlePipeline<T, R> : IPipelineBehavior<T, R>
-        where T : IRequest<R>
-    {
-        private readonly IRequestSettler _settler;
-
-        public SettlePipeline(IRequestSettler settler)
-        {
-            _settler = settler;
-        }
-
-        async Task<R> IPipelineBehavior<T, R>.Handle(T request, CancellationToken cancellationToken, RequestHandlerDelegate<R> next)
-        {
-            _settler.OnStartRequest();
-            try
-            {
-                return await next();
-            }
-            finally
-            {
-                _settler.OnEndRequest();
-            }
-        }
-    }
-
     public abstract class AbstractLanguageServerTestBase : LanguageServerTestBase, IAsyncLifetime
     {
         private readonly ITestOutputHelper _output;

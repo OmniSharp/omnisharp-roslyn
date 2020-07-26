@@ -24,7 +24,6 @@ using OmniSharp.Script;
 using OmniSharp.Services;
 using OmniSharp.Utilities;
 using Xunit.Abstractions;
-using ConfigurationBuilder = Microsoft.Extensions.Configuration.ConfigurationBuilder;
 
 namespace TestUtility
 {
@@ -40,7 +39,7 @@ namespace TestUtility
             typeof(OmniSharpWorkspace).GetTypeInfo().Assembly, // OmniSharp.Roslyn
             typeof(RoslynFeaturesHostServicesProvider).GetTypeInfo().Assembly, // OmniSharp.Roslyn.CSharp
             typeof(CakeProjectSystem).GetTypeInfo().Assembly, // OmniSharp.Cake
-            typeof(LanguageServerHost).Assembly // OmniSharp.LanguageServerProtocol
+            typeof(LanguageServerHost).Assembly, // OmniSharp.LanguageServerProtocol
         });
 
         private readonly IServiceProvider _serviceProvider;
