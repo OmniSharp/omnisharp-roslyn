@@ -181,7 +181,7 @@ jobs:
           CakeVersion: $(CakeVersion)
           DotNetVersion: $(DotNetVersion)
           NuGetVersion: $(NuGetVersion)
-      - powershell: .\build.ps1 -configuration Debug -verbosity Verbose -target Test -test-project="$ENV:TEST_PROJECT"
+      - powershell: .\build.ps1 -configuration Debug -verbosity Verbose --test-project="$ENV:TEST_PROJECT" -target Test
         displayName: 'Build'
       - template: ./.pipelines/logs.yml
         parameters:

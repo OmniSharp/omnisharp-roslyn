@@ -587,7 +587,7 @@ Task("Test")
     .IsDependentOn("PrepareTestAssets")
     .Does(() =>
 {
-        var testProjects = string.IsNullOrEmpty(testProjectArgument) ? buildPlan.TestProjects : new [] { testProjectArgument };
+        var testProjects = string.IsNullOrEmpty(testProjectArgument) ? buildPlan.TestProjects : testProjectArgument.Split(',');
         foreach (var testProject in testProjects)
         {
             PrintBlankLine();
