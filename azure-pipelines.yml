@@ -1,13 +1,27 @@
+parameters:
+  - displayName: Test Projects
+    name: testProjects
+    type: object
+    default:
+      - OmniSharp.Cake.Tests
+      - OmniSharp.DotNetTest.Tests
+      - OmniSharp.Http.Tests
+      - OmniSharp.Lsp.Tests
+      - OmniSharp.MSBuild.Tests
+      - OmniSharp.Roslyn.CSharp.Tests
+      - OmniSharp.Script.Tests
+      - OmniSharp.Stdio.Tests
+      - OmniSharp.Tests
 
 trigger:
-  batch: true
+  batch: 'true'
   branches:
     include:
       - master
       - refs/tags/*
 
 pr:
-  autoCancel: true
+  autoCancel: 'true'
   branches:
     include:
       - master
@@ -26,6 +40,7 @@ variables:
   CakeVersion: "0.32.1"
   NuGetVersion: "4.9.2"
   GitVersionVersion: "5.0.1"
+  MonoVersion: "6.10.0"
   Coverage: "$(Agent.BuildDirectory)/c"
   VstsCoverage: "$(Coverage)"
   Artifacts: $(Build.SourcesDirectory)/artifacts/
@@ -46,8 +61,6 @@ jobs:
     pool:
       vmImage: "macOS-10.15"
     dependsOn: GitVersion
-    variables:
-      MONO_VERSION: 6.10.0
     steps:
       - template: ./.pipelines/init.yml
         parameters:
@@ -55,20 +68,35 @@ jobs:
           CakeVersion: $(CakeVersion)
           DotNetVersion: $(DotNetVersion)
           NuGetVersion: $(NuGetVersion)
-      - script: |
-          curl -o mono.pkg https://download.mono-project.com/archive/$MONO_VERSION/macos-10-universal/MonoFramework-MDK-$MONO_VERSION.105.macos10.xamarin.universal.pkg
-          sudo installer -pkg mono.pkg -target /
-          sudo cp -rf /Library/Frameworks/Mono.framework/Versions/$MONO_VERSION/ /Library/Frameworks/Mono.framework/Versions/Current/
-          MONOPREFIX=/Library/Frameworks/Mono.framework/Versions/$MONO_VERSION
-          echo "##vso[task.setvariable variable=DYLD_FALLBACK_LIBRARY_PATH;]$MONOPREFIX/lib:/lib:/usr/lib:$DYLD_LIBRARY_FALLBACK_PATH"
-          echo "##vso[task.setvariable variable=PKG_CONFIG_PATH;]$MONOPREFIX/lib/pkgconfig:$MONOPREFIX/share/pkgconfig:$PKG_CONFIG_PATH"
-          echo "##vso[task.setvariable variable=PATH;]$MONOPREFIX/bin:$PATH"
-        displayName: Use Mono $(MONO_VERSION)
-        failOnStderr: false
+          MonoVersion: $(MonoVersion)
       - script: |
           echo $PATH
           chmod 755 ./build.sh
-          ./build.sh --configuration Release --verbosity Verbose --target All --publish-all --archive
+          ./build.sh --configuration Release --verbosity Verbose --target CI --publish-all --archive
+        displayName: 'Build'
+      - template: ./.pipelines/artifacts.yml
+        parameters:
+          Artifacts: $(Artifacts)
+
+  - job: macOS_tests
+    pool:
+      vmImage: "macOS-latest"
+    strategy:
+      matrix:
+        ${{ each project in parameters.testProjects }}:
+          TEST_PROJECT: ${{ project }}
+    steps:
+      - template: ./.pipelines/init.yml
+        parameters:
+          Verbosity: $(Verbosity)
+          CakeVersion: $(CakeVersion)
+          DotNetVersion: $(DotNetVersion)
+          NuGetVersion: $(NuGetVersion)
+          MonoVersion: $(MonoVersion)
+      - script: |
+          echo $PATH
+          chmod 755 ./build.sh
+          ./build.sh --configuration Release --verbosity Verbose --target CI --publish-all --archive --test-project $TEST_PROJECT
         displayName: 'Build'
       - template: ./.pipelines/artifacts.yml
         parameters:
@@ -76,10 +104,8 @@ jobs:
 
   - job: Linux
     pool:
-      vmImage: "Ubuntu-18.04"
+      vmImage: "ubuntu-latest"
     dependsOn: GitVersion
-    variables:
-      MONO_VERSION: 6.10.0
     steps:
       - template: ./.pipelines/init.yml
         parameters:
@@ -87,17 +113,33 @@ jobs:
           CakeVersion: $(CakeVersion)
           DotNetVersion: $(DotNetVersion)
           NuGetVersion: $(NuGetVersion)
-      - script: |
-          sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF
-          sudo apt install apt-transport-https ca-certificates
-          echo "deb https://download.mono-project.com/repo/ubuntu stable-bionic/snapshots/$MONO_VERSION.105 main" | sudo tee /etc/apt/sources.list.d/mono-official-stable.list
-          sudo apt update
-          sudo apt install mono-devel
-          sudo apt install msbuild
-        displayName: Use Mono $(MONO_VERSION)
+          MonoVersion: $(MonoVersion)
       - script: |
           chmod 755 ./build.sh
-          ./build.sh --configuration Release --verbosity Verbose --target All --publish-all --archive
+          ./build.sh --configuration Release --verbosity Verbose --target CI --publish-all --archive
+        displayName: 'Build'
+      - template: ./.pipelines/artifacts.yml
+        parameters:
+          Artifacts: $(Artifacts)
+
+  - job: Linux_tests
+    pool:
+      vmImage: "ubuntu-latest"
+    strategy:
+      matrix:
+        ${{ each project in parameters.testProjects }}:
+          TEST_PROJECT: ${{ project }}
+    steps:
+      - template: ./.pipelines/init.yml
+        parameters:
+          Verbosity: $(Verbosity)
+          CakeVersion: $(CakeVersion)
+          DotNetVersion: $(DotNetVersion)
+          NuGetVersion: $(NuGetVersion)
+          MonoVersion: $(MonoVersion)
+      - script: |
+          chmod 755 ./build.sh
+          ./build.sh --configuration Release --verbosity Verbose --target CI --publish-all --archive --test-project $TEST_PROJECT
         displayName: 'Build'
       - template: ./.pipelines/artifacts.yml
         parameters:
@@ -114,18 +156,42 @@ jobs:
           CakeVersion: $(CakeVersion)
           DotNetVersion: $(DotNetVersion)
           NuGetVersion: $(NuGetVersion)
-      - powershell: .\build.ps1 -configuration Release -verbosity Verbose -target All -publish-all -archive
+      - powershell: .\build.ps1 -configuration Release -verbosity Verbose -target CI -publish-all -archive
         displayName: 'Build'
       - template: ./.pipelines/artifacts.yml
         parameters:
           Artifacts: $(Artifacts)
+
+  - job: Windows_tests
+    pool:
+      vmImage: "windows-latest"
+    strategy:
+      matrix:
+        ${{ each project in parameters.testProjects }}:
+          TEST_PROJECT: ${{ project }}
+    steps:
+      - template: ./.pipelines/init.yml
+        parameters:
+          Verbosity: $(Verbosity)
+          CakeVersion: $(CakeVersion)
+          DotNetVersion: $(DotNetVersion)
+          NuGetVersion: $(NuGetVersion)
+      - powershell: .\build.ps1 -configuration Release -verbosity Verbose -target CI -publish-all -archive -test-project $TEST_PROJECT
+        displayName: 'Build'
+      - template: ./.pipelines/artifacts.yml
+        parameters:
+          Artifacts: $(Artifacts)
+
   - job: Release
     pool:
       vmImage: "Ubuntu-16.04"
     dependsOn:
       - macOS
+      - macOS_tests
       - Linux
+      - Linux_tests
       - Windows
+      - Windows_tests
     steps:
       - task: NuGetToolInstaller@1
         displayName: 'Install NuGet'
