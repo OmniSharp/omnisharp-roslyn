@@ -14,7 +14,7 @@ using Xunit.Abstractions;
 
 namespace OmniSharp.Lsp.Tests
 {
-    public class ReferencesHandlerFacts : AbstractLanguageServerTestFixture
+    public class ReferencesHandlerFacts : AbstractLanguageServerTestBase
     {
         public ReferencesHandlerFacts(ITestOutputHelper output)
             : base(output)

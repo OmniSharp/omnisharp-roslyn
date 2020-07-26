@@ -138,7 +138,7 @@ namespace OmniSharp
 
 
             // Setup the options from configuration
-            services.Configure<OmniSharpOptions>(configuration);
+            services.Configure<OmniSharpOptions>(configuration).PostConfigure<OmniSharpOptions>(OmniSharpOptions.PostConfigure);
             services.AddSingleton(configuration);
             services.AddSingleton<IConfiguration>(configuration);
 

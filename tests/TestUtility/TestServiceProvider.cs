@@ -53,6 +53,7 @@ namespace TestUtility
                 .AddSingleton(configuration)
                 .AddSingleton(configuration as IConfiguration)
                 .Configure<OmniSharpOptions>(configuration)
+                .PostConfigure<OmniSharpOptions>(OmniSharpOptions.PostConfigure)
                 .AddSingleton(analyzerAssemblyLoader);
 
             _serviceProvider = services.BuildServiceProvider();

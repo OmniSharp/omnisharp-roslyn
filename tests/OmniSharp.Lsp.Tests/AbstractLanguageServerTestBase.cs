@@ -53,7 +53,7 @@ namespace OmniSharp.Lsp.Tests
         }
     }
 
-    public abstract class AbstractLanguageServerTestFixture : LanguageServerTestBase, IAsyncLifetime
+    public abstract class AbstractLanguageServerTestBase : LanguageServerTestBase, IAsyncLifetime
     {
         private readonly ITestOutputHelper _output;
         private readonly ILoggerFactory _loggerFactory;
@@ -61,11 +61,11 @@ namespace OmniSharp.Lsp.Tests
         private Task startUpTask;
         protected ILogger Logger { get; }
 
-        protected AbstractLanguageServerTestFixture(ITestOutputHelper output) : this(output, new LoggerFactory().AddXunit(output))
+        protected AbstractLanguageServerTestBase(ITestOutputHelper output) : this(output, new LoggerFactory().AddXunit(output))
         {
         }
 
-        private AbstractLanguageServerTestFixture(ITestOutputHelper output, ILoggerFactory loggerFactory) : base(
+        private AbstractLanguageServerTestBase(ITestOutputHelper output, ILoggerFactory loggerFactory) : base(
             new JsonRpcTestOptions()
                 .WithClientLoggerFactory(loggerFactory)
                 .WithServerLoggerFactory(loggerFactory)
