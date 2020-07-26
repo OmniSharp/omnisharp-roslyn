@@ -23,6 +23,7 @@ namespace TestUtility
 {
     public class TestServiceProvider : DisposableObject, IServiceProvider
     {
+        private readonly ILogger<TestServiceProvider> _logger;
         private readonly ServiceProvider _serviceProvider;
 
         private TestServiceProvider(
@@ -36,6 +37,7 @@ namespace TestUtility
             IDotNetCliService dotNetCliService,
             IConfigurationRoot configuration)
         {
+            _logger = loggerFactory.CreateLogger<TestServiceProvider>();
             var services = new ServiceCollection();
             services
                 .AddLogging()
@@ -179,7 +181,18 @@ namespace TestUtility
 
         public object GetService(Type serviceType)
         {
-            return _serviceProvider.GetService(serviceType);
+            var result = _serviceProvider.GetService(serviceType);
+
+            if (result == null)
+            {
+                _logger.LogWarning($"{nameof(GetService)}: {serviceType.Name} => null");
+            }
+            else
+            {
+                _logger.LogInformation($"{nameof(GetService)}: {serviceType.Name} => {result.GetType().Name}");
+            }
+
+            return result;
         }
     }
 }
