@@ -1,13 +1,19 @@
 {
     "DotNetInstallScriptURL": "https://dot.net/v1",
     "DotNetChannel": "Preview",
-    "DotNetVersions": ["3.1.302", "5.0.100-preview.7.20366.6"],
+    "DotNetVersions": [
+        "3.1.302",
+        "5.0.100-preview.7.20366.6"
+    ],
     "RequiredMonoVersion": "6.6.0",
     "DownloadURL": "https://roslynomnisharp.blob.core.windows.net/ext",
     "MonoRuntimeMacOS": "mono.macOS-6.10.0.104.zip",
     "MonoRuntimeLinux32": "mono.linux-x86-6.10.0.104.zip",
     "MonoRuntimeLinux64": "mono.linux-x86_64-6.10.0.104.zip",
-    "HostProjects": ["OmniSharp.Stdio.Driver", "OmniSharp.Http.Driver"],
+    "HostProjects": [
+        "OmniSharp.Stdio.Driver",
+        "OmniSharp.Http.Driver"
+    ],
     "TestProjects": [
         "OmniSharp.MSBuild.Tests",
         "OmniSharp.Roslyn.CSharp.Tests",
@@ -41,7 +47,13 @@
         "ProjectWithAnalyzersAndEditorConfig",
         "ProjectWithParentEditorConfig"
     ],
-    "CakeTestAssets": ["CakeProject"],
-    "WindowsOnlyTestAssets": ["AntlrGeneratedFiles"],
-    "RestoreOnlyTestAssets": ["ProjectWithMissingType"]
+    "CakeTestAssets": [
+        "CakeProject"
+    ],
+    "WindowsOnlyTestAssets": [
+        "AntlrGeneratedFiles"
+    ],
+    "RestoreOnlyTestAssets": [
+        "ProjectWithMissingType"
+    ]
 }

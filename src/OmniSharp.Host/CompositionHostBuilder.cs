@@ -125,8 +125,8 @@ namespace OmniSharp
             services ??= new ServiceCollection();
 
             services.TryAddSingleton(_ => new ManualFileSystemWatcher());
-            services.TryAddSingleton<IFileSystemNotifier>(_ => _.GetRequiredService<ManualFileSystemWatcher>());
-            services.TryAddSingleton<IFileSystemWatcher>(_ => _.GetRequiredService<ManualFileSystemWatcher>());
+            services.TryAddSingleton<IFileSystemNotifier>(sp => sp.GetRequiredService<ManualFileSystemWatcher>());
+            services.TryAddSingleton<IFileSystemWatcher>(sp => sp.GetRequiredService<ManualFileSystemWatcher>());
 
             services.AddSingleton(environment);
             services.AddSingleton(eventEmitter);

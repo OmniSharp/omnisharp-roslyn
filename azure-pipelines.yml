@@ -42,7 +42,7 @@ variables:
 jobs:
   - job: GitVersion
     pool:
-      vmImage: "windows-latest"
+      vmImage: "windows-2019"
     steps:
       - template: gitversion/store.yml@rsg
         parameters:
@@ -72,7 +72,7 @@ jobs:
 
   - job: macOS_tests
     pool:
-      vmImage: "macOS-latest"
+      vmImage: "macOS-10.15"
     dependsOn: GitVersion
     strategy:
       matrix:
@@ -98,7 +98,7 @@ jobs:
 
   - job: Linux
     pool:
-      vmImage: "ubuntu-latest"
+      vmImage: "ubuntu-18.04"
     dependsOn: GitVersion
     steps:
       - template: ./.pipelines/init.yml
@@ -118,7 +118,7 @@ jobs:
 
   - job: Linux_tests
     pool:
-      vmImage: "ubuntu-latest"
+      vmImage: "ubuntu-18.04"
     dependsOn: GitVersion
     strategy:
       matrix:
@@ -143,7 +143,7 @@ jobs:
 
   - job: Windows
     pool:
-      vmImage: "windows-latest"
+      vmImage: "windows-2019"
     dependsOn: GitVersion
     steps:
       - template: ./.pipelines/init.yml
@@ -160,7 +160,7 @@ jobs:
 
   - job: Windows_tests
     pool:
-      vmImage: "windows-latest"
+      vmImage: "windows-2019"
     dependsOn: GitVersion
     strategy:
       matrix:
