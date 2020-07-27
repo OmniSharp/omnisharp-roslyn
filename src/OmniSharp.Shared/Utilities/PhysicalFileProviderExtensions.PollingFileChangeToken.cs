@@ -118,11 +118,6 @@ namespace OmniSharp.Utilities
 
             public IDisposable RegisterChangeCallback(Action<object> callback, object state)
             {
-                // if (state != null)
-                // {
-                //     throw new ArgumentException($"Stateful callbacks are not supported for {nameof(PollingFileChangeToken)}", nameof(state));
-                // }
-
                 lock (_gate)
                 {
                     if (_callbacks == null)

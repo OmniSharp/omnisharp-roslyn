@@ -71,8 +71,8 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             var omnisharpRequest = new FindUsagesRequest
             {
                 FileName = Helpers.FromUri(request.Data.ToObject<Uri>()),
-                Column = (int)request.Range.Start.Character,
-                Line = (int)request.Range.Start.Line,
+                Column = (int) request.Range.Start.Character,
+                Line = (int) request.Range.Start.Line,
                 OnlyThisFile = false,
                 ExcludeDefinition = true
             };
@@ -91,9 +91,11 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                 Title = length == 1 ? "1 reference" : $"{length} references",
                 Name = "omnisharp/client/findReferences",
                 Arguments = new JArray(
-                    new[] {
+                    new[]
+                    {
                         JObject.FromObject(
-                            new Location {
+                            new Location
+                            {
                                 Uri = request.Data.ToObject<Uri>(),
                                 Range = request.Range,
                             },
@@ -104,13 +106,14 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             return request;
         }
 
-        private static void ToCodeLens(TextDocumentIdentifier textDocument, FileMemberElement node, List<CodeLens> codeLensContainer)
+        private static void ToCodeLens(TextDocumentIdentifier textDocument, FileMemberElement node,
+            List<CodeLens> codeLensContainer)
         {
             var codeLens = new CodeLens
             {
-                Data = JToken.FromObject(string.IsNullOrEmpty(node.Location.FileName) ?
-                    textDocument.Uri :
-                    Helpers.ToUri(node.Location.FileName)),
+                Data = JToken.FromObject(string.IsNullOrEmpty(node.Location.FileName)
+                    ? textDocument.Uri
+                    : Helpers.ToUri(node.Location.FileName)),
                 Range = node.Location.ToRange()
             };
 
@@ -130,7 +133,8 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             var textDocumentUri = value.Data.ToObject<Uri>();
 
             return textDocumentUri != null &&
-                GetRegistrationOptions().DocumentSelector.IsMatch(new TextDocumentAttributes(textDocumentUri, string.Empty));
+                   GetRegistrationOptions().DocumentSelector
+                       .IsMatch(new TextDocumentAttributes(textDocumentUri, string.Empty));
         }
     }
 }
