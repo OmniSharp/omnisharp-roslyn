@@ -6,10 +6,12 @@ using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using OmniSharp;
 using OmniSharp.Eventing;
+using OmniSharp.FileWatching;
 using OmniSharp.Host.Services;
 using OmniSharp.MSBuild.Discovery;
 using OmniSharp.Options;
@@ -58,6 +60,10 @@ namespace TestUtility
                 .Configure<OmniSharpOptions>(configuration)
                 .PostConfigure<OmniSharpOptions>(OmniSharpOptions.PostConfigure)
                 .AddSingleton(analyzerAssemblyLoader);
+
+            services.TryAddSingleton(_ => new ManualFileSystemWatcher());
+            services.TryAddSingleton<IFileSystemNotifier>(_ => _.GetRequiredService<ManualFileSystemWatcher>());
+            services.TryAddSingleton<IFileSystemWatcher>(_ => _.GetRequiredService<ManualFileSystemWatcher>());
 
             _serviceProvider = services.BuildServiceProvider();
         }
