@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System.ComponentModel.Design;
+using System.Threading;
 using System.Threading.Tasks;
 using MediatR;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
@@ -39,6 +40,16 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                     _ => FileWatching.FileChangeType.Unspecified
                 };
                 _fileSystemNotifier.Notify(change.Uri.GetFileSystemPath(), changeType);
+
+                // We can only register one IDidChangeWatchedFilesHandler as there is no way to really identify the caller
+                // when the request comes through
+                // However we still need to deal with folder deletions
+                // There is no easy way to determine if the uri is a folder or a file (what if the file has no
+                // extension, we can't make this assumption with files that not yet exist on disc, vscode has Untitled-x)
+                if (change.Type == FileChangeType.Deleted)
+                {
+                    _fileSystemNotifier.Notify(change.Uri.GetFileSystemPath(), FileWatching.FileChangeType.DirectoryDelete);
+                }
             }
 
             return Unit.Task;

@@ -309,9 +309,6 @@ namespace OmniSharp.LanguageServerProtocol
                 s.AddHandler(
                     new OmnisharpOnDidChangeWatchedFilesHandler(
                         _serviceProvider.GetRequiredService<IFileSystemNotifier>()));
-                s.AddHandler(
-                    new OmnisharpOnDidChangeWatchedDirectoriesHandler(_serviceProvider
-                        .GetRequiredService<IFileSystemNotifier>()));
             });
 
             return Task.CompletedTask;
