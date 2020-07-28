@@ -101,7 +101,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                 var completionItem = new CompletionItem
                 {
                     Label = response.CompletionText,
-                    Detail = !string.IsNullOrEmpty(response.ReturnType) ?
+                    Detail = string.IsNullOrEmpty(response.ReturnType) ?
                             response.DisplayText :
                             $"{response.ReturnType} {response.DisplayText}",
                     Documentation = response.Description,
