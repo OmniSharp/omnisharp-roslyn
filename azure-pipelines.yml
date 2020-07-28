@@ -22,7 +22,7 @@ resources:
 
 variables:
   Verbosity: Diagnostic
-  DotNetVersion: "3.1.201"
+  DotNetVersion: "3.1.302"
   CakeVersion: "0.32.1"
   NuGetVersion: "4.9.2"
   GitVersionVersion: "5.0.1"
@@ -47,7 +47,7 @@ jobs:
       vmImage: "macOS-10.15"
     dependsOn: GitVersion
     variables:
-      MONO_VERSION: 6.8.0
+      MONO_VERSION: 6.10.0
     steps:
       - template: ./.pipelines/init.yml
         parameters:
@@ -79,7 +79,7 @@ jobs:
       vmImage: "Ubuntu-18.04"
     dependsOn: GitVersion
     variables:
-      MONO_VERSION: 6.8.0
+      MONO_VERSION: 6.10.0
     steps:
       - template: ./.pipelines/init.yml
         parameters:
@@ -90,7 +90,7 @@ jobs:
       - script: |
           sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF
           sudo apt install apt-transport-https ca-certificates
-          echo "deb https://download.mono-project.com/repo/ubuntu stable-xenial/snapshots/$MONO_VERSION.105 main" | sudo tee /etc/apt/sources.list.d/mono-official-stable.list
+          echo "deb https://download.mono-project.com/repo/ubuntu stable-bionic/snapshots/$MONO_VERSION.105 main" | sudo tee /etc/apt/sources.list.d/mono-official-stable.list
           sudo apt update
           sudo apt install mono-devel
           sudo apt install msbuild

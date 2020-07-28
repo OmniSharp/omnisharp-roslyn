@@ -157,8 +157,7 @@ namespace OmniSharp.DotNetTest
                     RunSettings = LoadRunSettingsOrDefault(runSettings, targetFrameworkVersion)
                 });
 
-            var message = ReadMessage();
-            var testStartInfo = message.DeserializePayload<TestProcessStartInfo>();
+            var testStartInfo = await GetTestRunnerProcessStartInfo(testCases, debuggingEnabled: false, runSettings, targetFrameworkVersion, cancellationToken);
 
             return new GetTestStartInfoResponse
             {
@@ -176,26 +175,55 @@ namespace OmniSharp.DotNetTest
             VerifyTestFramework(testFrameworkName);
 
             var testCases = await DiscoverTestsAsync(methodNames, runSettings, targetFrameworkVersion, cancellationToken);
+            var testStartInfo = await GetTestRunnerProcessStartInfo(testCases, debuggingEnabled: true, runSettings, targetFrameworkVersion, cancellationToken);
 
+            return new DebugTestGetStartInfoResponse
+            {
+                FileName = testStartInfo.FileName,
+                Arguments = testStartInfo.Arguments,
+                WorkingDirectory = testStartInfo.WorkingDirectory,
+                EnvironmentVariables = testStartInfo.EnvironmentVariables,
+                Succeeded = true
+            };
+        }
+
+        private async Task<TestProcessStartInfo> GetTestRunnerProcessStartInfo(TestCase[] testCases, bool debuggingEnabled, string runSettings, string targetFrameworkVersion, CancellationToken cancellationToken)
+        {
             SendMessage(MessageType.GetTestRunnerProcessStartInfoForRunSelected,
                 new
                 {
                     TestCases = testCases,
-                    DebuggingEnabled = true,
                     RunSettings = LoadRunSettingsOrDefault(runSettings, targetFrameworkVersion)
                 });
 
-            var message = await ReadMessageAsync(cancellationToken);
-            var startInfo = message.DeserializePayload<TestProcessStartInfo>();
-
-            return new DebugTestGetStartInfoResponse
+            bool done = false;
+            TestProcessStartInfo startInfo = null;
+            while (!done)
             {
-                FileName = startInfo.FileName,
-                Arguments = startInfo.Arguments,
-                WorkingDirectory = startInfo.WorkingDirectory,
-                EnvironmentVariables = startInfo.EnvironmentVariables,
-                Succeeded = true
-            };
+                var (success, message) = await TryReadMessageAsync(cancellationToken);
+                if (!success)
+                {
+                    return startInfo;
+                }
+
+                switch (message.MessageType)
+                {
+                    case MessageType.TestMessage:
+                        EmitTestMessage(message.DeserializePayload<TestMessagePayload>());
+                        break;
+
+                    case MessageType.CustomTestHostLaunch:
+                        startInfo = message.DeserializePayload<TestProcessStartInfo>();
+                        done = true;
+                        break;
+
+                    case MessageType.ExecutionComplete:
+                        done = true;
+                        break;
+                }
+            }
+
+            return startInfo;
         }
 
         public override async Task DebugLaunchAsync(CancellationToken cancellationToken)

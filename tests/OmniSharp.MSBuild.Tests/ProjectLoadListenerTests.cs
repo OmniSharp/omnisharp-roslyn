@@ -224,7 +224,7 @@ namespace OmniSharp.MSBuild.Tests
             using (var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory)))
             {
                 Assert.Single(emitter.ReceivedMessages);
-                Assert.Equal(GetHashedFileExtension("3.1.201"), emitter.ReceivedMessages[0].SdkVersion);
+                Assert.Equal(GetHashedFileExtension("3.1.302"), emitter.ReceivedMessages[0].SdkVersion);
             }
         }
 
@@ -238,7 +238,7 @@ namespace OmniSharp.MSBuild.Tests
             using (var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory)))
             {
                 Assert.Equal(2, emitter.ReceivedMessages.Length);
-                Assert.Equal(GetHashedFileExtension("5.0.100-preview.5.20279.10"), emitter.ReceivedMessages[0].SdkVersion);
+                Assert.Equal(GetHashedFileExtension("5.0.100-preview.7.20366.6"), emitter.ReceivedMessages[0].SdkVersion);
             }
         }
 
