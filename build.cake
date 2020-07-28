@@ -15,6 +15,7 @@ var installFolder = Argument("install-path",
     CombinePaths(Environment.GetEnvironmentVariable(Platform.Current.IsWindows ? "USERPROFILE" : "HOME"), ".omnisharp"));
 var publishAll = HasArgument("publish-all");
 var useGlobalDotNetSdk = HasArgument("use-global-dotnet-sdk");
+var testProjectArgument = Argument("test-project", "");
 
 Log.Context = Context;
 
@@ -114,7 +115,7 @@ Task("InstallDotNetCoreSdk")
 {
     if (!useGlobalDotNetSdk)
     {
-        foreach (var dotnetVersion in buildPlan.DotNetVersions) 
+        foreach (var dotnetVersion in buildPlan.DotNetVersions)
         {
             InstallDotNetSdk(env, buildPlan,
                 version: dotnetVersion,
@@ -586,7 +587,8 @@ Task("Test")
     .IsDependentOn("PrepareTestAssets")
     .Does(() =>
 {
-        foreach (var testProject in buildPlan.TestProjects)
+        var testProjects = string.IsNullOrEmpty(testProjectArgument) ? buildPlan.TestProjects : testProjectArgument.Split(',');
+        foreach (var testProject in testProjects)
         {
             PrintBlankLine();
             var instanceFolder = CombinePaths(env.Folders.Bin, configuration, testProject, "net472");
@@ -923,6 +925,15 @@ Task("All")
 /// </summary>
 Task("Default")
     .IsDependentOn("All");
+
+/// <summary>
+///  Task aliases for CI (excluding tests) as they are parallelized
+/// </summary>
+Task("CI")
+    .IsDependentOn("Cleanup")
+    .IsDependentOn("Build")
+    .IsDependentOn("Publish")
+    .IsDependentOn("ExecuteRunScript");
 
 Teardown(context =>
 {

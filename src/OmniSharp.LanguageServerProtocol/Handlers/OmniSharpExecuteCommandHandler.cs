@@ -5,6 +5,7 @@ using MediatR;
 using OmniSharp.Extensions.JsonRpc;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OmniSharp.Extensions.LanguageServer.Protocol.Server;
+using OmniSharp.Extensions.LanguageServer.Protocol.Workspace;
 
 namespace OmniSharp.LanguageServerProtocol.Handlers
 {
@@ -16,7 +17,8 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
         }
 
         public OmniSharpExecuteCommandHandler()
-            : base (new ExecuteCommandRegistrationOptions() {
+            : base(new ExecuteCommandRegistrationOptions()
+            {
                 Commands = new Container<string>(),
             })
         {

@@ -7,3 +7,4 @@
 [assembly: InternalsVisibleTo("OmniSharp.Roslyn.CSharp")]
 [assembly: InternalsVisibleTo("OmniSharp.DotNetTest.Tests")]
 [assembly: InternalsVisibleTo("OmniSharp.Tests")]
+[assembly: InternalsVisibleTo("OmniSharp.LanguageServerProtocol")]

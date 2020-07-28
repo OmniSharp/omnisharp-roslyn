@@ -4,6 +4,7 @@ parameters:
   DotNetVersion: "3.1.302"
   CakeVersion: "0.32.1"
   NuGetVersion: "4.9.2"
+  MonoVersion: ''
 steps:
   - task: DownloadBuildArtifacts@0
     displayName: "Download GitVersion Variables"
@@ -41,3 +42,16 @@ steps:
       command: custom
       feedsToUse: config
       arguments: install tools/packages.config -ExcludeVersion -OutputDirectory tools
+  - ${{ if ne(parameters.MonoVersion, '') }}:
+    - script: |
+        curl -o mono.pkg https://download.mono-project.com/archive/$MONO_VERSION/macos-10-universal/MonoFramework-MDK-$MONO_VERSION.105.macos10.xamarin.universal.pkg
+        sudo installer -pkg mono.pkg -target /
+        sudo cp -rf /Library/Frameworks/Mono.framework/Versions/$MONO_VERSION/ /Library/Frameworks/Mono.framework/Versions/Current/
+        MONOPREFIX=/Library/Frameworks/Mono.framework/Versions/$MONO_VERSION
+        echo "##vso[task.setvariable variable=DYLD_FALLBACK_LIBRARY_PATH;]$MONOPREFIX/lib:/lib:/usr/lib:$DYLD_LIBRARY_FALLBACK_PATH"
+        echo "##vso[task.setvariable variable=PKG_CONFIG_PATH;]$MONOPREFIX/lib/pkgconfig:$MONOPREFIX/share/pkgconfig:$PKG_CONFIG_PATH"
+        echo "##vso[task.setvariable variable=PATH;]$MONOPREFIX/bin:$PATH"
+      env:
+        MONO_VERSION: ${{ parameters.MonoVersion }}
+      displayName: Use Mono ${{ parameters.MonoVersion }}
+      failOnStderr: false

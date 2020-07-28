@@ -1,28 +1,29 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using OmniSharp.Extensions.JsonRpc;
+using OmniSharp.Extensions.LanguageServer.Protocol.Document;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OmniSharp.Extensions.LanguageServer.Protocol.Server;
 using OmniSharp.Models.Format;
 
 namespace OmniSharp.LanguageServerProtocol.Handlers
 {
-    internal sealed class OmniSharpDocumentOnTypeFormatHandler : DocumentOnTypeFormatHandler
+    internal sealed class OmniSharpDocumentOnTypeFormattingHandler : DocumentOnTypeFormattingHandler
     {
         public static IEnumerable<IJsonRpcHandler> Enumerate(RequestHandlers handlers)
         {
             foreach (var (selector, handler) in handlers
                 .OfType<Mef.IRequestHandler<FormatAfterKeystrokeRequest, FormatRangeResponse>>())
                 if (handler != null)
-                    yield return new OmniSharpDocumentOnTypeFormatHandler(handler, selector);
+                    yield return new OmniSharpDocumentOnTypeFormattingHandler(handler, selector);
         }
 
         private readonly Mef.IRequestHandler<FormatAfterKeystrokeRequest, FormatRangeResponse> _formatAfterKeystrokeHandler;
 
-        public OmniSharpDocumentOnTypeFormatHandler(Mef.IRequestHandler<FormatAfterKeystrokeRequest, FormatRangeResponse> formatAfterKeystrokeHandler, DocumentSelector documentSelector) : base(new DocumentOnTypeFormattingRegistrationOptions()
+        public OmniSharpDocumentOnTypeFormattingHandler(Mef.IRequestHandler<FormatAfterKeystrokeRequest, FormatRangeResponse> formatAfterKeystrokeHandler, DocumentSelector documentSelector) : base(new DocumentOnTypeFormattingRegistrationOptions()
         {
             DocumentSelector = documentSelector,
             FirstTriggerCharacter = ";",

@@ -109,7 +109,7 @@ public class Foo : I$$Foo
         private async Task VerifyImplementType(string code, string expectedChange, Dictionary<string, string> hostProperties)
         {
             var testFile = new TestFile("test.cs", code);
-            using (var host = CreateOmniSharpHost(new[] { testFile }, hostProperties))
+            using (var host = CreateOmniSharpHost(new[] { testFile }, hostProperties.ToConfiguration()))
             {
                 var requestHandler = host.GetRequestHandler<RunCodeActionService>(OmniSharpEndpoints.V2.RunCodeAction);
                 var point = testFile.Content.GetPointFromPosition();
