@@ -178,8 +178,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                     {
                         _logger.LogDebug($"Tried to remove non existent document from analysis, document: {changeEvent.DocumentId}");
                     }
-
-                    ;
                     break;
                 case WorkspaceChangeKind.ProjectAdded:
                 case WorkspaceChangeKind.ProjectChanged:
