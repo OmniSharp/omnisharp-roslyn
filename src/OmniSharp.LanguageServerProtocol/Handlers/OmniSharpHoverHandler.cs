@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using OmniSharp.Extensions.JsonRpc;
 using OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities;
+using OmniSharp.Extensions.LanguageServer.Protocol.Document;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OmniSharp.Extensions.LanguageServer.Protocol.Server;
 using OmniSharp.Models.TypeLookup;
@@ -23,7 +24,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
         private readonly Mef.IRequestHandler<TypeLookupRequest, TypeLookupResponse> _definitionHandler;
 
         public OmniSharpHoverHandler(Mef.IRequestHandler<TypeLookupRequest, TypeLookupResponse> definitionHandler, DocumentSelector documentSelector)
-            : base(new TextDocumentRegistrationOptions()
+            : base(new HoverRegistrationOptions()
             {
                 DocumentSelector = documentSelector
             })
@@ -47,7 +48,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             {
                 // TODO: Range?  We don't currently have that!
                 // Range =
-                Contents = new MarkedStringsOrMarkupContent(new MarkedStringContainer(Helpers.EscapeMarkdown(omnisharpResponse.Type), Helpers.EscapeMarkdown(omnisharpResponse.Documentation)))
+                Contents = new MarkedStringsOrMarkupContent(new Container<MarkedString>(Helpers.EscapeMarkdown(omnisharpResponse.Type), Helpers.EscapeMarkdown(omnisharpResponse.Documentation)))
             };
         }
     }

@@ -22,7 +22,8 @@
         "OmniSharp.DotNetTest.Tests",
         "OmniSharp.Tests",
         "OmniSharp.Cake.Tests",
-        "OmniSharp.Script.Tests"
+        "OmniSharp.Script.Tests",
+        "OmniSharp.Lsp.Tests"
     ],
     "TestAssets": [
         "NUnitTestProject",

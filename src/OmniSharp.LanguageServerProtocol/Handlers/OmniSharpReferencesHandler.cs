@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using OmniSharp.Extensions.JsonRpc;
 using OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities;
+using OmniSharp.Extensions.LanguageServer.Protocol.Document;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OmniSharp.Extensions.LanguageServer.Protocol.Server;
 using OmniSharp.Models;
@@ -25,7 +26,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
         private readonly Mef.IRequestHandler<FindUsagesRequest, QuickFixResponse> _findUsagesHandler;
 
         public OmniSharpReferencesHandler(Mef.IRequestHandler<FindUsagesRequest, QuickFixResponse> findUsagesHandler, DocumentSelector documentSelector)
-            : base(new TextDocumentRegistrationOptions()
+            : base(new ReferenceRegistrationOptions()
             {
                 DocumentSelector = documentSelector
             })
@@ -33,7 +34,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             _findUsagesHandler = findUsagesHandler;
         }
 
-        public async override Task<LocationContainer> Handle(ReferenceParams request, CancellationToken token)
+        public override async Task<LocationContainer> Handle(ReferenceParams request, CancellationToken token)
         {
             var omnisharpRequest = new FindUsagesRequest
             {
@@ -41,7 +42,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                 Column = Convert.ToInt32(request.Position.Character),
                 Line = Convert.ToInt32(request.Position.Line),
                 OnlyThisFile = false,
-                ExcludeDefinition = !request.Context.IncludeDeclaration
+                ExcludeDefinition = (request.Context?.IncludeDeclaration ?? true) == false
             };
 
             var omnisharpResponse = await _findUsagesHandler.Handle(omnisharpRequest);
@@ -50,7 +51,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             {
                 Uri = Helpers.ToUri(x.FileName),
                 Range = x.ToRange()
-            }).ToArray();
+            }).ToArray() ?? new LocationContainer();
         }
     }
 }

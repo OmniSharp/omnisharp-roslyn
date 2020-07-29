@@ -8,6 +8,7 @@ using MediatR;
 using OmniSharp.Extensions.JsonRpc;
 using OmniSharp.Extensions.LanguageServer.Protocol;
 using OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities;
+using OmniSharp.Extensions.LanguageServer.Protocol.Document;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OmniSharp.Extensions.LanguageServer.Protocol.Server;
 using OmniSharp.Extensions.LanguageServer.Protocol.Server.Capabilities;
@@ -62,11 +63,12 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             _workspace = workspace;
         }
 
-        public override TextDocumentAttributes GetTextDocumentAttributes(Uri uri)
+        public override TextDocumentAttributes GetTextDocumentAttributes(DocumentUri uri)
         {
             var document = _workspace.GetDocument(Helpers.FromUri(uri));
-            if (document == null) return new TextDocumentAttributes(uri, "");
-            return new TextDocumentAttributes(uri, "");
+            var langaugeId = "csharp";
+            if (document == null) return new TextDocumentAttributes(uri, uri.Scheme, langaugeId);
+            return new TextDocumentAttributes(uri, uri.Scheme, langaugeId);
         }
 
         public async override Task<Unit> Handle(DidChangeTextDocumentParams notification, CancellationToken cancellationToken)

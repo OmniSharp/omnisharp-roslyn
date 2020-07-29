@@ -54,14 +54,14 @@ namespace TestUtility
             IEnumerable<KeyValuePair<string, string>> configurationData = null,
             DotNetCliVersion dotNetCliVersion = DotNetCliVersion.Current,
             IEnumerable<ExportDescriptorProvider> additionalExports = null)
-            => OmniSharpTestHost.Create(path, this.TestOutput, configurationData, dotNetCliVersion, additionalExports);
+            => OmniSharpTestHost.Create(path, this.TestOutput, configurationData.ToConfiguration(), dotNetCliVersion, additionalExports);
 
-        protected OmniSharpTestHost CreateOmniSharpHost(params TestFile[] testFiles) => 
+        protected OmniSharpTestHost CreateOmniSharpHost(params TestFile[] testFiles) =>
             CreateOmniSharpHost(testFiles, null);
 
         protected OmniSharpTestHost CreateOmniSharpHost(TestFile[] testFiles, IEnumerable<KeyValuePair<string, string>> configurationData, string path = null)
         {
-            var host = OmniSharpTestHost.Create(path: path, testOutput: this.TestOutput, configurationData: configurationData);
+            var host = OmniSharpTestHost.Create(path: path, testOutput: this.TestOutput, configurationData: configurationData.ToConfiguration());
 
             if (testFiles.Length > 0)
             {

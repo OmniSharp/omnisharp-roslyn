@@ -13,7 +13,7 @@ namespace OmniSharp.Services
         bool EnabledByDefault { get; }
 
         /// <summary>
-        /// Flag indicating that the project system has been sucessfully initialized.
+        /// Flag indicating that the project system has been successfully initialized.
         /// </summary>
         bool Initialized { get; }
 

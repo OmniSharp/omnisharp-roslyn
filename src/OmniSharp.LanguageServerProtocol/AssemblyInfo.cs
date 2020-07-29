@@ -3,4 +3,4 @@
 [assembly: InternalsVisibleTo("TestUtility")]
 [assembly: InternalsVisibleTo("OmniSharp")]
 [assembly: InternalsVisibleTo("OmniSharp.Stdio.Tests")]
-[assembly: InternalsVisibleTo("OmniSharp.LanguageServer.Tests")]
+[assembly: InternalsVisibleTo("OmniSharp.Lsp.Tests")]
