@@ -49,6 +49,7 @@ namespace OmniSharp.Eventing
                                               HashedString projectId,
                                               HashedString sessionId,
                                               int outputKind,
+                                              IEnumerable<string> projectCapabilities,
                                               IEnumerable<string> targetFrameworks,
                                               HashedString sdkVersion,
                                               IEnumerable<HashedString> references,
@@ -57,6 +58,7 @@ namespace OmniSharp.Eventing
         {
             var projectConfiguration = new ProjectConfigurationMessage()
             {
+                ProjectCapabilities = projectCapabilities,
                 TargetFrameworks = targetFrameworks,
                 SdkVersion = sdkVersion.Value,
                 OutputKind = outputKind,

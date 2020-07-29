@@ -8,12 +8,14 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OmniSharp;
 using OmniSharp.Cake;
 using OmniSharp.DotNetTest.Models;
 using OmniSharp.Eventing;
+using OmniSharp.LanguageServerProtocol;
 using OmniSharp.Mef;
 using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.MSBuild;
@@ -37,6 +39,7 @@ namespace TestUtility
             typeof(OmniSharpWorkspace).GetTypeInfo().Assembly, // OmniSharp.Roslyn
             typeof(RoslynFeaturesHostServicesProvider).GetTypeInfo().Assembly, // OmniSharp.Roslyn.CSharp
             typeof(CakeProjectSystem).GetTypeInfo().Assembly, // OmniSharp.Cake
+            typeof(LanguageServerHost).Assembly, // OmniSharp.LanguageServerProtocol
         });
 
         private readonly IServiceProvider _serviceProvider;
@@ -48,6 +51,8 @@ namespace TestUtility
         public OmniSharpWorkspace Workspace { get; }
         public ILoggerFactory LoggerFactory { get; }
         public ILogger<OmniSharpTestHost> Logger { get; }
+        public CompositionHost CompositionHost => _compositionHost;
+        public IServiceProvider ServiceProvider => _serviceProvider;
 
         private OmniSharpTestHost(
             IServiceProvider serviceProvider,
@@ -99,7 +104,7 @@ namespace TestUtility
         public static OmniSharpTestHost Create(
             string path = null,
             ITestOutputHelper testOutput = null,
-            IEnumerable<KeyValuePair<string, string>> configurationData = null,
+            IConfiguration configurationData = null,
             DotNetCliVersion dotNetCliVersion = DotNetCliVersion.Current,
             IEnumerable<ExportDescriptorProvider> additionalExports = null,
             [CallerMemberName] string callerName = "",

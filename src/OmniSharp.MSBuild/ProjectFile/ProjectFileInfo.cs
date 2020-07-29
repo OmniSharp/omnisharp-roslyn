@@ -90,12 +90,11 @@ namespace OmniSharp.MSBuild.ProjectFile
             return new ProjectFileInfo(new ProjectIdInfo(id, isDefinedInSolution: false), filePath, data: null, sessionId: Guid.NewGuid(), DotNetInfo.Empty);
         }
 
-        internal static ProjectFileInfo CreateNoBuild(string filePath, ProjectLoader loader, IDotNetCliService dotNetCli)
+        internal static ProjectFileInfo CreateNoBuild(string filePath, ProjectLoader loader, DotNetInfo dotNetInfo)
         {
             var id = ProjectId.CreateNewId(debugName: filePath);
             var project = loader.EvaluateProjectFile(filePath);
 
-            var dotNetInfo = dotNetCli.GetInfo(Path.GetDirectoryName(project.FullPath));
             var data = ProjectData.Create(project);
             //we are not reading the solution here
             var projectIdInfo = new ProjectIdInfo(id, isDefinedInSolution: false);
@@ -103,7 +102,7 @@ namespace OmniSharp.MSBuild.ProjectFile
             return new ProjectFileInfo(projectIdInfo, filePath, data, sessionId: Guid.NewGuid(), dotNetInfo);
         }
 
-        public static (ProjectFileInfo, ImmutableArray<MSBuildDiagnostic>, ProjectLoadedEventArgs) Load(string filePath, ProjectIdInfo projectIdInfo, ProjectLoader loader, Guid sessionId, IDotNetCliService dotNetCli)
+        public static (ProjectFileInfo, ImmutableArray<MSBuildDiagnostic>, ProjectLoadedEventArgs) Load(string filePath, ProjectIdInfo projectIdInfo, ProjectLoader loader, Guid sessionId, DotNetInfo dotNetInfo)
         {
             if (!File.Exists(filePath))
             {
@@ -115,8 +114,6 @@ namespace OmniSharp.MSBuild.ProjectFile
             {
                 return (null, diagnostics, null);
             }
-
-            var dotNetInfo = dotNetCli.GetInfo(Path.GetDirectoryName(projectInstance.FullPath));
 
             var data = ProjectData.Create(projectInstance);
             var projectFileInfo = new ProjectFileInfo(projectIdInfo, filePath, data, sessionId, dotNetInfo);

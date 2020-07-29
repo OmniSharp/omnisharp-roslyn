@@ -8,10 +8,11 @@ using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OmniSharp.Extensions.LanguageServer.Protocol.Server;
 using OmniSharp.Models;
 using OmniSharp.Models.V2.CodeActions;
+using OmniSharp.Extensions.LanguageServer.Protocol.Document;
 
 namespace OmniSharp.LanguageServerProtocol.Handlers
 {
-    internal sealed class OmniSharpCodeActionHandler: CodeActionHandler
+    internal sealed class OmniSharpCodeActionHandler : CodeActionHandler
     {
         public static IEnumerable<IJsonRpcHandler> Enumerate(RequestHandlers handlers)
         {
@@ -45,7 +46,8 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
 
         public async override Task<CommandOrCodeActionContainer> Handle(CodeActionParams request, CancellationToken cancellationToken)
         {
-            var omnisharpRequest = new GetCodeActionsRequest {
+            var omnisharpRequest = new GetCodeActionsRequest
+            {
                 FileName = Helpers.FromUri(request.TextDocument.Uri),
                 Column = (int)request.Range.Start.Character,
                 Line = (int)request.Range.Start.Line,
@@ -58,7 +60,8 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
 
             foreach (var ca in omnisharpResponse.CodeActions)
             {
-                var omnisharpCaRequest = new RunCodeActionRequest {
+                var omnisharpCaRequest = new RunCodeActionRequest
+                {
                     Identifier = ca.Identifier,
                     FileName = Helpers.FromUri(request.TextDocument.Uri),
                     Column = Convert.ToInt32(request.Range.Start.Character),
@@ -86,7 +89,8 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                 else { kind = CodeActionKind.Refactor; }
 
                 codeActions.Add(
-                    new CodeAction {
+                    new CodeAction
+                    {
                         Title = ca.Name,
                         Kind = kind,
                         Diagnostics = new Container<Diagnostic>(),
