@@ -30,6 +30,7 @@
         "XunitTestProject",
         "MSTestProject",
         "ProjectAndSolution",
+        "ProjectAndSolutionWithGlobs",
         "ProjectAndSolutionWithProjectSection",
         "TwoProjectsWithSolution",
         "ProjectWithGeneratedFile",
