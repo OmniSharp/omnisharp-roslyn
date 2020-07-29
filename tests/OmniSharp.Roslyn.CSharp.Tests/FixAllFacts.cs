@@ -292,7 +292,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         {
             return OmniSharpTestHost.Create(
                 testOutput: _testOutput,
-                configurationData: new Dictionary<string, string>() { { "RoslynExtensionsOptions:EnableAnalyzersSupport", roslynAnalyzersEnabled.ToString() } },
+                configurationData: new Dictionary<string, string>() { { "RoslynExtensionsOptions:EnableAnalyzersSupport", roslynAnalyzersEnabled.ToString() } }.ToConfiguration(),
                 eventEmitter: _analysisEventListener
             );
         }
