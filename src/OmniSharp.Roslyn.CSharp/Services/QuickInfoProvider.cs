@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using OmniSharp.Mef;
 using OmniSharp.Models;
 using OmniSharp.Options;
+using OmniSharp.Utilities;
 
 #nullable enable
 
@@ -186,12 +187,12 @@ namespace OmniSharp.Roslyn.CSharp.Services
                     switch (current.Tag)
                     {
                         case TextTags.Text when !isInCodeBlock:
-                            stringBuilder.Append(current.Text);
+                            addText(current.Text);
                             break;
 
                         case TextTags.Text:
                             endBlock();
-                            stringBuilder.Append(current.Text);
+                            addText(current.Text);
                             break;
 
                         case TextTags.Space when isInCodeBlock:
@@ -200,7 +201,7 @@ namespace OmniSharp.Roslyn.CSharp.Services
                                 endBlock();
                             }
 
-                            stringBuilder.Append(current.Text);
+                            addText(current.Text);
                             break;
 
                         case TextTags.Space:
@@ -234,7 +235,7 @@ namespace OmniSharp.Roslyn.CSharp.Services
                                 isInCodeBlock = true;
                                 stringBuilder.Append('`');
                             }
-                            stringBuilder.Append(current.Text);
+                            addText(current.Text);
                             break;
                     }
                 }
@@ -245,6 +246,11 @@ namespace OmniSharp.Roslyn.CSharp.Services
                 }
 
                 return;
+
+                void addText(string text)
+                {
+                    stringBuilder.Append(MarkdownHelpers.Escape(text));
+                }
 
                 void addNewline()
                 {

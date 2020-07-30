@@ -692,6 +692,25 @@ class Program
             Assert.Equal("```csharp\nvoid Program.B()\n```\n\nHello World", response.Markdown);
         }
 
+        [Fact]
+        public async Task MarkdownInComment()
+        {
+            string content = @"
+class Program
+{
+	/// <summary>*This should be escaped*</summary>
+	public static void B() { }
+
+    public static void A()
+    {
+        B$$();
+    }
+
+}";
+            var response = await GetTypeLookUpResponse(content);
+            Assert.Equal("```csharp\nvoid Program.B()\n```\n\n\\*This should be escaped\\*", response.Markdown);
+        }
+
         private async Task<QuickInfoResponse> GetTypeLookUpResponse(string content)
         {
             TestFile testFile = new TestFile("dummy.cs", content);
