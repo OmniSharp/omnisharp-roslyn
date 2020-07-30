@@ -451,7 +451,7 @@ class C
 
         [Theory]
         [InlineData("dummy.cs")]
-        //[InlineData("dummy.csx")]
+        [InlineData("dummy.csx")]
         public async Task Embedded_language_completion_provider_for_datetime_format(string filename)
         {
             const string source = @"
@@ -460,17 +460,19 @@ class C
 {
     void M()
     {
-        var d = DateTime.Now.ToString(""$$
+        var d = DateTime.Now.ToString(""$$""
     }
 }
 ";
 
             var completions = await FindCompletionsAsync(filename, source);
 
-            var completion = completions.First();
-            Assert.Equal("G", completion.CompletionText);
-            Assert.Equal("general long date/time", completion.DisplayText);
-            Assert.Contains(@"The ""G"" standard format specifier", completion.Description);
+            Assert.NotEmpty(completions);
+
+            var gStandardCompletion = completions.FirstOrDefault(x => x.CompletionText == "G");
+            Assert.NotNull(gStandardCompletion);
+            Assert.Equal("general long date/time", gStandardCompletion.DisplayText);
+            Assert.Contains(@"The ""G"" standard format specifier", gStandardCompletion.Description);
         }
 
         [Fact]
