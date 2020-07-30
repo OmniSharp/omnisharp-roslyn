@@ -77,7 +77,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var controller = new QuickInfoProvider(workspace, new FormattingOptions(), null);
             var response = await controller.Handle(new QuickInfoRequest { FileName = testFile.FileName, Line = position.Line, Column = position.Offset });
 
-            Assert.Equal("```csharp\nclass ClassLibraryWithDocumentation.DocumentedClass\n```\n\nThis class performs an important function.", response.Markdown);
+            Assert.Equal("```csharp\nclass ClassLibraryWithDocumentation.DocumentedClass\n```\n\nThis class performs an important function\\.", response.Markdown);
         }
 
         [Fact]
@@ -310,7 +310,7 @@ class testissue
     }
 }";
             var response = await GetTypeLookUpResponse(content);
-            Assert.Equal("```csharp\nbool testissue.Compare(int gameObject, string tagName)\n```\n\nYou may have some additional information about this class here.", response.Markdown);
+            Assert.Equal("```csharp\nbool testissue.Compare(int gameObject, string tagName)\n```\n\nYou may have some additional information about this class here\\.", response.Markdown);
         }
 
         [Fact]
@@ -325,7 +325,7 @@ class testissue
     }
 }";
             var response = await GetTypeLookUpResponse(content);
-            Assert.Equal("```csharp\nbool testissue.Compare(int gameObject, string tagName)\n```\n\nChecks if object is tagged with the tag.", response.Markdown);
+            Assert.Equal("```csharp\nbool testissue.Compare(int gameObject, string tagName)\n```\n\nChecks if object is tagged with the tag\\.", response.Markdown);
         }
 
         [Fact]
@@ -340,7 +340,7 @@ class testissue
     }
 }";
             var response = await GetTypeLookUpResponse(content);
-            Assert.Equal("```csharp\nbool testissue.Compare(int gameObject, string tagName)\n```\n\nReturns:\n\n  Returns true if object is tagged with tag.", response.Markdown);
+            Assert.Equal("```csharp\nbool testissue.Compare(int gameObject, string tagName)\n```\n\nReturns:\n\n  Returns true if object is tagged with tag\\.", response.Markdown);
         }
 
         [Fact]
@@ -466,7 +466,7 @@ public class TestClass
 }
 ";
             var response = await GetTypeLookUpResponse(content);
-            Assert.Equal("```csharp\nstring Employee.Name { }\n```\n\nThe Name property represents the employee's name.\n\nValue:\n\n  The Name property gets/sets the value of the string field, _name.", response.Markdown);
+            Assert.Equal("```csharp\nstring Employee.Name { }\n```\n\nThe Name property represents the employee's name\\.\n\nValue:\n\n  The Name property gets/sets the value of the string field, \\_name\\.", response.Markdown);
         }
 
         [Fact]
@@ -481,7 +481,7 @@ public class TestClass
     }
 }";
             var response = await GetTypeLookUpResponse(content);
-            Assert.Equal("```csharp\nvoid TestClass.DoWork(int Int1)\n```\n\nDoWork is a method in the TestClass class. `System.Console.WriteLine(string)` for information about output statements.", response.Markdown);
+            Assert.Equal("```csharp\nvoid TestClass.DoWork(int Int1)\n```\n\nDoWork is a method in the TestClass class\\. `System.Console.WriteLine(string)` for information about output statements\\.", response.Markdown);
         }
 
         [Fact]
@@ -542,7 +542,7 @@ public class TestClass
 }
             ";
             var response = await GetTypeLookUpResponse(content);
-            Assert.Equal("```csharp\nvoid TestClass.DoWork(int Int1)\n```\n\nDoWork is a method in the TestClass class.\n\n\n\nHere's how you could make a second paragraph in a description.", response.Markdown);
+            Assert.Equal("```csharp\nvoid TestClass.DoWork(int Int1)\n```\n\nDoWork is a method in the TestClass class\\.\n\n\n\nHere's how you could make a second paragraph in a description\\.", response.Markdown);
         }
 
         [Fact]
@@ -563,7 +563,7 @@ public class TestClass
             }
 }";
             var response = await GetTypeLookUpResponse(content);
-            Assert.Equal("```csharp\nvoid TestClass.DoWork(int Int1)\n```\n\nDoWork is a method in the TestClass class. `TestClass.Main()`", response.Markdown);
+            Assert.Equal("```csharp\nvoid TestClass.DoWork(int Int1)\n```\n\nDoWork is a method in the TestClass class\\. `TestClass.Main()`", response.Markdown);
         }
 
         [Fact]
@@ -580,7 +580,7 @@ class testissue
     }
 }";
             var response = await GetTypeLookUpResponse(content);
-            Assert.Equal("```csharp\nbool testissue.Compare(int gameObject, string tagName)\n```\n\nChecks if object is tagged with the tag.", response.Markdown);
+            Assert.Equal("```csharp\nbool testissue.Compare(int gameObject, string tagName)\n```\n\nChecks if object is tagged with the tag\\.", response.Markdown);
         }
 
         [Fact]
@@ -602,7 +602,7 @@ class testissue
 }";
             var response = await GetTypeLookUpResponse(content);
             Assert.Equal(
-                "```csharp\nT[] testissue.Compare(int gameObject)\n```\n\nChecks if object is tagged with the tag.\n\nYou may have some additional information about this class here.\n\nReturns:\n\n  Returns an array of type `T`.\n\n\n\nExceptions:\n\n  `System.Exception`",
+                "```csharp\nT[] testissue.Compare(int gameObject)\n```\n\nChecks if object is tagged with the tag\\.\n\nYou may have some additional information about this class here\\.\n\nReturns:\n\n  Returns an array of type `T`\\.\n\n\n\nExceptions:\n\n  `System.Exception`",
                 response.Markdown);
         }
 
@@ -618,7 +618,7 @@ public class TestClass
     }
 }";
             var response = await GetTypeLookUpResponse(content);
-            Assert.Equal("```csharp\nvoid TestClass.DoWork(int Int1)\n```\n\nDoWork is a method in the TestClass class.", response.Markdown);
+            Assert.Equal("```csharp\nvoid TestClass.DoWork(int Int1)\n```\n\nDoWork is a method in the TestClass class\\.", response.Markdown);
         }
 
         [Fact]
@@ -634,7 +634,7 @@ class testissue
     }
 }";
             var response = await GetTypeLookUpResponse(content);
-            Assert.Equal("```csharp\n(parameter) int gameObject\n```\n\nThe game object.", response.Markdown);
+            Assert.Equal("```csharp\n(parameter) int gameObject\n```\n\nThe game object\\.", response.Markdown);
         }
 
         [Fact]
@@ -650,7 +650,7 @@ class testissue
     }
 }";
             var response = await GetTypeLookUpResponse(content);
-            Assert.Equal("```csharp\n(parameter) string tagName\n```\n\nName of the tag.", response.Markdown);
+            Assert.Equal("```csharp\n(parameter) string tagName\n```\n\nName of the tag\\.", response.Markdown);
         }
 
         [Fact]

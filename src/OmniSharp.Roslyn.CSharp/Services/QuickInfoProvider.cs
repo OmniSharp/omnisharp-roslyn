@@ -201,7 +201,11 @@ namespace OmniSharp.Roslyn.CSharp.Services
                                 endBlock();
                             }
 
-                            addText(current.Text);
+                            stringBuilder.Append(current.Text);
+                            break;
+
+                        case TextTags.Punctuation when isInCodeBlock && current.Text != "`":
+                            stringBuilder.Append(current.Text);
                             break;
 
                         case TextTags.Space:
@@ -211,7 +215,7 @@ namespace OmniSharp.Roslyn.CSharp.Services
 
                         case ContainerStart:
                             addNewline();
-                            stringBuilder.Append(current.Text);
+                            addText(current.Text);
                             break;
 
                         case ContainerEnd:
@@ -235,7 +239,7 @@ namespace OmniSharp.Roslyn.CSharp.Services
                                 isInCodeBlock = true;
                                 stringBuilder.Append('`');
                             }
-                            addText(current.Text);
+                            stringBuilder.Append(current.Text);
                             break;
                     }
                 }
