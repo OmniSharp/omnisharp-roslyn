@@ -449,6 +449,30 @@ class C
             Assert.True(completions.All(c => !c.IsSuggestionMode));
         }
 
+        [Theory]
+        [InlineData("dummy.cs")]
+        //[InlineData("dummy.csx")]
+        public async Task Embedded_language_completion_provider_for_datetime_format(string filename)
+        {
+            const string source = @"
+using System;
+class C
+{
+    void M()
+    {
+        var d = DateTime.Now.ToString(""$$
+    }
+}
+";
+
+            var completions = await FindCompletionsAsync(filename, source);
+
+            var completion = completions.First();
+            Assert.Equal("G", completion.CompletionText);
+            Assert.Equal("general long date/time", completion.DisplayText);
+            Assert.Contains(@"The ""G"" standard format specifier", completion.Description);
+        }
+
         [Fact]
         public async Task Scripting_by_default_returns_completions_for_CSharp7_1()
         {
