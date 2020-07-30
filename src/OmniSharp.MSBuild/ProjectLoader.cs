@@ -68,7 +68,7 @@ namespace OmniSharp.MSBuild
         }
 
         public (MSB.Execution.ProjectInstance projectInstance, ImmutableArray<MSBuildDiagnostic> diagnostics) BuildProject(
-            string filePath, Dictionary<string, string> configurationsInSolution)
+            string filePath, IReadOnlyDictionary<string, string> configurationsInSolution)
         {
             using (_sdksPathResolver.SetSdksPathEnvironmentVariable(filePath))
             {
@@ -116,7 +116,7 @@ namespace OmniSharp.MSBuild
             }
         }
 
-        private MSB.Evaluation.Project EvaluateProjectFileCore(string filePath, Dictionary<string, string> projectConfigurationsInSolution = null)
+        private MSB.Evaluation.Project EvaluateProjectFileCore(string filePath, IReadOnlyDictionary<string, string> projectConfigurationsInSolution = null)
         {
             var localProperties = new Dictionary<string, string>(_globalProperties);
             if (projectConfigurationsInSolution != null
@@ -137,7 +137,7 @@ namespace OmniSharp.MSBuild
                     {
                         var projectConfiguration = splitted[0];
                         localProperties[PropertyNames.Configuration] = projectConfiguration;
-                        // NOTE: Solution often defines configuration as `Any CPU` wheras project relies on `AnyCPU`
+                        // NOTE: Solution often defines configuration as `Any CPU` whereas project relies on `AnyCPU`
                         var projectPlatform = splitted[1].Replace("Any CPU", "AnyCPU");
                         localProperties[PropertyNames.Platform] = projectPlatform;
                         _logger.LogInformation($"Using configuration from solution: `{projectConfiguration}|{projectPlatform}`");
