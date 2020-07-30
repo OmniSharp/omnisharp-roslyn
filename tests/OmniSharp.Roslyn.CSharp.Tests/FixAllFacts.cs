@@ -34,6 +34,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
                 var testFilePath = CreateTestProjectWithDocument(host, originalText);
 
+                string textBeforeFix = await GetContentOfDocumentFromWorkspace(host, testFilePath);
+
                 var handler = host.GetRequestHandler<RunFixAllCodeActionService>(OmniSharpEndpoints.RunFixAll);
 
                 var response = await handler.Handle(new RunFixAllRequest
@@ -139,7 +141,12 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             }
         }
 
-        [Fact()]
+        [Fact(Skip = @"Fails on windows only inside roslyn
+System.ArgumentOutOfRangeException
+Specified argument was out of the range of valid values.
+Parameter name: start
+...
+")]
         // This is specifically tested because has custom mapping logic in it.
         public async Task WhenTextContainsUnusedImports_ThenTheyCanBeAutomaticallyFixed()
         {
