@@ -1,13 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
+﻿using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using OmniSharp.Models;
-using OmniSharp.Models.V2;
-using OmniSharp.Models.V2.CodeActions;
-using OmniSharp.Roslyn.CSharp.Services.Refactoring.V2;
 using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
@@ -38,10 +32,9 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     }
 
                     public string PropertyHere { get; set; }
-                }
-                ";
+                }";
             var response = await RunRefactoringAsync(code, "Generate constructor...");
-            AssertIgnoringIndent(expected, ((ModifiedFileResponse)response.Changes.First()).Buffer);
+            AssertUtils.AssertIgnoringIndent(expected, ((ModifiedFileResponse)response.Changes.First()).Buffer);
         }
 
         [Fact]
@@ -51,6 +44,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 @"public class Class1[||]
                 {
                 }";
+
             const string expected =
                 @"public class Class1
                 {
@@ -68,10 +62,10 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     {
                         return base.ToString();
                     }
-                }
-                ";
+                }";
+
             var response = await RunRefactoringAsync(code, "Generate overrides...");
-            AssertIgnoringIndent(expected, ((ModifiedFileResponse)response.Changes.First()).Buffer);
+            AssertUtils.AssertIgnoringIndent(expected, ((ModifiedFileResponse)response.Changes.First()).Buffer);
         }
 
         [Fact]
@@ -82,6 +76,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 {
                     public string PropertyHere { get; set; }
                 }";
+
             const string expected =
                 @"public class Class1
                 {
@@ -92,10 +87,10 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                         return obj is Class1 @class &&
                                PropertyHere == @class.PropertyHere;
                     }
-                }
-                ";
+                }";
+
             var response = await RunRefactoringAsync(code, "Generate Equals(object)...");
-            AssertIgnoringIndent(expected, ((ModifiedFileResponse)response.Changes.First()).Buffer);
+            AssertUtils.AssertIgnoringIndent(expected, ((ModifiedFileResponse)response.Changes.First()).Buffer);
         }
 
         [Fact]
@@ -156,8 +151,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     public string Foo[||] { get; set; }
                 }
 
-                public class BaseClass {}
-";
+                public class BaseClass {}";
 
             var response = await FindRefactoringNamesAsync(code);
 
@@ -174,8 +168,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 }";
 
             const string expected =
-                @"
-                public interface IClass1
+                @"public interface IClass1
                 {
                     string PropertyHere { get; set; }
                 }
@@ -183,11 +176,11 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 public class Class1 : IClass1
                 {
                     public string PropertyHere { get; set; }
-                }
-                ";
+                }";
+
             var response = await RunRefactoringAsync(code, "Extract interface...");
 
-            AssertIgnoringIndent(expected, ((ModifiedFileResponse)response.Changes.First()).Buffer);
+            AssertUtils.AssertIgnoringIndent(expected, ((ModifiedFileResponse)response.Changes.First()).Buffer);
         }
 
         [Fact]

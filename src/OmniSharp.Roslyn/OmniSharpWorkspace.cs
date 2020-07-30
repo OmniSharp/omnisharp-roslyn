@@ -25,7 +25,19 @@ namespace OmniSharp
     [Export, Shared]
     public class OmniSharpWorkspace : Workspace
     {
-        public bool Initialized { get; set; }
+        public bool Initialized
+        {
+            get { return isInitialized; }
+            set
+            {
+                if (isInitialized == value) return;
+                isInitialized = value;
+                OnInitialized(isInitialized);
+            }
+        }
+
+        public event Action<bool> OnInitialized = delegate { };
+
         public bool EditorConfigEnabled { get; set; }
         public BufferManager BufferManager { get; private set; }
 
@@ -34,6 +46,7 @@ namespace OmniSharp
         private readonly ConcurrentBag<Func<string, Task>> _waitForProjectModelReadyHandlers = new ConcurrentBag<Func<string, Task>>();
         private readonly ConcurrentDictionary<string, ProjectInfo> miscDocumentsProjectInfos = new ConcurrentDictionary<string, ProjectInfo>();
         private readonly ConcurrentDictionary<ProjectId, Predicate<string>> documentInclusionRulesPerProject = new ConcurrentDictionary<ProjectId, Predicate<string>>();
+        private bool isInitialized;
 
         [ImportingConstructor]
         public OmniSharpWorkspace(HostServicesAggregator aggregator, ILoggerFactory loggerFactory, IFileSystemWatcher fileSystemWatcher)

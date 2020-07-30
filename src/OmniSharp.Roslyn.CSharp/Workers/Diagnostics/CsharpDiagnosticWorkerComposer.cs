@@ -1,21 +1,11 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Composition;
-using System.Linq;
-using System.Reflection;
-using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.Diagnostics;
-using Microsoft.CodeAnalysis.Options;
 using Microsoft.Extensions.Logging;
-using OmniSharp.Helpers;
-using OmniSharp.Models.Diagnostics;
 using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
-using OmniSharp.Roslyn.CSharp.Workers.Diagnostics;
 using OmniSharp.Services;
 
 namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
@@ -26,7 +16,6 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
     public class CsharpDiagnosticWorkerComposer: ICsDiagnosticWorker
     {
         private readonly ICsDiagnosticWorker _implementation;
-        private readonly OmniSharpWorkspace _workspace;
 
         [ImportingConstructor]
         public CsharpDiagnosticWorkerComposer(
@@ -44,16 +33,14 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
             {
                 _implementation = new CSharpDiagnosticWorker(workspace, forwarder, loggerFactory);
             }
-
-            _workspace = workspace;
         }
 
-        public Task<ImmutableArray<(string projectName, Diagnostic diagnostic)>> GetAllDiagnosticsAsync()
+        public Task<ImmutableArray<DocumentDiagnostics>> GetAllDiagnosticsAsync()
         {
             return _implementation.GetAllDiagnosticsAsync();
         }
 
-        public Task<ImmutableArray<(string projectName, Diagnostic diagnostic)>> GetDiagnostics(ImmutableArray<string> documentPaths)
+        public Task<ImmutableArray<DocumentDiagnostics>> GetDiagnostics(ImmutableArray<string> documentPaths)
         {
             return _implementation.GetDiagnostics(documentPaths);
         }

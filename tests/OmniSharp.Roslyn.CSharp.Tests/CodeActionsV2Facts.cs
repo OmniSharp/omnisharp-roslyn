@@ -87,7 +87,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 public class c {public c() {Guid.NewGuid();}}";
 
             var response = await RunRefactoringAsync(code, "Remove Unnecessary Usings", isAnalyzersEnabled: roslynAnalyzersEnabled);
-            AssertIgnoringIndent(expected, ((ModifiedFileResponse)response.Changes.First()).Buffer);
+            AssertUtils.AssertIgnoringIndent(expected, ((ModifiedFileResponse)response.Changes.First()).Buffer);
         }
 
         [Theory]
@@ -185,8 +185,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                         Console.Write(""should be using System;"");
                     }
                 }";
-            var response = await RunRefactoringAsync(code, "Extract method", isAnalyzersEnabled: roslynAnalyzersEnabled);
-            AssertIgnoringIndent(expected, ((ModifiedFileResponse)response.Changes.First()).Buffer);
+            var response = await RunRefactoringAsync(code, "Extract Method", isAnalyzersEnabled: roslynAnalyzersEnabled);
+            AssertUtils.AssertIgnoringIndent(expected, ((ModifiedFileResponse)response.Changes.First()).Buffer);
         }
 
         [Theory]
