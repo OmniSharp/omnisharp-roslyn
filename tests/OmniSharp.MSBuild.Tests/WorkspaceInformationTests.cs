@@ -129,7 +129,7 @@ namespace OmniSharp.MSBuild.Tests
         {
             var configData = new Dictionary<string, string> { [$"MsBuild:{nameof(Options.MSBuildOptions.Configuration)}"] = "ReleaseSln" };
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("TwoProjectsWithSolutionAndCustomConfigurations"))
-            using (var host = CreateMSBuildTestHost(testProject.Directory, configurationData: configData))
+            using (var host = CreateMSBuildTestHost(testProject.Directory, configurationData: configData.ToConfiguration()))
             {
                 var workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
 
