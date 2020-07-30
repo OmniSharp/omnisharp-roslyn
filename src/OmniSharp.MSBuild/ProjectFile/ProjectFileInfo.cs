@@ -3,8 +3,11 @@ using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Runtime.Versioning;
+using Microsoft.Build.Evaluation;
+using Microsoft.Build.Globbing;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using OmniSharp.FileSystem;
 using OmniSharp.MSBuild.Logging;
 using OmniSharp.MSBuild.Notification;
 using OmniSharp.Services;
@@ -62,6 +65,7 @@ namespace OmniSharp.MSBuild.ProjectFile
         public bool RunAnalyzers => _data.RunAnalyzers;
         public bool RunAnalyzersDuringLiveAnalysis => _data.RunAnalyzersDuringLiveAnalysis;
         public string DefaultNamespace => _data.DefaultNamespace;
+        public ImmutableArray<IMSBuildGlob> FileInclusionGlobPatterns => _data.FileInclusionGlobs;
 
         public ProjectIdInfo ProjectIdInfo { get; }
         public DotNetInfo DotNetInfo { get; }
@@ -109,15 +113,16 @@ namespace OmniSharp.MSBuild.ProjectFile
                 return (null, ImmutableArray<MSBuildDiagnostic>.Empty, null);
             }
 
-            var (projectInstance, diagnostics) = loader.BuildProject(filePath);
+            var (projectInstance, project, diagnostics) = loader.BuildProject(filePath);
             if (projectInstance == null)
             {
                 return (null, diagnostics, null);
             }
 
-            var data = ProjectData.Create(projectInstance);
+            var data = ProjectData.Create(projectInstance, project);
             var projectFileInfo = new ProjectFileInfo(projectIdInfo, filePath, data, sessionId, dotNetInfo);
             var eventArgs = new ProjectLoadedEventArgs(projectIdInfo.Id,
+                                                       project,
                                                        sessionId,
                                                        projectInstance,
                                                        diagnostics,
@@ -132,15 +137,16 @@ namespace OmniSharp.MSBuild.ProjectFile
 
         public (ProjectFileInfo, ImmutableArray<MSBuildDiagnostic>, ProjectLoadedEventArgs) Reload(ProjectLoader loader)
         {
-            var (projectInstance, diagnostics) = loader.BuildProject(FilePath);
+            var (projectInstance, project, diagnostics) = loader.BuildProject(FilePath);
             if (projectInstance == null)
             {
                 return (null, diagnostics, null);
             }
 
-            var data = ProjectData.Create(projectInstance);
+            var data = ProjectData.Create(projectInstance, project);
             var projectFileInfo = new ProjectFileInfo(ProjectIdInfo, FilePath, data, SessionId, DotNetInfo);
             var eventArgs = new ProjectLoadedEventArgs(Id,
+                                                       project,
                                                        SessionId,
                                                        projectInstance,
                                                        diagnostics,
@@ -161,5 +167,15 @@ namespace OmniSharp.MSBuild.ProjectFile
                     return string.Equals(fileName, "UnityEngine.dll", StringComparison.OrdinalIgnoreCase)
                         || string.Equals(fileName, "UnityEditor.dll", StringComparison.OrdinalIgnoreCase);
                 });
+
+
+        public bool IsFileIncluded(string filePath)
+        {
+            if (SourceFiles.Contains(filePath, StringComparer.OrdinalIgnoreCase))
+                return true;
+
+            var relativePath = FileSystemHelper.GetRelativePath(filePath, FilePath);
+            return FileInclusionGlobPatterns.Any(glob => glob.IsMatch(relativePath));
+        }
     }
 }

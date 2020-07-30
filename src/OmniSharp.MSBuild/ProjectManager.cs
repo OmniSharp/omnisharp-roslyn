@@ -364,6 +364,7 @@ namespace OmniSharp.MSBuild
             var projectInfo = projectFileInfo.CreateProjectInfo(_analyzerAssemblyLoader);
 
             var newSolution = _workspace.CurrentSolution.AddProject(projectInfo);
+            _workspace.AddDocumentInclusionRuleForProject(projectInfo.Id, (filePath) => projectFileInfo.IsFileIncluded(filePath));
 
             if (!_workspace.TryApplyChanges(newSolution))
             {
@@ -468,6 +469,7 @@ namespace OmniSharp.MSBuild
             UpdateAnalyzerConfigFiles(project, projectFileInfo.AnalyzerConfigFiles);
             UpdateProjectProperties(project, projectFileInfo);
 
+            _workspace.AddDocumentInclusionRuleForProject(project.Id, (path) => projectFileInfo.IsFileIncluded(path));
             _workspace.TryPromoteMiscellaneousDocumentsToProject(project);
             _workspace.UpdateCompilationOptionsForProject(project.Id, projectFileInfo.CreateCompilationOptions());
         }

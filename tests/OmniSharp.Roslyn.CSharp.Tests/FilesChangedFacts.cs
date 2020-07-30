@@ -115,10 +115,42 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             }
         }
 
-        private async Task<string> AddFile(OmniSharpTestHost host)
+        [Fact]
+        public async Task TestThatMSBuildGlobsAreRespectedAfterProjectLoad()
+        {
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectAndSolutionWithGlobs"))
+            using (var host = CreateOmniSharpHost(testProject.Directory))
+            {
+                // prepare directories
+                var projectDirectory = Path.GetDirectoryName(host.Workspace.CurrentSolution.Projects.First().FilePath);
+                Directory.CreateDirectory(Path.Combine(projectDirectory, "explicitlyIgnoredFolder"));
+                Directory.CreateDirectory(Path.Combine(projectDirectory, "obj\\explicitlyIncludedFolder"));
+
+                // files which should not be included
+                var fileInObjFolder = await AddFile(host, "obj\\ObjFolderIsIgnoredByDefault.cs");
+                var fileInBinFolder = await AddFile(host, "bin\\BinFolderIsIgnoredByDefault.cs");
+                var explicitlyIgnoredFolder = await AddFile(host, "explicitlyIgnoredFolder\\fileName.cs");
+                var explicitlyIgnoredFile = await AddFile(host, "explicitlyIgnoredFile.cs");
+
+                // files which should be included
+                var fileInNormalFolder = await AddFile(host, "fileName.cs");
+                var fileInExplicitlyIncludedFolder = await AddFile(host, "obj\\explicitlyIncludedFolder\\fileName.cs");
+
+                var project = host.Workspace.CurrentSolution.Projects.First();
+
+                Assert.DoesNotContain(project.Documents, d => d.FilePath == fileInObjFolder);
+                Assert.DoesNotContain(project.Documents, d => d.FilePath == explicitlyIgnoredFolder);
+                Assert.DoesNotContain(project.Documents, d => d.FilePath == explicitlyIgnoredFile);
+                Assert.DoesNotContain(project.Documents, d => d.FilePath == fileInBinFolder);
+
+                Assert.Contains(project.Documents, d => d.FilePath == fileInNormalFolder);
+                Assert.Contains(project.Documents, d => d.FilePath == fileInExplicitlyIncludedFolder);
+            }
+        }
+
+        private async Task<string> AddFile(OmniSharpTestHost host, string filename = "FileName.cs")
         {
             var projectDirectory = Path.GetDirectoryName(host.Workspace.CurrentSolution.Projects.First().FilePath);
-            const string filename = "FileName.cs";
             var filePath = Path.Combine(projectDirectory, filename);
             File.WriteAllText(filePath, "text");
             await GetRequestHandler(host).Handle(new[] { new FilesChangedRequest() { FileName = filePath, ChangeType = FileChangeType.Create } });

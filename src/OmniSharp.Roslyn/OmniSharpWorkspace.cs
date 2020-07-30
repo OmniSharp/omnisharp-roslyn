@@ -32,8 +32,8 @@ namespace OmniSharp
         private readonly ILogger<OmniSharpWorkspace> _logger;
 
         private readonly ConcurrentBag<Func<string, Task>> _waitForProjectModelReadyHandlers = new ConcurrentBag<Func<string, Task>>();
-
         private readonly ConcurrentDictionary<string, ProjectInfo> miscDocumentsProjectInfos = new ConcurrentDictionary<string, ProjectInfo>();
+        private readonly ConcurrentDictionary<ProjectId, Predicate<string>> documentInclusionRulesPerProject = new ConcurrentDictionary<ProjectId, Predicate<string>>();
 
         [ImportingConstructor]
         public OmniSharpWorkspace(HostServicesAggregator aggregator, ILoggerFactory loggerFactory, IFileSystemWatcher fileSystemWatcher)
@@ -91,6 +91,11 @@ namespace OmniSharp
         public void AddProject(ProjectInfo projectInfo)
         {
             OnProjectAdded(projectInfo);
+        }
+
+        public void AddDocumentInclusionRuleForProject(ProjectId projectId, Predicate<string> documentPathFilter)
+        {
+            documentInclusionRulesPerProject[projectId] = documentPathFilter;
         }
 
         public void AddProjectReference(ProjectId projectId, ProjectReference projectReference)
@@ -358,15 +363,32 @@ namespace OmniSharp
                 return false;
             }
 
+            // File path needs to be checked against any rules defined by the specific project system. (e.g. MSBuild default excluded folders)
+            if (documentInclusionRulesPerProject.TryGetValue(project.Id, out Predicate<string> documentInclusionFilter))
+            {
+                return documentInclusionFilter(fileName);
+            }
+
+            // if no custom rule set for this ProjectId, fallback to simple directory heuristic.
             var fileDirectory = new FileInfo(fileName).Directory;
             var projectPath = project.FilePath;
             var projectDirectory = new FileInfo(projectPath).Directory.FullName;
+            var otherProjectDirectories = CurrentSolution.Projects
+                .Where(p => p != project && !string.IsNullOrWhiteSpace(p.FilePath))
+                .Select(p => new FileInfo(p.FilePath).Directory.FullName)
+                .ToImmutableArray();
 
             while (fileDirectory != null)
             {
                 if (string.Equals(fileDirectory.FullName, projectDirectory, StringComparison.OrdinalIgnoreCase))
                 {
                     return true;
+                }
+
+                // if any project is closer to the file, file should belong to that project.
+                if (otherProjectDirectories.Contains(fileDirectory.FullName, StringComparer.OrdinalIgnoreCase))
+                {
+                    return false;
                 }
 
                 fileDirectory = fileDirectory.Parent;
