@@ -140,7 +140,7 @@ namespace OmniSharp.MSBuild
                         // NOTE: Solution often defines configuration as `Any CPU` whereas project relies on `AnyCPU`
                         var projectPlatform = splitted[1].Replace("Any CPU", "AnyCPU");
                         localProperties[PropertyNames.Platform] = projectPlatform;
-                        _logger.LogInformation($"Using configuration from solution: `{projectConfiguration}|{projectPlatform}`");
+                        _logger.LogDebug($"Using configuration from solution: `{projectConfiguration}|{projectPlatform}`");
                     }
                 }
             }
