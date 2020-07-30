@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Composition.Hosting.Core;
 using Microsoft.CodeAnalysis;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Host.Services;
 using OmniSharp.MSBuild.Discovery;
@@ -35,7 +36,7 @@ namespace OmniSharp.MSBuild.Tests
         }
 
         protected OmniSharpTestHost CreateMSBuildTestHost(string path, IEnumerable<ExportDescriptorProvider> additionalExports = null,
-            IEnumerable<KeyValuePair<string, string>> configurationData = null)
+            IConfiguration configurationData = null)
         {
             var environment = new OmniSharpEnvironment(path, logLevel: LogLevel.Trace);
             var serviceProvider = TestServiceProvider.Create(this.TestOutput, environment, this.LoggerFactory, _assemblyLoader, _analyzerAssemblyLoader, _msbuildLocator,

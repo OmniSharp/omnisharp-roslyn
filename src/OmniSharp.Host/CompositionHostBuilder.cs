@@ -8,6 +8,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.DependencyModel;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -51,7 +52,8 @@ namespace OmniSharp
             var dotNetCliService = _serviceProvider.GetRequiredService<IDotNetCliService>();
             var config = new ContainerConfiguration();
 
-            var fileSystemWatcher = new ManualFileSystemWatcher();
+            var fileSystemNotifier = _serviceProvider.GetRequiredService<IFileSystemNotifier>();
+            var fileSystemWatcher = _serviceProvider.GetRequiredService<IFileSystemWatcher>();
             var logger = loggerFactory.CreateLogger<CompositionHostBuilder>();
 
             // We must register an MSBuild instance before composing MEF to ensure that
@@ -67,8 +69,8 @@ namespace OmniSharp
 
             config = config
                 .WithProvider(MefValueProvider.From(_serviceProvider))
-                .WithProvider(MefValueProvider.From<IFileSystemNotifier>(fileSystemWatcher))
-                .WithProvider(MefValueProvider.From<IFileSystemWatcher>(fileSystemWatcher))
+                .WithProvider(MefValueProvider.From(fileSystemNotifier))
+                .WithProvider(MefValueProvider.From(fileSystemWatcher))
                 .WithProvider(MefValueProvider.From(memoryCache))
                 .WithProvider(MefValueProvider.From(loggerFactory))
                 .WithProvider(MefValueProvider.From(environment))
@@ -86,7 +88,12 @@ namespace OmniSharp
             }
 
             var parts = _assemblies
-                .Concat(new[] { typeof(OmniSharpWorkspace).GetTypeInfo().Assembly, typeof(IRequest).GetTypeInfo().Assembly, typeof(FileSystemHelper).GetTypeInfo().Assembly })
+                .Where(a => a != null)
+                .Concat(new[]
+                {
+                    typeof(OmniSharpWorkspace).GetTypeInfo().Assembly, typeof(IRequest).GetTypeInfo().Assembly,
+                    typeof(FileSystemHelper).GetTypeInfo().Assembly
+                })
                 .Distinct()
                 .SelectMany(a => SafeGetTypes(a))
                 .ToArray();
@@ -115,7 +122,11 @@ namespace OmniSharp
             IServiceCollection services = null,
             Action<ILoggingBuilder> configureLogging = null)
         {
-            services = services ?? new ServiceCollection();
+            services ??= new ServiceCollection();
+
+            services.TryAddSingleton(_ => new ManualFileSystemWatcher());
+            services.TryAddSingleton<IFileSystemNotifier>(sp => sp.GetRequiredService<ManualFileSystemWatcher>());
+            services.TryAddSingleton<IFileSystemWatcher>(sp => sp.GetRequiredService<ManualFileSystemWatcher>());
 
             services.AddSingleton(environment);
             services.AddSingleton(eventEmitter);
@@ -137,8 +148,10 @@ namespace OmniSharp
 
 
             // Setup the options from configuration
-            services.Configure<OmniSharpOptions>(configuration);
+            services.Configure<OmniSharpOptions>(configuration)
+                .PostConfigure<OmniSharpOptions>(OmniSharpOptions.PostConfigure);
             services.AddSingleton(configuration);
+            services.AddSingleton<IConfiguration>(configuration);
 
             services.AddLogging(builder =>
             {

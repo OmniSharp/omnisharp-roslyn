@@ -55,7 +55,7 @@ namespace OmniSharp.Services
             }
         }
 
-        public static IEnumerable<Assembly> LoadByAssemblyNameOrPath(this IAssemblyLoader loader, ILogger logger, IEnumerable<string>  assemblyNames)
+        public static IEnumerable<Assembly> LoadByAssemblyNameOrPath(this IAssemblyLoader loader, ILogger logger, IEnumerable<string> assemblyNames)
         {
             foreach (var assemblyName in assemblyNames)
             {
