@@ -475,33 +475,6 @@ class C
             Assert.Contains(@"The ""G"" standard format specifier", gStandardCompletion.Description);
         }
 
-        [Theory]
-        [InlineData("dummy.cs")]
-        [InlineData("dummy.csx")]
-        public async Task Embedded_language_completion_provider_for_regex(string filename)
-        {
-            const string source = @"
-using System;
-using System.Text.RegularExpressions;
-class C
-{
-    void M()
-    {
-        var r = Regex.Match(""foo"", ""$$""
-    }
-}
-";
-
-            var completions = await FindCompletionsAsync(filename, source);
-
-            Assert.NotEmpty(completions);
-
-            var wCompletion = completions.FirstOrDefault(x => x.CompletionText == @"\w");
-            Assert.NotNull(wCompletion);
-            Assert.Equal("word character", wCompletion.DisplayText);
-            Assert.Contains(@"matches any word character", wCompletion.Description);
-        }
-
         [Fact]
         public async Task Scripting_by_default_returns_completions_for_CSharp7_1()
         {
