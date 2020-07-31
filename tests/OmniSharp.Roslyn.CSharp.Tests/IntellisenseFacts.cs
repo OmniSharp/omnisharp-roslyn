@@ -496,10 +496,10 @@ class C
 
             Assert.NotEmpty(completions);
 
-            var gStandardCompletion = completions.FirstOrDefault(x => x.CompletionText == @"\w");
-            Assert.NotNull(gStandardCompletion);
-            Assert.Equal("word character", gStandardCompletion.DisplayText);
-            Assert.Contains(@"matches any word character", gStandardCompletion.Description);
+            var wCompletion = completions.FirstOrDefault(x => x.CompletionText == @"\w");
+            Assert.NotNull(wCompletion);
+            Assert.Equal("word character", wCompletion.DisplayText);
+            Assert.Contains(@"matches any word character", wCompletion.Description);
         }
 
         [Fact]
