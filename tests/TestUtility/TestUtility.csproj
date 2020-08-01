@@ -8,6 +8,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\OmniSharp.DotNetTest\OmniSharp.DotNetTest.csproj" />
     <ProjectReference Include="..\..\src\OmniSharp.Host\OmniSharp.Host.csproj" />
+    <ProjectReference Include="..\..\src\OmniSharp.LanguageServerProtocol\OmniSharp.LanguageServerProtocol.csproj" />
     <ProjectReference Include="..\..\src\OmniSharp.MSBuild\OmniSharp.MSBuild.csproj" />
     <ProjectReference Include="..\..\src\OmniSharp.Roslyn.CSharp\OmniSharp.Roslyn.CSharp.csproj" />
     <ProjectReference Include="..\..\src\OmniSharp.Script\OmniSharp.Script.csproj" />

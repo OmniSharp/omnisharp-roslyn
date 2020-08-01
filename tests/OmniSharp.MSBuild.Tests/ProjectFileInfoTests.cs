@@ -28,7 +28,6 @@ namespace OmniSharp.MSBuild.Tests
         {
             var msbuildLocator = host.GetExport<IMSBuildLocator>();
             var sdksPathResolver = host.GetExport<SdksPathResolver>();
-            var dotNetCli = host.GetExport<IDotNetCliService>();
 
             var loader = new ProjectLoader(
                 options: new MSBuildOptions(),
@@ -38,7 +37,7 @@ namespace OmniSharp.MSBuild.Tests
                 sdksPathResolver: sdksPathResolver);
 
             var projectIdInfo = new ProjectIdInfo(ProjectId.CreateNewId(), false);
-            var (projectFileInfo, _, _) = ProjectFileInfo.Load(projectFilePath, projectIdInfo, loader, sessionId: Guid.NewGuid(), dotNetCli);
+            var (projectFileInfo, _, _) = ProjectFileInfo.Load(projectFilePath, projectIdInfo, loader, sessionId: Guid.NewGuid(), DotNetInfo.Empty);
 
             return projectFileInfo;
         }

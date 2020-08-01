@@ -6,11 +6,11 @@ using OmniSharp.Extensions.JsonRpc;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OmniSharp.Extensions.LanguageServer.Protocol.Server;
 using OmniSharp.Models.V2.CodeActions;
-using Newtonsoft.Json.Linq;
+using OmniSharp.Extensions.LanguageServer.Protocol.Document;
 
 namespace OmniSharp.LanguageServerProtocol.Handlers
 {
-    internal sealed class OmniSharpCodeActionHandler: CodeActionHandler
+    internal sealed class OmniSharpCodeActionHandler : CodeActionHandler
     {
         public static IEnumerable<IJsonRpcHandler> Enumerate(RequestHandlers handlers)
         {
@@ -40,7 +40,8 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
 
         public async override Task<CommandOrCodeActionContainer> Handle(CodeActionParams request, CancellationToken cancellationToken)
         {
-            var omnisharpRequest = new GetCodeActionsRequest {
+            var omnisharpRequest = new GetCodeActionsRequest
+            {
                 FileName = Helpers.FromUri(request.TextDocument.Uri),
                 Column = (int)request.Range.Start.Character,
                 Line = (int)request.Range.Start.Line,
@@ -53,6 +54,27 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
 
             foreach (var ca in omnisharpResponse.CodeActions)
             {
+                var omnisharpCaRequest = new RunCodeActionRequest
+                {
+                    Identifier = ca.Identifier,
+                    FileName = Helpers.FromUri(request.TextDocument.Uri),
+                    Column = Convert.ToInt32(request.Range.Start.Character),
+                    Line = Convert.ToInt32(request.Range.Start.Line),
+                    Selection = Helpers.FromRange(request.Range),
+                    ApplyTextChanges = false,
+                    WantsTextChanges = true,
+                };
+
+                var omnisharpCaResponse = await _runActionHandler.Handle(omnisharpCaRequest);
+
+                var changes = omnisharpCaResponse.Changes.ToDictionary(
+                    x => Helpers.ToUri(x.FileName),
+                    x => ((ModifiedFileResponse)x).Changes.Select(edit => new TextEdit
+                    {
+                        NewText = edit.NewText,
+                        Range = Helpers.ToRange((edit.StartColumn, edit.StartLine), (edit.EndColumn, edit.EndLine))
+                    }));
+
                 CodeActionKind kind;
                 if (ca.Identifier.StartsWith("using ")) { kind = CodeActionKind.SourceOrganizeImports; }
                 else if (ca.Identifier.StartsWith("Inline ")) { kind = CodeActionKind.RefactorInline; }

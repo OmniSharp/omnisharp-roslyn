@@ -34,7 +34,8 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             Mef.IRequestHandler<RunCodeActionRequest, RunCodeActionResponse> runActionHandler,
             ILanguageServerWorkspace mediator,
             DocumentSelector selector)
-            : base (new ExecuteCommandRegistrationOptions() {
+            : base(new ExecuteCommandRegistrationOptions()
+            {
                 Commands = new Container<string>(
                     "omnisharp/executeCodeAction"),
             })

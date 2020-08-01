@@ -201,6 +201,20 @@ namespace OmniSharp.MSBuild.Tests
         }
 
         [Fact]
+        public async Task The_correct_project_capablities_is_emitted()
+        {
+            // Arrange
+            var emitter = new ProjectLoadTestEventEmitter();
+
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("NetCore31Project"))
+            using (var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory)))
+            {
+                Assert.Single(emitter.ReceivedMessages);
+                Assert.Equal("GenerateDocumentationFile CSharp Managed ReferencesFolder LanguageService RelativePathDerivedDefaultNamespace AssemblyReferences COMReferences ProjectReferences SharedProjectReferences OutputGroups AllTargetOutputGroups VisualStudioWellKnownOutputGroups SingleFileGenerators DeclaredSourceItems UserSourceItems BuildWindowsDesktopTarget CrossPlatformExecutable Pack", string.Join(" ", emitter.ReceivedMessages[0].ProjectCapabilities));
+            }
+        }
+
+        [Fact]
         public async Task The_correct_sdk_version_is_emitted()
         {
             // Arrange
@@ -210,7 +224,7 @@ namespace OmniSharp.MSBuild.Tests
             using (var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory)))
             {
                 Assert.Single(emitter.ReceivedMessages);
-                Assert.Equal(GetHashedFileExtension("3.1.201"), emitter.ReceivedMessages[0].SdkVersion);
+                Assert.Equal(GetHashedFileExtension("3.1.302"), emitter.ReceivedMessages[0].SdkVersion);
             }
         }
 
@@ -224,7 +238,7 @@ namespace OmniSharp.MSBuild.Tests
             using (var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory)))
             {
                 Assert.Equal(2, emitter.ReceivedMessages.Length);
-                Assert.Equal(GetHashedFileExtension("5.0.100-preview.4.20258.7"), emitter.ReceivedMessages[0].SdkVersion);
+                Assert.Equal(GetHashedFileExtension("5.0.100-preview.7.20366.6"), emitter.ReceivedMessages[0].SdkVersion);
             }
         }
 

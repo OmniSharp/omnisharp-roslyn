@@ -195,22 +195,24 @@ namespace OmniSharp.MSBuild.Tests
             msbuildLocator.DeleteFakeInstancesFolders();
         }
 
-        [Fact]
-        public void RegisterDefaultInstancePrefersStandAloneOverSupportedVSLowerVersionInstanceWithoutDotnetCore()
+        [Theory]
+        [InlineData("16.2.2.3")] // lower than standalone
+        [InlineData("16.6.2.3")] // higher than standalone
+        public void RegisterDefaultInstancePrefersStandAloneOverSupportedVSInstanceWithoutDotnetCore(string vsVersion)
         {
             var msBuildInstances = new[]
             {
                 new MSBuildInstance(
                     "Test Instance",
                     TestIO.GetRandomTempFolderPath(),
-                    Version.Parse("16.2.2.3"),
+                    Version.Parse(vsVersion),
                     DiscoveryType.VisualStudioSetup
                 ),
                 GetStandAloneMSBuildInstance()
             };
 
             var msbuildLocator = new MSFakeLocator(msBuildInstances);
-            var logger = LoggerFactory.CreateLogger(nameof(RegisterDefaultInstancePrefersStandAloneOverSupportedVSLowerVersionInstanceWithoutDotnetCore));
+            var logger = LoggerFactory.CreateLogger(nameof(RegisterDefaultInstancePrefersStandAloneOverSupportedVSInstanceWithoutDotnetCore));
 
             // test
             msbuildLocator.RegisterDefaultInstance(logger);
@@ -224,6 +226,7 @@ namespace OmniSharp.MSBuild.Tests
 
         [Theory]
         [InlineData("15.1.2.3")]
+        [InlineData("15.9.2.3")]
         [InlineData("16.1.2.3")]
         [InlineData("16.2.2.3")]
         public void StandAloneIsPreferredOverUnsupportedVS(string vsVersion)

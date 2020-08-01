@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -187,25 +188,9 @@ namespace OmniSharp.Roslyn
 
         private IEnumerable<Project> FindProjectsByFileName(string fileName)
         {
-            var fileInfo = new FileInfo(fileName);
-            var dirInfo = fileInfo.Directory;
-            var candidates = _workspace.CurrentSolution.Projects
-                .Where(project => !String.IsNullOrWhiteSpace (project.FilePath))
-                .GroupBy(project => new FileInfo(project.FilePath).Directory.FullName)
-                .ToDictionary(grouping => grouping.Key, grouping => grouping.ToList());
-
-            List<Project> projects = null;
-            while (dirInfo != null)
-            {
-                if (candidates.TryGetValue(dirInfo.FullName, out projects))
-                {
-                    return projects;
-                }
-
-                dirInfo = dirInfo.Parent;
-            }
-
-            return Array.Empty<Project>();
+            return _workspace.CurrentSolution.Projects
+                .Where(project => _workspace.FileBelongsToProject(fileName, project))
+                .ToImmutableArray();
         }
 
         private void OnWorkspaceChanged(object sender, WorkspaceChangeEventArgs args)
