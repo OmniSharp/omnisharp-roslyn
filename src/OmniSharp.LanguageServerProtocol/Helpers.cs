@@ -125,13 +125,6 @@ namespace OmniSharp.LanguageServerProtocol
             };
         }
 
-        public static string EscapeMarkdown(string markdown)
-        {
-            if (markdown == null)
-                return null;
-            return Regex.Replace(markdown, @"([\\`\*_\{\}\[\]\(\)#+\-\.!])", @"\$1");
-        }
-
         private static readonly IDictionary<string, SymbolKind> Kinds = new Dictionary<string, SymbolKind>
         {
             { OmniSharp.Models.V2.SymbolKinds.Class, SymbolKind.Class },
