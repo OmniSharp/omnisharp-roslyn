@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text.RegularExpressions;
 using OmniSharp.Extensions.LanguageServer.Protocol;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OmniSharp.Models;
@@ -120,13 +119,6 @@ namespace OmniSharp.LanguageServerProtocol
                 Start = ToPosition(range.Start),
                 End = ToPosition(range.End)
             };
-        }
-
-        public static string EscapeMarkdown(string markdown)
-        {
-            if (markdown == null)
-                return null;
-            return Regex.Replace(markdown, @"([\\`\*_\{\}\[\]\(\)#+\-\.!])", @"\$1");
         }
 
         private static readonly IDictionary<string, SymbolKind> Kinds = new Dictionary<string, SymbolKind>
