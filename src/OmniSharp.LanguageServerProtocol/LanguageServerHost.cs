@@ -99,6 +99,7 @@ namespace OmniSharp.LanguageServerProtocol
             {
                 Section = "omnisharp"
             });
+            services.AddSingleton(new DocumentVersions());
         }
 
         public void Dispose()
@@ -184,6 +185,7 @@ namespace OmniSharp.LanguageServerProtocol
             var eventEmitter = new LanguageServerEventEmitter(server);
 
             services.AddSingleton(server);
+
             var serviceProvider =
                 CompositionHostBuilder.CreateDefaultServiceProvider(environment, configurationRoot, eventEmitter,
                     services);
@@ -326,9 +328,11 @@ namespace OmniSharp.LanguageServerProtocol
             // TODO: Make it easier to resolve handlers from MEF (without having to add more attributes to the services if we can help it)
             var workspace = compositionHost.GetExport<OmniSharpWorkspace>();
             compositionHost.GetExport<DiagnosticEventForwarder>().IsEnabled = true;
+            var documentVersions = server.Services.GetRequiredService<DocumentVersions>();
+            var serializer = server.Services.GetRequiredService<ISerializer>();
             server.Register(s =>
             {
-                foreach (var handler in OmniSharpTextDocumentSyncHandler.Enumerate(handlers, workspace)
+                foreach (var handler in OmniSharpTextDocumentSyncHandler.Enumerate(handlers, workspace, documentVersions)
                     .Concat(OmniSharpDefinitionHandler.Enumerate(handlers))
                     .Concat(OmniSharpHoverHandler.Enumerate(handlers))
                     .Concat(OmniSharpCompletionHandler.Enumerate(handlers))
@@ -338,10 +342,9 @@ namespace OmniSharp.LanguageServerProtocol
                     .Concat(OmniSharpDocumentSymbolHandler.Enumerate(handlers))
                     .Concat(OmniSharpReferencesHandler.Enumerate(handlers))
                     .Concat(OmniSharpCodeLensHandler.Enumerate(handlers))
-                    .Concat(OmniSharpCodeActionHandler.Enumerate(handlers))
+                    .Concat(OmniSharpCodeActionHandler.Enumerate(handlers, serializer, server, documentVersions))
                     .Concat(OmniSharpDocumentFormattingHandler.Enumerate(handlers))
                     .Concat(OmniSharpDocumentFormatRangeHandler.Enumerate(handlers))
-                    .Concat(OmniSharpExecuteCommandHandler.Enumerate(handlers))
                     .Concat(OmniSharpDocumentOnTypeFormattingHandler.Enumerate(handlers)))
                 {
                     s.AddHandlers(handler);

@@ -127,14 +127,5 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                 }
             }
         }
-
-        public override bool CanResolve(CodeLens value)
-        {
-            var textDocumentUri = value.Data.ToObject<Uri>();
-
-            return textDocumentUri != null &&
-                   GetRegistrationOptions().DocumentSelector
-                       .IsMatch(new TextDocumentAttributes(textDocumentUri, string.Empty));
-        }
     }
 }

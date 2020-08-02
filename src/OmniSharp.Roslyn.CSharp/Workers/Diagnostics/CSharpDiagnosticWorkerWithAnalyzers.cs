@@ -20,7 +20,7 @@ using OmniSharp.Services;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 {
-    public class CSharpDiagnosticWorkerWithAnalyzers : ICsDiagnosticWorker
+    public class CSharpDiagnosticWorkerWithAnalyzers : ICsDiagnosticWorker, IDisposable
     {
         private readonly AnalyzerWorkQueue _workQueue;
         private readonly ILogger<CSharpDiagnosticWorkerWithAnalyzers> _logger;
@@ -59,11 +59,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                 ?? throw new InvalidOperationException("Could not resolve 'Microsoft.CodeAnalysis.Diagnostics.WorkspaceAnalyzerOptions' for IDE analyzers.");
 
             _workspace.WorkspaceChanged += OnWorkspaceChanged;
+            _workspace.OnInitialized += OnWorkspaceInitialized;
 
             Task.Factory.StartNew(() => Worker(AnalyzerWorkType.Foreground), TaskCreationOptions.LongRunning);
             Task.Factory.StartNew(() => Worker(AnalyzerWorkType.Background), TaskCreationOptions.LongRunning);
-
-            _workspace.OnInitialized += (isInitialized) => OnWorkspaceInitialized(isInitialized);
 
             OnWorkspaceInitialized(_workspace.Initialized);
         }
@@ -320,6 +319,12 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                 .ToImmutableArray();
             QueueForAnalysis(documentIds, AnalyzerWorkType.Background);
             return documentIds;
+        }
+
+        public void Dispose()
+        {
+            _workspace.WorkspaceChanged -= OnWorkspaceChanged;
+            _workspace.OnInitialized -= OnWorkspaceInitialized;
         }
     }
 }

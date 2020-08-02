@@ -1,9 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Composition;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
 using OmniSharp.Services;
@@ -13,9 +16,14 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
     // Theres several implementation of worker currently based on configuration.
     // This will handle switching between them.
     [Export(typeof(ICsDiagnosticWorker)), Shared]
-    public class CsharpDiagnosticWorkerComposer: ICsDiagnosticWorker
+    public class CsharpDiagnosticWorkerComposer: ICsDiagnosticWorker, IDisposable
     {
-        private readonly ICsDiagnosticWorker _implementation;
+        private readonly OmniSharpWorkspace _workspace;
+        private readonly IEnumerable<ICodeActionProvider> _providers;
+        private readonly ILoggerFactory _loggerFactory;
+        private readonly DiagnosticEventForwarder _forwarder;
+        private ICsDiagnosticWorker _implementation;
+        private readonly IDisposable _onChange;
 
         [ImportingConstructor]
         public CsharpDiagnosticWorkerComposer(
@@ -23,15 +31,39 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
             [ImportMany] IEnumerable<ICodeActionProvider> providers,
             ILoggerFactory loggerFactory,
             DiagnosticEventForwarder forwarder,
-            OmniSharpOptions options)
+            IOptionsMonitor<OmniSharpOptions> options)
         {
-            if(options.RoslynExtensionsOptions.EnableAnalyzersSupport)
+            _workspace = workspace;
+            _providers = providers;
+            _loggerFactory = loggerFactory;
+            _forwarder = forwarder;
+            _onChange = options.OnChange(UpdateImplementation);
+            UpdateImplementation(options.CurrentValue);
+        }
+
+        private void UpdateImplementation(OmniSharpOptions options)
+        {
+            var firstRun = _implementation is null;
+            if (options.RoslynExtensionsOptions.EnableAnalyzersSupport && (firstRun || _implementation is CSharpDiagnosticWorker))
             {
-                _implementation = new CSharpDiagnosticWorkerWithAnalyzers(workspace, providers, loggerFactory, forwarder, options);
+                var old = Interlocked.Exchange(ref _implementation, new CSharpDiagnosticWorkerWithAnalyzers(_workspace, _providers, _loggerFactory, _forwarder, options));
+                if (old is IDisposable disposable)
+                {
+                    disposable.Dispose();
+                }
             }
-            else
+            else if (!options.RoslynExtensionsOptions.EnableAnalyzersSupport && (firstRun || _implementation is CSharpDiagnosticWorkerWithAnalyzers))
             {
-                _implementation = new CSharpDiagnosticWorker(workspace, forwarder, loggerFactory);
+                var old = Interlocked.Exchange(ref _implementation, new CSharpDiagnosticWorker(_workspace, _forwarder, _loggerFactory));
+                if (old is IDisposable disposable)
+                {
+                    disposable.Dispose();
+                }
+
+                if (!firstRun)
+                {
+                    _implementation.QueueDocumentsForDiagnostics();
+                }
             }
         }
 
@@ -53,6 +85,12 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
         public ImmutableArray<DocumentId> QueueDocumentsForDiagnostics(ImmutableArray<ProjectId> projectIds)
         {
             return _implementation.QueueDocumentsForDiagnostics(projectIds);
+        }
+
+        public void Dispose()
+        {
+            if (_implementation is IDisposable disposable) disposable.Dispose();
+            _onChange.Dispose();
         }
     }
 }

@@ -137,12 +137,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
 
         public override Task<CompletionItem> Handle(CompletionItem request, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
-        }
-
-        public override bool CanResolve(CompletionItem value)
-        {
-            return false;
+            return Task.FromResult(request);
         }
     }
 }
