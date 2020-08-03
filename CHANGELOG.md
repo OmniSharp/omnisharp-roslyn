@@ -7,6 +7,7 @@ All changes to the project will be documented in this file.
 * Fixed return type in LSP completion handler ([#1864](https://github.com/OmniSharp/omnisharp-roslyn/issues/1864), PR: [#1869](https://github.com/OmniSharp/omnisharp-roslyn/pull/1869))
 * Upgraded to the latest version of the csharp-language-server-protocol [#1815](https://github.com/OmniSharp/omnisharp-roslyn/pull/1815)
 * Added support for Roslyn `EmbeddedLanguageCompletionProvider` which enables completions for string literals for `DateTime` and `Regex` ([#1871](https://github.com/OmniSharp/omnisharp-roslyn/pull/1871))
+* Improve performance of the `textDocument/codeAction` request. (PR: [#1814](https://github.com/OmniSharp/omnisharp-roslyn/pull/1814))
 
 ## [1.35.4] - 2020-07-22
 * Update to Roslyn `3.8.0-1.20357.3` (PR: [#1849](https://github.com/OmniSharp/omnisharp-roslyn/pull/1849))
@@ -23,7 +24,6 @@ All changes to the project will be documented in this file.
 * Expose a custom LSP `omnisharp/client/findReferences` command via code lens (meant to be handled by LSP client). (PR: [#1807](https://github.com/OmniSharp/omnisharp-roslyn/pull/1807))
 * Added `DirectoryDelete` option to `FileChangeType` allowing clients to report deleted directories that need to be removed (along all the files) from the workspace (PR: [#1821](https://github.com/OmniSharp/omnisharp-roslyn/pull/1821))
 * Do not crash when plugin assembly cannot be loaded ([#1307](https://github.com/OmniSharp/omnisharp-roslyn/issues/1307), PR: [#1827](https://github.com/OmniSharp/omnisharp-roslyn/pull/1827))
-* Update to Roslyn `3.7.0-4.20311.4` (PR: [#1832](https://github.com/OmniSharp/omnisharp-roslyn/pull/1832))
 
 ## [1.35.2] - 2020-05-20
 * Added support for `WarningsAsErrors` in csproj files (PR: [#1779](https://github.com/OmniSharp/omnisharp-roslyn/pull/1779))

@@ -75,6 +75,7 @@ namespace OmniSharp
                 .WithProvider(MefValueProvider.From(loggerFactory))
                 .WithProvider(MefValueProvider.From(environment))
                 .WithProvider(MefValueProvider.From(options.CurrentValue))
+                .WithProvider(MefValueProvider.From(options))
                 .WithProvider(MefValueProvider.From(options.CurrentValue.FormattingOptions))
                 .WithProvider(MefValueProvider.From(assemblyLoader))
                 .WithProvider(MefValueProvider.From(analyzerAssemblyLoader))

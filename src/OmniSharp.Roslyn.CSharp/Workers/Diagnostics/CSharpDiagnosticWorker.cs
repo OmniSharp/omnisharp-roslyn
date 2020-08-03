@@ -16,12 +16,13 @@ using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
 
 namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
 {
-    public class CSharpDiagnosticWorker: ICsDiagnosticWorker
+    public class CSharpDiagnosticWorker: ICsDiagnosticWorker, IDisposable
     {
         private readonly ILogger _logger;
         private readonly OmniSharpWorkspace _workspace;
         private readonly DiagnosticEventForwarder _forwarder;
         private readonly IObserver<string> _openDocuments;
+        private readonly IDisposable _disposable;
 
         public CSharpDiagnosticWorker(OmniSharpWorkspace workspace, DiagnosticEventForwarder forwarder, ILoggerFactory loggerFactory)
         {
@@ -36,7 +37,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
             _workspace.DocumentOpened += OnDocumentOpened;
             _workspace.DocumentClosed += OnDocumentOpened;
 
-            openDocumentsSubject
+            _disposable = openDocumentsSubject
                 .GroupByUntil(x => true, group => Observable.Amb(
                     group.Throttle(TimeSpan.FromMilliseconds(200)),
                     group.Distinct().Skip(99))
@@ -193,6 +194,14 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
         {
             var documents = _workspace.CurrentSolution.Projects.SelectMany(x => x.Documents).Select(x => x.FilePath).ToImmutableArray();
             return GetDiagnostics(documents);
+        }
+
+        public void Dispose()
+        {
+            _workspace.WorkspaceChanged -= OnWorkspaceChanged;
+            _workspace.DocumentOpened -= OnDocumentOpened;
+            _workspace.DocumentClosed -= OnDocumentOpened;
+            _disposable.Dispose();
         }
     }
 }
