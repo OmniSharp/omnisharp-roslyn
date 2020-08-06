@@ -20,7 +20,7 @@ namespace OmniSharp.MSBuild.Discovery
             {
                 // Did we end up choosing the standalone MSBuild because there was an invalid Visual Studio?
                 // If so, provide a helpful message to the user.
-                if (invalidVSFound && bestInstanceFound.DiscoveryType == DiscoveryType.StandAlone)
+                if (invalidVSFound && bestInstanceFound.DiscoveryType == DiscoveryType.VisualStudioSetup)
                 {
                     logger.LogWarning(
                         $@"It looks like you have Visual Studio lower than VS 2019 {s_minimumMSBuildVersion} installed.
@@ -28,7 +28,7 @@ namespace OmniSharp.MSBuild.Discovery
                     );
                 }
 
-                if (vsWithoutSdkResolver && bestInstanceFound.DiscoveryType == DiscoveryType.StandAlone)
+                if (vsWithoutSdkResolver && bestInstanceFound.DiscoveryType == DiscoveryType.VisualStudioSetup)
                 {
                     logger.LogWarning(
                         @"It looks like you have Visual Studio 2019 installed without .NET Core SDK support which is required by OmniSharp.
@@ -38,14 +38,21 @@ namespace OmniSharp.MSBuild.Discovery
 
                 if (bestInstanceFound.Version < minimumMSBuildVersion)
                 {
-                    if (bestInstanceFound.DiscoveryType == DiscoveryType.Mono)
+                    if (bestInstanceFound.DiscoveryType == DiscoveryType.StandAlone)
+                    {
+                        logger.LogWarning(
+                            $@"It looks like the included version of MSBuild is lower than {minimumMSBuildVersion} which is the minimum supported by the configured .NET Core Sdk.
+ Try installing MSBuild version {minimumMSBuildVersion} or higher to enable better .NET Core Sdk support."
+                        );
+                    }
+                    else if (bestInstanceFound.DiscoveryType == DiscoveryType.Mono)
                     {
                         logger.LogWarning(
                             $@"It looks like you have Mono installed which contains a MSBuild lower than {minimumMSBuildVersion} which is the minimum supported by the configured .NET Core Sdk.
  Try updating Mono to the latest stable or preview version to enable better .NET Core Sdk support."
                         );
                     }
-                    else if (bestInstanceFound.DiscoveryType == DiscoveryType.StandAlone)
+                    else if (bestInstanceFound.DiscoveryType == DiscoveryType.VisualStudioSetup)
                     {
                         logger.LogWarning(
                             $@"It looks like you have Visual Studio 2019 installed which contains a MSBuild lower than {minimumMSBuildVersion} which is the minimum supported by the configured .NET Core Sdk.
@@ -84,7 +91,7 @@ namespace OmniSharp.MSBuild.Discovery
         }
 
         /// <summary>
-        /// Checks if it is MSBuild from Visual Studio 2017 RTM that cannot be used.
+        /// Checks if the discovered Visual Studio instance includes a version of MSBuild lower than our minimum supported version.
         /// </summary>
         public static bool IsInvalidVisualStudio(this MSBuildInstance instance)
             => (instance.Version.Major < s_minimumMSBuildVersion.Major ||
