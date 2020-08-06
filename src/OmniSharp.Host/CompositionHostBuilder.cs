@@ -40,7 +40,7 @@ namespace OmniSharp
             _exportDescriptorProviders = exportDescriptorProviders ?? Array.Empty<ExportDescriptorProvider>();
         }
 
-        public CompositionHost Build()
+        public CompositionHost Build(string workingDirectory)
         {
             var options = _serviceProvider.GetRequiredService<IOptionsMonitor<OmniSharpOptions>>();
             var memoryCache = _serviceProvider.GetRequiredService<IMemoryCache>();
@@ -64,7 +64,8 @@ namespace OmniSharp
             // This is for tests, where the MSBuild instance may be registered early.
             if (msbuildLocator.RegisteredInstance == null)
             {
-                msbuildLocator.RegisterDefaultInstance(logger);
+                var dotNetInfo = dotNetCliService.GetInfo(workingDirectory);
+                msbuildLocator.RegisterDefaultInstance(logger, dotNetInfo);
             }
 
             config = config
