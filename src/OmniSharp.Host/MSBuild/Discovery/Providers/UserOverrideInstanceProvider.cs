@@ -2,6 +2,8 @@
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Immutable;
+using System.Diagnostics;
+using System.IO;
 
 namespace OmniSharp.MSBuild.Discovery.Providers
 {
@@ -22,12 +24,16 @@ namespace OmniSharp.MSBuild.Discovery.Providers
                 return ImmutableArray<MSBuildInstance>.Empty;
             }
 
+            var microsoftBuildPath = Path.Combine(_options.MSBuildPath, "Microsoft.Build.dll");
+            var msbuildVersionInfo = FileVersionInfo.GetVersionInfo(microsoftBuildPath);
+            var version = Version.Parse(msbuildVersionInfo.ProductVersion);
+
             var builder = ImmutableArray.CreateBuilder<MSBuildInstance>();
             builder.Add(
                 new MSBuildInstance(
                     _options.Name ?? $"Overridden MSBuild from {_options.MSBuildPath}",
                     _options.MSBuildPath,
-                    new Version(99, 0),
+                    version,
                     DiscoveryType.UserOverride,
                     _options.PropertyOverrides?.ToImmutableDictionary()));
             return builder.ToImmutable();
