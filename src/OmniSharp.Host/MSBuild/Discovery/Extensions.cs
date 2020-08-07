@@ -20,7 +20,7 @@ namespace OmniSharp.MSBuild.Discovery
             {
                 // Did we end up choosing the standalone MSBuild because there was an invalid Visual Studio?
                 // If so, provide a helpful message to the user.
-                if (invalidVSFound && bestInstanceFound.DiscoveryType == DiscoveryType.VisualStudioSetup)
+                if (invalidVSFound && bestInstanceFound.DiscoveryType == DiscoveryType.StandAlone)
                 {
                     logger.LogWarning(
                         $@"It looks like you have Visual Studio lower than VS 2019 {s_minimumMSBuildVersion} installed.
@@ -28,7 +28,7 @@ namespace OmniSharp.MSBuild.Discovery
                     );
                 }
 
-                if (vsWithoutSdkResolver && bestInstanceFound.DiscoveryType == DiscoveryType.VisualStudioSetup)
+                if (vsWithoutSdkResolver && bestInstanceFound.DiscoveryType == DiscoveryType.StandAlone)
                 {
                     logger.LogWarning(
                         @"It looks like you have Visual Studio 2019 installed without .NET Core SDK support which is required by OmniSharp.
