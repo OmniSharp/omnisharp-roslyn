@@ -24,9 +24,7 @@ namespace OmniSharp.MSBuild.Discovery.Providers
                 return ImmutableArray<MSBuildInstance>.Empty;
             }
 
-            var microsoftBuildPath = Path.Combine(_options.MSBuildPath, "Microsoft.Build.dll");
-            var msbuildVersionInfo = FileVersionInfo.GetVersionInfo(microsoftBuildPath);
-            var version = Version.Parse(msbuildVersionInfo.ProductVersion);
+            var version = GetMSBuildVersion(Path.Combine(_options.MSBuildPath, "Microsoft.Build.dll"));
 
             var builder = ImmutableArray.CreateBuilder<MSBuildInstance>();
             builder.Add(

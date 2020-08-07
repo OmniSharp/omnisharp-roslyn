@@ -110,8 +110,7 @@ Try installing MSBuild into Mono (e.g. 'sudo apt-get install msbuild') to enable
                 propertyOverrides.Add("CscToolExe", "csc.exe");
             }
 
-            var msbuildVersionInfo = FileVersionInfo.GetVersionInfo(microsoftBuildPath);
-            var version = Version.Parse(msbuildVersionInfo.ProductVersion);
+            var version = GetMSBuildVersion(microsoftBuildPath);
 
             return ImmutableArray.Create(
                 new MSBuildInstance(

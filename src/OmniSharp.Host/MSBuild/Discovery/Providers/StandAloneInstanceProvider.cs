@@ -3,6 +3,7 @@ using System.Collections.Immutable;
 using System.Diagnostics;
 using System.IO;
 using Microsoft.Extensions.Logging;
+using NuGet.Versioning;
 using OmniSharp.Utilities;
 
 namespace OmniSharp.MSBuild.Discovery.Providers
@@ -26,9 +27,7 @@ namespace OmniSharp.MSBuild.Discovery.Providers
             var toolsPath = Path.Combine(extensionsPath, "Current", "Bin");
             var roslynPath = Path.Combine(toolsPath, "Roslyn");
 
-            var microsoftBuildPath = Path.Combine(toolsPath, "Microsoft.Build.dll");
-            var msbuildVersionInfo = FileVersionInfo.GetVersionInfo(microsoftBuildPath);
-            var version = Version.Parse(msbuildVersionInfo.ProductVersion);
+            var version = GetMSBuildVersion(Path.Combine(toolsPath, "Microsoft.Build.dll"));
 
             var propertyOverrides = ImmutableDictionary.CreateBuilder<string, string>(StringComparer.OrdinalIgnoreCase);
 
