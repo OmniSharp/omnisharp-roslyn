@@ -210,7 +210,22 @@ Task("CreateMSBuildFolder")
         "Microsoft.Build.Tasks.v4.0",
         "Microsoft.Build.Tasks.v12.0",
         "Microsoft.Build.Utilities.v4.0",
-        "Microsoft.Build.Utilities.v12.0"
+        "Microsoft.Build.Utilities.v12.0",
+    };
+
+    var msBuildDependencies = new []
+    {
+        "Microsoft.Bcl.AsyncInterfaces",
+        "System.Buffers",
+        "System.Collections.Immutable",
+        "System.Memory",
+        "System.Numerics.Vectors",
+        "System.Resources.Extensions",
+        "System.Runtime.CompilerServices.Unsafe",
+        "System.Text.Encodings.Web",
+        "System.Text.Json",
+        "System.Threading.Tasks.Dataflow",
+        "System.Threading.Tasks.Extensions",
     };
 
     var msbuildRuntimeFiles = new []
@@ -244,15 +259,8 @@ Task("CreateMSBuildFolder")
         "Microsoft.Xaml.targets",
         "MSBuild.dll",
         "MSBuild.dll.config",
-        "System.Buffers.dll",
-        "System.Collections.Immutable.dll",
-        "System.Memory.dll",
-        "System.Numerics.Vectors.dll",
-        "System.Reflection.Metadata.dll",
-        "System.Resources.Extensions.dll",
-        "System.Threading.Tasks.Dataflow.dll",
         "Workflow.VisualBasic.targets",
-        "Workflow.targets"
+        "Workflow.targets",
     };
 
     string sdkResolverTFM;
@@ -277,6 +285,19 @@ Task("CreateMSBuildFolder")
             if (FileHelper.Exists(librarySourcePath))
             {
                 FileHelper.Copy(librarySourcePath, libraryTargetPath);
+            }
+        }
+
+        Information("Copying MSBuild dependencies...");
+
+        foreach (var dependency in msBuildDependencies)
+        {
+            var dependencyFileName = dependency + ".dll";
+            var dependencySourcePath = CombinePaths(env.Folders.Tools, dependency, "lib", "netstandard2.0", dependencyFileName);
+            var dependencyTargetPath = CombinePaths(msbuildCurrentBinTargetFolder, dependencyFileName);
+            if (FileHelper.Exists(dependencySourcePath))
+            {
+                FileHelper.Copy(dependencySourcePath, dependencyTargetPath);
             }
         }
 
@@ -312,12 +333,27 @@ Task("CreateMSBuildFolder")
         {
             var libraryFileName = library + ".dll";
 
-            // copy MSBuild from current Mono (should be 6.4.0+)
+            // copy MSBuild from current Mono
             var librarySourcePath = CombinePaths(monoMSBuildPath, libraryFileName);
             var libraryTargetPath = CombinePaths(msbuildCurrentBinTargetFolder, libraryFileName);
             if (FileHelper.Exists(librarySourcePath))
             {
                 FileHelper.Copy(librarySourcePath, libraryTargetPath);
+            }
+        }
+
+        Information("Copying MSBuild depednencies...");
+
+        foreach (var dependency in msBuildDependencies)
+        {
+            var dependencyFileName = dependency + ".dll";
+
+            // copy MSBuild from current Mono
+            var dependencySourcePath = CombinePaths(monoMSBuildPath, dependencyFileName);
+            var dependencyTargetPath = CombinePaths(msbuildCurrentBinTargetFolder, dependencyFileName);
+            if (FileHelper.Exists(dependencySourcePath))
+            {
+                FileHelper.Copy(dependencySourcePath, dependencyTargetPath);
             }
         }
 
