@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Completion;
+using OmniSharp.Models.AutoComplete;
 using OmniSharp.Utilities;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
@@ -81,6 +82,33 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
         public static bool TryGetInsertionText(this CompletionItem completionItem, out string insertionText)
         {
             return completionItem.Properties.TryGetValue(InsertionText, out insertionText);
+        }
+
+        public static AutoCompleteResponse ToAutoCompleteResponse(this CompletionItem item, bool wantKind, bool isSuggestionMode, bool preselect)
+        {
+            // for simple use cases we'll just assume that the completion text is the same as the display text
+            var response = new AutoCompleteResponse()
+            {
+                CompletionText = item.DisplayText,
+                DisplayText = item.DisplayText,
+                Snippet = item.DisplayText,
+                Kind = wantKind ? item.Tags.FirstOrDefault() : null,
+                IsSuggestionMode = isSuggestionMode,
+                Preselect = preselect
+            };
+
+            // if provider name is "Microsoft.CodeAnalysis.CSharp.Completion.Providers.EmbeddedLanguageCompletionProvider"
+            // we have access to more elaborate description
+            if (GetProviderName(item) == "Microsoft.CodeAnalysis.CSharp.Completion.Providers.EmbeddedLanguageCompletionProvider")
+            {
+                response.DisplayText = item.InlineDescription;
+                if (item.Properties.TryGetValue("DescriptionKey", out var description))
+                {
+                    response.Description = description;
+                }
+            }
+
+            return response;
         }
     }
 }

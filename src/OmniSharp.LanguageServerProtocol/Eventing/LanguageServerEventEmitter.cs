@@ -1,10 +1,12 @@
 using System.Linq;
+using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using OmniSharp.Eventing;
 using OmniSharp.Extensions.LanguageServer.Protocol.Document;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OmniSharp.Extensions.LanguageServer.Protocol.Server;
+using OmniSharp.LanguageServerProtocol.Handlers;
 using OmniSharp.Models.Diagnostics;
 using OmniSharp.Models.Events;
 
@@ -13,10 +15,12 @@ namespace OmniSharp.LanguageServerProtocol.Eventing
     public class LanguageServerEventEmitter : IEventEmitter
     {
         private readonly ILanguageServer _server;
+        private readonly DocumentVersions _documentVersions;
 
         public LanguageServerEventEmitter(ILanguageServer server)
         {
             _server = server;
+            _documentVersions = server.Services.GetRequiredService<DocumentVersions>();
         }
 
         public void Emit(string kind, object args)
@@ -34,6 +38,7 @@ namespace OmniSharp.LanguageServerProtocol.Eventing
                             _server.TextDocument.PublishDiagnostics(new PublishDiagnosticsParams()
                             {
                                 Uri = group.Key,
+                                Version = _documentVersions.GetVersion(group.Key),
                                 Diagnostics = group
                                     .SelectMany(z => z.Select(v => v.ToDiagnostic()))
                                     .ToArray()

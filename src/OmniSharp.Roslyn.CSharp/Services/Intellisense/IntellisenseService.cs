@@ -99,19 +99,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
                                 continue;
                             }
 
-                            // for other completions, i.e. keywords, create a simple AutoCompleteResponse
-                            // we'll just assume that the completion text is the same
-                            // as the display text.
-                            var response = new AutoCompleteResponse()
-                            {
-                                CompletionText = item.DisplayText,
-                                DisplayText = item.DisplayText,
-                                Snippet = item.DisplayText,
-                                Kind = request.WantKind ? item.Tags.First() : null,
-                                IsSuggestionMode = isSuggestionMode,
-                                Preselect = preselect
-                            };
-
+                            // for other completions, i.e. keywords or em, create a simple AutoCompleteResponse
+                            var response = item.ToAutoCompleteResponse(request.WantKind, isSuggestionMode, preselect);
                             completions.Add(response);
                         }
                     }

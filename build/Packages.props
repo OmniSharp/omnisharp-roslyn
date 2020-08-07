@@ -5,7 +5,7 @@
   <PropertyGroup>
     <MSBuildPackageVersion>16.6.0</MSBuildPackageVersion>
     <NuGetPackageVersion>5.2.0</NuGetPackageVersion>
-    <RoslynPackageVersion>3.8.0-1.20357.3</RoslynPackageVersion>
+    <RoslynPackageVersion>3.8.0-1.20363.1</RoslynPackageVersion>
     <XunitPackageVersion>2.4.0</XunitPackageVersion>
   </PropertyGroup>
 
@@ -62,8 +62,8 @@
     <PackageReference Update="Nuget.ProjectModel" Version="$(NuGetPackageVersion)" />
     <PackageReference Update="Nuget.Versioning" Version="$(NuGetPackageVersion)" />
 
-    <PackageReference Update="OmniSharp.Extensions.LanguageServer" Version="0.17.3" />
-    <PackageReference Update="OmniSharp.Extensions.LanguageProtocol.Testing" Version="0.17.3" />
+    <PackageReference Update="OmniSharp.Extensions.LanguageServer" Version="0.18.0-beta0003" />
+    <PackageReference Update="OmniSharp.Extensions.LanguageProtocol.Testing" Version="0.18.0-beta0003" />
 
     <PackageReference Update="SQLitePCLRaw.bundle_green" Version="1.1.2" />
     <PackageReference Update="System.Collections.Immutable" Version="1.4.0" />

@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -27,37 +28,23 @@ namespace OmniSharp.Lsp.Tests
         {
             var options = OmniSharpTestHost.ServiceProvider.GetRequiredService<IOptionsMonitor<OmniSharpOptions>>();
 
+            var originalIndentationSize = options.CurrentValue.FormattingOptions.IndentationSize;
 
-            using (Client.Register(x => x.OnConfiguration(request =>
-            {
-                return Task.FromResult(new Container<JToken>(Enumerable.Select<ConfigurationItem, JObject>(request.Items, item =>
-                    item.Section == "csharp" ? new JObject()
-                    {
-                        ["FormattingOptions"] = new JObject() {["IndentationSize"] = 12,}
-                    } :
-                    item.Section == "omnisharp" ? new JObject()
-                    {
-                        ["RenameOptions"] = new JObject() {["RenameOverloads"] = true,}
-                    } : new JObject())));
-            })))
-            {
-                ChangeToken.OnChange(Server.Configuration.GetReloadToken,
-                    () => { Logger?.LogCritical("Server Reloaded!"); });
+            await Task.WhenAll(
+                Configuration.Update("csharp", new Dictionary<string, string>()
+                {
+                    ["FormattingOptions:IndentationSize"] = "12",
+                }),
+                Configuration.Update("omnisharp", new Dictionary<string, string>()
+                {
+                    ["RenameOptions:RenameOverloads"] = "true",
+                }),
+                options.WaitForChange(CancellationToken)
+            );
 
-                ChangeToken.OnChange(
-                    OmniSharpTestHost.ServiceProvider.GetRequiredService<IConfiguration>().GetReloadToken,
-                    () => { Logger?.LogCritical("Host Reloaded!"); });
-
-                var originalIndentationSize = options.CurrentValue.FormattingOptions.IndentationSize;
-
-                Client.Workspace.DidChangeConfiguration(new DidChangeConfigurationParams() {Settings = null});
-
-                await options.WaitForChange(CancellationToken);
-
-                Assert.NotEqual(originalIndentationSize, options.CurrentValue.FormattingOptions.IndentationSize);
-                Assert.Equal(12, options.CurrentValue.FormattingOptions.IndentationSize);
-                Assert.True(options.CurrentValue.RenameOptions.RenameOverloads);
-            }
+            Assert.NotEqual(originalIndentationSize, options.CurrentValue.FormattingOptions.IndentationSize);
+            Assert.Equal(12, options.CurrentValue.FormattingOptions.IndentationSize);
+            Assert.True(options.CurrentValue.RenameOptions.RenameOverloads);
         }
     }
 }
