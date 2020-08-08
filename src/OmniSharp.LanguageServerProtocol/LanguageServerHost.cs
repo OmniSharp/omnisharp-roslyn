@@ -56,7 +56,7 @@ namespace OmniSharp.LanguageServerProtocol
                 .WithOutput(output)
                 .ConfigureLogging(x => x
                         .AddLanguageProtocolLogging()
-                    // .SetMinimumLevel(application.LogLevel)
+                // .SetMinimumLevel(application.LogLevel)
                 )
                 .OnInitialize(Initialize)
                 .WithServices(ConfigureServices);
@@ -202,7 +202,7 @@ namespace OmniSharp.LanguageServerProtocol
                 .WithAssemblies(typeof(LanguageServerHost).Assembly)
                 .WithAssemblies(assemblyLoader.LoadByAssemblyNameOrPath(logger, plugins.AssemblyNames).ToArray());
 
-            return (serviceProvider, compositionHostBuilder.Build());
+            return (serviceProvider, compositionHostBuilder.Build(environment.TargetDirectory));
         }
 
         internal static RequestHandlers ConfigureCompositionHost(ILanguageServer server,
@@ -241,7 +241,7 @@ namespace OmniSharp.LanguageServerProtocol
 
             logger.LogTrace(
                 "Configured Document Selectors {@DocumentSelectors}",
-                documentSelectors.Select(x => new {x.language, x.selector})
+                documentSelectors.Select(x => new { x.language, x.selector })
             );
 
             var omnisharpRequestHandlers =
@@ -365,7 +365,7 @@ namespace OmniSharp.LanguageServerProtocol
 
             IDictionary<string, Lazy<LanguageProtocolInteropHandler>> endpointHandlers = null;
             var updateBufferEndpointHandler = new Lazy<LanguageProtocolInteropHandler<UpdateBufferRequest, object>>(
-                () => (LanguageProtocolInteropHandler<UpdateBufferRequest, object>) endpointHandlers[
+                () => (LanguageProtocolInteropHandler<UpdateBufferRequest, object>)endpointHandlers[
                     OmniSharpEndpoints.UpdateBuffer].Value);
             var languagePredicateHandler = new LanguagePredicateHandler(projectSystems);
             var projectSystemPredicateHandler = new StaticLanguagePredicateHandler("Projects");

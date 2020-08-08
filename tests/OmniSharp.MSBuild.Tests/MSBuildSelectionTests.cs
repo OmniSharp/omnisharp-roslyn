@@ -33,7 +33,7 @@ namespace OmniSharp.MSBuild.Tests
             var logger = LoggerFactory.CreateLogger(nameof(RegisterDefaultInstanceFindsTheBestInstanceAvailable));
 
             // test
-            msbuildLocator.RegisterDefaultInstance(logger);
+            msbuildLocator.RegisterDefaultInstance(logger, dotNetInfo: null);
 
             Assert.NotNull(msbuildLocator.RegisteredInstance);
             Assert.Same(msBuildInstances[1], msbuildLocator.RegisteredInstance);
@@ -72,7 +72,7 @@ namespace OmniSharp.MSBuild.Tests
             );
 
             // test
-            msbuildLocator.RegisterDefaultInstance(logger);
+            msbuildLocator.RegisterDefaultInstance(logger, dotNetInfo: null);
 
             Assert.NotNull(msbuildLocator.RegisteredInstance);
             Assert.Same(msBuildInstances[2], msbuildLocator.RegisteredInstance);
@@ -112,7 +112,7 @@ namespace OmniSharp.MSBuild.Tests
             );
 
             // test
-            msbuildLocator.RegisterDefaultInstance(logger);
+            msbuildLocator.RegisterDefaultInstance(logger, dotNetInfo: null);
 
             Assert.NotNull(msbuildLocator.RegisteredInstance);
             Assert.Same(msBuildInstances[2], msbuildLocator.RegisteredInstance);
@@ -159,7 +159,7 @@ namespace OmniSharp.MSBuild.Tests
             );
 
             // test
-            msbuildLocator.RegisterDefaultInstance(logger);
+            msbuildLocator.RegisterDefaultInstance(logger, dotNetInfo: null);
 
             Assert.NotNull(msbuildLocator.RegisteredInstance);
             Assert.Same(msBuildInstances[4], msbuildLocator.RegisteredInstance);
@@ -186,7 +186,7 @@ namespace OmniSharp.MSBuild.Tests
             var logger = LoggerFactory.CreateLogger(nameof(RegisterDefaultInstancePrefersSupportedVSLowerVersionInstanceOverStandAlone));
 
             // test
-            msbuildLocator.RegisterDefaultInstance(logger);
+            msbuildLocator.RegisterDefaultInstance(logger, dotNetInfo: null);
 
             Assert.NotNull(msbuildLocator.RegisteredInstance);
             Assert.Same(msBuildInstances[0], msbuildLocator.RegisteredInstance);
@@ -215,7 +215,7 @@ namespace OmniSharp.MSBuild.Tests
             var logger = LoggerFactory.CreateLogger(nameof(RegisterDefaultInstancePrefersStandAloneOverSupportedVSInstanceWithoutDotnetCore));
 
             // test
-            msbuildLocator.RegisterDefaultInstance(logger);
+            msbuildLocator.RegisterDefaultInstance(logger, dotNetInfo: null);
 
             Assert.NotNull(msbuildLocator.RegisteredInstance);
             Assert.Same(msBuildInstances[1], msbuildLocator.RegisteredInstance);
@@ -246,7 +246,7 @@ namespace OmniSharp.MSBuild.Tests
             var logger = LoggerFactory.CreateLogger(nameof(StandAloneIsPreferredOverUnsupportedVS));
 
             // test
-            msbuildLocator.RegisterDefaultInstance(logger);
+            msbuildLocator.RegisterDefaultInstance(logger, dotNetInfo: null);
 
             Assert.NotNull(msbuildLocator.RegisteredInstance);
             Assert.Same(msBuildInstances[1], msbuildLocator.RegisteredInstance);

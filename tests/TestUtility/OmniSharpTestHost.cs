@@ -88,7 +88,7 @@ namespace TestUtility
             [CallerMemberName] string callerName = "")
         {
             var compositionHost = new CompositionHostBuilder(serviceProvider, s_lazyAssemblies.Value, additionalExports)
-                .Build();
+                .Build(workingDirectory: null);
 
             WorkspaceInitializer.Initialize(serviceProvider, compositionHost);
 

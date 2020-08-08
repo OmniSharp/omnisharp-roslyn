@@ -121,7 +121,7 @@ namespace OmniSharp.Http.Tests
             var serviceProvider = TestServiceProvider.Create(this.TestOutput, new OmniSharpEnvironment());
             var compositionHost = new CompositionHostBuilder(serviceProvider)
                 .WithAssemblies(assemblies)
-                .Build();
+                .Build(workingDirectory: null);
 
             return new PlugInHost(serviceProvider, compositionHost);
         }
