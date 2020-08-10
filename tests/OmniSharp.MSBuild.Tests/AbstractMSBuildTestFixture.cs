@@ -27,7 +27,7 @@ namespace OmniSharp.MSBuild.Tests
 
             // Some tests require MSBuild to be discovered early
             // to ensure that the Microsoft.Build.* assemblies can be located
-            _msbuildLocator.RegisterDefaultInstance(this.LoggerFactory.CreateLogger("MSBuildTests"));
+            _msbuildLocator.RegisterDefaultInstance(this.LoggerFactory.CreateLogger("MSBuildTests"), dotNetInfo: null);
         }
 
         public void Dispose()
