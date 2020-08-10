@@ -9,7 +9,7 @@ using Microsoft.Extensions.Logging;
 using OmniSharp.Mef;
 using OmniSharp.Models;
 using OmniSharp.Options;
-using OmniSharp.Utilities;
+using OmniSharp.Roslyn.CSharp.Helpers;
 
 #nullable enable
 
@@ -24,18 +24,6 @@ namespace OmniSharp.Roslyn.CSharp.Services
         // They're copied here so that we can ensure we render blocks correctly in the markdown
         // https://github.com/dotnet/roslyn/issues/46254 tracks making these public
 
-        /// <summary>
-        /// Indicates the start of a text container. The elements after <see cref="ContainerStart"/> through (but not
-        /// including) the matching <see cref="ContainerEnd"/> are rendered in a rectangular block which is positioned
-        /// as an inline element relative to surrounding elements. The text of the <see cref="ContainerStart"/> element
-        /// itself precedes the content of the container, and is typically a bullet or number header for an item in a
-        /// list.
-        /// </summary>
-        private const string ContainerStart = nameof(ContainerStart);
-        /// <summary>
-        /// Indicates the end of a text container. See <see cref="ContainerStart"/>.
-        /// </summary>
-        private const string ContainerEnd = nameof(ContainerEnd);
         /// <summary>
         /// Section kind for nullability analysis.
         /// </summary>
@@ -92,7 +80,7 @@ namespace OmniSharp.Roslyn.CSharp.Services
             var summary = quickInfo.Sections.FirstOrDefault(s => s.Kind == QuickInfoSectionKinds.DocumentationComments);
             if (summary is object)
             {
-                buildSectionAsMarkdown(summary, sectionTextBuilder, _formattingOptions, out _);
+                MarkdownHelpers.TaggedTextToMarkdown(summary.TaggedParts, sectionTextBuilder, _formattingOptions, out _);
                 appendBuiltSection(finalTextBuilder, sectionTextBuilder, _formattingOptions);
             }
 
@@ -110,7 +98,7 @@ namespace OmniSharp.Roslyn.CSharp.Services
 
                     case QuickInfoSectionKinds.AnonymousTypes:
                         // The first line is "Anonymous Types:"
-                        buildSectionAsMarkdown(section, sectionTextBuilder, _formattingOptions, out int lastIndex, untilLineBreak: true);
+                        MarkdownHelpers.TaggedTextToMarkdown(section.TaggedParts, sectionTextBuilder, _formattingOptions, out int lastIndex, untilLineBreak: true);
                         appendBuiltSection(finalTextBuilder, sectionTextBuilder, _formattingOptions);
 
                         // Then we want all anonymous types to be C# highlighted
@@ -119,12 +107,12 @@ namespace OmniSharp.Roslyn.CSharp.Services
 
                     case NullabilityAnalysis:
                         // Italicize the nullable analysis for emphasis.
-                        buildSectionAsMarkdown(section, sectionTextBuilder, _formattingOptions, out _);
+                        MarkdownHelpers.TaggedTextToMarkdown(section.TaggedParts, sectionTextBuilder, _formattingOptions, out _);
                         appendBuiltSection(finalTextBuilder, sectionTextBuilder, _formattingOptions, italicize: true);
                         break;
 
                     default:
-                        buildSectionAsMarkdown(section, sectionTextBuilder, _formattingOptions, out _);
+                        MarkdownHelpers.TaggedTextToMarkdown(section.TaggedParts, sectionTextBuilder, _formattingOptions, out _);
                         appendBuiltSection(finalTextBuilder, sectionTextBuilder, _formattingOptions);
                         break;
                 }
@@ -173,112 +161,6 @@ namespace OmniSharp.Roslyn.CSharp.Services
                 }
                 builder.Append(formattingOptions.NewLine);
                 builder.Append("```");
-            }
-
-            static void buildSectionAsMarkdown(QuickInfoSection section, StringBuilder stringBuilder, FormattingOptions formattingOptions, out int lastIndex, bool untilLineBreak = false)
-            {
-                bool isInCodeBlock = false;
-                lastIndex = 0;
-                for (int i = 0; i < section.TaggedParts.Length; i++)
-                {
-                    var current = section.TaggedParts[i];
-                    lastIndex = i;
-
-                    switch (current.Tag)
-                    {
-                        case TextTags.Text when !isInCodeBlock:
-                            addText(current.Text);
-                            break;
-
-                        case TextTags.Text:
-                            endBlock();
-                            addText(current.Text);
-                            break;
-
-                        case TextTags.Space when isInCodeBlock:
-                            if (nextIsTag(i, TextTags.Text))
-                            {
-                                endBlock();
-                            }
-
-                            stringBuilder.Append(current.Text);
-                            break;
-
-                        case TextTags.Punctuation when isInCodeBlock && current.Text != "`":
-                            stringBuilder.Append(current.Text);
-                            break;
-
-                        case TextTags.Space:
-                        case TextTags.Punctuation:
-                            stringBuilder.Append(current.Text);
-                            break;
-
-                        case ContainerStart:
-                            addNewline();
-                            addText(current.Text);
-                            break;
-
-                        case ContainerEnd:
-                            addNewline();
-                            break;
-
-                        case TextTags.LineBreak when untilLineBreak && stringBuilder.Length != 0:
-                            // The section will end and another newline will be appended, no need to add yet another newline.
-                            return;
-
-                        case TextTags.LineBreak:
-                            if (stringBuilder.Length != 0 && !nextIsTag(i, ContainerStart, ContainerEnd) && i + 1 != section.TaggedParts.Length)
-                            {
-                                addNewline();
-                            }
-                            break;
-
-                        default:
-                            if (!isInCodeBlock)
-                            {
-                                isInCodeBlock = true;
-                                stringBuilder.Append('`');
-                            }
-                            stringBuilder.Append(current.Text);
-                            break;
-                    }
-                }
-
-                if (isInCodeBlock)
-                {
-                    endBlock();
-                }
-
-                return;
-
-                void addText(string text)
-                {
-                    stringBuilder.Append(MarkdownHelpers.Escape(text));
-                }
-
-                void addNewline()
-                {
-                    if (isInCodeBlock)
-                    {
-                        endBlock();
-                    }
-
-                    // Markdown needs 2 linebreaks to make a new paragraph
-                    stringBuilder.Append(formattingOptions.NewLine);
-                    stringBuilder.Append(formattingOptions.NewLine);
-                }
-
-                void endBlock()
-                {
-                    stringBuilder.Append('`');
-                    isInCodeBlock = false;
-                }
-
-                bool nextIsTag(int i, params string[] tags)
-                {
-                    int nextI = i + 1;
-                    return nextI < section.TaggedParts.Length && tags.Contains(section.TaggedParts[nextI].Tag);
-                }
             }
         }
     }

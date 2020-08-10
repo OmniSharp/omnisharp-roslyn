@@ -1,0 +1,138 @@
+﻿#nullable enable
+
+using System.Collections.Immutable;
+using Newtonsoft.Json;
+
+namespace OmniSharp.Models.v1.Completion
+{
+    public class CompletionItem
+    {
+        /// <summary>
+        /// The label of this completion item. By default
+        /// also the text that is inserted when selecting
+        /// this completion.
+        /// </summary>
+        [JsonProperty("label")]
+        public string Label { get; set; } = null!;
+
+        /// <summary>
+        /// The kind of this completion item. Based of the kind
+        /// an icon is chosen by the editor.The standardized set
+        /// of available values is defined in <see cref="CompletionItemKind"/>
+        /// </summary>
+        [JsonProperty("kind")]
+        public CompletionItemKind Kind { get; set; }
+
+        /// <summary>
+        /// Tags for this completion item
+        /// </summary>
+        [JsonProperty("tags")]
+        public ImmutableArray<CompletionItemTag>? Tags { get; set; }
+
+        /// <summary>
+        /// A human-readable string with additional information
+        /// about this item, like type or symbol information
+        /// </summary>
+        [JsonProperty("detail")]
+        public string? Detail { get; set; }
+
+        /// <summary>
+        /// A human-readable string that represents a doc-comment. This is
+        /// formatted as markdown.
+        /// </summary>
+        [JsonProperty("documentation")]
+        public string? Documentation { get; set; }
+
+        /// <summary>
+        /// Select this item when showing.
+        /// </summary>
+        [JsonProperty("preselect")]
+        public bool Preselect { get; set; }
+
+        /// <summary>
+        /// A string that should be used when comparing this item
+        /// with other items. When null or empty the label is used.
+        /// </summary>
+        [JsonProperty("sortText")]
+        public string? SortText { get; set; }
+
+        /// <summary>
+        /// A string that should be used when filtering a set of
+        /// completion items. When null or empty the label is used.
+        /// </summary>
+        [JsonProperty("filterText")]
+        public string? FilterText { get; set; }
+
+        /// <summary>
+        /// A string that should be inserted into a document when selecting
+        /// this completion.When null or empty the label is used.
+        /// </summary>
+        [JsonProperty("insertText")]
+        public string? InsertText { get; set; }
+
+        /// <summary>
+        /// The format of <see cref="InsertText"/>.
+        /// </summary>
+        [JsonProperty("insertTextFormat")]
+        public InsertTextFormat? InsertTextFormat { get; set; }
+
+        /// <summary>
+        /// An optional set of characters that when pressed while this completion is active will accept it first and
+        /// then type that character.
+        /// </summary>
+        [JsonProperty("commitCharacters")]
+        public ImmutableArray<char>? CommitCharacters { get; set; }
+
+        /// <summary>
+        /// Index in the completions list that this completion occurred.
+        /// </summary>
+        [JsonProperty("data")]
+        public int Data { get; set; }
+
+        public override string ToString()
+        {
+            return $"{{ {nameof(Label)} = {Label}, {nameof(CompletionItemKind)} = {Kind} }}";
+        }
+    }
+
+    public enum CompletionItemKind
+    {
+        Text = 1,
+        Method = 2,
+        Function = 3,
+        Constructor = 4,
+        Field = 5,
+        Variable = 6,
+        Class = 7,
+        Interface = 8,
+        Module = 9,
+        Property = 10,
+        Unit = 11,
+        Value = 12,
+        Enum = 13,
+        Keyword = 14,
+        Snippet = 15,
+        Color = 16,
+        File = 17,
+        Reference = 18,
+        Folder = 19,
+        EnumMember = 20,
+        Constant = 21,
+        Struct = 22,
+        Event = 23,
+        Operator = 24,
+        TypeParameter = 25,
+    }
+
+    public enum CompletionItemTag
+    {
+        Deprecated = 1,
+    }
+
+    public enum InsertTextFormat
+    {
+        PlainText = 1,
+        // TODO: Support snippets
+        Snippet = 2,
+    }
+}
