@@ -15,6 +15,7 @@ var installFolder = Argument("install-path",
     CombinePaths(Environment.GetEnvironmentVariable(Platform.Current.IsWindows ? "USERPROFILE" : "HOME"), ".omnisharp"));
 var publishAll = HasArgument("publish-all");
 var useGlobalDotNetSdk = HasArgument("use-global-dotnet-sdk");
+var testProjectArgument = Argument("test-project", "");
 
 Log.Context = Context;
 
@@ -114,7 +115,7 @@ Task("InstallDotNetCoreSdk")
 {
     if (!useGlobalDotNetSdk)
     {
-        foreach (var dotnetVersion in buildPlan.DotNetVersions) 
+        foreach (var dotnetVersion in buildPlan.DotNetVersions)
         {
             InstallDotNetSdk(env, buildPlan,
                 version: dotnetVersion,
@@ -205,11 +206,30 @@ Task("CreateMSBuildFolder")
         "Microsoft.Build",
         "Microsoft.Build.Framework",
         "Microsoft.Build.Tasks.Core",
-        "Microsoft.Build.Utilities.Core",
+        "Microsoft.Build.Utilities.Core"
+    };
+
+    var msbuildRefLibraries = new []
+    {
         "Microsoft.Build.Tasks.v4.0",
         "Microsoft.Build.Tasks.v12.0",
         "Microsoft.Build.Utilities.v4.0",
-        "Microsoft.Build.Utilities.v12.0"
+        "Microsoft.Build.Utilities.v12.0",
+    };
+
+    var msBuildDependencies = new []
+    {
+        "Microsoft.Bcl.AsyncInterfaces",
+        "System.Buffers",
+        "System.Collections.Immutable",
+        "System.Memory",
+        "System.Numerics.Vectors",
+        "System.Resources.Extensions",
+        "System.Runtime.CompilerServices.Unsafe",
+        "System.Text.Encodings.Web",
+        "System.Text.Json",
+        "System.Threading.Tasks.Dataflow",
+        "System.Threading.Tasks.Extensions",
     };
 
     var msbuildRuntimeFiles = new []
@@ -225,7 +245,9 @@ Task("CreateMSBuildFolder")
         "Microsoft.CSharp.Mono.targets",
         "Microsoft.CSharp.targets",
         "Microsoft.Data.Entity.targets",
+        "Microsoft.Managed.After.targets",
         "Microsoft.Managed.targets",
+        "Microsoft.Managed.Before.targets",
         "Microsoft.NET.props",
         "Microsoft.NETFramework.CurrentVersion.props",
         "Microsoft.NETFramework.CurrentVersion.targets",
@@ -241,15 +263,8 @@ Task("CreateMSBuildFolder")
         "Microsoft.Xaml.targets",
         "MSBuild.dll",
         "MSBuild.dll.config",
-        "System.Buffers.dll",
-        "System.Collections.Immutable.dll",
-        "System.Memory.dll",
-        "System.Numerics.Vectors.dll",
-        "System.Reflection.Metadata.dll",
-        "System.Resources.Extensions.dll",
-        "System.Threading.Tasks.Dataflow.dll",
         "Workflow.VisualBasic.targets",
-        "Workflow.targets"
+        "Workflow.targets",
     };
 
     string sdkResolverTFM;
@@ -274,6 +289,19 @@ Task("CreateMSBuildFolder")
             if (FileHelper.Exists(librarySourcePath))
             {
                 FileHelper.Copy(librarySourcePath, libraryTargetPath);
+            }
+        }
+
+        Information("Copying MSBuild dependencies...");
+
+        foreach (var dependency in msBuildDependencies)
+        {
+            var dependencyFileName = dependency + ".dll";
+            var dependencySourcePath = CombinePaths(env.Folders.Tools, dependency, "lib", "netstandard2.0", dependencyFileName);
+            var dependencyTargetPath = CombinePaths(msbuildCurrentBinTargetFolder, dependencyFileName);
+            if (FileHelper.Exists(dependencySourcePath))
+            {
+                FileHelper.Copy(dependencySourcePath, dependencyTargetPath);
             }
         }
 
@@ -308,13 +336,39 @@ Task("CreateMSBuildFolder")
         foreach (var library in msbuildLibraries)
         {
             var libraryFileName = library + ".dll";
-
-            // copy MSBuild from current Mono (should be 6.4.0+)
-            var librarySourcePath = CombinePaths(monoMSBuildPath, libraryFileName);
+            var librarySourcePath = CombinePaths(env.Folders.Tools, library, "lib", "net472", libraryFileName);
             var libraryTargetPath = CombinePaths(msbuildCurrentBinTargetFolder, libraryFileName);
             if (FileHelper.Exists(librarySourcePath))
             {
                 FileHelper.Copy(librarySourcePath, libraryTargetPath);
+            }
+        }
+
+        Information("Copying MSBuild Ref Libraries...");
+
+        foreach (var refLibrary in msbuildRefLibraries)
+        {
+            var refLibraryFileName = refLibrary + ".dll";
+
+            // copy MSBuild from current Mono
+            var refLibrarySourcePath = CombinePaths(monoMSBuildPath, refLibraryFileName);
+            var refLibraryTargetPath = CombinePaths(msbuildCurrentBinTargetFolder, refLibraryFileName);
+            if (FileHelper.Exists(refLibrarySourcePath))
+            {
+                FileHelper.Copy(refLibrarySourcePath, refLibraryTargetPath);
+            }
+        }
+
+        Information("Copying MSBuild dependencies...");
+
+        foreach (var dependency in msBuildDependencies)
+        {
+            var dependencyFileName = dependency + ".dll";
+            var dependencySourcePath = CombinePaths(env.Folders.Tools, dependency, "lib", "netstandard2.0", dependencyFileName);
+            var dependencyTargetPath = CombinePaths(msbuildCurrentBinTargetFolder, dependencyFileName);
+            if (FileHelper.Exists(dependencySourcePath))
+            {
+                FileHelper.Copy(dependencySourcePath, dependencyTargetPath);
             }
         }
 
@@ -584,7 +638,8 @@ Task("Test")
     .IsDependentOn("PrepareTestAssets")
     .Does(() =>
 {
-        foreach (var testProject in buildPlan.TestProjects)
+        var testProjects = string.IsNullOrEmpty(testProjectArgument) ? buildPlan.TestProjects : testProjectArgument.Split(',');
+        foreach (var testProject in testProjects)
         {
             PrintBlankLine();
             var instanceFolder = CombinePaths(env.Folders.Bin, configuration, testProject, "net472");
@@ -846,7 +901,7 @@ Task("ExecuteRunScript")
         var projectFolder = CombinePaths(env.Folders.Source, project);
 
         var scriptPath = GetScriptPath(env.Folders.ArtifactsScripts, project);
-        var didNotExitWithError = Run(env.ShellCommand, $"{env.ShellArgument}  \"{scriptPath}\" -s \"{projectFolder}\"",
+        var didNotExitWithError = Run(env.ShellCommand, $"{env.ShellArgument} \"{scriptPath}\" -s \"{projectFolder}\"",
                                     new RunOptions(waitForIdle: true))
                                 .WasIdle;
         if (!didNotExitWithError)
@@ -921,6 +976,15 @@ Task("All")
 /// </summary>
 Task("Default")
     .IsDependentOn("All");
+
+/// <summary>
+///  Task aliases for CI (excluding tests) as they are parallelized
+/// </summary>
+Task("CI")
+    .IsDependentOn("Cleanup")
+    .IsDependentOn("Build")
+    .IsDependentOn("Publish")
+    .IsDependentOn("ExecuteRunScript");
 
 Teardown(context =>
 {

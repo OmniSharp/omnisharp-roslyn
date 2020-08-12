@@ -36,7 +36,7 @@ namespace OmniSharp.Utilities
                     lock (_gate)
                     {
                         _polling = false;
-                        _callbacks.Clear();
+                        _callbacks?.Clear();
                         _callbacks = null;
                     }
                 }
@@ -118,11 +118,6 @@ namespace OmniSharp.Utilities
 
             public IDisposable RegisterChangeCallback(Action<object> callback, object state)
             {
-                if (state != null)
-                {
-                    throw new ArgumentException($"Stateful callbacks are not supported for {nameof(PollingFileChangeToken)}", nameof(state));
-                }
-
                 lock (_gate)
                 {
                     if (_callbacks == null)

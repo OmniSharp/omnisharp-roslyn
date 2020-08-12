@@ -1,6 +1,12 @@
 using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
+using OmniSharp.Extensions.LanguageServer.Protocol;
+using OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
+using OmniSharp.LanguageServerProtocol.Handlers;
 using OmniSharp.Models;
 using OmniSharp.Models.Diagnostics;
 
@@ -79,26 +85,8 @@ namespace OmniSharp.LanguageServerProtocol
             return DiagnosticSeverity.Information;
         }
 
-        public static Uri ToUri(string fileName)
-        {
-            fileName = fileName.Replace(":", "%3A").Replace("\\", "/");
-            if (!fileName.StartsWith("/")) return new Uri($"file:///{fileName}");
-            return new Uri($"file://{fileName}");
-        }
-
-        public static string FromUri(Uri uri)
-        {
-            if (uri.Segments.Length > 1)
-            {
-                // On windows of the Uri contains %3a local path
-                // doesn't come out as a proper windows path
-                if (uri.Segments[1].IndexOf("%3a", StringComparison.OrdinalIgnoreCase) > -1)
-                {
-                    return FromUri(new Uri(uri.AbsoluteUri.Replace("%3a", ":").Replace("%3A", ":")));
-                }
-            }
-            return uri.LocalPath;
-        }
+        public static DocumentUri ToUri(string fileName) => DocumentUri.File(fileName);
+        public static string FromUri(DocumentUri uri) => uri.GetFileSystemPath().Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
 
         public static Range ToRange((int column, int line) location)
         {
@@ -137,11 +125,121 @@ namespace OmniSharp.LanguageServerProtocol
             };
         }
 
-        public static string EscapeMarkdown(string markdown)
+        private static readonly IDictionary<string, SymbolKind> Kinds = new Dictionary<string, SymbolKind>
         {
-            if (markdown == null)
-                return null;
-            return Regex.Replace(markdown, @"([\\`\*_\{\}\[\]\(\)#+\-\.!])", @"\$1");
+            { OmniSharp.Models.V2.SymbolKinds.Class, SymbolKind.Class },
+            { OmniSharp.Models.V2.SymbolKinds.Delegate, SymbolKind.Class },
+            { OmniSharp.Models.V2.SymbolKinds.Enum, SymbolKind.Enum },
+            { OmniSharp.Models.V2.SymbolKinds.Interface, SymbolKind.Interface },
+            { OmniSharp.Models.V2.SymbolKinds.Struct, SymbolKind.Struct },
+            { OmniSharp.Models.V2.SymbolKinds.Constant, SymbolKind.Constant },
+            { OmniSharp.Models.V2.SymbolKinds.Destructor, SymbolKind.Method },
+            { OmniSharp.Models.V2.SymbolKinds.EnumMember, SymbolKind.EnumMember },
+            { OmniSharp.Models.V2.SymbolKinds.Event, SymbolKind.Event },
+            { OmniSharp.Models.V2.SymbolKinds.Field, SymbolKind.Field },
+            { OmniSharp.Models.V2.SymbolKinds.Indexer, SymbolKind.Property },
+            { OmniSharp.Models.V2.SymbolKinds.Method, SymbolKind.Method },
+            { OmniSharp.Models.V2.SymbolKinds.Operator, SymbolKind.Operator },
+            { OmniSharp.Models.V2.SymbolKinds.Property, SymbolKind.Property },
+            { OmniSharp.Models.V2.SymbolKinds.Namespace, SymbolKind.Namespace },
+            { OmniSharp.Models.V2.SymbolKinds.Unknown, SymbolKind.Class },
+        };
+
+        public static SymbolKind ToSymbolKind(string omnisharpKind)
+        {
+            return Kinds.TryGetValue(omnisharpKind.ToLowerInvariant(), out var symbolKind) ? symbolKind : SymbolKind.Class;
+        }
+
+        public static WorkspaceEdit ToWorkspaceEdit(IEnumerable<FileOperationResponse> responses, WorkspaceEditCapability workspaceEditCapability, DocumentVersions documentVersions)
+        {
+            workspaceEditCapability ??= new WorkspaceEditCapability();
+            workspaceEditCapability.ResourceOperations ??= Array.Empty<ResourceOperationKind>();
+
+
+            if (workspaceEditCapability.DocumentChanges)
+            {
+                var documentChanges = new List<WorkspaceEditDocumentChange>();
+                foreach (var response in responses)
+                {
+                    documentChanges.Add(ToWorkspaceEditDocumentChange(response, workspaceEditCapability,
+                        documentVersions));
+
+                }
+
+                return new WorkspaceEdit()
+                {
+                    DocumentChanges = documentChanges
+                };
+            }
+            else
+            {
+                var changes = new Dictionary<DocumentUri, IEnumerable<TextEdit>>();
+                foreach (var response in responses)
+                {
+                    changes.Add(DocumentUri.FromFileSystemPath(response.FileName), ToTextEdits(response));
+                }
+
+                return new WorkspaceEdit()
+                {
+                    Changes = changes
+                };
+            }
+        }
+
+        public static WorkspaceEditDocumentChange ToWorkspaceEditDocumentChange(FileOperationResponse response, WorkspaceEditCapability workspaceEditCapability, DocumentVersions documentVersions)
+        {
+            workspaceEditCapability ??= new WorkspaceEditCapability();
+            workspaceEditCapability.ResourceOperations ??= Array.Empty<ResourceOperationKind>();
+
+            if (response is ModifiedFileResponse modified)
+            {
+                return new TextDocumentEdit()
+                {
+                    Edits = new TextEditContainer(modified.Changes.Select(ToTextEdit)),
+                    TextDocument = new VersionedTextDocumentIdentifier()
+                    {
+                        Version = documentVersions.GetVersion(DocumentUri.FromFileSystemPath(response.FileName)),
+                        Uri = DocumentUri.FromFileSystemPath(response.FileName)
+                    },
+                };
+            }
+
+            if (response is RenamedFileResponse rename && workspaceEditCapability.ResourceOperations.Contains(ResourceOperationKind.Rename))
+            {
+                return new RenameFile()
+                {
+                    // Options = new RenameFileOptions()
+                    // {
+                    //     Overwrite                        = true,
+                    //     IgnoreIfExists = false
+                    // },
+                    NewUri = DocumentUri.FromFileSystemPath(rename.NewFileName).ToString(),
+                    OldUri = DocumentUri.FromFileSystemPath(rename.FileName).ToString(),
+                };
+            }
+
+            return default;
+        }
+
+        public static IEnumerable<TextEdit> ToTextEdits(FileOperationResponse response)
+        {
+            if (!(response is ModifiedFileResponse modified)) yield break;
+            foreach (var change in modified.Changes)
+            {
+                yield return ToTextEdit(change);
+            }
+        }
+
+        public static TextEdit ToTextEdit(LinePositionSpanTextChange textChange)
+        {
+            return new TextEdit()
+            {
+                NewText = textChange.NewText,
+                Range = ToRange(
+                    (textChange.StartColumn, textChange.StartLine),
+                    (textChange.EndColumn, textChange.EndLine)
+                )
+            };
         }
     }
 }

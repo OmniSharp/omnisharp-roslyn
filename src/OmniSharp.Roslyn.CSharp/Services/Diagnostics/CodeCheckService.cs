@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Collections.Immutable;
+﻿using System.Collections.Immutable;
 using System.Composition;
 using System.Linq;
 using System.Threading.Tasks;
@@ -9,7 +8,6 @@ using OmniSharp.Helpers;
 using OmniSharp.Mef;
 using OmniSharp.Models;
 using OmniSharp.Models.CodeCheck;
-using OmniSharp.Models.Diagnostics;
 using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Workers.Diagnostics;
 
@@ -45,11 +43,11 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             return GetResponseFromDiagnostics(diagnostics, request.FileName);
         }
 
-        private static QuickFixResponse GetResponseFromDiagnostics(ImmutableArray<(string projectName, Diagnostic diagnostic)> diagnostics, string fileName)
+        private static QuickFixResponse GetResponseFromDiagnostics(ImmutableArray<DocumentDiagnostics> diagnostics, string fileName)
         {
             var diagnosticLocations = diagnostics
-                .Where(x => (string.IsNullOrEmpty(fileName)
-                    || x.diagnostic.Location.GetLineSpan().Path == fileName))
+                .Where(x => string.IsNullOrEmpty(fileName)
+                    || x.DocumentPath == fileName)
                 .DistinctDiagnosticLocationsByProject()
                 .Where(x => x.FileName != null);
 

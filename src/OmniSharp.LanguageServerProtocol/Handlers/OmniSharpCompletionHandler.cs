@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using OmniSharp.Extensions.JsonRpc;
 using OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities;
+using OmniSharp.Extensions.LanguageServer.Protocol.Document;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OmniSharp.Extensions.LanguageServer.Protocol.Server;
 using OmniSharp.Models.AutoComplete;
@@ -100,7 +101,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                 var completionItem = new CompletionItem
                 {
                     Label = response.CompletionText,
-                    Detail = !string.IsNullOrEmpty(response.ReturnType) ?
+                    Detail = string.IsNullOrEmpty(response.ReturnType) ?
                             response.DisplayText :
                             $"{response.ReturnType} {response.DisplayText}",
                     Documentation = response.Description,
@@ -136,12 +137,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
 
         public override Task<CompletionItem> Handle(CompletionItem request, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
-        }
-
-        public override bool CanResolve(CompletionItem value)
-        {
-            return false;
+            return Task.FromResult(request);
         }
     }
 }

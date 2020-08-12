@@ -86,7 +86,7 @@ namespace OmniSharp.MSBuild
         public void Initalize(IConfiguration configuration)
         {
             if (Initialized) return;
-            
+
             _options = new MSBuildOptions();
             ConfigurationBinder.Bind(configuration, _options);
 
@@ -102,7 +102,8 @@ namespace OmniSharp.MSBuild
             _packageDependencyChecker = new PackageDependencyChecker(_loggerFactory, _eventEmitter, _dotNetCli, _options);
             _loader = new ProjectLoader(_options, _environment.TargetDirectory, _propertyOverrides, _loggerFactory, _sdksPathResolver);
 
-            _manager = new ProjectManager(_loggerFactory, _options, _eventEmitter, _fileSystemWatcher, _metadataFileReferenceCache, _packageDependencyChecker, _loader, _workspace, _assemblyLoader, _eventSinks);
+            var dotNetInfo = GetDotNetInfo();
+            _manager = new ProjectManager(_loggerFactory, _options, _eventEmitter, _fileSystemWatcher, _metadataFileReferenceCache, _packageDependencyChecker, _loader, _workspace, _assemblyLoader, _eventSinks, dotNetInfo);
             Initialized = true;
 
             if (_options.LoadProjectsOnDemand)
@@ -123,6 +124,15 @@ namespace OmniSharp.MSBuild
 
                 _manager.QueueProjectUpdate(projectFilePath, allowAutoRestore: true, projectIdInfo);
             }
+        }
+
+        private DotNetInfo GetDotNetInfo()
+        {
+            var workingDirectory = string.IsNullOrEmpty(_environment.SolutionFilePath)
+                ? _environment.TargetDirectory
+                : Path.GetDirectoryName(_environment.SolutionFilePath);
+
+            return _dotNetCli.GetInfo(workingDirectory);
         }
 
         private IEnumerable<(string, ProjectIdInfo)> GetInitialProjectPathsAndIds()
