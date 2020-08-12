@@ -148,15 +148,6 @@ namespace OmniSharp.DotNetTest
             VerifyTestFramework(testFrameworkName);
 
             var testCases = await DiscoverTestsAsync(new string[] { methodName }, runSettings, targetFrameworkVersion, cancellationToken);
-
-            SendMessage(MessageType.GetTestRunnerProcessStartInfoForRunSelected,
-                new
-                {
-                    TestCases = testCases,
-                    DebuggingEnabled = true,
-                    RunSettings = LoadRunSettingsOrDefault(runSettings, targetFrameworkVersion)
-                });
-
             var testStartInfo = await GetTestRunnerProcessStartInfo(testCases, debuggingEnabled: false, runSettings, targetFrameworkVersion, cancellationToken);
 
             return new GetTestStartInfoResponse
