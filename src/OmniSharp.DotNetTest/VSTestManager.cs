@@ -415,7 +415,7 @@ namespace OmniSharp.DotNetTest
                             if (payload.LastRunTests != null && payload.LastRunTests.NewTestResults != null)
                             {
                                 var lastRunResults = ConvertResults(payload.LastRunTests.NewTestResults);
-                                passed = passed && payload.LastRunTests.NewTestResults.Any(o => o.Outcome == TestOutcome.Failed);
+                                passed = passed && !payload.LastRunTests.NewTestResults.Any(o => o.Outcome == TestOutcome.Failed);
                                 results.AddRange(lastRunResults);
                                 foreach (var result in lastRunResults)
                                 {
