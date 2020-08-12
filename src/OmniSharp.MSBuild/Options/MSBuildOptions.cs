@@ -19,7 +19,7 @@ namespace OmniSharp.Options
         /// SDKs for a project by running 'dotnet --info' and retrieving the path. This is only needed
         /// for older versions of the .NET Core SDK.
         /// </summary>
-        public bool UseLegacySdkResolver { get; set; }
+        public bool UseLegacySdkResolver { get; set; } = true;
 
         public string MSBuildExtensionsPath { get; set; }
         public string TargetFrameworkRootPath { get; set; }
