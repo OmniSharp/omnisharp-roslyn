@@ -206,7 +206,11 @@ Task("CreateMSBuildFolder")
         "Microsoft.Build",
         "Microsoft.Build.Framework",
         "Microsoft.Build.Tasks.Core",
-        "Microsoft.Build.Utilities.Core",
+        "Microsoft.Build.Utilities.Core"
+    };
+
+    var msbuildRefLibraries = new []
+    {
         "Microsoft.Build.Tasks.v4.0",
         "Microsoft.Build.Tasks.v12.0",
         "Microsoft.Build.Utilities.v4.0",
@@ -337,6 +341,21 @@ Task("CreateMSBuildFolder")
             if (FileHelper.Exists(librarySourcePath))
             {
                 FileHelper.Copy(librarySourcePath, libraryTargetPath);
+            }
+        }
+
+        Information("Copying MSBuild Ref Libraries...");
+
+        foreach (var refLibrary in msbuildRefLibraries)
+        {
+            var refLibraryFileName = refLibrary + ".dll";
+
+            // copy MSBuild from current Mono
+            var refLibrarySourcePath = CombinePaths(monoMSBuildPath, refLibraryFileName);
+            var refLibraryTargetPath = CombinePaths(msbuildCurrentBinTargetFolder, refLibraryFileName);
+            if (FileHelper.Exists(refLibrarySourcePath))
+            {
+                FileHelper.Copy(refLibrarySourcePath, refLibraryTargetPath);
             }
         }
 
