@@ -332,9 +332,7 @@ Task("CreateMSBuildFolder")
         foreach (var library in msbuildLibraries)
         {
             var libraryFileName = library + ".dll";
-
-            // copy MSBuild from current Mono
-            var librarySourcePath = CombinePaths(monoMSBuildPath, libraryFileName);
+            var librarySourcePath = CombinePaths(env.Folders.Tools, library, "lib", "net472", libraryFileName);
             var libraryTargetPath = CombinePaths(msbuildCurrentBinTargetFolder, libraryFileName);
             if (FileHelper.Exists(librarySourcePath))
             {
@@ -342,7 +340,7 @@ Task("CreateMSBuildFolder")
             }
         }
 
-        Information("Copying MSBuild depednencies...");
+        Information("Copying MSBuild dependencies...");
 
         foreach (var dependency in msBuildDependencies)
         {
