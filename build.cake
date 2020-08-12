@@ -345,9 +345,7 @@ Task("CreateMSBuildFolder")
         foreach (var dependency in msBuildDependencies)
         {
             var dependencyFileName = dependency + ".dll";
-
-            // copy MSBuild from current Mono
-            var dependencySourcePath = CombinePaths(monoMSBuildPath, dependencyFileName);
+            var dependencySourcePath = CombinePaths(env.Folders.Tools, dependency, "lib", "netstandard2.0", dependencyFileName);
             var dependencyTargetPath = CombinePaths(msbuildCurrentBinTargetFolder, dependencyFileName);
             if (FileHelper.Exists(dependencySourcePath))
             {
