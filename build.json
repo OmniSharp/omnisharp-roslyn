@@ -2,7 +2,7 @@
     "DotNetInstallScriptURL": "https://dot.net/v1",
     "DotNetChannel": "Preview",
     "DotNetVersions": [
-        "3.1.302",
+        "3.1.401",
         "5.0.100-preview.7.20366.6"
     ],
     "RequiredMonoVersion": "6.6.0",
@@ -11,8 +11,7 @@
     "MonoRuntimeLinux32": "mono.linux-x86-6.10.0.104.zip",
     "MonoRuntimeLinux64": "mono.linux-x86_64-6.10.0.104.zip",
     "HostProjects": [
-        "OmniSharp.Stdio.Driver",
-        "OmniSharp.Http.Driver"
+        "OmniSharp.Stdio.Driver"
     ],
     "TestProjects": [
         "OmniSharp.MSBuild.Tests",
