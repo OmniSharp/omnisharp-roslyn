@@ -55,12 +55,5 @@ namespace OmniSharp.Services
                 SharedDirectory = Path.Combine(root, ".omnisharp");
             }
         }
-
-        public static bool IsValidPath(string path)
-        {
-            return string.IsNullOrEmpty(path)
-                || Directory.Exists(path)
-                || (File.Exists(path) && Path.GetExtension(path).Equals(".sln", StringComparison.OrdinalIgnoreCase));
-        }
     }
 }

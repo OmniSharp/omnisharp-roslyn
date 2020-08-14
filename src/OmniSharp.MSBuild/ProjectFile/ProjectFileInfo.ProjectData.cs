@@ -4,6 +4,8 @@ using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Runtime.Versioning;
+using Microsoft.Build.Evaluation;
+using Microsoft.Build.Globbing;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using NuGet.Packaging.Core;
@@ -43,16 +45,22 @@ namespace OmniSharp.MSBuild.ProjectFile
             public bool SignAssembly { get; }
             public string AssemblyOriginatorKeyFile { get; }
 
+            public ImmutableArray<IMSBuildGlob> FileInclusionGlobs { get; }
             public ImmutableArray<string> SourceFiles { get; }
             public ImmutableArray<string> ProjectReferences { get; }
             public ImmutableArray<string> References { get; }
             public ImmutableArray<PackageReference> PackageReferences { get; }
             public ImmutableArray<string> Analyzers { get; }
             public ImmutableArray<string> AdditionalFiles { get; }
+            public ImmutableArray<string> AnalyzerConfigFiles { get; }
+            public ImmutableArray<string> WarningsAsErrors { get; }
+            public ImmutableArray<string> WarningsNotAsErrors { get; }
             public RuleSet RuleSet { get; }
             public ImmutableDictionary<string, string> ReferenceAliases { get; }
             public ImmutableDictionary<string, string> ProjectReferenceAliases { get; }
             public bool TreatWarningsAsErrors { get; }
+            public bool RunAnalyzers { get; }
+            public bool RunAnalyzersDuringLiveAnalysis { get; }
             public string DefaultNamespace { get; }
 
             private ProjectData()
@@ -68,8 +76,12 @@ namespace OmniSharp.MSBuild.ProjectFile
                 PackageReferences = ImmutableArray<PackageReference>.Empty;
                 Analyzers = ImmutableArray<string>.Empty;
                 AdditionalFiles = ImmutableArray<string>.Empty;
+                AnalyzerConfigFiles = ImmutableArray<string>.Empty;
                 ReferenceAliases = ImmutableDictionary<string, string>.Empty;
                 ProjectReferenceAliases = ImmutableDictionary<string, string>.Empty;
+                WarningsAsErrors = ImmutableArray<string>.Empty;
+                FileInclusionGlobs = ImmutableArray<IMSBuildGlob>.Empty;
+                WarningsNotAsErrors = ImmutableArray<string>.Empty;
             }
 
             private ProjectData(
@@ -87,10 +99,14 @@ namespace OmniSharp.MSBuild.ProjectFile
                 string documentationFile,
                 ImmutableArray<string> preprocessorSymbolNames,
                 ImmutableArray<string> suppressedDiagnosticIds,
+                ImmutableArray<string> warningsAsErrors,
+                ImmutableArray<string> warningsNotAsErrors,
                 bool signAssembly,
                 string assemblyOriginatorKeyFile,
                 bool treatWarningsAsErrors,
                 string defaultNamespace,
+                bool runAnalyzers,
+                bool runAnalyzersDuringLiveAnalysis,
                 RuleSet ruleset)
                 : this()
             {
@@ -116,12 +132,17 @@ namespace OmniSharp.MSBuild.ProjectFile
                 DocumentationFile = documentationFile;
                 PreprocessorSymbolNames = preprocessorSymbolNames.EmptyIfDefault();
                 SuppressedDiagnosticIds = suppressedDiagnosticIds.EmptyIfDefault();
+                WarningsAsErrors = warningsAsErrors.EmptyIfDefault();
+                WarningsNotAsErrors = warningsNotAsErrors.EmptyIfDefault();
 
                 SignAssembly = signAssembly;
                 AssemblyOriginatorKeyFile = assemblyOriginatorKeyFile;
                 TreatWarningsAsErrors = treatWarningsAsErrors;
                 RuleSet = ruleset;
                 DefaultNamespace = defaultNamespace;
+
+                RunAnalyzers = runAnalyzers;
+                RunAnalyzersDuringLiveAnalysis = runAnalyzersDuringLiveAnalysis;
             }
 
             private ProjectData(
@@ -139,6 +160,8 @@ namespace OmniSharp.MSBuild.ProjectFile
                 string documentationFile,
                 ImmutableArray<string> preprocessorSymbolNames,
                 ImmutableArray<string> suppressedDiagnosticIds,
+                ImmutableArray<string> warningsAsErrors,
+                ImmutableArray<string> warningsNotAsErrors,
                 bool signAssembly,
                 string assemblyOriginatorKeyFile,
                 ImmutableArray<string> sourceFiles,
@@ -147,14 +170,18 @@ namespace OmniSharp.MSBuild.ProjectFile
                 ImmutableArray<PackageReference> packageReferences,
                 ImmutableArray<string> analyzers,
                 ImmutableArray<string> additionalFiles,
+                ImmutableArray<string> analyzerConfigFiles,
                 bool treatWarningsAsErrors,
                 string defaultNamespace,
+                bool runAnalyzers,
+                bool runAnalyzersDuringLiveAnalysis,
                 RuleSet ruleset,
                 ImmutableDictionary<string, string> referenceAliases,
-                ImmutableDictionary<string, string> projectReferenceAliases)
+                ImmutableDictionary<string, string> projectReferenceAliases,
+                ImmutableArray<IMSBuildGlob> fileInclusionGlobs)
                 : this(guid, name, assemblyName, targetPath, outputPath, intermediateOutputPath, projectAssetsFile,
                       configuration, platform, targetFramework, targetFrameworks, outputKind, languageVersion, nullableContextOptions, allowUnsafeCode, checkForOverflowUnderflow,
-                      documentationFile, preprocessorSymbolNames, suppressedDiagnosticIds, signAssembly, assemblyOriginatorKeyFile, treatWarningsAsErrors, defaultNamespace, ruleset)
+                      documentationFile, preprocessorSymbolNames, suppressedDiagnosticIds, warningsAsErrors, warningsNotAsErrors, signAssembly, assemblyOriginatorKeyFile, treatWarningsAsErrors, defaultNamespace, runAnalyzers, runAnalyzersDuringLiveAnalysis, ruleset)
             {
                 SourceFiles = sourceFiles.EmptyIfDefault();
                 ProjectReferences = projectReferences.EmptyIfDefault();
@@ -162,8 +189,10 @@ namespace OmniSharp.MSBuild.ProjectFile
                 PackageReferences = packageReferences.EmptyIfDefault();
                 Analyzers = analyzers.EmptyIfDefault();
                 AdditionalFiles = additionalFiles.EmptyIfDefault();
+                AnalyzerConfigFiles = analyzerConfigFiles.EmptyIfDefault();
                 ReferenceAliases = referenceAliases;
                 ProjectReferenceAliases = projectReferenceAliases;
+                FileInclusionGlobs = fileInclusionGlobs;
             }
 
             public static ProjectData Create(MSB.Evaluation.Project project)
@@ -197,17 +226,21 @@ namespace OmniSharp.MSBuild.ProjectFile
                 var documentationFile = project.GetPropertyValue(PropertyNames.DocumentationFile);
                 var preprocessorSymbolNames = PropertyConverter.ToPreprocessorSymbolNames(project.GetPropertyValue(PropertyNames.DefineConstants));
                 var suppressedDiagnosticIds = PropertyConverter.ToSuppressedDiagnosticIds(project.GetPropertyValue(PropertyNames.NoWarn));
+                var warningsAsErrors = PropertyConverter.SplitList(project.GetPropertyValue(PropertyNames.WarningsAsErrors), ',');
+                var warningsNotAsErrors = PropertyConverter.SplitList(project.GetPropertyValue(PropertyNames.WarningsNotAsErrors), ',');
                 var signAssembly = PropertyConverter.ToBoolean(project.GetPropertyValue(PropertyNames.SignAssembly), defaultValue: false);
                 var assemblyOriginatorKeyFile = project.GetPropertyValue(PropertyNames.AssemblyOriginatorKeyFile);
                 var treatWarningsAsErrors = PropertyConverter.ToBoolean(project.GetPropertyValue(PropertyNames.TreatWarningsAsErrors), defaultValue: false);
+                var runAnalyzers = PropertyConverter.ToBoolean(project.GetPropertyValue(PropertyNames.RunAnalyzers), defaultValue: true);
+                var runAnalyzersDuringLiveAnalysis = PropertyConverter.ToBoolean(project.GetPropertyValue(PropertyNames.RunAnalyzersDuringLiveAnalysis), defaultValue: true);
 
                 return new ProjectData(
                     guid, name, assemblyName, targetPath, outputPath, intermediateOutputPath, projectAssetsFile,
                     configuration, platform, targetFramework, targetFrameworks, outputKind, languageVersion, nullableContextOptions, allowUnsafeCode, checkForOverflowUnderflow,
-                    documentationFile, preprocessorSymbolNames, suppressedDiagnosticIds, signAssembly, assemblyOriginatorKeyFile, treatWarningsAsErrors, defaultNamespace, ruleset: null);
+                    documentationFile, preprocessorSymbolNames, suppressedDiagnosticIds, warningsAsErrors, warningsNotAsErrors, signAssembly, assemblyOriginatorKeyFile, treatWarningsAsErrors, defaultNamespace, runAnalyzers, runAnalyzersDuringLiveAnalysis, ruleset: null);
             }
 
-            public static ProjectData Create(MSB.Execution.ProjectInstance projectInstance)
+            public static ProjectData Create(MSB.Execution.ProjectInstance projectInstance, MSB.Evaluation.Project project)
             {
                 var guid = PropertyConverter.ToGuid(projectInstance.GetPropertyValue(PropertyNames.ProjectGuid));
                 var name = projectInstance.GetPropertyValue(PropertyNames.ProjectName);
@@ -238,8 +271,12 @@ namespace OmniSharp.MSBuild.ProjectFile
                 var documentationFile = projectInstance.GetPropertyValue(PropertyNames.DocumentationFile);
                 var preprocessorSymbolNames = PropertyConverter.ToPreprocessorSymbolNames(projectInstance.GetPropertyValue(PropertyNames.DefineConstants));
                 var suppressedDiagnosticIds = PropertyConverter.ToSuppressedDiagnosticIds(projectInstance.GetPropertyValue(PropertyNames.NoWarn));
+                var warningsAsErrors = PropertyConverter.SplitList(projectInstance.GetPropertyValue(PropertyNames.WarningsAsErrors), ',');
+                var warningsNotAsErrors = PropertyConverter.SplitList(projectInstance.GetPropertyValue(PropertyNames.WarningsNotAsErrors), ',');
                 var signAssembly = PropertyConverter.ToBoolean(projectInstance.GetPropertyValue(PropertyNames.SignAssembly), defaultValue: false);
                 var treatWarningsAsErrors = PropertyConverter.ToBoolean(projectInstance.GetPropertyValue(PropertyNames.TreatWarningsAsErrors), defaultValue: false);
+                var runAnalyzers = PropertyConverter.ToBoolean(projectInstance.GetPropertyValue(PropertyNames.RunAnalyzers), defaultValue: true);
+                var runAnalyzersDuringLiveAnalysis = PropertyConverter.ToBoolean(projectInstance.GetPropertyValue(PropertyNames.RunAnalyzersDuringLiveAnalysis), defaultValue: true);
                 var assemblyOriginatorKeyFile = projectInstance.GetPropertyValue(PropertyNames.AssemblyOriginatorKeyFile);
 
                 var ruleset = ResolveRulesetIfAny(projectInstance);
@@ -304,14 +341,48 @@ namespace OmniSharp.MSBuild.ProjectFile
                 var packageReferences = GetPackageReferences(projectInstance.GetItems(ItemNames.PackageReference));
                 var analyzers = GetFullPaths(projectInstance.GetItems(ItemNames.Analyzer));
                 var additionalFiles = GetFullPaths(projectInstance.GetItems(ItemNames.AdditionalFiles));
+                var editorConfigFiles = GetFullPaths(projectInstance.GetItems(ItemNames.EditorConfigFiles));
+                var includeGlobs = project.GetAllGlobs().Select(x => x.MsBuildGlob).ToImmutableArray();
 
-                return new ProjectData(guid, name,
-                    assemblyName, targetPath, outputPath, intermediateOutputPath, projectAssetsFile,
-                    configuration, platform, targetFramework, targetFrameworks,
-                    outputKind, languageVersion, nullableContextOptions, allowUnsafeCode, checkForOverflowUnderflow, documentationFile, preprocessorSymbolNames, suppressedDiagnosticIds,
-                    signAssembly, assemblyOriginatorKeyFile,
-                    sourceFiles, projectReferences.ToImmutable(), references.ToImmutable(), packageReferences, analyzers, additionalFiles, treatWarningsAsErrors, defaultNamespace, ruleset,
-                    referenceAliases.ToImmutableDictionary(), projectReferenceAliases.ToImmutable());
+                return new ProjectData(
+                    guid,
+                    name,
+                    assemblyName,
+                    targetPath,
+                    outputPath,
+                    intermediateOutputPath,
+                    projectAssetsFile,
+                    configuration,
+                    platform,
+                    targetFramework,
+                    targetFrameworks,
+                    outputKind,
+                    languageVersion,
+                    nullableContextOptions,
+                    allowUnsafeCode,
+                    checkForOverflowUnderflow,
+                    documentationFile,
+                    preprocessorSymbolNames,
+                    suppressedDiagnosticIds,
+                    warningsAsErrors,
+                    warningsNotAsErrors,
+                    signAssembly,
+                    assemblyOriginatorKeyFile,
+                    sourceFiles,
+                    projectReferences.ToImmutable(),
+                    references.ToImmutable(),
+                    packageReferences,
+                    analyzers,
+                    additionalFiles,
+                    editorConfigFiles,
+                    treatWarningsAsErrors,
+                    defaultNamespace,
+                    runAnalyzers,
+                    runAnalyzersDuringLiveAnalysis,
+                    ruleset,
+                    referenceAliases.ToImmutableDictionary(),
+                    projectReferenceAliases.ToImmutable(),
+                    includeGlobs);
             }
 
             private static RuleSet ResolveRulesetIfAny(MSB.Execution.ProjectInstance projectInstance)

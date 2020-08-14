@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using OmniSharp.Extensions.JsonRpc;
 using OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities;
+using OmniSharp.Extensions.LanguageServer.Protocol.Document;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OmniSharp.Extensions.LanguageServer.Protocol.Server;
 using OmniSharp.Models.CodeFormat;
@@ -24,10 +25,11 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
 
         private readonly Mef.IRequestHandler<CodeFormatRequest, CodeFormatResponse> _codeFormatHandler;
 
-        public OmniSharpDocumentFormattingHandler(Mef.IRequestHandler<CodeFormatRequest, CodeFormatResponse> codeFormatHandler, DocumentSelector documentSelector) : base(new TextDocumentRegistrationOptions()
-        {
-            DocumentSelector = documentSelector,
-        })
+        public OmniSharpDocumentFormattingHandler(Mef.IRequestHandler<CodeFormatRequest, CodeFormatResponse> codeFormatHandler, DocumentSelector documentSelector) : base(
+            new DocumentFormattingRegistrationOptions()
+            {
+                DocumentSelector = documentSelector,
+            })
         {
             _codeFormatHandler = codeFormatHandler;
         }

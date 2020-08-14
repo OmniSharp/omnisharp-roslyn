@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.IO;
 using Microsoft.Extensions.Logging;
+using NuGet.Versioning;
 using OmniSharp.Utilities;
 
 namespace OmniSharp.MSBuild.Discovery.Providers
@@ -25,6 +27,8 @@ namespace OmniSharp.MSBuild.Discovery.Providers
             var toolsPath = Path.Combine(extensionsPath, "Current", "Bin");
             var roslynPath = Path.Combine(toolsPath, "Roslyn");
 
+            var version = GetMSBuildVersion(Path.Combine(toolsPath, "Microsoft.Build.dll"));
+
             var propertyOverrides = ImmutableDictionary.CreateBuilder<string, string>(StringComparer.OrdinalIgnoreCase);
 
             if (PlatformHelper.IsMono)
@@ -46,7 +50,7 @@ namespace OmniSharp.MSBuild.Discovery.Providers
                 new MSBuildInstance(
                     nameof(DiscoveryType.StandAlone),
                     toolsPath,
-                    new Version(16, 4), // we now ship with embedded MsBuild 16.4
+                    version,
                     DiscoveryType.StandAlone,
                     propertyOverrides.ToImmutable(),
                     setMSBuildExePathVariable: true));

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.CodeAnalysis;
 using OmniSharp.Services;
 
 namespace OmniSharp.Endpoint
@@ -24,7 +25,7 @@ namespace OmniSharp.Endpoint
                 }
             }
 
-            return null;
+            return LanguageNames.CSharp;
         }
     }
 }

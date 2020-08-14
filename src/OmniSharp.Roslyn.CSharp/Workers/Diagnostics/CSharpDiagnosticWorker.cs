@@ -1,36 +1,28 @@
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Composition;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using System.Reflection;
-using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.Diagnostics;
-using Microsoft.CodeAnalysis.Options;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Helpers;
 using OmniSharp.Models.Diagnostics;
-using OmniSharp.Options;
-using OmniSharp.Roslyn;
-using OmniSharp.Roslyn.CSharp.Workers.Diagnostics;
-using OmniSharp.Services;
+using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
 
 namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
 {
-    public class CSharpDiagnosticWorker: ICsDiagnosticWorker
+    public class CSharpDiagnosticWorker: ICsDiagnosticWorker, IDisposable
     {
         private readonly ILogger _logger;
         private readonly OmniSharpWorkspace _workspace;
         private readonly DiagnosticEventForwarder _forwarder;
         private readonly IObserver<string> _openDocuments;
+        private readonly IDisposable _disposable;
 
         public CSharpDiagnosticWorker(OmniSharpWorkspace workspace, DiagnosticEventForwarder forwarder, ILoggerFactory loggerFactory)
         {
@@ -45,7 +37,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
             _workspace.DocumentOpened += OnDocumentOpened;
             _workspace.DocumentClosed += OnDocumentOpened;
 
-            openDocumentsSubject
+            _disposable = openDocumentsSubject
                 .GroupByUntil(x => true, group => Observable.Amb(
                     group.Throttle(TimeSpan.FromMilliseconds(200)),
                     group.Distinct().Skip(99))
@@ -143,11 +135,11 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
             return ImmutableArray<DocumentId>.Empty;
         }
 
-        public async Task<ImmutableArray<(string projectName, Diagnostic diagnostic)>> GetDiagnostics(ImmutableArray<string> documentPaths)
+        public async Task<ImmutableArray<DocumentDiagnostics>> GetDiagnostics(ImmutableArray<string> documentPaths)
         {
-            if (!documentPaths.Any()) return ImmutableArray<(string projectName, Diagnostic diagnostic)>.Empty;
+            if (!documentPaths.Any()) return ImmutableArray<DocumentDiagnostics>.Empty;
 
-            var results = new List<(string projectName, Diagnostic diagnostic)>();
+            var results = new List<DocumentDiagnostics>();
 
             var documents =
                 (await Task.WhenAll(
@@ -162,7 +154,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
 
                 var projectName = document.Project.Name;
                 var diagnostics = await GetDiagnosticsForDocument(document, projectName);
-                results.AddRange(diagnostics.Select(x => (projectName: document.Project.Name, diagnostic: x)));
+                results.Add(new DocumentDiagnostics(document.Id, document.FilePath, document.Project.Id, document.Project.Name, diagnostics));
             }
 
             return results.ToImmutableArray();
@@ -198,10 +190,18 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
             return documents.Select(x => x.Id).ToImmutableArray();
         }
 
-        public Task<ImmutableArray<(string projectName, Diagnostic diagnostic)>> GetAllDiagnosticsAsync()
+        public Task<ImmutableArray<DocumentDiagnostics>> GetAllDiagnosticsAsync()
         {
             var documents = _workspace.CurrentSolution.Projects.SelectMany(x => x.Documents).Select(x => x.FilePath).ToImmutableArray();
             return GetDiagnostics(documents);
+        }
+
+        public void Dispose()
+        {
+            _workspace.WorkspaceChanged -= OnWorkspaceChanged;
+            _workspace.DocumentOpened -= OnDocumentOpened;
+            _workspace.DocumentClosed -= OnDocumentOpened;
+            _disposable.Dispose();
         }
     }
 }

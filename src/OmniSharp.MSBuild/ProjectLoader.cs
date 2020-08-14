@@ -67,7 +67,7 @@ namespace OmniSharp.MSBuild
             return globalProperties;
         }
 
-        public (MSB.Execution.ProjectInstance projectInstance, ImmutableArray<MSBuildDiagnostic> diagnostics) BuildProject(string filePath)
+        public (MSB.Execution.ProjectInstance projectInstance, MSB.Evaluation.Project project, ImmutableArray<MSBuildDiagnostic> diagnostics) BuildProject(string filePath)
         {
             using (_sdksPathResolver.SetSdksPathEnvironmentVariable(filePath))
             {
@@ -102,8 +102,8 @@ namespace OmniSharp.MSBuild
                 var diagnostics = msbuildLogger.GetDiagnostics();
 
                 return buildResult
-                    ? (projectInstance, diagnostics)
-                    : (null, diagnostics);
+                    ? (projectInstance, evaluatedProject, diagnostics)
+                    : (null, null, diagnostics);
             }
         }
 
@@ -148,7 +148,7 @@ namespace OmniSharp.MSBuild
                 // For now, we'll just pick the first target framework. Eventually, we'll need to
                 // do better and potentially allow OmniSharp hosts to select a target framework.
                 targetFramework = targetFrameworks[0];
-                evaluatedProject.SetProperty(PropertyNames.TargetFramework, targetFramework);
+                evaluatedProject.SetGlobalProperty(PropertyNames.TargetFramework, targetFramework);
                 evaluatedProject.ReevaluateIfNecessary();
             }
         }

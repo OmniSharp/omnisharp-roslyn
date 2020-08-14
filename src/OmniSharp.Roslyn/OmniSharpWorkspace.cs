@@ -16,6 +16,7 @@ using Microsoft.Extensions.Logging;
 using OmniSharp.FileSystem;
 using OmniSharp.FileWatching;
 using OmniSharp.Roslyn;
+using OmniSharp.Roslyn.EditorConfig;
 using OmniSharp.Roslyn.Utilities;
 using OmniSharp.Utilities;
 
@@ -24,14 +25,28 @@ namespace OmniSharp
     [Export, Shared]
     public class OmniSharpWorkspace : Workspace
     {
-        public bool Initialized { get; set; }
+        public bool Initialized
+        {
+            get { return isInitialized; }
+            set
+            {
+                if (isInitialized == value) return;
+                isInitialized = value;
+                OnInitialized(isInitialized);
+            }
+        }
+
+        public event Action<bool> OnInitialized = delegate { };
+
+        public bool EditorConfigEnabled { get; set; }
         public BufferManager BufferManager { get; private set; }
 
         private readonly ILogger<OmniSharpWorkspace> _logger;
 
         private readonly ConcurrentBag<Func<string, Task>> _waitForProjectModelReadyHandlers = new ConcurrentBag<Func<string, Task>>();
-
         private readonly ConcurrentDictionary<string, ProjectInfo> miscDocumentsProjectInfos = new ConcurrentDictionary<string, ProjectInfo>();
+        private readonly ConcurrentDictionary<ProjectId, Predicate<string>> documentInclusionRulesPerProject = new ConcurrentDictionary<ProjectId, Predicate<string>>();
+        private bool isInitialized;
 
         [ImportingConstructor]
         public OmniSharpWorkspace(HostServicesAggregator aggregator, ILoggerFactory loggerFactory, IFileSystemWatcher fileSystemWatcher)
@@ -39,9 +54,25 @@ namespace OmniSharp
         {
             BufferManager = new BufferManager(this, fileSystemWatcher);
             _logger = loggerFactory.CreateLogger<OmniSharpWorkspace>();
+            fileSystemWatcher.WatchDirectories(OnDirectoryRemoved);
         }
 
         public override bool CanOpenDocuments => true;
+
+
+        private void OnDirectoryRemoved(string path, FileChangeType changeType)
+        {
+            if(changeType == FileChangeType.DirectoryDelete)
+            {
+                var docs = CurrentSolution.Projects.SelectMany(x => x.Documents)
+                    .Where(x => x.FilePath.StartsWith(path + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase));
+
+                foreach(var doc in docs)
+                {
+                    OnDocumentRemoved(doc.Id);
+                }
+            }
+        }
 
         public void AddWaitForProjectModelReadyHandler(Func<string, Task> handler)
         {
@@ -75,6 +106,11 @@ namespace OmniSharp
             OnProjectAdded(projectInfo);
         }
 
+        public void AddDocumentInclusionRuleForProject(ProjectId projectId, Predicate<string> documentPathFilter)
+        {
+            documentInclusionRulesPerProject[projectId] = documentPathFilter;
+        }
+
         public void AddProjectReference(ProjectId projectId, ProjectReference projectReference)
         {
             OnProjectReferenceAdded(projectId, projectReference);
@@ -103,6 +139,21 @@ namespace OmniSharp
             var projectInfo = miscDocumentsProjectInfos.GetOrAdd(language, (lang) => CreateMiscFilesProject(lang));
             var documentId = AddDocument(projectInfo.Id, filePath);
             _logger.LogInformation($"Miscellaneous file: {filePath} added to workspace");
+
+            if (!EditorConfigEnabled)
+            {
+                return documentId;
+            }
+
+            var analyzerConfigFiles = projectInfo.AnalyzerConfigDocuments.Select(document => document.FilePath);
+            var newAnalyzerConfigFiles = EditorConfigFinder
+                .GetEditorConfigPaths(filePath)
+                .Except(analyzerConfigFiles);
+            foreach (var analyzerConfigFile in newAnalyzerConfigFiles)
+            {
+                AddAnalyzerConfigDocument(projectInfo.Id, analyzerConfigFile);
+            }
+
             return documentId;
         }
 
@@ -153,7 +204,12 @@ namespace OmniSharp
         public void UpdateDiagnosticOptionsForProject(ProjectId projectId, ImmutableDictionary<string, ReportDiagnostic> rules)
         {
             var project = this.CurrentSolution.GetProject(projectId);
-            OnCompilationOptionsChanged(projectId,  project.CompilationOptions.WithSpecificDiagnosticOptions(rules));
+            OnCompilationOptionsChanged(projectId, project.CompilationOptions.WithSpecificDiagnosticOptions(rules));
+        }
+
+        public void UpdateCompilationOptionsForProject(ProjectId projectId, CompilationOptions options)
+        {
+            OnCompilationOptionsChanged(projectId, options);
         }
 
         private ProjectInfo CreateMiscFilesProject(string language)
@@ -222,7 +278,7 @@ namespace OmniSharp
             // folder computation is best effort. in case of exceptions, we back out because it's not essential for core features
             try
             {
-                // find the relative path from project file to our document 
+                // find the relative path from project file to our document
                 var relativeDocumentPath = FileSystemHelper.GetRelativePath(fullPath, basePath);
 
                 // only set document's folders if
@@ -320,15 +376,32 @@ namespace OmniSharp
                 return false;
             }
 
+            // File path needs to be checked against any rules defined by the specific project system. (e.g. MSBuild default excluded folders)
+            if (documentInclusionRulesPerProject.TryGetValue(project.Id, out Predicate<string> documentInclusionFilter))
+            {
+                return documentInclusionFilter(fileName);
+            }
+
+            // if no custom rule set for this ProjectId, fallback to simple directory heuristic.
             var fileDirectory = new FileInfo(fileName).Directory;
             var projectPath = project.FilePath;
             var projectDirectory = new FileInfo(projectPath).Directory.FullName;
+            var otherProjectDirectories = CurrentSolution.Projects
+                .Where(p => p != project && !string.IsNullOrWhiteSpace(p.FilePath))
+                .Select(p => new FileInfo(p.FilePath).Directory.FullName)
+                .ToImmutableArray();
 
             while (fileDirectory != null)
             {
                 if (string.Equals(fileDirectory.FullName, projectDirectory, StringComparison.OrdinalIgnoreCase))
                 {
                     return true;
+                }
+
+                // if any project is closer to the file, file should belong to that project.
+                if (otherProjectDirectories.Contains(fileDirectory.FullName, StringComparer.OrdinalIgnoreCase))
+                {
+                    return false;
                 }
 
                 fileDirectory = fileDirectory.Parent;
@@ -449,13 +522,13 @@ namespace OmniSharp
             var refsToAdd = analyzerReferences.Where(newRef => project.AnalyzerReferences.All(oldRef => oldRef.Display != newRef.Display));
             var refsToRemove = project.AnalyzerReferences.Where(newRef => analyzerReferences.All(oldRef => oldRef.Display != newRef.Display));
 
-            foreach(var toAdd in refsToAdd)
+            foreach (var toAdd in refsToAdd)
             {
                 _logger.LogInformation($"Adding analyzer reference: {toAdd.FullPath}");
                 base.OnAnalyzerReferenceAdded(id, toAdd);
             }
 
-            foreach(var toRemove in refsToRemove)
+            foreach (var toRemove in refsToRemove)
             {
                 _logger.LogInformation($"Removing analyzer reference: {toRemove.FullPath}");
                 base.OnAnalyzerReferenceRemoved(id, toRemove);
@@ -470,9 +543,22 @@ namespace OmniSharp
             OnAdditionalDocumentAdded(documentInfo);
         }
 
+        public void AddAnalyzerConfigDocument(ProjectId projectId, string filePath)
+        {
+            var documentId = DocumentId.CreateNewId(projectId);
+            var loader = new OmniSharpTextLoader(filePath);
+            var documentInfo = DocumentInfo.Create(documentId, Path.GetFileName(filePath), filePath: filePath, loader: loader);
+            OnAnalyzerConfigDocumentAdded(documentInfo);
+        }
+
         public void RemoveAdditionalDocument(DocumentId documentId)
         {
             OnAdditionalDocumentRemoved(documentId);
+        }
+
+        public void RemoveAnalyzerConfigDocument(DocumentId documentId)
+        {
+            OnAnalyzerConfigDocumentRemoved(documentId);
         }
 
         protected override void ApplyProjectChanges(ProjectChanges projectChanges)

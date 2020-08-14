@@ -1,6 +1,13 @@
 {
     "script": {
         "enableScriptNuGetReferences": true,
-        "defaultTargetFramework": "netcoreapp3.0"
-      }
+        "defaultTargetFramework": "netcoreapp3.1"
+    },
+    "FormattingOptions": {
+        "enableEditorConfigSupport": true
+    },
+    "RoslynExtensionsOptions": {
+        "enableAnalyzersSupport": true,
+        "enableDecompilationSupport": true
+    }
 }

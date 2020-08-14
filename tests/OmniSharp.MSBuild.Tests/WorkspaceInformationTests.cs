@@ -64,18 +64,39 @@ namespace OmniSharp.MSBuild.Tests
         }
 
         [Fact]
-        public async Task NetCore30Project()
+        public async Task NetCore31Project()
         {
-            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("NetCore30Project"))
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("NetCore31Project"))
             using (var host = CreateMSBuildTestHost(testProject.Directory))
             {
                 var workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
 
                 Assert.NotNull(workspaceInfo.Projects);
                 var project = Assert.Single(workspaceInfo.Projects);
-                Assert.Equal("NetCore30Project", project.AssemblyName);
-                Assert.Equal(".NETCoreApp,Version=v3.0", project.TargetFramework);
-                Assert.Equal("netcoreapp3.0", project.TargetFrameworks[0].ShortName);
+                Assert.Equal("NetCore31Project", project.AssemblyName);
+                Assert.Equal(".NETCoreApp,Version=v3.1", project.TargetFramework);
+                Assert.Equal("netcoreapp3.1", project.TargetFrameworks[0].ShortName);
+            }
+        }
+
+        [Fact]
+        public async Task Net50Solution()
+        {
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("Net50Project"))
+            using (var host = CreateMSBuildTestHost(testProject.Directory))
+            {
+                var workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
+
+                Assert.NotNull(workspaceInfo.Projects);
+                Assert.Equal(2, workspaceInfo.Projects.Count);
+                var appProject = workspaceInfo.Projects.Single(proj => proj.IsExe);
+                Assert.Equal("console-app", appProject.AssemblyName);
+                Assert.Equal(".NETCoreApp,Version=v5.0", appProject.TargetFramework);
+                Assert.Contains(appProject.TargetFrameworks[0].ShortName, new[] { "net5.0", "netcoreapp5.0" });
+                var libProject = workspaceInfo.Projects.Single(proj => !proj.IsExe);
+                Assert.Equal("net50-lib", libProject.AssemblyName);
+                Assert.Equal(".NETCoreApp,Version=v5.0", libProject.TargetFramework);
+                Assert.Contains(libProject.TargetFrameworks[0].ShortName, new[] { "net50", "net5.0" });
             }
         }
 
@@ -241,7 +262,7 @@ namespace OmniSharp.MSBuild.Tests
 
                 Assert.Equal(6, project.SourceFiles.Count);
                 Assert.Contains(project.SourceFiles, fileName => fileName.EndsWith("GrammarParser.cs"));
-            }    
+            }
         }
 
         [Fact]

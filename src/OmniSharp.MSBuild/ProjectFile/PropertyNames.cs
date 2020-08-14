@@ -32,6 +32,8 @@
         public const string _ResolveReferenceDependencies = nameof(_ResolveReferenceDependencies);
         public const string RootNamespace = nameof(RootNamespace);
         public const string RoslynTargetsPath = nameof(RoslynTargetsPath);
+        public const string RunAnalyzers = nameof(RunAnalyzers);
+        public const string RunAnalyzersDuringLiveAnalysis = nameof(RunAnalyzersDuringLiveAnalysis);
         public const string SignAssembly = nameof(SignAssembly);
         public const string SkipCompilerExecution = nameof(SkipCompilerExecution);
         public const string SolutionDir = nameof(SolutionDir);
@@ -43,5 +45,7 @@
         public const string TreatWarningsAsErrors = nameof(TreatWarningsAsErrors);
         public const string VisualStudioVersion = nameof(VisualStudioVersion);
         public const string VsInstallRoot = nameof(VsInstallRoot);
+        public const string WarningsAsErrors = nameof(WarningsAsErrors);
+        public const string WarningsNotAsErrors = nameof(WarningsNotAsErrors);
     }
 }

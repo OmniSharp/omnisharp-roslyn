@@ -52,10 +52,31 @@ namespace OmniSharp.MSBuild.ProjectFile
 
         public static ImmutableDictionary<string, ReportDiagnostic> GetDiagnosticOptions(this ProjectFileInfo projectFileInfo)
         {
-            var defaultSuppressions = CompilationOptionsHelper.GetDefaultSuppressedDiagnosticOptions(projectFileInfo.SuppressedDiagnosticIds);
+            var suppressions = CompilationOptionsHelper.GetDefaultSuppressedDiagnosticOptions(projectFileInfo.SuppressedDiagnosticIds);
             var specificRules = projectFileInfo.RuleSet?.SpecificDiagnosticOptions ?? ImmutableDictionary<string, ReportDiagnostic>.Empty;
 
-            return specificRules.Concat(defaultSuppressions.Where(x => !specificRules.Keys.Contains(x.Key))).ToImmutableDictionary();
+            // suppressions capture NoWarn and they have the highest priority
+            var combinedRules = specificRules.Concat(suppressions.Where(x => !specificRules.Keys.Contains(x.Key))).ToDictionary(x => x.Key, x => x.Value);
+
+            // then handle WarningsAsErrors
+            foreach (var warningAsError in projectFileInfo.WarningsAsErrors)
+            {
+                if (!suppressions.ContainsKey(warningAsError))
+                {
+                    combinedRules[warningAsError] = ReportDiagnostic.Error;
+                }
+            }
+
+            // WarningsNotAsErrors can overwrite WarningsAsErrors
+            foreach (var warningNotAsError in projectFileInfo.WarningsNotAsErrors)
+            {
+                if (!suppressions.ContainsKey(warningNotAsError))
+                {
+                    combinedRules[warningNotAsError] = ReportDiagnostic.Warn;
+                }
+            }
+
+            return combinedRules.ToImmutableDictionary();
         }
 
         public static ProjectInfo CreateProjectInfo(this ProjectFileInfo projectFileInfo, IAnalyzerAssemblyLoader analyzerAssemblyLoader)
@@ -76,6 +97,11 @@ namespace OmniSharp.MSBuild.ProjectFile
 
         private static IEnumerable<AnalyzerReference> ResolveAnalyzerReferencesForProject(ProjectFileInfo projectFileInfo, IAnalyzerAssemblyLoader analyzerAssemblyLoader)
         {
+            if (!projectFileInfo.RunAnalyzers || !projectFileInfo.RunAnalyzersDuringLiveAnalysis)
+            {
+                return Enumerable.Empty<AnalyzerReference>();
+            }
+
             foreach(var analyzerAssemblyPath in projectFileInfo.Analyzers.Distinct())
             {
                 analyzerAssemblyLoader.AddDependencyLocation(analyzerAssemblyPath);

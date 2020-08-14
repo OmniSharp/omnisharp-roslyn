@@ -218,7 +218,7 @@ class Foo
                 ["RoslynExtensionsOptions:EnableAnalyzersSupport"] = "true"
             }, TestAssets.Instance.TestFilesFolder))
             {
-                var result = await host.RequestCodeCheckAsync();
+                var result = await host.RequestCodeCheckAsync(testFile.FileName);
 
                 Assert.Contains(result.QuickFixes.OfType<DiagnosticLocation>().Where(x => x.FileName == testFile.FileName), f => f.Text == "Use framework type" && f.Id == "IDE0049");
                 Assert.Contains(result.QuickFixes.OfType<DiagnosticLocation>().Where(x => x.FileName == testFile.FileName), f => f.Text == "Use explicit type instead of 'var'" && f.Id == "IDE0008");
@@ -247,7 +247,7 @@ class Foo
                 ["RoslynExtensionsOptions:EnableAnalyzersSupport"] = "true"
             }, TestAssets.Instance.TestFilesFolder))
             {
-                var result = await host.RequestCodeCheckAsync();
+                var result = await host.RequestCodeCheckAsync(testFile.FileName);
 
                 Assert.Contains(result.QuickFixes.OfType<DiagnosticLocation>().Where(x => x.FileName == testFile.FileName), f => f.Text == "Naming rule violation: Missing prefix: 'xxx_'" && f.Id == "IDE1006");
             }
@@ -282,7 +282,7 @@ class Foo
 
                 var getResponse = await getRequestHandler.Handle(getRequest);
                 Assert.NotNull(getResponse.CodeActions);
-                Assert.Contains(getResponse.CodeActions, f => f.Name == "Create and initialize field 'xxx_something'");
+                Assert.Contains(getResponse.CodeActions, f => f.Name == "Create and assign field 'xxx_something'");
             }
         }
 
@@ -324,14 +324,14 @@ class Foo
                     Line = point.Line,
                     Column = point.Offset,
                     FileName = testFile.FileName,
-                    Identifier = "Create and initialize field 'xxx_something'",
+                    Identifier = "Create and assign field 'xxx_something'",
                     WantsTextChanges = false,
                     WantsAllCodeActionOperations = true,
                     Buffer = testFile.Content.Code
                 };
                 var runResponse = await runRequestHandler.Handle(runRequest);
 
-                AssertIgnoringIndent(expected, ((ModifiedFileResponse)runResponse.Changes.First()).Buffer);
+                AssertUtils.AssertIgnoringIndent(expected, ((ModifiedFileResponse)runResponse.Changes.First()).Buffer);
             }
         }
 
@@ -381,18 +381,8 @@ class Foo
                 };
                 var runResponse = await runRequestHandler.Handle(runRequest);
 
-                AssertIgnoringIndent(expected, ((ModifiedFileResponse)runResponse.Changes.First()).Buffer);
+                AssertUtils.AssertIgnoringIndent(expected, ((ModifiedFileResponse)runResponse.Changes.First()).Buffer);
             }
-        }
-
-        private static void AssertIgnoringIndent(string expected, string actual)
-        {
-            Assert.Equal(TrimLines(expected), TrimLines(actual), false, true, true);
-        }
-
-        private static string TrimLines(string source)
-        {
-            return string.Join("\n", source.Split('\n').Select(s => s.Trim()));
         }
     }
 }

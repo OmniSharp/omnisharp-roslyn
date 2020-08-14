@@ -34,7 +34,8 @@ namespace OmniSharp
         public const string WorkspaceInformation = "/projects";
         public const string ProjectInformation = "/project";
         public const string FixUsings = "/fixusings";
-
+        public const string RunFixAll = "/runfixall";
+        public const string GetFixAll = "/getfixall";
         public const string CheckAliveStatus = "/checkalivestatus";
         public const string CheckReadyStatus = "/checkreadystatus";
         public const string StopServer = "/stopserver";
@@ -44,6 +45,7 @@ namespace OmniSharp
         public const string Diagnostics = "/diagnostics";
 
         public const string ReAnalyze = "/reanalyze";
+        public const string QuickInfo = "/quickinfo";
 
         public static class V2
         {
@@ -55,11 +57,17 @@ namespace OmniSharp
             public const string RunAllTestsInClass = "/v2/runtestsinclass";
             public const string DebugTestGetStartInfo = "/v2/debugtest/getstartinfo";
             public const string DebugTestLaunch = "/v2/debugtest/launch";
+            public const string DebugTestsInContextGetStartInfo = "/v2/debugtestsincontext/getstartinfo";
             public const string DebugTestStop = "/v2/debugtest/stop";
             public const string DebugTestsInClassGetStartInfo = "/v2/debugtestsinclass/getstartinfo";
+            public const string DiscoverTests = "/v2/discovertests";
+            public const string RunTestsInContext = "/v2/runtestsincontext";
 
             public const string BlockStructure = "/v2/blockstructure";
             public const string CodeStructure = "/v2/codestructure";
+
+            public const string Highlight = "/v2/highlight";
+
         }
     }
 }

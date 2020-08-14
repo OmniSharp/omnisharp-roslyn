@@ -1,12 +1,15 @@
 {
     "DotNetInstallScriptURL": "https://dot.net/v1",
-    "DotNetChannel": "Current",
-    "DotNetVersion": "3.0.100",
+    "DotNetChannel": "Preview",
+    "DotNetVersions": [
+        "3.1.401",
+        "5.0.100-preview.7.20366.6"
+    ],
     "RequiredMonoVersion": "6.6.0",
     "DownloadURL": "https://roslynomnisharp.blob.core.windows.net/ext",
-    "MonoRuntimeMacOS": "mono.macOS-6.8.0.105.zip",
-    "MonoRuntimeLinux32": "mono.linux-x86-6.8.0.105.zip",
-    "MonoRuntimeLinux64": "mono.linux-x86_64-6.8.0.105.zip",
+    "MonoRuntimeMacOS": "mono.macOS-6.10.0.104.zip",
+    "MonoRuntimeLinux32": "mono.linux-x86-6.10.0.104.zip",
+    "MonoRuntimeLinux64": "mono.linux-x86_64-6.10.0.104.zip",
     "HostProjects": [
         "OmniSharp.Stdio.Driver",
         "OmniSharp.Http.Driver"
@@ -19,13 +22,15 @@
         "OmniSharp.DotNetTest.Tests",
         "OmniSharp.Tests",
         "OmniSharp.Cake.Tests",
-        "OmniSharp.Script.Tests"
+        "OmniSharp.Script.Tests",
+        "OmniSharp.Lsp.Tests"
     ],
     "TestAssets": [
         "NUnitTestProject",
         "XunitTestProject",
         "MSTestProject",
         "ProjectAndSolution",
+        "ProjectAndSolutionWithGlobs",
         "ProjectAndSolutionWithProjectSection",
         "TwoProjectsWithSolution",
         "ProjectWithGeneratedFile",
@@ -35,7 +40,13 @@
         "ProjectWithMultiTFMLib",
         "ExternAlias",
         "ProjectWithComplexAnalyzers",
-        "NetCore30Project"
+        "ProjectWithDisabledAnalyzers",
+        "ProjectWithDisabledAnalyzers2",
+        "ProjectWithAnalyzers",
+        "NetCore31Project",
+        "Net50Project",
+        "ProjectWithAnalyzersAndEditorConfig",
+        "ProjectWithParentEditorConfig"
     ],
     "CakeTestAssets": [
         "CakeProject"

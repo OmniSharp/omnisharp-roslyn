@@ -7,6 +7,7 @@ namespace OmniSharp.Options
 {
     public class RoslynExtensionsOptions : OmniSharpExtensionsOptions
     {
+        public bool EnableDecompilationSupport { get; set; }
         public bool EnableAnalyzersSupport { get; set; }
         public int DocumentAnalysisTimeoutMs { get; set; } = 10 * 1000;
     }

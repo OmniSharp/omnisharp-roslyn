@@ -44,7 +44,7 @@ namespace OmniSharp.Stdio
 
             _logger.LogInformation($"Starting OmniSharp on {Platform.Current}");
 
-            _compositionHost = compositionHostBuilder.Build();
+            _compositionHost = compositionHostBuilder.Build(_environment.TargetDirectory);
             _cachedStringBuilder = new CachedStringBuilder();
 
             var handlers = Initialize();
