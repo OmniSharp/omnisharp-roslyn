@@ -84,6 +84,18 @@ namespace OmniSharp.Models.v1.Completion
         public ImmutableArray<char>? CommitCharacters { get; set; }
 
         /// <summary>
+        /// An optional array of additional text edits that are applied when
+        /// selecting this completion.Edits must not overlap (including the same insert position)
+        /// with the main edit nor with themselves.
+        ///
+        /// Additional text edits should be used to change text unrelated to the current cursor position
+        /// (for example adding an import statement at the top of the file if the completion item will
+        /// insert an unqualified type).
+        /// </summary>
+        [JsonProperty("additionalTextEdits")]
+        public ImmutableArray<TextEdit>? AdditionalTextEdits { get; set; }
+
+        /// <summary>
         /// Index in the completions list that this completion occurred.
         /// </summary>
         [JsonProperty("data")]
@@ -93,6 +105,33 @@ namespace OmniSharp.Models.v1.Completion
         {
             return $"{{ {nameof(Label)} = {Label}, {nameof(CompletionItemKind)} = {Kind} }}";
         }
+    }
+
+    public struct TextEdit
+    {
+        [JsonProperty("range")]
+        public Range Range { get; set; }
+
+        [JsonProperty("newText")]
+        public string? NewText { get; set; }
+    }
+
+    // These are using different versions from the normal Range/Point classes in order to apply
+    // json converters that match up with lsp naming conventions.
+    public struct Range
+    {
+        [JsonProperty("start")]
+        public Position Start { get; set; }
+        [JsonProperty("end")]
+        public Position End { get; set; }
+    }
+
+    public struct Position
+    {
+        [JsonProperty("line")]
+        public int Line { get; set; }
+        [JsonProperty("character")]
+        public int Character { get; set; }
     }
 
     public enum CompletionItemKind

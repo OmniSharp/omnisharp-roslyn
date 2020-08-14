@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Composition;
 using System.Diagnostics;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
@@ -18,7 +19,6 @@ using OmniSharp.Roslyn.CSharp.Services.Intellisense;
 using OmniSharp.Utilities;
 using CompletionItem = OmniSharp.Models.v1.Completion.CompletionItem;
 using CompletionTriggerKind = OmniSharp.Models.v1.Completion.CompletionTriggerKind;
-using CSharpCompletionItem = Microsoft.CodeAnalysis.Completion.CompletionItem;
 using CSharpCompletionList = Microsoft.CodeAnalysis.Completion.CompletionList;
 using CSharpCompletionService = Microsoft.CodeAnalysis.Completion.CompletionService;
 
@@ -73,7 +73,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
         private readonly FormattingOptions _formattingOptions;
         private readonly ILogger _logger;
 
-        private (CSharpCompletionList Completions, string FileName, int Position)? _lastCompletion = null;
+        private readonly object _lock = new object();
+        private (CSharpCompletionList Completions, string FileName)? _lastCompletion = null;
 
         [ImportingConstructor]
         public CompletionService(OmniSharpWorkspace workspace, FormattingOptions formattingOptions, ILoggerFactory loggerFactory)
@@ -86,7 +87,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
         public async Task<CompletionResponse> Handle(CompletionRequest request)
         {
             _logger.LogTrace("Completions requested");
-            _lastCompletion = null;
+            lock (_lock)
+            {
+                _lastCompletion = null;
+            }
 
             var document = _workspace.GetDocument(request.FileName);
             if (document is null)
@@ -115,8 +119,14 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                              request.Line,
                              request.Column);
 
-            if (completions is null)
+            if (completions is null || completions.Items.Length == 0)
             {
+                return new CompletionResponse { Items = ImmutableArray<CompletionItem>.Empty };
+            }
+
+            if (request.TriggerCharacter == ' ' && !completions.Items.Any(c => c.IsObjectCreationCompletionItem()))
+            {
+                // Only trigger on space if there is an object creation completion
                 return new CompletionResponse { Items = ImmutableArray<CompletionItem>.Empty };
             }
 
@@ -127,13 +137,154 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                 ? completionService.FilterItems(document, completions.Items, typedText).SelectAsArray(i => i.DisplayText)
                 : ImmutableArray<string>.Empty;
             _logger.LogTrace("Completions filled in");
-            _lastCompletion = (completions, request.FileName, position);
+
+            lock (_lock)
+            {
+                _lastCompletion = (completions, request.FileName);
+            }
 
             var triggerCharactersBuilder = ImmutableArray.CreateBuilder<char>(completions.Rules.DefaultCommitCharacters.Length);
+            var completionsBuilder = ImmutableArray.CreateBuilder<CompletionItem>(completions.Items.Length);
+
+            for (int i = 0; i < completions.Items.Length; i++)
+            {
+                var completion = completions.Items[i];
+                var commitCharacters = buildCommitCharacters(completions, completion.Rules.CommitCharacterRules, triggerCharactersBuilder);
+
+                var insertTextFormat = InsertTextFormat.PlainText;
+                ImmutableArray<TextEdit>? additionalTextEdits = null;
+
+                if (!completion.TryGetInsertionText(out string insertText))
+                {
+                    switch (completion.GetProviderName())
+                    {
+                        case CompletionItemExtensions.InternalsVisibleToCompletionProvider:
+                            // The IVT completer doesn't add extra things before the completion
+                            // span, only assembly keys at the end if they exist.
+                            {
+                                CompletionChange change = await completionService.GetChangeAsync(document, completion);
+                                Debug.Assert(typedSpan == change.TextChange.Span);
+                                insertText = change.TextChange.NewText!;
+                            }
+                            break;
+
+                        case CompletionItemExtensions.XmlDocCommentCompletionProvider:
+                            {
+                                // The doc comment completion might compensate for the < before
+                                // the current word, if one exists. For these cases, if the token
+                                // before the current location is a < and the text it's replacing starts
+                                // with a <, erase the < from the given insertion text.
+                                var change = await completionService.GetChangeAsync(document, completion);
+
+                                bool trimFront = change.TextChange.NewText![0] == '<'
+                                                 && sourceText[change.TextChange.Span.Start] == '<';
+
+                                Debug.Assert(!trimFront || change.TextChange.Span.Start + 1 == typedSpan.Start);
+
+                                (insertText, insertTextFormat) = getAdjustedInsertTextWithPosition(change, position, newOffset: trimFront ? 1 : 0);
+                            }
+                            break;
+
+                        case CompletionItemExtensions.OverrideCompletionProvider:
+                        case CompletionItemExtensions.PartialMethodCompletionProvider:
+                            {
+                                // For these two, we potentially need to use additionalTextEdits. It's possible
+                                // that override (or C# expanded partials) will cause the word or words before
+                                // the cursor to be adjusted. For example:
+                                //
+                                // public class C {
+                                //     override $0
+                                // }
+                                //
+                                // Invoking completion and selecting, say Equals, wants to cause the line to be
+                                // rewritten as this:
+                                //
+                                // public class C {
+                                //     public override bool Equals(object other)
+                                //     {
+                                //         return base.Equals(other);$0
+                                //     }
+                                // }
+                                //
+                                // In order to handle this, we need to chop off the section of the completion
+                                // before the cursor and bundle that into an additionalTextEdit. Then, we adjust
+                                // the remaining bit of the change to put the cursor in the expected spot via
+                                // snippets. We could leave the additionalTextEdit bit for resolve, but we already
+                                // have the data do the change and we basically have to compute the whole thing now
+                                // anyway, so it doesn't really save us anything.
+
+                                var change = await completionService.GetChangeAsync(document, completion);
+
+                                // If the span we're using to key the completion off is the same as the replacement
+                                // span, then we don't need to do anything special, just snippitize the text and
+                                // exit
+                                if (typedSpan == change.TextChange.Span)
+                                {
+                                    (insertText, insertTextFormat) = getAdjustedInsertTextWithPosition(change, position, newOffset: 0);
+                                    break;
+                                }
+
+                                // We know the span starts before the text we're keying off of. So, break that
+                                // out into a separate edit. We need to cut out the space before the current word,
+                                // as the additional edit is not allowed to overlap with the insertion point.
+                                var additionalEditStartPosition = sourceText.Lines.GetLinePosition(change.TextChange.Span.Start);
+                                var additionalEditEndPosition = sourceText.Lines.GetLinePosition(typedSpan.Start - 1);
+                                var additionalRange = new Range
+                                {
+                                    Start = new Position { Line = additionalEditStartPosition.Line, Character = additionalEditStartPosition.Character },
+                                    End = new Position { Line = additionalEditEndPosition.Line, Character = additionalEditEndPosition.Character },
+                                };
+
+                                int additionalEditEndOffset = change.TextChange.NewText!.IndexOf(completion.DisplayText);
+                                if (additionalEditEndOffset < 1)
+                                {
+                                    // The first index of this was either 0 and the edit span was wrong,
+                                    // or it wasn't found at all. In this case, just do the best we can:
+                                    // send the whole string wtih no additional edits and log a warning.
+                                    _logger.LogWarning("Could not find the first index of the display text.\nDisplay text: {0}.\nCompletion Text: {1}",
+                                        completion.DisplayText, change.TextChange.NewText);
+                                    (insertText, insertTextFormat) = getAdjustedInsertTextWithPosition(change, position, newOffset: 0);
+                                    break;
+                                }
+
+                                additionalTextEdits = ImmutableArray.Create(new TextEdit
+                                {
+                                    // Again, we cut off the space at the end of the offset
+                                    NewText = change.TextChange.NewText!.Substring(0, additionalEditEndOffset - 1),
+                                    Range = additionalRange
+                                });
+
+                                // Now that we have the additional edit, adjust the rest of the new text
+                                (insertText, insertTextFormat) = getAdjustedInsertTextWithPosition(change, position, additionalEditEndOffset);
+                            }
+                            break;
+
+                        default:
+                            insertText = completion.DisplayText;
+                            break;
+                    }
+                }
+
+                completionsBuilder.Add(new CompletionItem
+                {
+                    Label = completion.DisplayTextPrefix + completion.DisplayText + completion.DisplayTextSuffix,
+                    InsertText = insertText,
+                    InsertTextFormat = insertTextFormat,
+                    AdditionalTextEdits = additionalTextEdits,
+                    SortText = completion.SortText,
+                    FilterText = completion.FilterText,
+                    Kind = getCompletionItemKind(completion.Tags),
+                    Detail = completion.InlineDescription,
+                    Data = i,
+                    Preselect = completion.Rules.MatchPriority == MatchPriority.Preselect || filteredItems.Contains(completion.DisplayText),
+                    CommitCharacters = commitCharacters,
+                });
+            }
+
             return new CompletionResponse
             {
                 IsIncomplete = false,
-                Items = completions.Items.SelectAsArrayWithArgumentAndIndex((completions, triggerCharactersBuilder, filteredItems), buildCompletion)
+                Items = completionsBuilder.MoveToImmutable()
             };
 
             CompletionTrigger getCompletionTrigger(bool includeTriggerCharacter)
@@ -159,15 +310,11 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                 return CompletionItemKind.Text;
             }
 
-            static CompletionItem buildCompletion(
-                CSharpCompletionItem completion,
-                (CSharpCompletionList completions, ImmutableArray<char>.Builder triigerCharactersBuilder, ImmutableArray<string> filteredItems) completionsAndBuilder,
-                int index)
+            static ImmutableArray<char> buildCommitCharacters(CSharpCompletionList completions, ImmutableArray<CharacterSetModificationRule> characterRules, ImmutableArray<char>.Builder triggerCharactersBuilder)
             {
-                var (completions, triggerCharactersBuilder, filteredItems) = completionsAndBuilder;
                 triggerCharactersBuilder.AddRange(completions.Rules.DefaultCommitCharacters);
 
-                foreach (var modifiedRule in completion.Rules.CommitCharacterRules)
+                foreach (var modifiedRule in characterRules)
                 {
                     switch (modifiedRule.Kind)
                     {
@@ -202,20 +349,46 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                     triggerCharactersBuilder.Remove(' ');
                 }
 
-                ImmutableArray<char> commitCharacters = triggerCharactersBuilder.ToImmutableAndClear();
+                return triggerCharactersBuilder.ToImmutableAndClear();
+            }
 
-                return new CompletionItem
+            static (string, InsertTextFormat) getAdjustedInsertTextWithPosition(
+                CompletionChange change,
+                int originalPosition,
+                int newOffset)
+            {
+                // We often have to trim part of the given change off the front, but we
+                // still want to turn the resulting change into a snippet and control
+                // the cursor location in the insertion text. We therefore need to compensate
+                // by cutting off the requested portion of the text, finding the adjusted
+                // position in the requested string, and snippetizing it.
+
+                // NewText is annotated as nullable, but this is a misannotation that will be fixed.
+                string newText = change.TextChange.NewText!;
+
+                // Easy-out, either Roslyn doesn't have an opinion on adjustment, or the adjustment is after the
+                // end of the new text. Just return a substring from the requested offset to the end
+                if (!(change.NewPosition is int newPosition)
+                    || newPosition >= (change.TextChange.Span.Start + newText.Length))
                 {
-                    Label = completion.DisplayTextPrefix + completion.DisplayText + completion.DisplayTextSuffix,
-                    InsertText = completion.TryGetInsertionText(out var insertionText) ? insertionText : completion.DisplayText,
-                    SortText = completion.SortText,
-                    FilterText = completion.FilterText,
-                    Kind = getCompletionItemKind(completion.Tags),
-                    Detail = completion.InlineDescription,
-                    Data = index,
-                    Preselect = completion.Rules.MatchPriority == MatchPriority.Preselect || filteredItems.Contains(completion.DisplayText),
-                    CommitCharacters = commitCharacters
-                };
+                    return (newText.Substring(newOffset), InsertTextFormat.PlainText);
+                }
+
+                if (newPosition < (originalPosition + newOffset))
+                {
+                    Debug.Fail($"Unknown case of attempting to move cursor before the text that needs to be cut off. Requested cutoff: {newOffset}. New Position: {newPosition}");
+                    // Gracefully handle as best we can in release
+                    return (newText.Substring(newOffset), InsertTextFormat.PlainText);
+                }
+
+                // Roslyn wants to move the cursor somewhere inside the result. Substring from the
+                // requested start to the new position, and from the new position to the end of the
+                // string.
+                int midpoint = newPosition - change.TextChange.Span.Start;
+                var beforeText = LspSnippetHelpers.Escape(newText.Substring(newOffset, midpoint - newOffset));
+                var afterText = LspSnippetHelpers.Escape(newText.Substring(midpoint));
+
+                return (beforeText + "$0" + afterText, InsertTextFormat.Snippet);
             }
         }
 
@@ -227,7 +400,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                 return new CompletionResolveResponse { Item = request.Item };
             }
 
-            var (completions, fileName, _) = _lastCompletion.Value;
+            var (completions, fileName) = _lastCompletion.Value;
 
             if (request.Item is null
                 || request.Item.Data >= completions.Items.Length
@@ -261,7 +434,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
 
             request.Item.Documentation = textBuilder.ToString();
 
-            // TODO: Diff the document and fill in additionalTextEdits
+            // TODO: Do import completion diffing here
 
             return new CompletionResolveResponse
             {

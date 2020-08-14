@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Threading.Tasks;
 
 namespace OmniSharp.Utilities
 {
@@ -30,23 +31,6 @@ namespace OmniSharp.Utilities
             foreach (var e in array)
             {
                 builder.Add(mapper(e));
-            }
-
-            return builder.MoveToImmutable();
-        }
-
-        public static ImmutableArray<TOut> SelectAsArrayWithArgumentAndIndex<TIn, TArg, TOut>(this ImmutableArray<TIn> array, TArg argument, Func<TIn, TArg, int, TOut> selector)
-        {
-            if (array.IsDefaultOrEmpty)
-            {
-                return ImmutableArray<TOut>.Empty;
-            }
-
-            var builder = ImmutableArray.CreateBuilder<TOut>(array.Length);
-
-            for (int i = 0; i < array.Length; i++)
-            {
-                builder.Add(selector(array[i], argument, i));
             }
 
             return builder.MoveToImmutable();

@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading.Tasks;
+using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Models.v1.Completion;
 using OmniSharp.Roslyn.CSharp.Services.Completion;
@@ -22,13 +20,13 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         public CompletionFacts(ITestOutputHelper output, SharedOmniSharpHostFixture sharedOmniSharpHostFixture)
             : base(output, sharedOmniSharpHostFixture)
         {
-            this._logger = this.LoggerFactory.CreateLogger<IntellisenseFacts>();
+            this._logger = this.LoggerFactory.CreateLogger<CompletionFacts>();
         }
 
         [Theory]
         [InlineData("dummy.cs")]
         [InlineData("dummy.csx")]
-        public async Task Label_is_correct_for_property(string filename)
+        public async Task PropertyCompletion(string filename)
         {
             const string input =
                 @"public class Class1 {
@@ -41,12 +39,13 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             var completions = await FindCompletionsAsync(filename, input);
             Assert.Contains("Foo", completions.Items.Select(c => c.Label));
+            Assert.Contains("Foo", completions.Items.Select(c => c.InsertText));
         }
 
         [Theory]
         [InlineData("dummy.cs")]
         [InlineData("dummy.csx")]
-        public async Task Label_is_correct_for_variable(string filename)
+        public async Task VariableCompletion(string filename)
         {
             const string input =
                 @"public class Class1 {
@@ -59,12 +58,13 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             var completions = await FindCompletionsAsync(filename, input);
             Assert.Contains("foo", completions.Items.Select(c => c.Label));
+            Assert.Contains("foo", completions.Items.Select(c => c.InsertText));
         }
 
         [Theory]
         [InlineData("dummy.cs")]
         [InlineData("dummy.csx")]
-        public async Task Description_has_header_and_text(string filename)
+        public async Task DocumentationIsResolved(string filename)
         {
             const string input =
                 @"public class Class1 {
@@ -89,7 +89,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Theory]
         [InlineData("dummy.cs")]
         [InlineData("dummy.csx")]
-        public async Task Returns_camel_case_completions(string filename)
+        public async Task ReturnsCamelCasedCompletions(string filename)
         {
             const string input =
                 @"public class Class1 {
@@ -106,7 +106,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Theory]
         [InlineData("dummy.cs")]
         [InlineData("dummy.csx")]
-        public async Task Returns_sub_sequence_completions(string filename)
+        public async Task ReturnsSubsequences(string filename)
         {
             const string input =
                 @"public class Class1 {
@@ -123,7 +123,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Theory]
         [InlineData("dummy.cs")]
         [InlineData("dummy.csx")]
-        public async Task Returns_sub_sequence_completions_without_matching_firstletter(string filename)
+        public async Task ReturnsSubsequencesWithoutFirstLetter(string filename)
         {
             const string input =
                 @"public class Class1 {
@@ -140,7 +140,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Theory]
         [InlineData("dummy.cs")]
         [InlineData("dummy.csx")]
-        public async Task Returns_method_header(string filename)
+        public async Task MethodHeaderDocumentation(string filename)
         {
             const string input =
                 @"public class Class1 {
@@ -161,7 +161,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Theory]
         [InlineData("dummy.cs")]
         [InlineData("dummy.csx")]
-        public async Task Returns_variable_before_class(string filename)
+        public async Task PreselectsCorrectCasing_Lowercase(string filename)
         {
             const string input =
                 @"public class MyClass1 {
@@ -193,7 +193,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Theory]
         [InlineData("dummy.cs")]
         [InlineData("dummy.csx")]
-        public async Task Returns_class_before_variable(string filename)
+        public async Task PreselectsCorrectCasing_Uppercase(string filename)
         {
             const string input =
                 @"public class MyClass1 {
@@ -225,7 +225,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Theory]
         [InlineData("dummy.cs")]
         [InlineData("dummy.csx")]
-        public async Task Returns_empty_sequence_in_invalid_context(string filename)
+        public async Task NoCompletionsInInvalid(string filename)
         {
             const string source =
                 @"public class MyClass1 {
@@ -243,7 +243,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Theory]
         [InlineData("dummy.cs")]
         [InlineData("dummy.csx")]
-        public async Task Returns_attribute_without_attribute_suffix(string filename)
+        public async Task AttributeDoesNotHaveAttributeSuffix(string filename)
         {
             const string source =
                 @"using System;
@@ -255,6 +255,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             var completions = await FindCompletionsAsync(filename, source);
             Assert.Contains(completions.Items, c => c.Label == "Bar");
+            Assert.Contains(completions.Items, c => c.InsertText == "Bar");
             Assert.All(completions.Items, c =>
             {
                 switch (c.Label)
@@ -272,7 +273,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Theory]
         [InlineData("dummy.cs")]
         [InlineData("dummy.csx")]
-        public async Task Returns_members_in_object_initializer_context(string filename)
+        public async Task ReturnsObjectInitalizerMembers(string filename)
         {
             const string source =
                 @"public class MyClass1 {
@@ -290,13 +291,15 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 ";
 
             var completions = await FindCompletionsAsync(filename, source);
-            ContainsCompletions(completions.Items.Select(c => c.InsertText), "Foo");
+            Assert.Single(completions.Items);
+            Assert.Equal("Foo", completions.Items[0].Label);
+            Assert.Equal("Foo", completions.Items[0].InsertText);
         }
 
         [Theory]
         [InlineData("dummy.cs")]
         [InlineData("dummy.csx")]
-        public async Task Returns_parameter_name_inside_a_method(string filename)
+        public async Task IncludesParameterNames(string filename)
         {
             const string source =
                 @"public class MyClass1 {
@@ -314,7 +317,9 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 ";
 
             var completions = await FindCompletionsAsync(filename, source);
-            Assert.Contains(completions.Items, c => c.Label == "text:");
+            var item = completions.Items.First(c => c.Label == "text:");
+            Assert.NotNull(item);
+            Assert.Equal("text", item.InsertText);
             Assert.All(completions.Items, c =>
             {
                 switch (c.Label)
@@ -332,7 +337,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Theory]
         [InlineData("dummy.cs")]
         [InlineData("dummy.csx")]
-        public async Task Returns_declaration_names(string filename)
+        public async Task ReturnsNameSuggestions(string filename)
         {
             const string source =
                 @"
@@ -347,11 +352,10 @@ public class MyClass
                          completions.Items.Select(c => c.Label));
         }
 
-
         [Theory]
         [InlineData("dummy.cs")]
         [InlineData("dummy.csx")]
-        public async Task Returns_override_signatures(string filename)
+        public async Task OverrideSignatures_Publics(string filename)
         {
             const string source =
                 @"class Foo
@@ -367,13 +371,205 @@ public class MyClass
                 ";
 
             var completions = await FindCompletionsAsync(filename, source);
-            ContainsCompletions(completions.Items.Select(c => c.InsertText), "Equals(object obj)", "GetHashCode()", "Test(string text)", "Test(string text, string moreText)", "ToString()");
+            Assert.Equal(new[] { "Equals(object obj)", "GetHashCode()", "Test(string text)", "Test(string text, string moreText)", "ToString()" },
+                         completions.Items.Select(c => c.Label));
+            Assert.Equal(new[] { "Equals(object obj)\n    {\n        return base.Equals(obj);$0\n    \\}\n",
+                                 "GetHashCode()\n    {\n        return base.GetHashCode();$0\n    \\}\n",
+                                 "Test(string text)\n    {\n        base.Test(text);$0\n    \\}\n",
+                                 "Test(string text, string moreText)\n    {\n        base.Test(text, moreText);$0\n    \\}\n",
+                                 "ToString()\n    {\n        return base.ToString();$0\n    \\}\n"
+                                },
+                         completions.Items.Select(c => c.InsertText));
+
+            Assert.Equal(new[] { "\n    public override bool",
+                                 "\n    public override int",
+                                 "\n    public override void",
+                                 "\n    public override void",
+                                 "\n    public override string"},
+                        completions.Items.Select(c => c.AdditionalTextEdits.Value.Single().NewText));
+
+            Assert.All(completions.Items.Select(c => c.AdditionalTextEdits.Value.Single().Range),
+                       r => Assert.Equal(
+                           new Range { Start = new Position { Line = 7, Character = 21 }, End = new Position { Line = 8, Character = 30 } },
+                           r));
+
+            Assert.All(completions.Items, c => Assert.Equal(InsertTextFormat.Snippet, c.InsertTextFormat));
         }
 
         [Theory]
         [InlineData("dummy.cs")]
         [InlineData("dummy.csx")]
-        public async Task Returns_cref_completion(string filename)
+        public async Task OverrideSignatures_UnimportedTypesFullyQualified(string filename)
+        {
+            const string source = @"
+using N2;
+namespace N1
+{
+    public class CN1 {}
+}
+namespace N2
+{
+    using N1;
+    public abstract class IN2 { protected abstract CN1 GetN1(); }
+}
+namespace N3
+{
+    class CN3 : IN2
+    {
+        override $$
+    }
+}";
+
+            var completions = await FindCompletionsAsync(filename, source);
+            Assert.Equal(new[] { "Equals(object obj)", "GetHashCode()", "GetN1()", "ToString()" },
+                         completions.Items.Select(c => c.Label));
+
+            Assert.Equal(new[] { "Equals(object obj)\n        {\n            return base.Equals(obj);$0\n        \\}",
+                                 "GetHashCode()\n        {\n            return base.GetHashCode();$0\n        \\}",
+                                 "GetN1()\n        {\n            throw new System.NotImplementedException();$0\n        \\}",
+                                 "ToString()\n        {\n            return base.ToString();$0\n        \\}"
+                               },
+                         completions.Items.Select(c => c.InsertText));
+
+            Assert.Equal(new[] { "public override bool",
+                                 "public override int",
+                                 "protected override N1.CN1",
+                                 "public override string"},
+                        completions.Items.Select(c => c.AdditionalTextEdits.Value.Single().NewText));
+
+            Assert.All(completions.Items.Select(c => c.AdditionalTextEdits.Value.Single().Range),
+                       r => Assert.Equal(
+                           new Range { Start = new Position { Line = 15, Character = 8 }, End = new Position { Line = 15, Character = 16 } },
+                           r));
+
+            Assert.All(completions.Items, c => Assert.Equal(InsertTextFormat.Snippet, c.InsertTextFormat));
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task OverrideSignatures_ModifierInFront(string filename)
+        {
+            const string source = @"
+class C
+{
+    public override $$
+}";
+
+            var completions = await FindCompletionsAsync(filename, source);
+            Assert.Equal(new[] { "Equals(object obj)", "GetHashCode()", "ToString()" },
+                         completions.Items.Select(c => c.Label));
+
+            Assert.Equal(new[] { "bool Equals(object obj)\n    {\n        return base.Equals(obj);$0\n    \\}",
+                                 "int GetHashCode()\n    {\n        return base.GetHashCode();$0\n    \\}",
+                                 "string ToString()\n    {\n        return base.ToString();$0\n    \\}"
+                               },
+                         completions.Items.Select(c => c.InsertText));
+
+            Assert.All(completions.Items.Select(c => c.AdditionalTextEdits), a => Assert.Null(a));
+            Assert.All(completions.Items, c => Assert.Equal(InsertTextFormat.Snippet, c.InsertTextFormat));
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task OverrideSignatures_ModifierAndReturnTypeInFront(string filename)
+        {
+            const string source = @"
+class C
+{
+    public override bool $$
+}";
+
+            var completions = await FindCompletionsAsync(filename, source);
+            Assert.Equal(new[] { "Equals(object obj)" },
+                         completions.Items.Select(c => c.Label));
+
+            Assert.Equal(new[] { "Equals(object obj)\n    {\n        return base.Equals(obj);$0\n    \\}" },
+                         completions.Items.Select(c => c.InsertText));
+
+            Assert.All(completions.Items.Select(c => c.AdditionalTextEdits), a => Assert.Null(a));
+            Assert.All(completions.Items, c => Assert.Equal(InsertTextFormat.Snippet, c.InsertTextFormat));
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task PartialCompletion(string filename)
+        {
+            const string source = @"
+partial class C
+{
+    partial void M1(string param);
+}
+partial class C
+{
+    partial $$
+}
+";
+
+            var completions = await FindCompletionsAsync(filename, source);
+            Assert.Equal(new[] { "M1(string param)" },
+                         completions.Items.Select(c => c.Label));
+
+            Assert.Equal(new[] { "void M1(string param)\n    {\n        throw new System.NotImplementedException();$0\n    \\}" },
+                         completions.Items.Select(c => c.InsertText));
+
+            Assert.All(completions.Items.Select(c => c.AdditionalTextEdits), a => Assert.Null(a));
+            Assert.All(completions.Items, c => Assert.Equal(InsertTextFormat.Snippet, c.InsertTextFormat));
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task OverrideSignatures_PartiallyTypedIdentifier(string filename)
+        {
+            const string source = @"
+class C
+{
+    override Ge$$
+}";
+
+            var completions = await FindCompletionsAsync(filename, source);
+            Assert.Equal(new[] { "Equals(object obj)", "GetHashCode()", "ToString()" },
+                         completions.Items.Select(c => c.Label));
+
+            Assert.Equal(new[] { "Equals(object obj)\n    {\n        return base.Equals(obj);$0\n    \\}",
+                                 "GetHashCode()\n    {\n        return base.GetHashCode();$0\n    \\}",
+                                 "ToString()\n    {\n        return base.ToString();$0\n    \\}"
+                               },
+                         completions.Items.Select(c => c.InsertText));
+
+            Assert.Equal(new[] { "public override bool",
+                                 "public override int",
+                                 "public override string"},
+                        completions.Items.Select(c => c.AdditionalTextEdits.Value.Single().NewText));
+
+            Assert.All(completions.Items.Select(c => c.AdditionalTextEdits.Value.Single().Range),
+                       r => Assert.Equal(
+                           new Range { Start = new Position { Line = 3, Character = 4 }, End = new Position { Line = 3, Character = 12 } },
+                           r));
+
+            Assert.All(completions.Items, c =>
+            {
+                switch (c.Label)
+                {
+                    case "GetHashCode()":
+                        Assert.True(c.Preselect);
+                        break;
+                    default:
+                        Assert.False(c.Preselect);
+                        break;
+                }
+            });
+
+            Assert.All(completions.Items, c => Assert.Equal(InsertTextFormat.Snippet, c.InsertTextFormat));
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task CrefCompletion(string filename)
         {
             const string source =
                 @"  /// <summary>
@@ -399,8 +595,36 @@ public class MyClass
             });
         }
 
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task DocCommentTagCompletions(string filename)
+        {
+            const string source =
+                @"  /// <summary>
+                    /// A comment. <$$
+                    /// </summary>
+                  public class MyClass1 {
+                  }
+                ";
+
+            var completions = await FindCompletionsAsync(filename, source);
+            Assert.Equal(new[] { "!--$0-->",
+                                 "![CDATA[$0]]>",
+                                 "c",
+                                 "code",
+                                 "inheritdoc$0/>",
+                                 "list type=\"$0\"",
+                                 "para",
+                                 "see cref=\"$0\"/>",
+                                 "seealso cref=\"$0\"/>"
+                         },
+                         completions.Items.Select(c => c.InsertText));
+            Assert.All(completions.Items, c => Assert.Equal(c.InsertText.Contains("$0"), c.InsertTextFormat == InsertTextFormat.Snippet));
+        }
+
         [Fact]
-        public async Task Returns_host_object_members_in_csx()
+        public async Task HostObjectCompletionInScripts()
         {
             const string source =
                 "Prin$$";
@@ -413,7 +637,7 @@ public class MyClass
         [Theory]
         [InlineData("dummy.cs")]
         [InlineData("dummy.csx")]
-        public async Task Is_suggestion_mode_true_for_lambda_expression_position1(string filename)
+        public async Task NoCommitOnSpaceInLambdaParameter_MethodArgument(string filename)
         {
             const string source = @"
 using System;
@@ -422,6 +646,7 @@ class C
     int CallMe(int i) => 42;
 
     void M(Func<int, int> a) { }
+    void M(string unrelated) { }
 
     void M()
     {
@@ -438,7 +663,7 @@ class C
         [Theory]
         [InlineData("dummy.cs")]
         [InlineData("dummy.csx")]
-        public async Task Is_suggestion_mode_true_for_lambda_expression_position2(string filename)
+        public async Task NoCommitOnSpaceInLambdaParameter_Initializer(string filename)
         {
             const string source = @"
 using System;
@@ -461,7 +686,7 @@ class C
         [Theory]
         [InlineData("dummy.cs")]
         [InlineData("dummy.csx")]
-        public async Task Is_suggestion_mode_false_for_normal_position1(string filename)
+        public async Task CommitOnSpaceWithoutLambda_InArgument(string filename)
         {
             const string source = @"
 using System;
@@ -486,7 +711,7 @@ class C
         [Theory]
         [InlineData("dummy.cs")]
         [InlineData("dummy.csx")]
-        public async Task Is_suggestion_mode_false_for_normal_position2(string filename)
+        public async Task CommitOnSpaceWithoutLambda_InInitializer(string filename)
         {
             const string source = @"
 using System;
@@ -507,7 +732,7 @@ class C
         }
 
         [Fact]
-        public async Task Scripting_by_default_returns_completions_for_CSharp7_1()
+        public async Task ScriptingIncludes7_1()
         {
             const string source =
                 @"
@@ -536,7 +761,7 @@ class C
         }
 
         [Fact]
-        public async Task Scripting_by_default_returns_completions_for_CSharp7_2()
+        public async Task ScriptingIncludes7_2()
         {
             const string source =
                 @"
@@ -567,7 +792,7 @@ class C
         }
 
         [Fact]
-        public async Task Scripting_by_default_returns_completions_for_CSharp8_0()
+        public async Task ScriptingIncludes8_0()
         {
             const string source =
                 @"
@@ -599,34 +824,6 @@ class C
                         break;
                 }
             });
-        }
-
-        private void ContainsCompletions(IEnumerable<string> completions, params string[] expected)
-        {
-            if (!completions.SequenceEqual(expected))
-            {
-                var builder = new StringBuilder();
-                builder.AppendLine("Expected");
-                builder.AppendLine("--------");
-
-                foreach (var completion in expected)
-                {
-                    builder.AppendLine(completion);
-                }
-
-                builder.AppendLine();
-                builder.AppendLine("Found");
-                builder.AppendLine("-----");
-
-                foreach (var completion in completions)
-                {
-                    builder.AppendLine(completion);
-                }
-
-                this._logger.LogError(builder.ToString());
-            }
-
-            Assert.Equal(expected, completions.ToArray());
         }
 
         [Theory]
@@ -680,6 +877,29 @@ class C
             Assert.Empty(completions.Items);
         }
 
+        [Fact]
+        public async Task InternalsVisibleToCompletion()
+        {
+            var projectInfo = ProjectInfo.Create(
+                ProjectId.CreateNewId(),
+                VersionStamp.Create(),
+                "ProjectNameVal",
+                "AssemblyNameVal",
+                LanguageNames.CSharp,
+                "/path/to/project.csproj");
+
+            SharedOmniSharpTestHost.Workspace.AddProject(projectInfo);
+
+            const string input = @"
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo(""$$";
+
+
+            var completions = await FindCompletionsAsync("dummy.cs", input);
+            Assert.Single(completions.Items);
+            Assert.Equal("AssemblyNameVal", completions.Items[0].Label);
+            Assert.Equal("AssemblyNameVal", completions.Items[0].InsertText);
+        }
+
         private CompletionService GetCompletionService(OmniSharpTestHost host)
             => host.GetRequestHandler<CompletionService>(EndpointName);
 
@@ -710,6 +930,6 @@ class C
 
     internal static class CompletionResponseExtensions
     {
-        public static bool IsSuggestionMode(this CompletionItem item) => item.CommitCharacters?.IsDefaultOrEmpty ?? false || !item.CommitCharacters.Contains(' ');
+        public static bool IsSuggestionMode(this CompletionItem item) => (item.CommitCharacters?.IsDefaultOrEmpty ?? true) || !item.CommitCharacters.Contains(' ');
     }
 }
