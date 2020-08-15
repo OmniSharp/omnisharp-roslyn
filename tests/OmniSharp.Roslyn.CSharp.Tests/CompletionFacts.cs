@@ -357,44 +357,44 @@ public class MyClass
         [InlineData("dummy.csx")]
         public async Task OverrideSignatures_Publics(string filename)
         {
-            const string source =
-                @"class Foo
-                    {
-                       public virtual void Test(string text) {}
-                       public virtual void Test(string text, string moreText) {}
-                    }
+            const string source = @"
+class Foo
+{
+    public virtual void Test(string text) {}
+    public virtual void Test(string text, string moreText) {}
+}
 
-                    class FooChild : Foo 
-                    {
-                      override $$
-                    }
-                ";
+class FooChild : Foo 
+{
+    override $$
+}
+";
 
             var completions = await FindCompletionsAsync(filename, source);
             Assert.Equal(new[] { "Equals(object obj)", "GetHashCode()", "Test(string text)", "Test(string text, string moreText)", "ToString()" },
                          completions.Items.Select(c => c.Label));
-            Assert.Equal(new[] { "Equals(object obj)\n    {\n        return base.Equals(obj);$0\n    \\}\n",
-                                 "GetHashCode()\n    {\n        return base.GetHashCode();$0\n    \\}\n",
-                                 "Test(string text)\n    {\n        base.Test(text);$0\n    \\}\n",
-                                 "Test(string text, string moreText)\n    {\n        base.Test(text, moreText);$0\n    \\}\n",
-                                 "ToString()\n    {\n        return base.ToString();$0\n    \\}\n"
+            Assert.Equal(new[] { "Equals(object obj)\n    {\n        return base.Equals(obj);$0\n    \\}",
+                                 "GetHashCode()\n    {\n        return base.GetHashCode();$0\n    \\}",
+                                 "Test(string text)\n    {\n        base.Test(text);$0\n    \\}",
+                                 "Test(string text, string moreText)\n    {\n        base.Test(text, moreText);$0\n    \\}",
+                                 "ToString()\n    {\n        return base.ToString();$0\n    \\}"
                                 },
-                         completions.Items.Select(c => c.InsertText));
+                         completions.Items.Select<CompletionItem, string>(c => c.InsertText));
 
-            Assert.Equal(new[] { "\n    public override bool",
-                                 "\n    public override int",
-                                 "\n    public override void",
-                                 "\n    public override void",
-                                 "\n    public override string"},
+            Assert.Equal(new[] { "public override bool",
+                                 "public override int",
+                                 "public override void",
+                                 "public override void",
+                                 "public override string"},
                         completions.Items.Select(c => c.AdditionalTextEdits.Value.Single().NewText));
 
             Assert.All(completions.Items.Select(c => c.AdditionalTextEdits.Value.Single()),
                        r =>
                        {
-                           Assert.Equal(7, r.StartLine);
-                           Assert.Equal(21, r.StartColumn);
-                           Assert.Equal(8, r.EndLine);
-                           Assert.Equal(30, r.EndColumn);
+                           Assert.Equal(9, r.StartLine);
+                           Assert.Equal(4, r.StartColumn);
+                           Assert.Equal(9, r.EndLine);
+                           Assert.Equal(12, r.EndColumn);
                        });
 
             Assert.All(completions.Items, c => Assert.Equal(InsertTextFormat.Snippet, c.InsertTextFormat));
