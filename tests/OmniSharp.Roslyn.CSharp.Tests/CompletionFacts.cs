@@ -388,10 +388,14 @@ public class MyClass
                                  "\n    public override string"},
                         completions.Items.Select(c => c.AdditionalTextEdits.Value.Single().NewText));
 
-            Assert.All(completions.Items.Select(c => c.AdditionalTextEdits.Value.Single().Range),
-                       r => Assert.Equal(
-                           new Range { Start = new Position { Line = 7, Character = 21 }, End = new Position { Line = 8, Character = 30 } },
-                           r));
+            Assert.All(completions.Items.Select(c => c.AdditionalTextEdits.Value.Single()),
+                       r =>
+                       {
+                           Assert.Equal(7, r.StartLine);
+                           Assert.Equal(21, r.StartColumn);
+                           Assert.Equal(8, r.EndLine);
+                           Assert.Equal(30, r.EndColumn);
+                       });
 
             Assert.All(completions.Items, c => Assert.Equal(InsertTextFormat.Snippet, c.InsertTextFormat));
         }
@@ -437,10 +441,14 @@ namespace N3
                                  "public override string"},
                         completions.Items.Select(c => c.AdditionalTextEdits.Value.Single().NewText));
 
-            Assert.All(completions.Items.Select(c => c.AdditionalTextEdits.Value.Single().Range),
-                       r => Assert.Equal(
-                           new Range { Start = new Position { Line = 15, Character = 8 }, End = new Position { Line = 15, Character = 16 } },
-                           r));
+            Assert.All(completions.Items.Select(c => c.AdditionalTextEdits.Value.Single()),
+                       r =>
+                       {
+                           Assert.Equal(15, r.StartLine);
+                           Assert.Equal(8, r.StartColumn);
+                           Assert.Equal(15, r.EndLine);
+                           Assert.Equal(16, r.EndColumn);
+                       });
 
             Assert.All(completions.Items, c => Assert.Equal(InsertTextFormat.Snippet, c.InsertTextFormat));
         }
@@ -545,10 +553,14 @@ class C
                                  "public override string"},
                         completions.Items.Select(c => c.AdditionalTextEdits.Value.Single().NewText));
 
-            Assert.All(completions.Items.Select(c => c.AdditionalTextEdits.Value.Single().Range),
-                       r => Assert.Equal(
-                           new Range { Start = new Position { Line = 3, Character = 4 }, End = new Position { Line = 3, Character = 12 } },
-                           r));
+            Assert.All(completions.Items.Select(c => c.AdditionalTextEdits.Value.Single()),
+                       r =>
+                       {
+                           Assert.Equal(3, r.StartLine);
+                           Assert.Equal(4, r.StartColumn);
+                           Assert.Equal(3, r.EndLine);
+                           Assert.Equal(12, r.EndColumn);
+                       });
 
             Assert.All(completions.Items, c =>
             {

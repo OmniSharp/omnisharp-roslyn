@@ -12,6 +12,7 @@ using Microsoft.CodeAnalysis.Completion;
 using Microsoft.CodeAnalysis.Tags;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Mef;
+using OmniSharp.Models;
 using OmniSharp.Models.v1.Completion;
 using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Helpers;
@@ -152,7 +153,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                 var commitCharacters = buildCommitCharacters(completions, completion.Rules.CommitCharacterRules, triggerCharactersBuilder);
 
                 var insertTextFormat = InsertTextFormat.PlainText;
-                ImmutableArray<TextEdit>? additionalTextEdits = null;
+                ImmutableArray<LinePositionSpanTextChange>? additionalTextEdits = null;
 
                 if (!completion.TryGetInsertionText(out string insertText))
                 {
@@ -229,12 +230,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                                 // as the additional edit is not allowed to overlap with the insertion point.
                                 var additionalEditStartPosition = sourceText.Lines.GetLinePosition(change.TextChange.Span.Start);
                                 var additionalEditEndPosition = sourceText.Lines.GetLinePosition(typedSpan.Start - 1);
-                                var additionalRange = new Range
-                                {
-                                    Start = new Position { Line = additionalEditStartPosition.Line, Character = additionalEditStartPosition.Character },
-                                    End = new Position { Line = additionalEditEndPosition.Line, Character = additionalEditEndPosition.Character },
-                                };
-
                                 int additionalEditEndOffset = change.TextChange.NewText!.IndexOf(completion.DisplayText);
                                 if (additionalEditEndOffset < 1)
                                 {
@@ -247,11 +242,14 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                                     break;
                                 }
 
-                                additionalTextEdits = ImmutableArray.Create(new TextEdit
+                                additionalTextEdits = ImmutableArray.Create(new LinePositionSpanTextChange
                                 {
                                     // Again, we cut off the space at the end of the offset
                                     NewText = change.TextChange.NewText!.Substring(0, additionalEditEndOffset - 1),
-                                    Range = additionalRange
+                                    StartLine = additionalEditStartPosition.Line,
+                                    StartColumn = additionalEditStartPosition.Character,
+                                    EndLine = additionalEditEndPosition.Line,
+                                    EndColumn = additionalEditEndPosition.Character,
                                 });
 
                                 // Now that we have the additional edit, adjust the rest of the new text
@@ -430,7 +428,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
             var description = await completionService.GetDescriptionAsync(document, lastCompletionItem);
 
             StringBuilder textBuilder = new StringBuilder();
-            MarkdownHelpers.TaggedTextToMarkdown(description.TaggedParts, textBuilder, _formattingOptions, out _);
+            MarkdownHelpers.TaggedTextToMarkdown(description.TaggedParts, textBuilder, _formattingOptions, MarkdownFormat.FirstLineAsCSharp);
 
             request.Item.Documentation = textBuilder.ToString();
 

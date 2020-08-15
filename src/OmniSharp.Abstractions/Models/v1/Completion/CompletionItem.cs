@@ -1,7 +1,6 @@
 ﻿#nullable enable
 
 using System.Collections.Immutable;
-using Newtonsoft.Json;
 
 namespace OmniSharp.Models.v1.Completion
 {
@@ -12,7 +11,6 @@ namespace OmniSharp.Models.v1.Completion
         /// also the text that is inserted when selecting
         /// this completion.
         /// </summary>
-        [JsonProperty("label")]
         public string Label { get; set; } = null!;
 
         /// <summary>
@@ -20,67 +18,57 @@ namespace OmniSharp.Models.v1.Completion
         /// an icon is chosen by the editor.The standardized set
         /// of available values is defined in <see cref="CompletionItemKind"/>
         /// </summary>
-        [JsonProperty("kind")]
         public CompletionItemKind Kind { get; set; }
 
         /// <summary>
         /// Tags for this completion item
         /// </summary>
-        [JsonProperty("tags")]
         public ImmutableArray<CompletionItemTag>? Tags { get; set; }
 
         /// <summary>
         /// A human-readable string with additional information
         /// about this item, like type or symbol information
         /// </summary>
-        [JsonProperty("detail")]
         public string? Detail { get; set; }
 
         /// <summary>
         /// A human-readable string that represents a doc-comment. This is
         /// formatted as markdown.
         /// </summary>
-        [JsonProperty("documentation")]
         public string? Documentation { get; set; }
 
         /// <summary>
         /// Select this item when showing.
         /// </summary>
-        [JsonProperty("preselect")]
         public bool Preselect { get; set; }
 
         /// <summary>
         /// A string that should be used when comparing this item
         /// with other items. When null or empty the label is used.
         /// </summary>
-        [JsonProperty("sortText")]
         public string? SortText { get; set; }
 
         /// <summary>
         /// A string that should be used when filtering a set of
         /// completion items. When null or empty the label is used.
         /// </summary>
-        [JsonProperty("filterText")]
         public string? FilterText { get; set; }
 
         /// <summary>
         /// A string that should be inserted into a document when selecting
         /// this completion.When null or empty the label is used.
         /// </summary>
-        [JsonProperty("insertText")]
         public string? InsertText { get; set; }
 
         /// <summary>
         /// The format of <see cref="InsertText"/>.
         /// </summary>
-        [JsonProperty("insertTextFormat")]
         public InsertTextFormat? InsertTextFormat { get; set; }
 
         /// <summary>
         /// An optional set of characters that when pressed while this completion is active will accept it first and
         /// then type that character.
         /// </summary>
-        [JsonProperty("commitCharacters")]
         public ImmutableArray<char>? CommitCharacters { get; set; }
 
         /// <summary>
@@ -92,46 +80,17 @@ namespace OmniSharp.Models.v1.Completion
         /// (for example adding an import statement at the top of the file if the completion item will
         /// insert an unqualified type).
         /// </summary>
-        [JsonProperty("additionalTextEdits")]
-        public ImmutableArray<TextEdit>? AdditionalTextEdits { get; set; }
+        public ImmutableArray<LinePositionSpanTextChange>? AdditionalTextEdits { get; set; }
 
         /// <summary>
         /// Index in the completions list that this completion occurred.
         /// </summary>
-        [JsonProperty("data")]
         public int Data { get; set; }
 
         public override string ToString()
         {
             return $"{{ {nameof(Label)} = {Label}, {nameof(CompletionItemKind)} = {Kind} }}";
         }
-    }
-
-    public struct TextEdit
-    {
-        [JsonProperty("range")]
-        public Range Range { get; set; }
-
-        [JsonProperty("newText")]
-        public string? NewText { get; set; }
-    }
-
-    // These are using different versions from the normal Range/Point classes in order to apply
-    // json converters that match up with lsp naming conventions.
-    public struct Range
-    {
-        [JsonProperty("start")]
-        public Position Start { get; set; }
-        [JsonProperty("end")]
-        public Position End { get; set; }
-    }
-
-    public struct Position
-    {
-        [JsonProperty("line")]
-        public int Line { get; set; }
-        [JsonProperty("character")]
-        public int Character { get; set; }
     }
 
     public enum CompletionItemKind

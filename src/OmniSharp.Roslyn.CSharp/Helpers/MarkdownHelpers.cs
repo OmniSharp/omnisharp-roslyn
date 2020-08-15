@@ -1,6 +1,7 @@
 ﻿using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.CodeAnalysis;
@@ -32,50 +33,76 @@ namespace OmniSharp.Roslyn.CSharp.Helpers
         /// </summary>
         private const string ContainerEnd = nameof(ContainerEnd);
 
-        public static void TaggedTextToMarkdown(ImmutableArray<TaggedText> taggedParts, StringBuilder stringBuilder, FormattingOptions formattingOptions, out int lastIndex, bool untilLineBreak = false)
+        public static void TaggedTextToMarkdown(
+            ImmutableArray<TaggedText> taggedParts,
+            StringBuilder stringBuilder,
+            FormattingOptions formattingOptions,
+            MarkdownFormat markdownFormat)
         {
             bool isInCodeBlock = false;
             bool brokeLine = true;
-            lastIndex = 0;
+            bool afterFirstLine = false;
+
+            if (markdownFormat == MarkdownFormat.Italicize)
+            {
+                stringBuilder.Append("_");
+            }
+
             for (int i = 0; i < taggedParts.Length; i++)
             {
                 var current = taggedParts[i];
-                lastIndex = i;
 
-                if (brokeLine)
+                if (brokeLine && markdownFormat != MarkdownFormat.Italicize)
                 {
                     Debug.Assert(!isInCodeBlock);
-                    // If we're on a new line and there are no text parts in the upcoming line, then we
-                    // can format the whole line as C# code instead of plaintext. Otherwise, we need to
-                    // intermix, and can only use simple ` codefences
                     brokeLine = false;
-                    bool canFormatAsBlock = false;
-                    for (int j = i; j < taggedParts.Length; j++)
+                    bool canFormatAsBlock = (afterFirstLine, markdownFormat) switch
                     {
-                        switch (taggedParts[j].Tag)
+                        (false, MarkdownFormat.FirstLineAsCSharp) => true,
+                        (true, MarkdownFormat.FirstLineDefaultRestCSharp) => true,
+                        (_, MarkdownFormat.AllTextAsCSharp) => true,
+                        _ => false
+                    };
+
+                    if (!canFormatAsBlock)
+                    {
+                        // If we're on a new line and there are no text parts in the upcoming line, then we
+                        // can format the whole line as C# code instead of plaintext. Otherwise, we need to
+                        // intermix, and can only use simple ` codefences
+                        for (int j = i; j < taggedParts.Length; j++)
                         {
-                            case TextTags.Text:
-                                canFormatAsBlock = false;
-                                goto endOfLineOrTextFound;
+                            switch (taggedParts[j].Tag)
+                            {
+                                case TextTags.Text:
+                                    canFormatAsBlock = false;
+                                    goto endOfLineOrTextFound;
 
-                            case ContainerStart:
-                            case ContainerEnd:
-                            case TextTags.LineBreak:
-                                goto endOfLineOrTextFound;
+                                case ContainerStart:
+                                case ContainerEnd:
+                                case TextTags.LineBreak:
+                                    goto endOfLineOrTextFound;
 
-                            default:
-                                // If the block is just newlines, then we don't want to format that as
-                                // C# code. So, we default to false, set it to true if there's actually
-                                // content on the line, then set to false again if Text content is
-                                // encountered.
-                                canFormatAsBlock = true;
-                                continue;
+                                default:
+                                    // If the block is just newlines, then we don't want to format that as
+                                    // C# code. So, we default to false, set it to true if there's actually
+                                    // content on the line, then set to false again if Text content is
+                                    // encountered.
+                                    canFormatAsBlock = true;
+                                    continue;
+                            }
                         }
+                    }
+                    else
+                    {
+                        // If it's just a newline, we're going to default to standard handling which will
+                        // skip the newline.
+                        canFormatAsBlock = !indexIsTag(i, ContainerStart, ContainerEnd, TextTags.LineBreak);
                     }
 
                 endOfLineOrTextFound:
                     if (canFormatAsBlock)
                     {
+                        afterFirstLine = true;
                         stringBuilder.Append("```csharp");
                         stringBuilder.Append(formattingOptions.NewLine);
                         for (; i < taggedParts.Length; i++)
@@ -85,16 +112,23 @@ namespace OmniSharp.Roslyn.CSharp.Helpers
                                 || current.Tag == ContainerEnd
                                 || current.Tag == TextTags.LineBreak)
                             {
-                                // End the codeblock
                                 stringBuilder.Append(formattingOptions.NewLine);
-                                stringBuilder.Append("```");
 
-                                // We know we're at a line break of some kind, but it could be
-                                // a container start, so let the standard handling take care of it.
-                                goto standardHandling;
+                                if (markdownFormat != MarkdownFormat.AllTextAsCSharp
+                                    && markdownFormat != MarkdownFormat.FirstLineDefaultRestCSharp)
+                                {
+                                    // End the codeblock
+                                    stringBuilder.Append("```");
+
+                                    // We know we're at a line break of some kind, but it could be
+                                    // a container start, so let the standard handling take care of it.
+                                    goto standardHandling;
+                                }
                             }
-
-                            stringBuilder.Append(current.Text);
+                            else
+                            {
+                                stringBuilder.Append(current.Text);
+                            }
                         }
 
                         // If we're here, that means that the last part has been reached, so just
@@ -141,10 +175,6 @@ namespace OmniSharp.Roslyn.CSharp.Helpers
                         addNewline();
                         break;
 
-                    case TextTags.LineBreak when untilLineBreak && stringBuilder.Length != 0:
-                        // The section will end and another newline will be appended, no need to add yet another newline.
-                        return;
-
                     case TextTags.LineBreak:
                         if (stringBuilder.Length != 0 && !indexIsTag(i + 1, ContainerStart, ContainerEnd) && i + 1 != taggedParts.Length)
                         {
@@ -172,7 +202,12 @@ namespace OmniSharp.Roslyn.CSharp.Helpers
 
             void addText(string text)
             {
-                stringBuilder.Append(Escape(text));
+                afterFirstLine = true;
+                if (!isInCodeBlock)
+                {
+                    text = Escape(text);
+                }
+                stringBuilder.Append(text);
             }
 
             void addNewline()
@@ -182,10 +217,20 @@ namespace OmniSharp.Roslyn.CSharp.Helpers
                     endBlock();
                 }
 
+                if (markdownFormat == MarkdownFormat.Italicize)
+                {
+                    stringBuilder.Append("_");
+                }
+
                 // Markdown needs 2 linebreaks to make a new paragraph
                 stringBuilder.Append(formattingOptions.NewLine);
                 stringBuilder.Append(formattingOptions.NewLine);
                 brokeLine = true;
+
+                if (markdownFormat == MarkdownFormat.Italicize)
+                {
+                    stringBuilder.Append("_");
+                }
             }
 
             void endBlock()
@@ -197,5 +242,29 @@ namespace OmniSharp.Roslyn.CSharp.Helpers
             bool indexIsTag(int i, params string[] tags)
                 => i < taggedParts.Length && tags.Contains(taggedParts[i].Tag);
         }
+    }
+
+    public enum MarkdownFormat
+    {
+        /// <summary>
+        /// Only format entire lines as C# code if there is no standard text on the line
+        /// </summary>
+        Default,
+        /// <summary>
+        /// Italicize the section
+        /// </summary>
+        Italicize,
+        /// <summary>
+        /// Format the first line as C#, unconditionally
+        /// </summary>
+        FirstLineAsCSharp,
+        /// <summary>
+        /// Format the first line as default text, and format the rest of the lines as C#, unconditionally
+        /// </summary>
+        FirstLineDefaultRestCSharp,
+        /// <summary>
+        /// Format the entire set of text as C#, unconditionally
+        /// </summary>
+        AllTextAsCSharp
     }
 }

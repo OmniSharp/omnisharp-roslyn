@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.IO;
+﻿using System.IO;
 using System.Threading.Tasks;
 using OmniSharp.Models;
 using OmniSharp.Options;
@@ -232,7 +230,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         public async Task DisplayFormatFor_TypeSymbol_WithGenerics()
         {
             var response = await GetTypeLookUpResponse(line: 15, column: 36);
-            Assert.Equal("```csharp\ninterface System.Collections.Generic.IDictionary<TKey, TValue>\n```\n```csharp\n\nTKey is string\nTValue is IEnumerable<int>\n```", response.Markdown);
+            Assert.Equal("```csharp\ninterface System.Collections.Generic.IDictionary<TKey, TValue>\n```\n\n\n\n```csharp\nTKey is string\nTValue is IEnumerable<int>\n```", response.Markdown);
         }
 
         [Fact]
@@ -340,7 +338,7 @@ class testissue
     }
 }";
             var response = await GetTypeLookUpResponse(content);
-            Assert.Equal("```csharp\nbool testissue.Compare(int gameObject, string tagName)\n```\n\nReturns:\n\n  Returns true if object is tagged with tag\\.", response.Markdown);
+            Assert.Equal("```csharp\nbool testissue.Compare(int gameObject, string tagName)\n```\n\n\n\nReturns:\n\n  Returns true if object is tagged with tag\\.", response.Markdown);
         }
 
         [Fact]
@@ -371,7 +369,7 @@ class testissue
     }
 }";
             var response = await GetTypeLookUpResponse(content);
-            Assert.Equal("```csharp\nbool testissue.Compare(int gameObject, string tagName)\n```\n\nExceptions:\n\n  A\n\n  B", response.Markdown);
+            Assert.Equal("```csharp\nbool testissue.Compare(int gameObject, string tagName)\n```\n\n\n\nExceptions:\n\n  A\n\n  B", response.Markdown);
         }
 
         [Fact]
@@ -602,7 +600,7 @@ class testissue
 }";
             var response = await GetTypeLookUpResponse(content);
             Assert.Equal(
-                "```csharp\nT[] testissue.Compare(int gameObject)\n```\n\nChecks if object is tagged with the tag\\.\n\nYou may have some additional information about this class here\\.\n\nReturns:\n\n  Returns an array of type `T`\\.\n\n\n\nExceptions:\n\n  `System.Exception`",
+                "```csharp\nT[] testissue.Compare(int gameObject)\n```\n\nChecks if object is tagged with the tag\\.\n\nYou may have some additional information about this class here\\.\n\nReturns:\n\n  Returns an array of type `T`\\.\n\n\n\nExceptions:\n\n```csharp\n  System.Exception\n```",
                 response.Markdown);
         }
 
@@ -667,7 +665,7 @@ class C
     }
 }";
             var response = await GetTypeLookUpResponse(content);
-            Assert.Equal("```csharp\nvoid C.M1<'a>('a t)\n```\n\nAnonymous Types:\n```csharp\n    'a is new { int X, int Y }\n```", response.Markdown);
+            Assert.Equal("```csharp\nvoid C.M1<'a>('a t)\n```\n\n\n\nAnonymous Types:\n\n```csharp\n    'a is new { int X, int Y }\n```", response.Markdown);
         }
 
         [Fact]

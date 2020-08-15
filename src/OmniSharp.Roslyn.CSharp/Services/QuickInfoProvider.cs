@@ -69,19 +69,26 @@ namespace OmniSharp.Roslyn.CSharp.Services
             }
 
             var finalTextBuilder = new StringBuilder();
-            var sectionTextBuilder = new StringBuilder();
 
             var description = quickInfo.Sections.FirstOrDefault(s => s.Kind == QuickInfoSectionKinds.Description);
             if (description is object)
             {
-                appendSectionAsCsharp(description, finalTextBuilder, _formattingOptions, includeSpaceAtStart: false);
+                appendSection(description, MarkdownFormat.AllTextAsCSharp);
+
+                // The description doesn't include a set of newlines at the end, regardless
+                // of whether there are more sections, so if there are more sections we need
+                // to ensure they're separated.
+                if (quickInfo.Sections.Length > 1)
+                {
+                    finalTextBuilder.Append(_formattingOptions.NewLine);
+                    finalTextBuilder.Append(_formattingOptions.NewLine);
+                }
             }
 
             var summary = quickInfo.Sections.FirstOrDefault(s => s.Kind == QuickInfoSectionKinds.DocumentationComments);
             if (summary is object)
             {
-                MarkdownHelpers.TaggedTextToMarkdown(summary.TaggedParts, sectionTextBuilder, _formattingOptions, out _);
-                appendBuiltSection(finalTextBuilder, sectionTextBuilder, _formattingOptions);
+                appendSection(summary, MarkdownFormat.Default);
             }
 
             foreach (var section in quickInfo.Sections)
@@ -93,27 +100,22 @@ namespace OmniSharp.Roslyn.CSharp.Services
                         continue;
 
                     case QuickInfoSectionKinds.TypeParameters:
-                        appendSectionAsCsharp(section, finalTextBuilder, _formattingOptions);
+                        appendSection(section, MarkdownFormat.AllTextAsCSharp);
                         break;
 
                     case QuickInfoSectionKinds.AnonymousTypes:
                         // The first line is "Anonymous Types:"
-                        MarkdownHelpers.TaggedTextToMarkdown(section.TaggedParts, sectionTextBuilder, _formattingOptions, out int lastIndex, untilLineBreak: true);
-                        appendBuiltSection(finalTextBuilder, sectionTextBuilder, _formattingOptions);
-
                         // Then we want all anonymous types to be C# highlighted
-                        appendSectionAsCsharp(section, finalTextBuilder, _formattingOptions, lastIndex + 1);
+                        appendSection(section, MarkdownFormat.FirstLineDefaultRestCSharp);
                         break;
 
                     case NullabilityAnalysis:
                         // Italicize the nullable analysis for emphasis.
-                        MarkdownHelpers.TaggedTextToMarkdown(section.TaggedParts, sectionTextBuilder, _formattingOptions, out _);
-                        appendBuiltSection(finalTextBuilder, sectionTextBuilder, _formattingOptions, italicize: true);
+                        appendSection(section, MarkdownFormat.Italicize);
                         break;
 
                     default:
-                        MarkdownHelpers.TaggedTextToMarkdown(section.TaggedParts, sectionTextBuilder, _formattingOptions, out _);
-                        appendBuiltSection(finalTextBuilder, sectionTextBuilder, _formattingOptions);
+                        appendSection(section, MarkdownFormat.Default);
                         break;
                 }
             }
@@ -122,45 +124,9 @@ namespace OmniSharp.Roslyn.CSharp.Services
 
             return response;
 
-            static void appendBuiltSection(StringBuilder finalTextBuilder, StringBuilder stringBuilder, FormattingOptions formattingOptions, bool italicize = false)
+            void appendSection(QuickInfoSection section, MarkdownFormat format)
             {
-                // Two newlines to trigger a markdown new paragraph
-                finalTextBuilder.Append(formattingOptions.NewLine);
-                finalTextBuilder.Append(formattingOptions.NewLine);
-                if (italicize)
-                {
-                    finalTextBuilder.Append("_");
-                }
-                finalTextBuilder.Append(stringBuilder);
-                if (italicize)
-                {
-                    finalTextBuilder.Append("_");
-                }
-                stringBuilder.Clear();
-            }
-
-            static void appendSectionAsCsharp(QuickInfoSection section, StringBuilder builder, FormattingOptions formattingOptions, int startingIndex = 0, bool includeSpaceAtStart = true)
-            {
-                if (includeSpaceAtStart)
-                {
-                    builder.Append(formattingOptions.NewLine);
-                }
-                builder.Append("```csharp");
-                builder.Append(formattingOptions.NewLine);
-                for (int i = startingIndex; i < section.TaggedParts.Length; i++)
-                {
-                    TaggedText part = section.TaggedParts[i];
-                    if (part.Tag == TextTags.LineBreak && i + 1 != section.TaggedParts.Length)
-                    {
-                        builder.Append(formattingOptions.NewLine);
-                    }
-                    else
-                    {
-                        builder.Append(part.Text);
-                    }
-                }
-                builder.Append(formattingOptions.NewLine);
-                builder.Append("```");
+                MarkdownHelpers.TaggedTextToMarkdown(section.TaggedParts, finalTextBuilder, _formattingOptions, format);
             }
         }
     }
