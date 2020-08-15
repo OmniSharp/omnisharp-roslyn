@@ -206,7 +206,11 @@ Task("CreateMSBuildFolder")
         "Microsoft.Build",
         "Microsoft.Build.Framework",
         "Microsoft.Build.Tasks.Core",
-        "Microsoft.Build.Utilities.Core",
+        "Microsoft.Build.Utilities.Core"
+    };
+
+    var msbuildRefLibraries = new []
+    {
         "Microsoft.Build.Tasks.v4.0",
         "Microsoft.Build.Tasks.v12.0",
         "Microsoft.Build.Utilities.v4.0",
@@ -332,9 +336,7 @@ Task("CreateMSBuildFolder")
         foreach (var library in msbuildLibraries)
         {
             var libraryFileName = library + ".dll";
-
-            // copy MSBuild from current Mono
-            var librarySourcePath = CombinePaths(monoMSBuildPath, libraryFileName);
+            var librarySourcePath = CombinePaths(env.Folders.Tools, library, "lib", "net472", libraryFileName);
             var libraryTargetPath = CombinePaths(msbuildCurrentBinTargetFolder, libraryFileName);
             if (FileHelper.Exists(librarySourcePath))
             {
@@ -342,14 +344,27 @@ Task("CreateMSBuildFolder")
             }
         }
 
-        Information("Copying MSBuild depednencies...");
+        Information("Copying MSBuild Ref Libraries...");
+
+        foreach (var refLibrary in msbuildRefLibraries)
+        {
+            var refLibraryFileName = refLibrary + ".dll";
+
+            // copy MSBuild from current Mono
+            var refLibrarySourcePath = CombinePaths(monoMSBuildPath, refLibraryFileName);
+            var refLibraryTargetPath = CombinePaths(msbuildCurrentBinTargetFolder, refLibraryFileName);
+            if (FileHelper.Exists(refLibrarySourcePath))
+            {
+                FileHelper.Copy(refLibrarySourcePath, refLibraryTargetPath);
+            }
+        }
+
+        Information("Copying MSBuild dependencies...");
 
         foreach (var dependency in msBuildDependencies)
         {
             var dependencyFileName = dependency + ".dll";
-
-            // copy MSBuild from current Mono
-            var dependencySourcePath = CombinePaths(monoMSBuildPath, dependencyFileName);
+            var dependencySourcePath = CombinePaths(env.Folders.Tools, dependency, "lib", "netstandard2.0", dependencyFileName);
             var dependencyTargetPath = CombinePaths(msbuildCurrentBinTargetFolder, dependencyFileName);
             if (FileHelper.Exists(dependencySourcePath))
             {

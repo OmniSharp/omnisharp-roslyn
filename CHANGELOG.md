@@ -1,13 +1,20 @@
 # Changelog
 All changes to the project will be documented in this file.
 
-## [1.36.0] - Not yet released
-* Fixed debugging in .NET 5 preview SDKs ([omnisharp-vscode#3459](https://github.com/OmniSharp/omnisharp-vscode/issues/3459), PR: [#1862](https://github.com/OmniSharp/omnisharp-roslyn/pull/1862))
+## [1.36.1] - 2020-08-12
+* Fix MSBuild version mismatch with new SDKs ([omnisharp-vscode#3951](https://github.com/OmniSharp/omnisharp-vscode/issues/3951), PR: [#1883](https://github.com/OmniSharp/omnisharp-roslyn/pull/1883))
+
+## [1.36.0] - 2020-08-10
 * Introduced a new `/quickinfo` endpoint to provide a richer set of information compared to `/typeinfo`. Consumers are encouraged to use it as their hover provider ([#1808](https://github.com/OmniSharp/omnisharp-roslyn/issues/1808), PR: [#1860](https://github.com/OmniSharp/omnisharp-roslyn/pull/1860))
+* Updated LSP hover provider to use the new QuickInfo based services (PR: [#1870](https://github.com/OmniSharp/omnisharp-roslyn/pull/1870))
 * Fixed return type in LSP completion handler ([#1864](https://github.com/OmniSharp/omnisharp-roslyn/issues/1864), PR: [#1869](https://github.com/OmniSharp/omnisharp-roslyn/pull/1869))
 * Upgraded to the latest version of the csharp-language-server-protocol [#1815](https://github.com/OmniSharp/omnisharp-roslyn/pull/1815)
 * Added support for Roslyn `EmbeddedLanguageCompletionProvider` which enables completions for string literals for `DateTime` and `Regex` ([#1871](https://github.com/OmniSharp/omnisharp-roslyn/pull/1871))
 * Improve performance of the `textDocument/codeAction` request. (PR: [#1814](https://github.com/OmniSharp/omnisharp-roslyn/pull/1814))
+* Updated Roslyn to Roslyn version and tools to match .NET 5 Preview8 (PR: [#1867](https://github.com/OmniSharp/omnisharp-roslyn/pull/1867))
+* Provide a warning when the discovered MSBuild version is lower than the minimumMSBuildVersion supported by the configured SDK (PR: [#1875](https://github.com/OmniSharp/omnisharp-roslyn/pull/1875))
+* Use the real MSBuild product version during discovery (PR: [#1876](https://github.com/OmniSharp/omnisharp-roslyn/pull/1876))
+* Fixed debugging in .NET 5 preview SDKs ([omnisharp-vscode#3459](https://github.com/OmniSharp/omnisharp-vscode/issues/3459), PR: [#1862](https://github.com/OmniSharp/omnisharp-roslyn/pull/1862))
 
 ## [1.35.4] - 2020-07-22
 * Update to Roslyn `3.8.0-1.20357.3` (PR: [#1849](https://github.com/OmniSharp/omnisharp-roslyn/pull/1849))
