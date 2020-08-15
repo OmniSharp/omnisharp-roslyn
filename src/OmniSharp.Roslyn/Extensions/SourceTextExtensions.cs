@@ -3,7 +3,7 @@
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
 
-namespace OmniSharp.Roslyn.CSharp.Helpers
+namespace OmniSharp.Extensions
 {
     internal static class SourceTextExtensions
     {

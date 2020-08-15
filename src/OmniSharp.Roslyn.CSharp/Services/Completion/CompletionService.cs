@@ -11,6 +11,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Completion;
 using Microsoft.CodeAnalysis.Tags;
 using Microsoft.Extensions.Logging;
+using OmniSharp.Extensions;
 using OmniSharp.Mef;
 using OmniSharp.Models;
 using OmniSharp.Models.v1.Completion;

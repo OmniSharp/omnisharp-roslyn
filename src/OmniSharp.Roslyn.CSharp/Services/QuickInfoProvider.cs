@@ -6,6 +6,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.QuickInfo;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.Extensions.Logging;
+using OmniSharp.Extensions;
 using OmniSharp.Mef;
 using OmniSharp.Models;
 using OmniSharp.Options;
@@ -59,7 +60,7 @@ namespace OmniSharp.Roslyn.CSharp.Services
             }
 
             var sourceText = await document.GetTextAsync();
-            var position = sourceText.Lines.GetPosition(new LinePosition(request.Line, request.Column));
+            var position = sourceText.GetTextPosition(request);
 
             var quickInfo = await quickInfoService.GetQuickInfoAsync(document, position);
             if (quickInfo is null)
