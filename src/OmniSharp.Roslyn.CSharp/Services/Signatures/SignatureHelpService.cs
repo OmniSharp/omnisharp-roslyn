@@ -6,6 +6,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
+using OmniSharp.Extensions;
 using OmniSharp.Mef;
 using OmniSharp.Models;
 using OmniSharp.Models.SignatureHelp;
@@ -104,7 +105,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Signatures
         private async Task<InvocationContext> GetInvocation(Document document, Request request)
         {
             var sourceText = await document.GetTextAsync();
-            var position = sourceText.Lines.GetPosition(new LinePosition(request.Line, request.Column));
+            var position = sourceText.GetTextPosition(request);
             var tree = await document.GetSyntaxTreeAsync();
             var root = await tree.GetRootAsync();
             var node = root.FindToken(position).Parent;
