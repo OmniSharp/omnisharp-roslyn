@@ -18,8 +18,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
         private const string InsertionText = nameof(InsertionText);
         private const string ObjectCreationCompletionProvider = "Microsoft.CodeAnalysis.CSharp.Completion.Providers.ObjectCreationCompletionProvider";
         private const string NamedParameterCompletionProvider = "Microsoft.CodeAnalysis.CSharp.Completion.Providers.NamedParameterCompletionProvider";
-        private const string OverrideCompletionProvider = "Microsoft.CodeAnalysis.CSharp.Completion.Providers.OverrideCompletionProvider";
-        private const string ParitalMethodCompletionProvider = "Microsoft.CodeAnalysis.CSharp.Completion.Providers.PartialMethodCompletionProvider";
+        internal const string OverrideCompletionProvider = "Microsoft.CodeAnalysis.CSharp.Completion.Providers.OverrideCompletionProvider";
+        internal const string PartialMethodCompletionProvider = "Microsoft.CodeAnalysis.CSharp.Completion.Providers.PartialMethodCompletionProvider";
+        internal const string InternalsVisibleToCompletionProvider = "Microsoft.CodeAnalysis.CSharp.Completion.Providers.InternalsVisibleToCompletionProvider";
+        internal const string XmlDocCommentCompletionProvider = "Microsoft.CodeAnalysis.CSharp.Completion.Providers.XmlDocCommentCompletionProvider";
         private const string ProviderName = nameof(ProviderName);
         private const string SymbolCompletionItem = "Microsoft.CodeAnalysis.Completion.Providers.SymbolCompletionItem";
         private const string SymbolKind = nameof(SymbolKind);
@@ -37,7 +39,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
             _getProviderName = typeof(CompletionItem).GetProperty(ProviderName, BindingFlags.NonPublic | BindingFlags.Instance);
         }
 
-        private static string GetProviderName(CompletionItem item)
+        internal static string GetProviderName(this CompletionItem item)
         {
             return (string)_getProviderName.GetValue(item);
         }
@@ -76,7 +78,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
         public static bool UseDisplayTextAsCompletionText(this CompletionItem completionItem)
         {
             var provider = GetProviderName(completionItem);
-            return provider == NamedParameterCompletionProvider || provider == OverrideCompletionProvider || provider == ParitalMethodCompletionProvider;
+            return provider == NamedParameterCompletionProvider || provider == OverrideCompletionProvider || provider == PartialMethodCompletionProvider;
         }
 
         public static bool TryGetInsertionText(this CompletionItem completionItem, out string insertionText)
