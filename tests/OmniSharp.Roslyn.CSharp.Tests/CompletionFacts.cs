@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
@@ -101,6 +102,163 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             var completions = await FindCompletionsAsync(filename, input);
             Assert.Contains("TryParse", completions.Items.Select(c => c.InsertText));
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task ImportCompletion(string filename)
+        {
+            const string input =
+@"public class Class1 {
+    public Class1()
+    {
+        Gui$$
+    }
+}";
+
+            // First completions should kick off the task.
+            var completions = await FindCompletionsAsync(filename, input);
+            Assert.True(completions.IsIncomplete);
+            Assert.DoesNotContain("Guid", completions.Items.Select(c => c.InsertText));
+
+            // Populating the completion list should take no more than a few ms, don't let it take too
+            // long
+            CancellationTokenSource cts = new CancellationTokenSource(100);
+            await Task.Run(async () =>
+            {
+                while (completions.IsIncomplete)
+                {
+                    completions = await FindCompletionsAsync(filename, input);
+                    cts.Token.ThrowIfCancellationRequested();
+                }
+            }, cts.Token);
+
+            Assert.False(completions.IsIncomplete);
+            Assert.Contains("Guid", completions.Items.Select(c => c.InsertText));
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task ImportCompletion_LocalsPrioritizedOverImports(string filename)
+        {
+
+            const string input =
+@"public class Class1 {
+    public Class1()
+    {
+        string guid;
+        Gui$$
+    }
+}";
+
+            var completions = await FindCompletionsWithImportedAsync(filename, input);
+            Assert.True(completions.Items.First(c => c.InsertText == "guid").Data.Index < completions.Items.First(c => c.InsertText == "Guid").Data.Index);
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task ImportCompletions_IncludesExtensionMethods(string filename)
+        {
+            const string input =
+@"namespace N1
+{
+    public class C1
+    {
+        public void M(object o)
+        {
+            o.$$
+        }
+    }
+}
+namespace N2
+{
+    public static class ObjectExtensions
+    {
+        public static void Test(this object o)
+        {
+        }
+    }
+}";
+
+            var completions = await FindCompletionsWithImportedAsync(filename, input);
+            Assert.Contains("Test", completions.Items.Select(c => c.InsertText));
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task ImportCompletion_ResolveAddsImportEdit(string filename)
+        {
+            const string input =
+@"namespace N1
+{
+    public class C1
+    {
+        public void M(object o)
+        {
+            o.$$
+        }
+    }
+}
+namespace N2
+{
+    public static class ObjectExtensions
+    {
+        public static void Test(this object o)
+        {
+        }
+    }
+}";
+
+            var completions = await FindCompletionsWithImportedAsync(filename, input);
+            var resolved = await ResolveCompletionAsync(completions.Items.First(c => c.InsertText == "Test"));
+            Assert.Single(resolved.Item.AdditionalTextEdits.Value);
+            var additionalEdit = resolved.Item.AdditionalTextEdits.Value[0];
+            Assert.Equal("using N2;\n\nnamespace N1\r\n{\r\n    public class C1\r\n    {\r\n        public void M(object o)\r\n        {\r\n            o", additionalEdit.NewText);
+            Assert.Equal(0, additionalEdit.StartLine);
+            Assert.Equal(0, additionalEdit.StartColumn);
+            Assert.Equal(6, additionalEdit.EndLine);
+            Assert.Equal(13, additionalEdit.EndColumn);
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task SelectsLastInstanceOfCompletion(string filename)
+        {
+            const string input =
+@"namespace N1
+{
+    public class C1
+    {
+        public void M(object o)
+        {
+            /*Guid*/$$//Guid
+        }
+    }
+}
+namespace N2
+{
+    public static class ObjectExtensions
+    {
+        public static void Test(this object o)
+        {
+        }
+    }
+}";
+
+            var completions = await FindCompletionsWithImportedAsync(filename, input);
+            var resolved = await ResolveCompletionAsync(completions.Items.First(c => c.InsertText == "Guid"));
+            Assert.Single(resolved.Item.AdditionalTextEdits.Value);
+            var additionalEdit = resolved.Item.AdditionalTextEdits.Value[0];
+            Assert.Equal("using System;\n\nnamespace N1\r\n{\r\n    public class C1\r\n    {\r\n        public void M(object o)\r\n        {\r\n            /*Guid*", additionalEdit.NewText);
+            Assert.Equal(0, additionalEdit.StartLine);
+            Assert.Equal(0, additionalEdit.StartColumn);
+            Assert.Equal(6, additionalEdit.EndLine);
+            Assert.Equal(19, additionalEdit.EndColumn);
         }
 
         [Theory]
@@ -497,6 +655,51 @@ class C
                          completions.Items.Select(c => c.InsertText));
 
             Assert.All(completions.Items.Select(c => c.AdditionalTextEdits), a => Assert.Null(a));
+            Assert.All(completions.Items, c => Assert.Equal(InsertTextFormat.Snippet, c.InsertTextFormat));
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task OverrideSignatures_TestTest(string filename)
+        {
+            const string source = @"
+class Test {}
+abstract class Base
+{
+    protected abstract Test Test();
+}
+class Derived : Base
+{
+    override $$
+}";
+
+            var completions = await FindCompletionsAsync(filename, source);
+            Assert.Equal(new[] { "Equals(object obj)", "GetHashCode()", "Test()", "ToString()" },
+                         completions.Items.Select(c => c.Label));
+
+            Assert.Equal(new[] { "Equals(object obj)\n    {\n        return base.Equals(obj);$0\n    \\}",
+                                 "GetHashCode()\n    {\n        return base.GetHashCode();$0\n    \\}",
+                                 "Test()\n    {\n        throw new System.NotImplementedException();$0\n    \\}",
+                                 "ToString()\n    {\n        return base.ToString();$0\n    \\}"
+                               },
+                         completions.Items.Select(c => c.InsertText));
+
+            Assert.Equal(new[] { "public override bool",
+                                 "public override int",
+                                 "protected override Test",
+                                 "public override string"},
+                        completions.Items.Select(c => c.AdditionalTextEdits.Value.Single().NewText));
+
+            Assert.All(completions.Items.Select(c => c.AdditionalTextEdits.Value.Single()),
+                       r =>
+                       {
+                           Assert.Equal(8, r.StartLine);
+                           Assert.Equal(4, r.StartColumn);
+                           Assert.Equal(8, r.EndLine);
+                           Assert.Equal(12, r.EndColumn);
+                       });
+
             Assert.All(completions.Items, c => Assert.Equal(InsertTextFormat.Snippet, c.InsertTextFormat));
         }
 
@@ -934,6 +1137,30 @@ class C
             var requestHandler = GetCompletionService(SharedOmniSharpTestHost);
 
             return await requestHandler.Handle(request);
+        }
+
+        private async Task<CompletionResponse> FindCompletionsWithImportedAsync(string filename, string source, char? triggerChar = null)
+        {
+            var completions = await FindCompletionsAsync(filename, source);
+            if (!completions.IsIncomplete)
+            {
+                return completions;
+            }
+
+            // Populating the completion list should take no more than a few ms, don't let it take too
+            // long
+            CancellationTokenSource cts = new CancellationTokenSource(100);
+            await Task.Run(async () =>
+            {
+                while (completions.IsIncomplete)
+                {
+                    completions = await FindCompletionsAsync(filename, source);
+                    cts.Token.ThrowIfCancellationRequested();
+                }
+            }, cts.Token);
+
+            Assert.False(completions.IsIncomplete);
+            return completions;
         }
 
         protected async Task<CompletionResolveResponse> ResolveCompletionAsync(CompletionItem completionItem)

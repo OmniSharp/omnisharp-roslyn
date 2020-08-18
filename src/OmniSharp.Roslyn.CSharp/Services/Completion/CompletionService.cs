@@ -9,7 +9,9 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Completion;
+using Microsoft.CodeAnalysis.Options;
 using Microsoft.CodeAnalysis.Tags;
+using Microsoft.CodeAnalysis.Text;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Extensions;
 using OmniSharp.Mef;
@@ -76,7 +78,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
         private readonly ILogger _logger;
 
         private readonly object _lock = new object();
-        private (CSharpCompletionList Completions, string FileName)? _lastCompletion = null;
+        private (CSharpCompletionList Completions, string FileName, int position)? _lastCompletion = null;
 
         [ImportingConstructor]
         public CompletionService(OmniSharpWorkspace workspace, FormattingOptions formattingOptions, ILoggerFactory loggerFactory)
@@ -114,7 +116,14 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                 return new CompletionResponse { Items = ImmutableArray<CompletionItem>.Empty };
             }
 
-            var completions = await completionService.GetCompletionsAsync(document, position, getCompletionTrigger(includeTriggerCharacter: false));
+            OptionSet completionsWithImport = await document.GetOptionsAsync();
+            completionsWithImport = completionsWithImport.WithChangedOption(CompletionItemExtensions.ShowItemsFromUnimportedNamespaces, LanguageNames.CSharp, true);
+
+            var (completions, expandedItemsAvailable) = await completionService.GetCompletionsInternalAsync(
+                document,
+                position,
+                getCompletionTrigger(includeTriggerCharacter: false),
+                options: completionsWithImport);
             _logger.LogTrace("Found {0} completions for {1}:{2},{3}",
                              completions?.Items.IsDefaultOrEmpty != true ? 0 : completions.Items.Length,
                              request.FileName,
@@ -142,11 +151,17 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
 
             lock (_lock)
             {
-                _lastCompletion = (completions, request.FileName);
+                _lastCompletion = (completions, request.FileName, position);
             }
 
             var triggerCharactersBuilder = ImmutableArray.CreateBuilder<char>(completions.Rules.DefaultCommitCharacters.Length);
             var completionsBuilder = ImmutableArray.CreateBuilder<CompletionItem>(completions.Items.Length);
+
+            // If we don't encounter any unimported types, and the completion context thinks that some would be available, then
+            // that completion provider is still creating the cache. We'll mark this completion list as not completed, and the
+            // editor will ask again when the user types more. By then, hopefully the cache will have populated and we can mark
+            // the completion as done.
+            bool isIncomplete = expandedItemsAvailable;
 
             for (int i = 0; i < completions.Items.Length; i++)
             {
@@ -155,6 +170,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
 
                 var insertTextFormat = InsertTextFormat.PlainText;
                 ImmutableArray<LinePositionSpanTextChange>? additionalTextEdits = null;
+                var isExpanded = false;
 
                 if (!completion.TryGetInsertionText(out string insertText))
                 {
@@ -226,37 +242,20 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                                     break;
                                 }
 
-                                // We know the span starts before the text we're keying off of. So, break that
-                                // out into a separate edit. We need to cut out the space before the current word,
-                                // as the additional edit is not allowed to overlap with the insertion point.
-                                var additionalEditStartPosition = sourceText.Lines.GetLinePosition(change.TextChange.Span.Start);
-                                var additionalEditEndPosition = sourceText.Lines.GetLinePosition(typedSpan.Start - 1);
-                                int additionalEditEndOffset = change.TextChange.NewText!.IndexOf(completion.DisplayText);
-                                if (additionalEditEndOffset < 1)
-                                {
-                                    // The first index of this was either 0 and the edit span was wrong,
-                                    // or it wasn't found at all. In this case, just do the best we can:
-                                    // send the whole string wtih no additional edits and log a warning.
-                                    _logger.LogWarning("Could not find the first index of the display text.\nDisplay text: {0}.\nCompletion Text: {1}",
-                                        completion.DisplayText, change.TextChange.NewText);
-                                    (insertText, insertTextFormat) = getAdjustedInsertTextWithPosition(change, position, newOffset: 0);
-                                    break;
-                                }
-
-                                additionalTextEdits = ImmutableArray.Create(new LinePositionSpanTextChange
-                                {
-                                    // Again, we cut off the space at the end of the offset
-                                    NewText = change.TextChange.NewText!.Substring(0, additionalEditEndOffset - 1),
-                                    StartLine = additionalEditStartPosition.Line,
-                                    StartColumn = additionalEditStartPosition.Character,
-                                    EndLine = additionalEditEndPosition.Line,
-                                    EndColumn = additionalEditEndPosition.Character,
-                                });
+                                int additionalEditEndOffset;
+                                (additionalTextEdits, additionalEditEndOffset) = GetAdditionalTextEdits(change, sourceText, typedSpan, completion.DisplayText, isImportCompletion: false);
 
                                 // Now that we have the additional edit, adjust the rest of the new text
                                 (insertText, insertTextFormat) = getAdjustedInsertTextWithPosition(change, position, additionalEditEndOffset);
                             }
                             break;
+
+                        case CompletionItemExtensions.TypeImportCompletionProvider:
+                        case CompletionItemExtensions.ExtensionMethodImportCompletionProvider:
+                            // We did indeed find unimported types, the completion list can be considered complete
+                            isIncomplete = false;
+                            isExpanded = true;
+                            goto default;
 
                         default:
                             insertText = completion.DisplayText;
@@ -274,7 +273,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                     FilterText = completion.FilterText,
                     Kind = getCompletionItemKind(completion.Tags),
                     Detail = completion.InlineDescription,
-                    Data = i,
+                    Data = (i, isExpanded),
                     Preselect = completion.Rules.MatchPriority == MatchPriority.Preselect || filteredItems.Contains(completion.DisplayText),
                     CommitCharacters = commitCharacters,
                 });
@@ -282,7 +281,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
 
             return new CompletionResponse
             {
-                IsIncomplete = false,
+                IsIncomplete = isIncomplete,
                 Items = completionsBuilder.MoveToImmutable()
             };
 
@@ -399,17 +398,17 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                 return new CompletionResolveResponse { Item = request.Item };
             }
 
-            var (completions, fileName) = _lastCompletion.Value;
+            var (completions, fileName, position) = _lastCompletion.Value;
 
             if (request.Item is null
-                || request.Item.Data >= completions.Items.Length
-                || request.Item.Data < 0)
+                || request.Item.Data.Index >= completions.Items.Length
+                || request.Item.Data.Index < 0)
             {
                 _logger.LogError("Received invalid completion resolve!");
                 return new CompletionResolveResponse { Item = request.Item };
             }
 
-            var lastCompletionItem = completions.Items[request.Item.Data];
+            var lastCompletionItem = completions.Items[request.Item.Data.Index];
             if (lastCompletionItem.DisplayTextPrefix + lastCompletionItem.DisplayText + lastCompletionItem.DisplayTextSuffix != request.Item.Label)
             {
                 _logger.LogError($"Inconsistent completion data. Requested data on {request.Item.Label}, but found completion item {lastCompletionItem.DisplayText}");
@@ -433,12 +432,52 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
 
             request.Item.Documentation = textBuilder.ToString();
 
-            // TODO: Do import completion diffing here
+            if (request.Item.Data.IsExpanded)
+            {
+                var sourceText = await document.GetTextAsync();
+                var typedSpan = completionService.GetDefaultCompletionListSpan(sourceText, position);
+                var change = await completionService.GetChangeAsync(document, lastCompletionItem, typedSpan);
+                (request.Item.AdditionalTextEdits, _) = GetAdditionalTextEdits(change, sourceText, typedSpan, lastCompletionItem.DisplayText, isImportCompletion: true);
+            }
 
             return new CompletionResolveResponse
             {
                 Item = request.Item
             };
+        }
+
+        private (ImmutableArray<LinePositionSpanTextChange> edits, int endOffset) GetAdditionalTextEdits(CompletionChange change, SourceText sourceText, TextSpan typedSpan, string completionDisplayText, bool isImportCompletion)
+        {
+            // We know the span starts before the text we're keying off of. So, break that
+            // out into a separate edit. We need to cut out the space before the current word,
+            // as the additional edit is not allowed to overlap with the insertion point.
+            var additionalEditStartPosition = sourceText.Lines.GetLinePosition(change.TextChange.Span.Start);
+            var additionalEditEndPosition = sourceText.Lines.GetLinePosition(typedSpan.Start - 1);
+            int additionalEditEndOffset = isImportCompletion
+                // Import completion will put the displaytext at the end of the line, override completion will
+                // put it at the front.
+                ? change.TextChange.NewText!.LastIndexOf(completionDisplayText)
+                : change.TextChange.NewText!.IndexOf(completionDisplayText);
+
+            if (additionalEditEndOffset < 1)
+            {
+                // The first index of this was either 0 and the edit span was wrong,
+                // or it wasn't found at all. In this case, just do the best we can:
+                // send the whole string wtih no additional edits and log a warning.
+                _logger.LogWarning("Could not find the first index of the display text.\nDisplay text: {0}.\nCompletion Text: {1}",
+                    completionDisplayText, change.TextChange.NewText);
+                return default;
+            }
+
+            return (ImmutableArray.Create(new LinePositionSpanTextChange
+            {
+                // Again, we cut off the space at the end of the offset
+                NewText = change.TextChange.NewText!.Substring(0, additionalEditEndOffset - 1),
+                StartLine = additionalEditStartPosition.Line,
+                StartColumn = additionalEditStartPosition.Character,
+                EndLine = additionalEditEndPosition.Line,
+                EndColumn = additionalEditEndPosition.Character,
+            }), additionalEditEndOffset);
         }
     }
 }

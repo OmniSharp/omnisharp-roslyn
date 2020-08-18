@@ -85,7 +85,7 @@ namespace OmniSharp.Models.v1.Completion
         /// <summary>
         /// Index in the completions list that this completion occurred.
         /// </summary>
-        public int Data { get; set; }
+        public (int Index, bool IsExpanded) Data { get; set; }
 
         public override string ToString()
         {

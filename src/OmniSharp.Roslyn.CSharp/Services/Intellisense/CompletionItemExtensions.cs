@@ -7,6 +7,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Completion;
+using Microsoft.CodeAnalysis.Options;
+using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models.AutoComplete;
 using OmniSharp.Utilities;
 
@@ -22,14 +24,19 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
         internal const string PartialMethodCompletionProvider = "Microsoft.CodeAnalysis.CSharp.Completion.Providers.PartialMethodCompletionProvider";
         internal const string InternalsVisibleToCompletionProvider = "Microsoft.CodeAnalysis.CSharp.Completion.Providers.InternalsVisibleToCompletionProvider";
         internal const string XmlDocCommentCompletionProvider = "Microsoft.CodeAnalysis.CSharp.Completion.Providers.XmlDocCommentCompletionProvider";
+        internal const string TypeImportCompletionProvider = "Microsoft.CodeAnalysis.CSharp.Completion.Providers.TypeImportCompletionProvider";
+        internal const string ExtensionMethodImportCompletionProvider = "Microsoft.CodeAnalysis.CSharp.Completion.Providers.ExtensionMethodImportCompletionProvider";
         private const string ProviderName = nameof(ProviderName);
         private const string SymbolCompletionItem = "Microsoft.CodeAnalysis.Completion.Providers.SymbolCompletionItem";
         private const string SymbolKind = nameof(SymbolKind);
         private const string SymbolName = nameof(SymbolName);
         private const string Symbols = nameof(Symbols);
         private static readonly Type _symbolCompletionItemType;
-        private static MethodInfo _getSymbolsAsync;
+        private static readonly MethodInfo _getSymbolsAsync;
         private static readonly PropertyInfo _getProviderName;
+        private static readonly MethodInfo _getCompletionsInternalAsync;
+        private static readonly MethodInfo _getChangeAsync;
+        internal static readonly PerLanguageOption<bool?> ShowItemsFromUnimportedNamespaces = new PerLanguageOption<bool?>("CompletionOptions", "ShowItemsFromUnimportedNamespaces", defaultValue: null);
 
         static CompletionItemExtensions()
         {
@@ -37,6 +44,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
             _getSymbolsAsync = _symbolCompletionItemType.GetMethod(GetSymbolsAsync, BindingFlags.Public | BindingFlags.Static);
 
             _getProviderName = typeof(CompletionItem).GetProperty(ProviderName, BindingFlags.NonPublic | BindingFlags.Instance);
+
+            _getCompletionsInternalAsync = typeof(CompletionService).GetMethod(nameof(GetCompletionsInternalAsync), BindingFlags.NonPublic | BindingFlags.Instance);
+            _getChangeAsync = typeof(CompletionService).GetMethod(nameof(GetChangeAsync), BindingFlags.NonPublic | BindingFlags.Instance);
         }
 
         internal static string GetProviderName(this CompletionItem item)
@@ -48,6 +58,24 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
         {
             return GetProviderName(item) == ObjectCreationCompletionProvider;
         }
+        public static Task<(CompletionList completionList, bool expandItemsAvailable)> GetCompletionsInternalAsync(
+            this CompletionService completionService,
+            Document document,
+            int caretPosition,
+            CompletionTrigger trigger = default,
+            ImmutableHashSet<string> roles = null,
+            OptionSet options = null,
+            CancellationToken cancellationToken = default)
+            => (Task<(CompletionList completionList, bool expandItemsAvailable)>)_getCompletionsInternalAsync.Invoke(completionService, new object[] { document, caretPosition, trigger, roles, options, cancellationToken });
+
+        internal static Task<CompletionChange> GetChangeAsync(
+            this CompletionService completionService,
+            Document document,
+            CompletionItem item,
+            TextSpan completionListSpan,
+            char? commitCharacter = null,
+            CancellationToken cancellationToken = default)
+            => (Task<CompletionChange>)_getChangeAsync.Invoke(completionService, new object[] { document, item, completionListSpan, commitCharacter, cancellationToken });
 
         public static async Task<IEnumerable<ISymbol>> GetCompletionSymbolsAsync(this CompletionItem completionItem, IEnumerable<ISymbol> recommendedSymbols, Document document)
         {
