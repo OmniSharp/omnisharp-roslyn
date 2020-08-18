@@ -1,7 +1,7 @@
 # Changelog
 All changes to the project will be documented in this file.
 
-## [1.36.2] - 2020-08-18
+## [1.37.0] - 2020-08-18
 * Update Roslyn version and tooling to match .NET 5 Preview8 (PR: [#1897](https://github.com/OmniSharp/omnisharp-roslyn/pull/1897))
 * Updated lsp library to fix issue with signature help, etc (PR: [#1890](https://github.com/OmniSharp/omnisharp-roslyn/pull/1890))
 * Include version matched target files with minimal MSBuild (PR: [#1895](https://github.com/OmniSharp/omnisharp-roslyn/pull/1895))
