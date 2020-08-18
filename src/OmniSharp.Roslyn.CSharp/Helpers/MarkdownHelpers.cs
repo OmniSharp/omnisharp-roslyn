@@ -189,6 +189,7 @@ namespace OmniSharp.Roslyn.CSharp.Helpers
                             stringBuilder.Append('`');
                         }
                         stringBuilder.Append(current.Text);
+                        brokeLine = false;
                         break;
                 }
             }
@@ -198,10 +199,16 @@ namespace OmniSharp.Roslyn.CSharp.Helpers
                 endBlock();
             }
 
+            if (!brokeLine && markdownFormat == MarkdownFormat.Italicize)
+            {
+                stringBuilder.Append("_");
+            }
+
             return;
 
             void addText(string text)
             {
+                brokeLine = false;
                 afterFirstLine = true;
                 if (!isInCodeBlock)
                 {

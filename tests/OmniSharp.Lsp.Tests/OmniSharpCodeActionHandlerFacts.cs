@@ -95,7 +95,7 @@ namespace OmniSharp.Lsp.Tests
             var response =
                 (await RunRefactoringAsync(code, "Remove Unnecessary Usings",
                     isAnalyzersEnabled: roslynAnalyzersEnabled)).Single();
-            var updatedText = await OmniSharpTestHost.Workspace.GetDocument(response.FileName).GetTextAsync();
+            var updatedText = await OmniSharpTestHost.Workspace.GetDocument(response.FileName).GetTextAsync(CancellationToken);
             AssertUtils.AssertIgnoringIndent(expected, updatedText.ToString());
         }
 
@@ -199,7 +199,7 @@ namespace OmniSharp.Lsp.Tests
             var response =
                 (await RunRefactoringAsync(code, "Extract Method", isAnalyzersEnabled: roslynAnalyzersEnabled))
                 .Single();
-            var updatedText = await OmniSharpTestHost.Workspace.GetDocument(response.FileName).GetTextAsync();
+            var updatedText = await OmniSharpTestHost.Workspace.GetDocument(response.FileName).GetTextAsync(CancellationToken);
             AssertUtils.AssertIgnoringIndent(expected, updatedText.ToString());
         }
 
@@ -224,7 +224,7 @@ namespace OmniSharp.Lsp.Tests
                 }), CancellationToken);
 
             var updatedDocument = OmniSharpTestHost.Workspace.GetDocument(Path.Combine(Path.GetDirectoryName(document.FilePath), "Z.cs"));
-            var updateDocumentText = await updatedDocument.GetTextAsync();
+            var updateDocumentText = await updatedDocument.GetTextAsync(CancellationToken);
 
             Assert.Equal(@"namespace ConsoleApplication
 {
@@ -296,7 +296,7 @@ namespace OmniSharp.Lsp.Tests
                 Context = new CodeActionContext() { },
                 Range = LanguageServerProtocol.Helpers.ToRange(range),
                 TextDocument = new TextDocumentIdentifier(bufferPath)
-            });
+            }, CancellationToken);
 
             return response.Where(z => z.IsCodeAction).Select(z => z.CodeAction);
         }
@@ -309,7 +309,7 @@ namespace OmniSharp.Lsp.Tests
 
             OmniSharpTestHost.AddFilesToWorkspace(testFile);
 
-            await Client.Workspace.ExecuteCommand(command);
+            await Client.Workspace.ExecuteCommand(command, CancellationToken);
 
             return new[] {testFile};
         }

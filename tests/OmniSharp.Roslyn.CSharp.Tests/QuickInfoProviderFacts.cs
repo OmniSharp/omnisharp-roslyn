@@ -709,6 +709,23 @@ class Program
             Assert.Equal("```csharp\nvoid Program.B()\n```\n\n\\*This should be escaped\\*", response.Markdown);
         }
 
+        [Fact]
+        public async Task NullableIsItalicized()
+        {
+            string content = @"
+#nullable enable
+class Program
+{
+    public static void A(string s)
+    {
+        _ = s$$;
+    }
+
+}";
+            var response = await GetTypeLookUpResponse(content);
+            Assert.Equal("```csharp\n(parameter) string s\n```\n\n_'s' is not null here\\._", response.Markdown);
+        }
+
         private async Task<QuickInfoResponse> GetTypeLookUpResponse(string content)
         {
             TestFile testFile = new TestFile("dummy.cs", content);
