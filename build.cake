@@ -331,6 +331,14 @@ Task("CreateMSBuildFolder")
             }
         }
 
+        Information("Copying MSBuild runtime...");
+
+        var msbuildSourceFolder = CombinePaths(env.Folders.Tools, "Microsoft.Build.Runtime", "contentFiles", "any", "net472");
+        DirectoryHelper.Copy(msbuildSourceFolder, msbuildCurrentBinTargetFolder, copySubDirectories: false);
+
+        var msbuild15SourceFolder = CombinePaths(msbuildSourceFolder, "Current");
+        DirectoryHelper.Copy(msbuild15SourceFolder, msbuildCurrentTargetFolder);
+
         Information("Copying MSBuild libraries...");
 
         foreach (var library in msbuildLibraries)
@@ -457,9 +465,9 @@ Task("CreateMSBuildFolder")
         source: CombinePaths(env.Folders.Tools, "Newtonsoft.Json", "lib", "net45", "Newtonsoft.Json.dll"),
         destination: CombinePaths(msbuildCurrentBinTargetFolder, "Newtonsoft.Json.dll"));
 
-    // Copy content of Microsoft.Net.Compilers
-    Information("Copying Microsoft.Net.Compilers...");
-    var compilersSourceFolder = CombinePaths(env.Folders.Tools, "Microsoft.Net.Compilers", "tools");
+    // Copy content of Microsoft.Net.Compilers.Toolset
+    Information("Copying Microsoft.Net.Compilers.Toolset...");
+    var compilersSourceFolder = CombinePaths(env.Folders.Tools, "Microsoft.Net.Compilers.Toolset", "tasks", "net472");
     var compilersTargetFolder = CombinePaths(msbuildCurrentBinTargetFolder, "Roslyn");
 
     DirectoryHelper.Copy(compilersSourceFolder, compilersTargetFolder);
