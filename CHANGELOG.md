@@ -1,6 +1,15 @@
 # Changelog
 All changes to the project will be documented in this file.
 
+## [1.36.2] - 2020-08-18
+* Update Roslyn version and tooling to match .NET 5 Preview8 (PR: [#1897](https://github.com/OmniSharp/omnisharp-roslyn/pull/1897))
+* Updated lsp library to fix issue with signature help, etc (PR: [#1890](https://github.com/OmniSharp/omnisharp-roslyn/pull/1890))
+* Include version matched target files with minimal MSBuild (PR: [#1895](https://github.com/OmniSharp/omnisharp-roslyn/pull/1895))
+* Fix lack of trailing italics in quickinfo (PR: [#1894](https://github.com/OmniSharp/omnisharp-roslyn/pull/1894))
+* Added System.Reflection.Emit.* to embedded mono script (PR: [#1892](https://github.com/OmniSharp/omnisharp-roslyn/pull/1892))
+* Start moving omnisharp to directly using Roslyn's completion service (PR: [#1877](https://github.com/OmniSharp/omnisharp-roslyn/pull/1877))
+* Add asynchronous test completed events (PR: [#1802](https://github.com/OmniSharp/omnisharp-roslyn/pull/1802))
+
 ## [1.36.1] - 2020-08-12
 * Fix MSBuild version mismatch with new SDKs ([omnisharp-vscode#3951](https://github.com/OmniSharp/omnisharp-vscode/issues/3951), PR: [#1883](https://github.com/OmniSharp/omnisharp-roslyn/pull/1883))
 
