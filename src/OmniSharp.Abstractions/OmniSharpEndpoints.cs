@@ -47,6 +47,9 @@ namespace OmniSharp
         public const string ReAnalyze = "/reanalyze";
         public const string QuickInfo = "/quickinfo";
 
+        public const string Completion = "/completion";
+        public const string CompletionResolve = "/completion/resolve";
+
         public static class V2
         {
             public const string GetCodeActions = "/v2/getcodeactions";
