@@ -425,7 +425,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
             var description = await completionService.GetDescriptionAsync(document, lastCompletionItem);
 
             StringBuilder textBuilder = new StringBuilder();
-            MarkdownHelpers.TaggedTextToMarkdown(description.TaggedParts, textBuilder, _formattingOptions, MarkdownFormat.FirstLineAsCSharp);
+            MarkdownHelpers.TaggedTextToMarkdown(description.TaggedParts, textBuilder, _formattingOptions, MarkdownFormat.FirstLineAsCSharp, out _);
 
             request.Item.Documentation = textBuilder.ToString();
 

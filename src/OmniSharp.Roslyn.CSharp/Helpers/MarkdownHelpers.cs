@@ -33,11 +33,18 @@ namespace OmniSharp.Roslyn.CSharp.Helpers
         /// </summary>
         private const string ContainerEnd = nameof(ContainerEnd);
 
+        public static bool StartsWithNewline(this ImmutableArray<TaggedText> taggedParts)
+        {
+            return !taggedParts.IsDefaultOrEmpty
+                   && taggedParts[0].Tag switch { TextTags.LineBreak => true, ContainerStart => true, _ => false };
+        }
+
         public static void TaggedTextToMarkdown(
             ImmutableArray<TaggedText> taggedParts,
             StringBuilder stringBuilder,
             FormattingOptions formattingOptions,
-            MarkdownFormat markdownFormat)
+            MarkdownFormat markdownFormat,
+            out bool endedWithLineBreak)
         {
             bool isInCodeBlock = false;
             bool brokeLine = true;
@@ -136,6 +143,7 @@ namespace OmniSharp.Roslyn.CSharp.Helpers
                         Debug.Assert(i == taggedParts.Length);
                         stringBuilder.Append(formattingOptions.NewLine);
                         stringBuilder.Append("```");
+                        endedWithLineBreak = false;
                         return;
                     }
                 }
@@ -189,6 +197,7 @@ namespace OmniSharp.Roslyn.CSharp.Helpers
                             stringBuilder.Append('`');
                         }
                         stringBuilder.Append(current.Text);
+                        brokeLine = false;
                         break;
                 }
             }
@@ -198,10 +207,17 @@ namespace OmniSharp.Roslyn.CSharp.Helpers
                 endBlock();
             }
 
+            if (!brokeLine && markdownFormat == MarkdownFormat.Italicize)
+            {
+                stringBuilder.Append("_");
+            }
+
+            endedWithLineBreak = brokeLine;
             return;
 
             void addText(string text)
             {
+                brokeLine = false;
                 afterFirstLine = true;
                 if (!isInCodeBlock)
                 {
