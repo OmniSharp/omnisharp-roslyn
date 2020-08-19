@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Text;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Models.v1.Completion;
 using OmniSharp.Roslyn.CSharp.Services.Completion;
@@ -607,6 +608,33 @@ class C
             });
         }
 
+        [Fact]
+        public async Task InternalsVisibleTo()
+        {
+            const string source =
+                @"  /// <summary>
+                    /// A comment. <see cref=""My$$"" /> for more details
+                    /// </summary>
+                  public class MyClass1 {
+                  }
+                ";
+
+            var completions = await FindCompletionsAsync("dummy.cs", source);
+            Assert.Contains(completions.Items, c => c.Label == "MyClass1");
+            Assert.All(completions.Items, c =>
+            {
+                switch (c.Label)
+                {
+                    case "MyClass1":
+                        Assert.True(c.Preselect);
+                        break;
+                    default:
+                        Assert.False(c.Preselect);
+                        break;
+                }
+            });
+        }
+
         [Theory]
         [InlineData("dummy.cs")]
         [InlineData("dummy.csx")]
@@ -905,6 +933,31 @@ class C
             const string input = @"
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo(""$$";
 
+            var completions = await FindCompletionsAsync("dummy.cs", input);
+            Assert.Single(completions.Items);
+            Assert.Equal("AssemblyNameVal", completions.Items[0].Label);
+            Assert.Equal("AssemblyNameVal", completions.Items[0].InsertText);
+        }
+
+        [Fact]
+        public async Task InternalsVisibleToCompletionSkipsMiscProject()
+        {
+            var projectInfo = ProjectInfo.Create(
+                ProjectId.CreateNewId(),
+                VersionStamp.Create(),
+                "ProjectNameVal",
+                "AssemblyNameVal",
+                LanguageNames.CSharp,
+                "/path/to/project.csproj");
+
+            SharedOmniSharpTestHost.Workspace.AddProject(projectInfo);
+
+            var miscFile = "class Foo {}";
+            var miscFileLoader = TextLoader.From(TextAndVersion.Create(SourceText.From(miscFile), VersionStamp.Create()));
+            SharedOmniSharpTestHost.Workspace.TryAddMiscellaneousDocument("dummy.cs", miscFileLoader, LanguageNames.CSharp);
+
+            const string input = @"
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo(""$$";
 
             var completions = await FindCompletionsAsync("dummy.cs", input);
             Assert.Single(completions.Items);
