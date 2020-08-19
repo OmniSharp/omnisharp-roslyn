@@ -219,14 +219,13 @@ namespace OmniSharp
 
         private ProjectInfo CreateMiscFilesProject(string language)
         {
-            const string assemblyName = "OmniSharpMiscellaneousFiles";
             var projectInfo = ProjectInfo.Create(
                    id: ProjectId.CreateNewId(),
                    version: VersionStamp.Create(),
-                   name: $"{assemblyName}.csproj",
+                   name: $"{Configuration.OmniSharpMiscProjectName}.csproj",
                    metadataReferences: DefaultMetadataReferenceHelper.GetDefaultMetadataReferenceLocations()
                                        .Select(loc => MetadataReference.CreateFromFile(loc)),
-                   assemblyName: assemblyName,
+                   assemblyName: Configuration.OmniSharpMiscProjectName,
                    language: language);
 
             AddProject(projectInfo);

@@ -106,11 +106,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
 
         public static bool IsVisible(this CompletionItem item)
         {
-            var providerName = GetProviderName(item);
             switch (item.GetProviderName())
             {
-                case CompletionItemExtensions.InternalsVisibleToCompletionProvider:
-                    if (item.DisplayText == "OmniSharpMiscellaneousFiles") return false;
+                case InternalsVisibleToCompletionProvider:
+                    if (item.DisplayText == Configuration.OmniSharpMiscProjectName) return false;
                     break;
             }
 
