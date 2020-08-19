@@ -131,13 +131,13 @@ namespace OmniSharp
             OnMetadataReferenceRemoved(projectId, metadataReference);
         }
 
-        public DocumentId TryAddMiscellaneousDocument(string filePath, string language)
+        public DocumentId TryAddMiscellaneousDocument(string filePath, TextLoader loader, string language)
         {
             if (GetDocument(filePath) != null)
                 return null; //if the workspace already knows about this document then it is not a miscellaneous document
 
             var projectInfo = miscDocumentsProjectInfos.GetOrAdd(language, (lang) => CreateMiscFilesProject(lang));
-            var documentId = AddDocument(projectInfo.Id, filePath);
+            var documentId = AddDocument(projectInfo.Id, filePath, loader);
             _logger.LogInformation($"Miscellaneous file: {filePath} added to workspace");
 
             if (!EditorConfigEnabled)
@@ -155,6 +155,11 @@ namespace OmniSharp
             }
 
             return documentId;
+        }
+
+        public DocumentId TryAddMiscellaneousDocument(string filePath, string language)
+        {
+            return TryAddMiscellaneousDocument(filePath, new OmniSharpTextLoader(filePath), language);
         }
 
         public bool TryRemoveMiscellaneousDocument(string filePath)
@@ -214,11 +219,11 @@ namespace OmniSharp
 
         private ProjectInfo CreateMiscFilesProject(string language)
         {
-            string assemblyName = Guid.NewGuid().ToString("N");
+            const string assemblyName = "OmniSharpMiscellaneousFiles";
             var projectInfo = ProjectInfo.Create(
                    id: ProjectId.CreateNewId(),
                    version: VersionStamp.Create(),
-                   name: "MiscellaneousFiles.csproj",
+                   name: $"{assemblyName}.csproj",
                    metadataReferences: DefaultMetadataReferenceHelper.GetDefaultMetadataReferenceLocations()
                                        .Select(loc => MetadataReference.CreateFromFile(loc)),
                    assemblyName: assemblyName,
