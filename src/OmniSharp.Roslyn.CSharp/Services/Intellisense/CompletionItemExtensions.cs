@@ -39,15 +39,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
             _getProviderName = typeof(CompletionItem).GetProperty(ProviderName, BindingFlags.NonPublic | BindingFlags.Instance);
         }
 
-        internal static string GetProviderName(this CompletionItem item)
-        {
-            return (string)_getProviderName.GetValue(item);
-        }
+        internal static string GetProviderName(this CompletionItem item) => (string)_getProviderName.GetValue(item);
 
-        public static bool IsObjectCreationCompletionItem(this CompletionItem item)
-        {
-            return GetProviderName(item) == ObjectCreationCompletionProvider;
-        }
+        public static bool IsObjectCreationCompletionItem(this CompletionItem item) => GetProviderName(item) == ObjectCreationCompletionProvider;
 
         public static async Task<IEnumerable<ISymbol>> GetCompletionSymbolsAsync(this CompletionItem completionItem, IEnumerable<ISymbol> recommendedSymbols, Document document)
         {
@@ -81,10 +75,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
             return provider == NamedParameterCompletionProvider || provider == OverrideCompletionProvider || provider == PartialMethodCompletionProvider;
         }
 
-        public static bool TryGetInsertionText(this CompletionItem completionItem, out string insertionText)
-        {
-            return completionItem.Properties.TryGetValue(InsertionText, out insertionText);
-        }
+        public static bool TryGetInsertionText(this CompletionItem completionItem, out string insertionText) => completionItem.Properties.TryGetValue(InsertionText, out insertionText);
 
         public static AutoCompleteResponse ToAutoCompleteResponse(this CompletionItem item, bool wantKind, bool isSuggestionMode, bool preselect)
         {
@@ -111,6 +102,19 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
             }
 
             return response;
+        }
+
+        public static bool IsVisible(this CompletionItem item)
+        {
+            var providerName = GetProviderName(item);
+            switch (item.GetProviderName())
+            {
+                case CompletionItemExtensions.InternalsVisibleToCompletionProvider:
+                    if (item.DisplayText == "OmniSharpMiscellaneousFiles") return false;
+                    break;
+            }
+
+            return true;
         }
     }
 }
