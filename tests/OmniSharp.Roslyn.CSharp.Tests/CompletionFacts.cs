@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
@@ -14,6 +16,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 {
     public class CompletionFacts : AbstractTestFixture
     {
+        private const int ImportCompletionTimeout = 1000;
         private readonly ILogger _logger;
 
         private string EndpointName => OmniSharpEndpoints.Completion;
@@ -38,7 +41,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                         }
                     }";
 
-            var completions = await FindCompletionsAsync(filename, input);
+            var completions = await FindCompletionsAsync(filename, input, SharedOmniSharpTestHost);
             Assert.Contains("Foo", completions.Items.Select(c => c.Label));
             Assert.Contains("Foo", completions.Items.Select(c => c.InsertText));
         }
@@ -57,7 +60,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                         }
                     }";
 
-            var completions = await FindCompletionsAsync(filename, input);
+            var completions = await FindCompletionsAsync(filename, input, SharedOmniSharpTestHost);
             Assert.Contains("foo", completions.Items.Select(c => c.Label));
             Assert.Contains("foo", completions.Items.Select(c => c.InsertText));
         }
@@ -79,11 +82,11 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                         }
                     }";
 
-            var completions = await FindCompletionsAsync(filename, input);
+            var completions = await FindCompletionsAsync(filename, input, SharedOmniSharpTestHost);
             Assert.All(completions.Items, c => Assert.Null(c.Documentation));
 
             var fooCompletion = completions.Items.Single(c => c.Label == "Foo");
-            var resolvedCompletion = await ResolveCompletionAsync(fooCompletion);
+            var resolvedCompletion = await ResolveCompletionAsync(fooCompletion, SharedOmniSharpTestHost);
             Assert.Equal("```csharp\nvoid Class1.Foo([int bar = 1])\n```\n\nSome Text", resolvedCompletion.Item.Documentation);
         }
 
@@ -100,8 +103,239 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                         }
                     }";
 
-            var completions = await FindCompletionsAsync(filename, input);
+            var completions = await FindCompletionsAsync(filename, input, SharedOmniSharpTestHost);
             Assert.Contains("TryParse", completions.Items.Select(c => c.InsertText));
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task ImportCompletionTurnedOff(string filename)
+        {
+            const string input =
+@"public class Class1 {
+    public Class1()
+    {
+        Gui$$
+    }
+}";
+
+            var completions = await FindCompletionsAsync(filename, input, SharedOmniSharpTestHost);
+            Assert.False(completions.IsIncomplete);
+            Assert.DoesNotContain("Guid", completions.Items.Select(c => c.InsertText));
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task ImportCompletionResolvesOnSubsequentQueries(string filename)
+        {
+            const string input =
+@"public class Class1 {
+    public Class1()
+    {
+        Gui$$
+    }
+}";
+
+            using var host = GetImportCompletionHost();
+
+            // First completion request should kick off the task to update the completion cache.
+            var completions = await FindCompletionsAsync(filename, input, host);
+            Assert.True(completions.IsIncomplete);
+            Assert.DoesNotContain("Guid", completions.Items.Select(c => c.InsertText));
+
+            // Populating the completion cache should take no more than a few ms, don't let it take too
+            // long
+            CancellationTokenSource cts = new CancellationTokenSource(millisecondsDelay: ImportCompletionTimeout);
+            await Task.Run(async () =>
+            {
+                while (completions.IsIncomplete)
+                {
+                    completions = await FindCompletionsAsync(filename, input, host);
+                    cts.Token.ThrowIfCancellationRequested();
+                }
+            }, cts.Token);
+
+            Assert.False(completions.IsIncomplete);
+            Assert.Contains("Guid", completions.Items.Select(c => c.InsertText));
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task ImportCompletion_LocalsPrioritizedOverImports(string filename)
+        {
+
+            const string input =
+@"public class Class1 {
+    public Class1()
+    {
+        string guid;
+        Gui$$
+    }
+}";
+
+            using var host = GetImportCompletionHost();
+            var completions = await FindCompletionsWithImportedAsync(filename, input, host);
+            Assert.True(completions.Items.First(c => c.InsertText == "guid").Data < completions.Items.First(c => c.InsertText == "Guid").Data);
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task ImportCompletions_IncludesExtensionMethods(string filename)
+        {
+            const string input =
+@"namespace N1
+{
+    public class C1
+    {
+        public void M(object o)
+        {
+            o.$$
+        }
+    }
+}
+namespace N2
+{
+    public static class ObjectExtensions
+    {
+        public static void Test(this object o)
+        {
+        }
+    }
+}";
+
+            using var host = GetImportCompletionHost();
+            var completions = await FindCompletionsWithImportedAsync(filename, input, host);
+            Assert.Contains("Test", completions.Items.Select(c => c.InsertText));
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task ImportCompletion_ResolveAddsImportEdit(string filename)
+        {
+            const string input =
+@"namespace N1
+{
+    public class C1
+    {
+        public void M(object o)
+        {
+            o.$$
+        }
+    }
+}
+namespace N2
+{
+    public static class ObjectExtensions
+    {
+        public static void Test(this object o)
+        {
+        }
+    }
+}";
+
+            using var host = GetImportCompletionHost();
+            var completions = await FindCompletionsWithImportedAsync(filename, input, host);
+            var resolved = await ResolveCompletionAsync(completions.Items.First(c => c.InsertText == "Test"), host);
+
+            Assert.Single(resolved.Item.AdditionalTextEdits.Value);
+            var additionalEdit = resolved.Item.AdditionalTextEdits.Value[0];
+            Assert.Equal(NormalizeNewlines("using N2;\n\nnamespace N1\r\n{\r\n    public class C1\r\n    {\r\n        public void M(object o)\r\n        {\r\n            o"),
+                         additionalEdit.NewText);
+            Assert.Equal(0, additionalEdit.StartLine);
+            Assert.Equal(0, additionalEdit.StartColumn);
+            Assert.Equal(6, additionalEdit.EndLine);
+            Assert.Equal(13, additionalEdit.EndColumn);
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task SelectsLastInstanceOfCompletion(string filename)
+        {
+            const string input =
+@"namespace N1
+{
+    public class C1
+    {
+        public void M(object o)
+        {
+            /*Guid*/$$//Guid
+        }
+    }
+}
+namespace N2
+{
+    public static class ObjectExtensions
+    {
+        public static void Test(this object o)
+        {
+        }
+    }
+}";
+
+            using var host = GetImportCompletionHost();
+            var completions = await FindCompletionsWithImportedAsync(filename, input, host);
+            var resolved = await ResolveCompletionAsync(completions.Items.First(c => c.InsertText == "Guid"), host);
+
+            Assert.Single(resolved.Item.AdditionalTextEdits.Value);
+            var additionalEdit = resolved.Item.AdditionalTextEdits.Value[0];
+            Assert.Equal(NormalizeNewlines("using System;\n\nnamespace N1\r\n{\r\n    public class C1\r\n    {\r\n        public void M(object o)\r\n        {\r\n            /*Guid*"),
+                         additionalEdit.NewText);
+            Assert.Equal(0, additionalEdit.StartLine);
+            Assert.Equal(0, additionalEdit.StartColumn);
+            Assert.Equal(6, additionalEdit.EndLine);
+            Assert.Equal(19, additionalEdit.EndColumn);
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task UsingsAddedInOrder(string filename)
+        {
+
+            const string input =
+@"using N1;
+using N3;
+namespace N1
+{
+    public class C1
+    {
+        public void M(object o)
+        {
+            $$
+        }
+    }
+}
+namespace N2
+{
+    public class C2
+    {
+    }
+}
+namespace N3
+{
+    public class C3
+    {
+    }
+}";
+
+            using var host = GetImportCompletionHost();
+            var completions = await FindCompletionsWithImportedAsync(filename, input, host);
+            var resolved = await ResolveCompletionAsync(completions.Items.First(c => c.InsertText == "C2"), host);
+
+            Assert.Single(resolved.Item.AdditionalTextEdits.Value);
+            var additionalEdit = resolved.Item.AdditionalTextEdits.Value[0];
+            Assert.Equal(NormalizeNewlines("N2;\nusing N3;\r\nnamespace N1\r\n{\r\n    public class C1\r\n    {\r\n        public void M(object o)\r\n        {\r\n           "),
+                         additionalEdit.NewText);
+            Assert.Equal(1, additionalEdit.StartLine);
+            Assert.Equal(6, additionalEdit.StartColumn);
+            Assert.Equal(8, additionalEdit.EndLine);
+            Assert.Equal(11, additionalEdit.EndColumn);
         }
 
         [Theory]
@@ -117,7 +351,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                         }
                     }";
 
-            var completions = await FindCompletionsAsync(filename, input);
+            var completions = await FindCompletionsAsync(filename, input, SharedOmniSharpTestHost);
             Assert.Contains("NewGuid", completions.Items.Select(c => c.Label));
         }
 
@@ -134,7 +368,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                         }
                     }";
 
-            var completions = await FindCompletionsAsync(filename, input);
+            var completions = await FindCompletionsAsync(filename, input, SharedOmniSharpTestHost);
             Assert.Contains("NewGuid", completions.Items.Select(c => c.Label));
         }
 
@@ -151,11 +385,11 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                         }
                     }";
 
-            var completions = await FindCompletionsAsync(filename, input);
+            var completions = await FindCompletionsAsync(filename, input, SharedOmniSharpTestHost);
             Assert.All(completions.Items, c => Assert.Null(c.Documentation));
 
             var fooCompletion = completions.Items.Single(c => c.Label == "NewGuid");
-            var resolvedCompletion = await ResolveCompletionAsync(fooCompletion);
+            var resolvedCompletion = await ResolveCompletionAsync(fooCompletion, SharedOmniSharpTestHost);
             Assert.Equal("```csharp\nSystem.Guid System.Guid.NewGuid()\n```", resolvedCompletion.Item.Documentation);
         }
 
@@ -174,7 +408,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                         }
                     }";
 
-            var completions = await FindCompletionsAsync(filename, input);
+            var completions = await FindCompletionsAsync(filename, input, SharedOmniSharpTestHost);
             Assert.Contains(completions.Items, c => c.Label == "myvar");
             Assert.Contains(completions.Items, c => c.Label == "MyClass1");
             Assert.All(completions.Items, c =>
@@ -206,7 +440,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                         }
                     }";
 
-            var completions = await FindCompletionsAsync(filename, input);
+            var completions = await FindCompletionsAsync(filename, input, SharedOmniSharpTestHost);
             Assert.Contains(completions.Items, c => c.Label == "myvar");
             Assert.Contains(completions.Items, c => c.Label == "MyClass1");
             Assert.All(completions.Items, c =>
@@ -237,7 +471,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                         }
                     }";
 
-            var completions = await FindCompletionsAsync(filename, source);
+            var completions = await FindCompletionsAsync(filename, source, SharedOmniSharpTestHost);
             Assert.Empty(completions.Items);
         }
 
@@ -254,7 +488,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     [B$$
                     public class Foo {}";
 
-            var completions = await FindCompletionsAsync(filename, source);
+            var completions = await FindCompletionsAsync(filename, source, SharedOmniSharpTestHost);
             Assert.Contains(completions.Items, c => c.Label == "Bar");
             Assert.Contains(completions.Items, c => c.InsertText == "Bar");
             Assert.All(completions.Items, c =>
@@ -291,7 +525,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     }
                 ";
 
-            var completions = await FindCompletionsAsync(filename, source);
+            var completions = await FindCompletionsAsync(filename, source, SharedOmniSharpTestHost);
             Assert.Single(completions.Items);
             Assert.Equal("Foo", completions.Items[0].Label);
             Assert.Equal("Foo", completions.Items[0].InsertText);
@@ -317,7 +551,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     }
                 ";
 
-            var completions = await FindCompletionsAsync(filename, source);
+            var completions = await FindCompletionsAsync(filename, source, SharedOmniSharpTestHost);
             var item = completions.Items.First(c => c.Label == "text:");
             Assert.NotNull(item);
             Assert.Equal("text", item.InsertText);
@@ -348,7 +582,7 @@ public class MyClass
 }
                 ";
 
-            var completions = await FindCompletionsAsync(filename, source);
+            var completions = await FindCompletionsAsync(filename, source, SharedOmniSharpTestHost);
             Assert.Equal(new[] { "myClass", "my", "@class", "MyClass", "My", "Class", "GetMyClass", "GetMy", "GetClass" },
                          completions.Items.Select(c => c.Label));
         }
@@ -365,13 +599,13 @@ class Foo
     public virtual void Test(string text, string moreText) {}
 }
 
-class FooChild : Foo 
+class FooChild : Foo
 {
     override $$
 }
 ";
 
-            var completions = await FindCompletionsAsync(filename, source);
+            var completions = await FindCompletionsAsync(filename, source, SharedOmniSharpTestHost);
             Assert.Equal(new[] { "Equals(object obj)", "GetHashCode()", "Test(string text)", "Test(string text, string moreText)", "ToString()" },
                          completions.Items.Select(c => c.Label));
             Assert.Equal(new[] { "Equals(object obj)\n    {\n        return base.Equals(obj);$0\n    \\}",
@@ -425,7 +659,7 @@ namespace N3
     }
 }";
 
-            var completions = await FindCompletionsAsync(filename, source);
+            var completions = await FindCompletionsAsync(filename, source, SharedOmniSharpTestHost);
             Assert.Equal(new[] { "Equals(object obj)", "GetHashCode()", "GetN1()", "ToString()" },
                          completions.Items.Select(c => c.Label));
 
@@ -465,7 +699,7 @@ class C
     public override $$
 }";
 
-            var completions = await FindCompletionsAsync(filename, source);
+            var completions = await FindCompletionsAsync(filename, source, SharedOmniSharpTestHost);
             Assert.Equal(new[] { "Equals(object obj)", "GetHashCode()", "ToString()" },
                          completions.Items.Select(c => c.Label));
 
@@ -490,7 +724,7 @@ class C
     public override bool $$
 }";
 
-            var completions = await FindCompletionsAsync(filename, source);
+            var completions = await FindCompletionsAsync(filename, source, SharedOmniSharpTestHost);
             Assert.Equal(new[] { "Equals(object obj)" },
                          completions.Items.Select(c => c.Label));
 
@@ -498,6 +732,51 @@ class C
                          completions.Items.Select(c => c.InsertText));
 
             Assert.All(completions.Items.Select(c => c.AdditionalTextEdits), a => Assert.Null(a));
+            Assert.All(completions.Items, c => Assert.Equal(InsertTextFormat.Snippet, c.InsertTextFormat));
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task OverrideSignatures_TestTest(string filename)
+        {
+            const string source = @"
+class Test {}
+abstract class Base
+{
+    protected abstract Test Test();
+}
+class Derived : Base
+{
+    override $$
+}";
+
+            var completions = await FindCompletionsAsync(filename, source, SharedOmniSharpTestHost);
+            Assert.Equal(new[] { "Equals(object obj)", "GetHashCode()", "Test()", "ToString()" },
+                         completions.Items.Select(c => c.Label));
+
+            Assert.Equal(new[] { "Equals(object obj)\n    {\n        return base.Equals(obj);$0\n    \\}",
+                                 "GetHashCode()\n    {\n        return base.GetHashCode();$0\n    \\}",
+                                 "Test()\n    {\n        throw new System.NotImplementedException();$0\n    \\}",
+                                 "ToString()\n    {\n        return base.ToString();$0\n    \\}"
+                               },
+                         completions.Items.Select(c => c.InsertText));
+
+            Assert.Equal(new[] { "public override bool",
+                                 "public override int",
+                                 "protected override Test",
+                                 "public override string"},
+                        completions.Items.Select(c => c.AdditionalTextEdits.Value.Single().NewText));
+
+            Assert.All(completions.Items.Select(c => c.AdditionalTextEdits.Value.Single()),
+                       r =>
+                       {
+                           Assert.Equal(8, r.StartLine);
+                           Assert.Equal(4, r.StartColumn);
+                           Assert.Equal(8, r.EndLine);
+                           Assert.Equal(12, r.EndColumn);
+                       });
+
             Assert.All(completions.Items, c => Assert.Equal(InsertTextFormat.Snippet, c.InsertTextFormat));
         }
 
@@ -517,7 +796,7 @@ partial class C
 }
 ";
 
-            var completions = await FindCompletionsAsync(filename, source);
+            var completions = await FindCompletionsAsync(filename, source, SharedOmniSharpTestHost);
             Assert.Equal(new[] { "M1(string param)" },
                          completions.Items.Select(c => c.Label));
 
@@ -539,7 +818,7 @@ class C
     override Ge$$
 }";
 
-            var completions = await FindCompletionsAsync(filename, source);
+            var completions = await FindCompletionsAsync(filename, source, SharedOmniSharpTestHost);
             Assert.Equal(new[] { "Equals(object obj)", "GetHashCode()", "ToString()" },
                          completions.Items.Select(c => c.Label));
 
@@ -592,7 +871,7 @@ class C
                   }
                 ";
 
-            var completions = await FindCompletionsAsync(filename, source);
+            var completions = await FindCompletionsAsync(filename, source, SharedOmniSharpTestHost);
             Assert.Contains(completions.Items, c => c.Label == "MyClass1");
             Assert.All(completions.Items, c =>
             {
@@ -621,7 +900,7 @@ class C
                   }
                 ";
 
-            var completions = await FindCompletionsAsync(filename, source);
+            var completions = await FindCompletionsAsync(filename, source, SharedOmniSharpTestHost);
             Assert.Equal(new[] { "!--$0-->",
                                  "![CDATA[$0]]>",
                                  "c",
@@ -642,7 +921,7 @@ class C
             const string source =
                 "Prin$$";
 
-            var completions = await FindCompletionsAsync("dummy.csx", source);
+            var completions = await FindCompletionsAsync("dummy.csx", source, SharedOmniSharpTestHost);
             Assert.Contains(completions.Items, c => c.Label == "Print");
             Assert.Contains(completions.Items, c => c.Label == "PrintOptions");
         }
@@ -668,7 +947,7 @@ class C
 }
 ";
 
-            var completions = await FindCompletionsAsync(filename, source);
+            var completions = await FindCompletionsAsync(filename, source, SharedOmniSharpTestHost);
 
             Assert.True(completions.Items.All(c => c.IsSuggestionMode()));
         }
@@ -691,7 +970,7 @@ class C
 }
 ";
 
-            var completions = await FindCompletionsAsync(filename, source);
+            var completions = await FindCompletionsAsync(filename, source, SharedOmniSharpTestHost);
 
             Assert.True(completions.Items.All(c => c.IsSuggestionMode()));
         }
@@ -716,7 +995,7 @@ class C
 }
 ";
 
-            var completions = await FindCompletionsAsync(filename, source);
+            var completions = await FindCompletionsAsync(filename, source, SharedOmniSharpTestHost);
 
             Assert.True(completions.Items.All(c => !c.IsSuggestionMode()));
         }
@@ -739,7 +1018,7 @@ class C
 }
 ";
 
-            var completions = await FindCompletionsAsync(filename, source);
+            var completions = await FindCompletionsAsync(filename, source, SharedOmniSharpTestHost);
 
             Assert.True(completions.Items.All(c => !c.IsSuggestionMode()));
         }
@@ -755,7 +1034,7 @@ class C
                   tuple.n$$
                 ";
 
-            var completions = await FindCompletionsAsync("dummy.csx", source);
+            var completions = await FindCompletionsAsync("dummy.csx", source, SharedOmniSharpTestHost);
             Assert.Contains(completions.Items, c => c.Label == "number1");
             Assert.Contains(completions.Items, c => c.Label == "number2");
             Assert.All(completions.Items, c =>
@@ -788,7 +1067,7 @@ class C
                   }
                 ";
 
-            var completions = await FindCompletionsAsync("dummy.csx", source);
+            var completions = await FindCompletionsAsync("dummy.csx", source, SharedOmniSharpTestHost);
             Assert.Contains(completions.Items, c => c.Label == "myValue");
             Assert.All(completions.Items, c =>
             {
@@ -821,7 +1100,7 @@ class C
                   points[0].Po$$
                 ";
 
-            var completions = await FindCompletionsAsync("dummy.csx", source);
+            var completions = await FindCompletionsAsync("dummy.csx", source, SharedOmniSharpTestHost);
             Assert.Contains(completions.Items, c => c.Label == "PositionX");
             Assert.Contains(completions.Items, c => c.Label == "PositionY");
             Assert.All(completions.Items, c =>
@@ -852,7 +1131,7 @@ class C
     }
 }";
 
-            var completions = await FindCompletionsAsync(filename, input, triggerChar: ' ');
+            var completions = await FindCompletionsAsync(filename, input, SharedOmniSharpTestHost, triggerChar: ' ');
             Assert.NotEmpty(completions.Items);
         }
 
@@ -869,7 +1148,7 @@ class C
     }
 }";
 
-            var completions = await FindCompletionsAsync(filename, input, triggerChar: ' ');
+            var completions = await FindCompletionsAsync(filename, input, SharedOmniSharpTestHost, triggerChar: ' ');
             Assert.NotEmpty(completions.Items.Where(completion => completion.Preselect == true));
         }
 
@@ -886,7 +1165,7 @@ class C
     }
 }";
 
-            var completions = await FindCompletionsAsync(filename, input, triggerChar: ' ');
+            var completions = await FindCompletionsAsync(filename, input, SharedOmniSharpTestHost, triggerChar: ' ');
             Assert.Empty(completions.Items);
         }
 
@@ -932,7 +1211,7 @@ class C
             const string input = @"
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo(""$$";
 
-            var completions = await FindCompletionsAsync("dummy.cs", input);
+            var completions = await FindCompletionsAsync("dummy.cs", input, SharedOmniSharpTestHost);
             Assert.Single(completions.Items);
             Assert.Equal("AssemblyNameVal", completions.Items[0].Label);
             Assert.Equal("AssemblyNameVal", completions.Items[0].InsertText);
@@ -941,10 +1220,11 @@ class C
         private CompletionService GetCompletionService(OmniSharpTestHost host)
             => host.GetRequestHandler<CompletionService>(EndpointName);
 
-        protected async Task<CompletionResponse> FindCompletionsAsync(string filename, string source, char? triggerChar = null)
+        protected async Task<CompletionResponse> FindCompletionsAsync(string filename, string source, OmniSharpTestHost testHost, char? triggerChar = null)
         {
             var testFile = new TestFile(filename, source);
-            SharedOmniSharpTestHost.AddFilesToWorkspace(testFile);
+
+            testHost.AddFilesToWorkspace(testFile);
             var point = testFile.Content.GetPointFromPosition();
 
             var request = new CompletionRequest
@@ -957,13 +1237,47 @@ class C
                 TriggerCharacter = triggerChar
             };
 
-            var requestHandler = GetCompletionService(SharedOmniSharpTestHost);
+            var requestHandler = GetCompletionService(testHost);
 
             return await requestHandler.Handle(request);
         }
 
-        protected async Task<CompletionResolveResponse> ResolveCompletionAsync(CompletionItem completionItem)
-            => await GetCompletionService(SharedOmniSharpTestHost).Handle(new CompletionResolveRequest { Item = completionItem });
+        private async Task<CompletionResponse> FindCompletionsWithImportedAsync(string filename, string source, OmniSharpTestHost host)
+        {
+            var completions = await FindCompletionsAsync(filename, source, host);
+            if (!completions.IsIncomplete)
+            {
+                return completions;
+            }
+
+            // Populating the completion list should take no more than a few ms, don't let it take too
+            // long
+            CancellationTokenSource cts = new CancellationTokenSource(millisecondsDelay: ImportCompletionTimeout);
+            await Task.Run(async () =>
+            {
+                while (completions.IsIncomplete)
+                {
+                    completions = await FindCompletionsAsync(filename, source, host);
+                    cts.Token.ThrowIfCancellationRequested();
+                }
+            }, cts.Token);
+
+            Assert.False(completions.IsIncomplete);
+            return completions;
+        }
+
+        protected async Task<CompletionResolveResponse> ResolveCompletionAsync(CompletionItem completionItem, OmniSharpTestHost testHost)
+            => await GetCompletionService(testHost).Handle(new CompletionResolveRequest { Item = completionItem });
+
+        private OmniSharpTestHost GetImportCompletionHost()
+        {
+            var testHost = CreateOmniSharpHost(configurationData: new[] { new KeyValuePair<string, string>("RoslynExtensionsOptions:EnableImportCompletion", "true") });
+            testHost.AddFilesToWorkspace();
+            return testHost;
+        }
+
+        private static string NormalizeNewlines(string str)
+            => str.Replace("\r\n", Environment.NewLine);
     }
 
     internal static class CompletionResponseExtensions
