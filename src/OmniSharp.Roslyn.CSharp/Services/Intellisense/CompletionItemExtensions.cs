@@ -103,17 +103,5 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
 
             return response;
         }
-
-        public static bool IsVisible(this CompletionItem item)
-        {
-            switch (item.GetProviderName())
-            {
-                case InternalsVisibleToCompletionProvider:
-                    if (item.DisplayText == Configuration.OmniSharpMiscProjectName) return false;
-                    break;
-            }
-
-            return true;
-        }
     }
 }
