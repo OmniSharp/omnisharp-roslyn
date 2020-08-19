@@ -608,33 +608,6 @@ class C
             });
         }
 
-        [Fact]
-        public async Task InternalsVisibleTo()
-        {
-            const string source =
-                @"  /// <summary>
-                    /// A comment. <see cref=""My$$"" /> for more details
-                    /// </summary>
-                  public class MyClass1 {
-                  }
-                ";
-
-            var completions = await FindCompletionsAsync("dummy.cs", source);
-            Assert.Contains(completions.Items, c => c.Label == "MyClass1");
-            Assert.All(completions.Items, c =>
-            {
-                switch (c.Label)
-                {
-                    case "MyClass1":
-                        Assert.True(c.Preselect);
-                        break;
-                    default:
-                        Assert.False(c.Preselect);
-                        break;
-                }
-            });
-        }
-
         [Theory]
         [InlineData("dummy.cs")]
         [InlineData("dummy.csx")]
