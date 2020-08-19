@@ -9,7 +9,6 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Completion;
-using Microsoft.CodeAnalysis.Options;
 using Microsoft.CodeAnalysis.Tags;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.Extensions.Logging;
@@ -432,7 +431,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
 
             switch (lastCompletionItem.GetProviderName())
             {
-
                 case CompletionItemExtensions.ExtensionMethodImportCompletionProvider:
                 case CompletionItemExtensions.TypeImportCompletionProvider:
                     var sourceText = await document.GetTextAsync();
