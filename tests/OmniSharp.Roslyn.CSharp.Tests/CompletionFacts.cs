@@ -13,8 +13,9 @@ using Xunit.Abstractions;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
-    public class CompletionFacts : AbstractTestFixture 
+    public class CompletionFacts : AbstractTestFixture
     {
+        private const int ImportCompletionTimeout = 1000;
         private readonly ILogger _logger;
 
         private string EndpointName => OmniSharpEndpoints.Completion;
@@ -145,7 +146,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             // Populating the completion cache should take no more than a few ms, don't let it take too
             // long
-            CancellationTokenSource cts = new CancellationTokenSource(millisecondsDelay: 100);
+            CancellationTokenSource cts = new CancellationTokenSource(millisecondsDelay: ImportCompletionTimeout);
             await Task.Run(async () =>
             {
                 while (completions.IsIncomplete)
@@ -597,7 +598,7 @@ class Foo
     public virtual void Test(string text, string moreText) {}
 }
 
-class FooChild : Foo 
+class FooChild : Foo
 {
     override $$
 }
@@ -1225,7 +1226,7 @@ class C
 
             // Populating the completion list should take no more than a few ms, don't let it take too
             // long
-            CancellationTokenSource cts = new CancellationTokenSource(millisecondsDelay: 100);
+            CancellationTokenSource cts = new CancellationTokenSource(millisecondsDelay: ImportCompletionTimeout);
             await Task.Run(async () =>
             {
                 while (completions.IsIncomplete)
