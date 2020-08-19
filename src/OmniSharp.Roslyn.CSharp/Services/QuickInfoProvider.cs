@@ -4,7 +4,6 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.QuickInfo;
-using Microsoft.CodeAnalysis.Text;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Extensions;
 using OmniSharp.Mef;
@@ -71,19 +70,11 @@ namespace OmniSharp.Roslyn.CSharp.Services
 
             var finalTextBuilder = new StringBuilder();
 
+            bool lastSectionHadLineBreak = true;
             var description = quickInfo.Sections.FirstOrDefault(s => s.Kind == QuickInfoSectionKinds.Description);
             if (description is object)
             {
                 appendSection(description, MarkdownFormat.AllTextAsCSharp);
-
-                // The description doesn't include a set of newlines at the end, regardless
-                // of whether there are more sections, so if there are more sections we need
-                // to ensure they're separated.
-                if (quickInfo.Sections.Length > 1)
-                {
-                    finalTextBuilder.Append(_formattingOptions.NewLine);
-                    finalTextBuilder.Append(_formattingOptions.NewLine);
-                }
             }
 
             var summary = quickInfo.Sections.FirstOrDefault(s => s.Kind == QuickInfoSectionKinds.DocumentationComments);
@@ -127,7 +118,12 @@ namespace OmniSharp.Roslyn.CSharp.Services
 
             void appendSection(QuickInfoSection section, MarkdownFormat format)
             {
-                MarkdownHelpers.TaggedTextToMarkdown(section.TaggedParts, finalTextBuilder, _formattingOptions, format);
+                if (!lastSectionHadLineBreak && !section.TaggedParts.StartsWithNewline())
+                {
+                    finalTextBuilder.Append(_formattingOptions.NewLine);
+                    finalTextBuilder.Append(_formattingOptions.NewLine);
+                }
+                MarkdownHelpers.TaggedTextToMarkdown(section.TaggedParts, finalTextBuilder, _formattingOptions, format, out lastSectionHadLineBreak);
             }
         }
     }
