@@ -157,16 +157,15 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
             // that completion provider is still creating the cache. We'll mark this completion list as not completed, and the
             // editor will ask again when the user types more. By then, hopefully the cache will have populated and we can mark
             // the completion as done.
-            bool isIncomplete = expandedItemsAvailable &&
-                                _workspace.Options.GetOption(CompletionItemExtensions.ShowItemsFromUnimportedNamespaces, LanguageNames.CSharp) == true;
+            bool seenUnimportedCompletions = false;
+            bool expectingImportedItems = expandedItemsAvailable && _workspace.Options.GetOption(CompletionItemExtensions.ShowItemsFromUnimportedNamespaces, LanguageNames.CSharp) == true;
 
             for (int i = 0; i < completions.Items.Length; i++)
             {
                 var completion = completions.Items[i];
-                var commitCharacters = buildCommitCharacters(completions, completion.Rules.CommitCharacterRules, triggerCharactersBuilder);
-
                 var insertTextFormat = InsertTextFormat.PlainText;
                 ImmutableArray<LinePositionSpanTextChange>? additionalTextEdits = null;
+                char sortTextPrepend = '0';
 
                 if (!completion.TryGetInsertionText(out string insertText))
                 {
@@ -254,7 +253,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                             // This is technically slightly incorrect: extension method completion can provide
                             // partial results. However, this should only affect the first completion session or
                             // two and isn't a big problem in practice.
-                            isIncomplete = false;
+                            seenUnimportedCompletions = true;
+                            sortTextPrepend = '1';
                             goto default;
 
                         default:
@@ -263,13 +263,16 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                     }
                 }
 
+                var commitCharacters = buildCommitCharacters(completions, completion.Rules.CommitCharacterRules, triggerCharactersBuilder);
+
                 completionsBuilder.Add(new CompletionItem
                 {
                     Label = completion.DisplayTextPrefix + completion.DisplayText + completion.DisplayTextSuffix,
                     InsertText = insertText,
                     InsertTextFormat = insertTextFormat,
                     AdditionalTextEdits = additionalTextEdits,
-                    SortText = completion.SortText,
+                    // Ensure that unimported items are sorted after things already imported.
+                    SortText = expectingImportedItems ? sortTextPrepend + completion.SortText : completion.SortText,
                     FilterText = completion.FilterText,
                     Kind = getCompletionItemKind(completion.Tags),
                     Detail = completion.InlineDescription,
@@ -281,7 +284,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
 
             return new CompletionResponse
             {
-                IsIncomplete = isIncomplete,
+                IsIncomplete = !seenUnimportedCompletions && expectingImportedItems,
                 Items = completionsBuilder.ToImmutableArray()
             };
 
