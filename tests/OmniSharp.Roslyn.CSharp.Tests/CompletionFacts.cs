@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -177,7 +178,12 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             using var host = GetImportCompletionHost();
             var completions = await FindCompletionsWithImportedAsync(filename, input, host);
-            Assert.True(completions.Items.First(c => c.InsertText == "guid").Data < completions.Items.First(c => c.InsertText == "Guid").Data);
+            CompletionItem localCompletion = completions.Items.First(c => c.InsertText == "guid");
+            CompletionItem typeCompletion = completions.Items.First(c => c.InsertText == "Guid");
+            Assert.True(localCompletion.Data < typeCompletion.Data);
+            Assert.StartsWith("0", localCompletion.SortText);
+            Assert.StartsWith("1", typeCompletion.SortText);
+            VerifySortOrders(completions.Items);
         }
 
         [Theory]
@@ -209,6 +215,7 @@ namespace N2
             using var host = GetImportCompletionHost();
             var completions = await FindCompletionsWithImportedAsync(filename, input, host);
             Assert.Contains("Test", completions.Items.Select(c => c.InsertText));
+            VerifySortOrders(completions.Items);
         }
 
         [Theory]
@@ -249,6 +256,7 @@ namespace N2
             Assert.Equal(0, additionalEdit.StartColumn);
             Assert.Equal(6, additionalEdit.EndLine);
             Assert.Equal(13, additionalEdit.EndColumn);
+            VerifySortOrders(completions.Items);
         }
 
         [Theory]
@@ -289,6 +297,7 @@ namespace N2
             Assert.Equal(0, additionalEdit.StartColumn);
             Assert.Equal(6, additionalEdit.EndLine);
             Assert.Equal(19, additionalEdit.EndColumn);
+            VerifySortOrders(completions.Items);
         }
 
         [Theory]
@@ -335,6 +344,7 @@ namespace N3
             Assert.Equal(6, additionalEdit.StartColumn);
             Assert.Equal(8, additionalEdit.EndLine);
             Assert.Equal(11, additionalEdit.EndColumn);
+            VerifySortOrders(completions.Items);
         }
 
         [Theory]
@@ -1252,6 +1262,14 @@ class C
 
         private static string NormalizeNewlines(string str)
             => str.Replace("\r\n", Environment.NewLine);
+
+        private static void VerifySortOrders(ImmutableArray<CompletionItem> items)
+        {
+            Assert.All(items, c =>
+            {
+                Assert.True(c.SortText.StartsWith("0") || c.SortText.StartsWith("1"));
+            });
+        }
     }
 
     internal static class CompletionResponseExtensions
