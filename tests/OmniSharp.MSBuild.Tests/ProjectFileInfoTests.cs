@@ -159,7 +159,7 @@ namespace OmniSharp.MSBuild.Tests
 
                 var libpath = Path.Combine(testProject.Directory, "ExternAlias.Lib", "bin", "Debug", "netstandard2.0", "ExternAlias.Lib.dll");
                 Assert.True(projectFileInfo.ReferenceAliases.ContainsKey(libpath));
-                Assert.Equal("abc", projectFileInfo.ReferenceAliases[libpath]);
+                Assert.Equal("abc,def", projectFileInfo.ReferenceAliases[libpath]);
             }
         }
 
@@ -179,7 +179,7 @@ namespace OmniSharp.MSBuild.Tests
 
                 var projectReferencePath = Path.Combine(testProject.Directory, "ExternAlias.Lib", "ExternAlias.Lib.csproj");
                 Assert.True(projectFileInfo.ProjectReferenceAliases.ContainsKey(projectReferencePath));
-                Assert.Equal("abc", projectFileInfo.ProjectReferenceAliases[projectReferencePath]);
+                Assert.Equal("abc,def", projectFileInfo.ProjectReferenceAliases[projectReferencePath]);
             }
         }
 
