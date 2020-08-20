@@ -49,15 +49,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
             _getChangeAsync = typeof(CompletionService).GetMethod(nameof(GetChangeAsync), BindingFlags.NonPublic | BindingFlags.Instance);
         }
 
-        internal static string GetProviderName(this CompletionItem item)
-        {
-            return (string)_getProviderName.GetValue(item);
-        }
+        internal static string GetProviderName(this CompletionItem item) => (string)_getProviderName.GetValue(item);
 
-        public static bool IsObjectCreationCompletionItem(this CompletionItem item)
-        {
-            return GetProviderName(item) == ObjectCreationCompletionProvider;
-        }
+        public static bool IsObjectCreationCompletionItem(this CompletionItem item) => GetProviderName(item) == ObjectCreationCompletionProvider;
+
         public static Task<(CompletionList completionList, bool expandItemsAvailable)> GetCompletionsInternalAsync(
             this CompletionService completionService,
             Document document,
@@ -109,10 +104,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
             return provider == NamedParameterCompletionProvider || provider == OverrideCompletionProvider || provider == PartialMethodCompletionProvider;
         }
 
-        public static bool TryGetInsertionText(this CompletionItem completionItem, out string insertionText)
-        {
-            return completionItem.Properties.TryGetValue(InsertionText, out insertionText);
-        }
+        public static bool TryGetInsertionText(this CompletionItem completionItem, out string insertionText) => completionItem.Properties.TryGetValue(InsertionText, out insertionText);
 
         public static AutoCompleteResponse ToAutoCompleteResponse(this CompletionItem item, bool wantKind, bool isSuggestionMode, bool preselect)
         {
