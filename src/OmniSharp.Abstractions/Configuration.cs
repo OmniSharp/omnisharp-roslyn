@@ -10,6 +10,7 @@ namespace OmniSharp
         public readonly static string RoslynFeatures = GetRoslynAssemblyFullName("Microsoft.CodeAnalysis.Features");
         public readonly static string RoslynCSharpFeatures = GetRoslynAssemblyFullName("Microsoft.CodeAnalysis.CSharp.Features");
         public readonly static string RoslynWorkspaces = GetRoslynAssemblyFullName("Microsoft.CodeAnalysis.Workspaces");
+        public readonly static string OmniSharpMiscProjectName = "OmniSharpMiscellaneousFiles";
 
         private static string GetRoslynAssemblyFullName(string name)
         {
