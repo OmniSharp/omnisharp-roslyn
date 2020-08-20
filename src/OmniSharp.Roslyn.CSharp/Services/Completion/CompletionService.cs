@@ -151,7 +151,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
             }
 
             var triggerCharactersBuilder = ImmutableArray.CreateBuilder<char>(completions.Rules.DefaultCommitCharacters.Length);
-            var completionsBuilder = new List<CompletionItem>();
+            var completionsBuilder = ImmutableArray.CreateBuilder<CompletionItem>();
 
             // If we don't encounter any unimported types, and the completion context thinks that some would be available, then
             // that completion provider is still creating the cache. We'll mark this completion list as not completed, and the
@@ -282,7 +282,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
             return new CompletionResponse
             {
                 IsIncomplete = isIncomplete,
-                Items = completionsBuilder.MoveToImmutable()
+                Items = completionsBuilder.ToImmutableArray()
             };
 
             CompletionTrigger getCompletionTrigger(bool includeTriggerCharacter)

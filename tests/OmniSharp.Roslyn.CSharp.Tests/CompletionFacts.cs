@@ -1185,7 +1185,7 @@ class C
             const string input = @"
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo(""$$";
 
-            var completions = await FindCompletionsAsync("dummy.cs", input);
+            var completions = await FindCompletionsAsync("dummy.cs", input, SharedOmniSharpTestHost);
             Assert.Single(completions.Items);
             Assert.Equal("AssemblyNameVal", completions.Items[0].Label);
             Assert.Equal("AssemblyNameVal", completions.Items[0].InsertText);
