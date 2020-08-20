@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Resolvers;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Completion;
 using Microsoft.CodeAnalysis.Tags;
@@ -150,7 +151,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
             }
 
             var triggerCharactersBuilder = ImmutableArray.CreateBuilder<char>(completions.Rules.DefaultCommitCharacters.Length);
-            var completionsBuilder = ImmutableArray.CreateBuilder<CompletionItem>(completions.Items.Length);
+            var completionsBuilder = ImmutableArray.CreateBuilder<CompletionItem>();
 
             // If we don't encounter any unimported types, and the completion context thinks that some would be available, then
             // that completion provider is still creating the cache. We'll mark this completion list as not completed, and the
@@ -174,6 +175,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                             // The IVT completer doesn't add extra things before the completion
                             // span, only assembly keys at the end if they exist.
                             {
+                                // if the completion is for the hidden Misc files project, skip it
+                                if (completion.DisplayText == Configuration.OmniSharpMiscProjectName) continue;
                                 CompletionChange change = await completionService.GetChangeAsync(document, completion);
                                 Debug.Assert(typedSpan == change.TextChange.Span);
                                 insertText = change.TextChange.NewText!;
@@ -282,7 +285,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
             return new CompletionResponse
             {
                 IsIncomplete = !seenUnimportedCompletions && expectingImportedItems,
-                Items = completionsBuilder.MoveToImmutable()
+                Items = completionsBuilder.ToImmutableArray()
             };
 
             CompletionTrigger getCompletionTrigger(bool includeTriggerCharacter)
