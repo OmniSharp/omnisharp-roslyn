@@ -670,15 +670,8 @@ namespace OmniSharp.MSBuild
                     if (projectFileInfo.ProjectReferenceAliases.TryGetValue(projectReferencePath, out var projectReferenceAliases))
                     {
                         if (!string.IsNullOrEmpty(projectReferenceAliases))
-                        {
-                            var trimmed = projectReferenceAliases.Split(',');
-                            
-                            for(var i = 0; i < trimmed.Length; i++)
-                            {
-                                trimmed[i] = trimmed[i].Trim();
-                            }
-                            
-                            aliases = trimmed.ToImmutableArray();
+                        {                            
+                            aliases = ImmutableArray.CreateRange(projectReferenceAliases.Split(new char[]{','},StringSplitOptions.RemoveEmptyEntries).Select(a => a.Trim()));
                             _logger.LogDebug($"Setting aliases: {projectReferencePath}, {projectReferenceAliases} ");
                         }
                     }
@@ -747,14 +740,7 @@ namespace OmniSharp.MSBuild
                         {
                             if (!string.IsNullOrEmpty(aliases))
                             {
-                                var trimmed = aliases.Split(',');
-
-                                for(var i = 0; i < trimmed.Length; i++)
-                                {
-                                    trimmed[i] = trimmed[i].Trim();
-                                }
-
-                                reference = reference.WithAliases(trimmed);
+                                reference = reference.WithAliases(aliases.Split(new char[]{','},StringSplitOptions.RemoveEmptyEntries).Select(a => a.Trim()));
                                 _logger.LogDebug($"setting aliases: {referencePath}, {aliases} ");
                             }
                         }
