@@ -817,7 +817,7 @@ public class Derived : Base
             Assert.Equal(0, item.AdditionalTextEdits[0].StartColumn);
             Assert.Equal(3, item.AdditionalTextEdits[0].EndLine);
             Assert.Equal(12, item.AdditionalTextEdits[0].EndColumn);
-            Assert.Equal("", item.InsertText);
+            Assert.Equal("GetAction(Action a)\n    {\n        return base.GetAction(a);$0\n    \\}", item.InsertText);
         }
 
         [Fact]
@@ -845,7 +845,7 @@ public class Derived : Base
             Assert.Equal(4, item.AdditionalTextEdits[0].StartColumn);
             Assert.Equal(9, item.AdditionalTextEdits[0].EndLine);
             Assert.Equal(12, item.AdditionalTextEdits[0].EndColumn);
-            Assert.Equal("M1(object param)\n    {\n        return base;$0\n    \\}", item.InsertText);
+            Assert.Equal("M1(object param)\n    {\n        return base.M1(param);$0\n    \\}", item.InsertText);
         }
 
         [Theory]
@@ -901,7 +901,7 @@ public partial class C
             Assert.Equal(0, item.AdditionalTextEdits[0].StartColumn);
             Assert.Equal(3, item.AdditionalTextEdits[0].EndLine);
             Assert.Equal(11, item.AdditionalTextEdits[0].EndColumn);
-            Assert.Equal("void M1(string param)\n    {\n        throw new System.NotImplementedException();$0\n    \\}", item.InsertText);
+            Assert.Equal("M(Action a)\n    {\n        throw new NotImplementedException();$0\n    \\}", item.InsertText);
         }
 
         [Fact]
