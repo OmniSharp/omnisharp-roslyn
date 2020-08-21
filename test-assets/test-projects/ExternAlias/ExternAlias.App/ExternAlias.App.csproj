@@ -7,7 +7,7 @@
   <ItemGroup>
     <Reference Include="ExternAlias.Lib">
         <HintPath>$(ProjectDir)../ExternAlias.Lib/bin/$(Configuration)/netstandard2.0/ExternAlias.Lib.dll</HintPath>
-        <Aliases>abc</Aliases>
+        <Aliases>abc,def</Aliases>
     </Reference>
   </ItemGroup>
 
