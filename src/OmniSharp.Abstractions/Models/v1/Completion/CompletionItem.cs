@@ -1,6 +1,6 @@
 ﻿#nullable enable
 
-using System.Collections.Immutable;
+using System.Collections.Generic;
 
 namespace OmniSharp.Models.v1.Completion
 {
@@ -23,7 +23,7 @@ namespace OmniSharp.Models.v1.Completion
         /// <summary>
         /// Tags for this completion item
         /// </summary>
-        public ImmutableArray<CompletionItemTag>? Tags { get; set; }
+        public IReadOnlyList<CompletionItemTag>? Tags { get; set; }
 
         /// <summary>
         /// A human-readable string with additional information
@@ -69,7 +69,7 @@ namespace OmniSharp.Models.v1.Completion
         /// An optional set of characters that when pressed while this completion is active will accept it first and
         /// then type that character.
         /// </summary>
-        public ImmutableArray<char>? CommitCharacters { get; set; }
+        public IReadOnlyList<char>? CommitCharacters { get; set; }
 
         /// <summary>
         /// An optional array of additional text edits that are applied when
@@ -80,7 +80,7 @@ namespace OmniSharp.Models.v1.Completion
         /// (for example adding an import statement at the top of the file if the completion item will
         /// insert an unqualified type).
         /// </summary>
-        public ImmutableArray<LinePositionSpanTextChange>? AdditionalTextEdits { get; set; }
+        public IReadOnlyList<LinePositionSpanTextChange>? AdditionalTextEdits { get; set; }
 
         /// <summary>
         /// Index in the completions list that this completion occurred.
