@@ -163,8 +163,8 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
         private static async Task<ImmutableArray<Diagnostic>> GetDiagnosticsForDocument(Document document, string projectName)
         {
             // Only basic syntax check is available if file is miscellanous like orphan .cs file.
-            // Those projects are on hard coded virtual project named 'MiscellaneousFiles.csproj'.
-            if (projectName == "MiscellaneousFiles.csproj")
+            // Those projects are on hard coded virtual project
+            if (projectName == $"{Configuration.OmniSharpMiscProjectName}.csproj")
             {
                 var syntaxTree = await document.GetSyntaxTreeAsync();
                 return syntaxTree.GetDiagnostics().ToImmutableArray();

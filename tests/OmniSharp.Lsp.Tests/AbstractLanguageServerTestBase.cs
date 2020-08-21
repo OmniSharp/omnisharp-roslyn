@@ -98,7 +98,7 @@ namespace OmniSharp.Lsp.Tests
             Client.Dispose();
             OmniSharpTestHost.Dispose();
 
-            _setupConfiguration ??= new Microsoft.Extensions.Configuration.ConfigurationBuilder()
+            _setupConfiguration = configuration ?? new Microsoft.Extensions.Configuration.ConfigurationBuilder()
                 .AddInMemoryCollection(configurationData ?? new Dictionary<string, string>())
                 .Build();
             await InitializeAsync();
@@ -106,7 +106,7 @@ namespace OmniSharp.Lsp.Tests
 
         public async Task InitializeAsync()
         {
-            Client = await InitializeClient(x =>
+            var(client, configurationProvider) = await InitializeClientWithConfiguration(x =>
             {
                 x.WithCapability(new WorkspaceEditCapability()
                 {
@@ -117,107 +117,109 @@ namespace OmniSharp.Lsp.Tests
                         ResourceOperationKind.Create, ResourceOperationKind.Delete, ResourceOperationKind.Rename
                     }
                 });
+                x.OnApplyWorkspaceEdit(async @params =>
+                {
+                    if (@params.Edit?.Changes != null)
+                    {
+                        foreach (var change in @params.Edit.Changes)
+                        {
+                            var changes = change.Value
+                                .Select(change => new LinePositionSpanTextChange()
+                                {
+                                    NewText = change.NewText,
+                                    StartColumn = Convert.ToInt32(change.Range.Start.Character),
+                                    StartLine = Convert.ToInt32(change.Range.Start.Line),
+                                    EndColumn = Convert.ToInt32(change.Range.End.Character),
+                                    EndLine = Convert.ToInt32(change.Range.End.Line),
+                                })
+                                .ToArray();
+
+                            await OmniSharpTestHost.Workspace.BufferManager.UpdateBufferAsync(new UpdateBufferRequest()
+                            {
+                                FileName = LanguageServerProtocol.Helpers.FromUri(change.Key),
+                                Changes = changes
+                            });
+                        }
+                    }
+                    else if (@params.Edit?.DocumentChanges != null)
+                    {
+                        foreach (var change in @params.Edit.DocumentChanges)
+                        {
+                            if (change.IsTextDocumentEdit)
+                            {
+                                var contentChanges = change.TextDocumentEdit.Edits.ToArray();
+                                if (contentChanges.Length == 1 && contentChanges[0].Range == null)
+                                {
+                                    var c = contentChanges[0];
+                                    await OmniSharpTestHost.Workspace.BufferManager.UpdateBufferAsync(
+                                        new UpdateBufferRequest()
+                                        {
+                                            FileName = LanguageServerProtocol.Helpers.FromUri(change.TextDocumentEdit
+                                                .TextDocument.Uri),
+                                            Buffer = c.NewText
+                                        });
+                                }
+                                else
+                                {
+                                    var changes = contentChanges
+                                        .Select(change => new LinePositionSpanTextChange()
+                                        {
+                                            NewText = change.NewText,
+                                            StartColumn = Convert.ToInt32(change.Range.Start.Character),
+                                            StartLine = Convert.ToInt32(change.Range.Start.Line),
+                                            EndColumn = Convert.ToInt32(change.Range.End.Character),
+                                            EndLine = Convert.ToInt32(change.Range.End.Line),
+                                        })
+                                        .ToArray();
+
+                                    await OmniSharpTestHost.Workspace.BufferManager.UpdateBufferAsync(
+                                        new UpdateBufferRequest()
+                                        {
+                                            FileName = LanguageServerProtocol.Helpers.FromUri(change.TextDocumentEdit
+                                                .TextDocument.Uri),
+                                            Changes = changes
+                                        });
+                                }
+                            }
+
+                            if (change.IsRenameFile)
+                            {
+                                var documents =
+                                    OmniSharpTestHost.Workspace.GetDocuments(
+                                        change.RenameFile.OldUri.GetFileSystemPath());
+                                foreach (var oldDocument in documents)
+                                {
+                                    var text = await oldDocument.GetTextAsync();
+                                    var newFilePath = change.RenameFile.NewUri.GetFileSystemPath();
+                                    var newFileName = Path.GetFileName(newFilePath);
+                                    OmniSharpTestHost.Workspace.TryApplyChanges(
+                                        OmniSharpTestHost.Workspace.CurrentSolution
+                                            .RemoveDocument(oldDocument.Id)
+                                            .AddDocument(
+                                                DocumentId.CreateNewId(oldDocument.Project.Id, newFileName),
+                                                newFileName,
+                                                text,
+                                                oldDocument.Folders,
+                                                newFilePath
+                                            )
+                                    );
+                                }
+                            }
+                        }
+                    }
+
+                    await ClientEvents.SettleNext();
+
+                    return new ApplyWorkspaceEditResponse()
+                    {
+                        Applied = true
+                    };
+                });
             });
-            Client.Register(c => c.OnApplyWorkspaceEdit(async @params =>
-            {
-                if (@params.Edit?.Changes != null)
-                {
-                    foreach (var change in @params.Edit.Changes)
-                    {
-                        var changes = change.Value
-                            .Select(change => new LinePositionSpanTextChange()
-                            {
-                                NewText = change.NewText,
-                                StartColumn = Convert.ToInt32(change.Range.Start.Character),
-                                StartLine = Convert.ToInt32(change.Range.Start.Line),
-                                EndColumn = Convert.ToInt32(change.Range.End.Character),
-                                EndLine = Convert.ToInt32(change.Range.End.Line),
-                            })
-                            .ToArray();
+            Client = client;
 
-                        await OmniSharpTestHost.Workspace.BufferManager.UpdateBufferAsync(new UpdateBufferRequest()
-                        {
-                            FileName = LanguageServerProtocol.Helpers.FromUri(change.Key),
-                            Changes = changes
-                        });
-                    }
-                }
-                else if (@params.Edit?.DocumentChanges != null)
-                {
-                    foreach (var change in @params.Edit.DocumentChanges)
-                    {
-                        if (change.IsTextDocumentEdit)
-                        {
-                            var contentChanges = change.TextDocumentEdit.Edits.ToArray();
-                            if (contentChanges.Length == 1 && contentChanges[0].Range == null)
-                            {
-                                var c = contentChanges[0];
-                                await OmniSharpTestHost.Workspace.BufferManager.UpdateBufferAsync(
-                                    new UpdateBufferRequest()
-                                    {
-                                        FileName = LanguageServerProtocol.Helpers.FromUri(change.TextDocumentEdit
-                                            .TextDocument.Uri),
-                                        Buffer = c.NewText
-                                    });
-                            }
-                            else
-                            {
-                                var changes = contentChanges
-                                    .Select(change => new LinePositionSpanTextChange()
-                                    {
-                                        NewText = change.NewText,
-                                        StartColumn = Convert.ToInt32(change.Range.Start.Character),
-                                        StartLine = Convert.ToInt32(change.Range.Start.Line),
-                                        EndColumn = Convert.ToInt32(change.Range.End.Character),
-                                        EndLine = Convert.ToInt32(change.Range.End.Line),
-                                    })
-                                    .ToArray();
-
-                                await OmniSharpTestHost.Workspace.BufferManager.UpdateBufferAsync(
-                                    new UpdateBufferRequest()
-                                    {
-                                        FileName = LanguageServerProtocol.Helpers.FromUri(change.TextDocumentEdit
-                                            .TextDocument.Uri),
-                                        Changes = changes
-                                    });
-                            }
-                        }
-
-                        if (change.IsRenameFile)
-                        {
-                            var documents =
-                                OmniSharpTestHost.Workspace.GetDocuments(change.RenameFile.OldUri.GetFileSystemPath());
-                            foreach (var oldDocument in documents)
-                            {
-                                var text = await oldDocument.GetTextAsync();
-                                var newFilePath = change.RenameFile.NewUri.GetFileSystemPath();
-                                var newFileName = Path.GetFileName(newFilePath);
-                                OmniSharpTestHost.Workspace.TryApplyChanges(
-                                    OmniSharpTestHost.Workspace.CurrentSolution
-                                        .RemoveDocument(oldDocument.Id)
-                                        .AddDocument(
-                                            DocumentId.CreateNewId(oldDocument.Project.Id, newFileName),
-                                            newFileName,
-                                            text,
-                                            oldDocument.Folders,
-                                            newFilePath
-                                        )
-                                );
-                            }
-                        }
-                    }
-                }
-
-                await ClientEvents.SettleNext();
-
-                return new ApplyWorkspaceEditResponse()
-                {
-                    Applied = true
-                };
-            }));
             await startUpTask;
-            Configuration = new ConfigurationProvider(Server, Client, CancellationToken);
-            Client.Register(x => x.AddHandler(Configuration));
+            Configuration = new ConfigurationProvider(Server, Client, configurationProvider, CancellationToken);
         }
 
         public Task DisposeAsync()
