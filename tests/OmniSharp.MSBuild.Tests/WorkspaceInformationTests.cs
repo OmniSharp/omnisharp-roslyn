@@ -317,7 +317,9 @@ namespace OmniSharp.MSBuild.Tests
                     .ProjectReferences
                     .Single(x => x.ProjectId == lib.Id);
 
-                Assert.Equal("abc", projectReference.Aliases.Single());
+                Assert.Collection(projectReference.Aliases,
+                    referenceA => Assert.Equal("abc",referenceA),
+                    referenceB => Assert.Equal("def",referenceB));
             }
         }
 
@@ -337,7 +339,9 @@ namespace OmniSharp.MSBuild.Tests
                     .MetadataReferences
                     .Single(x => x.Display == "ExternAlias.Lib.dll");
 
-                Assert.Equal("abc", reference.Properties.Aliases.Single());
+                Assert.Collection(reference.Properties.Aliases,
+                    referenceA => Assert.Equal("abc",referenceA),
+                    referenceB => Assert.Equal("def",referenceB));
             }
         }
     }
