@@ -8,7 +8,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../ExternAlias.Lib/ExternAlias.Lib.csproj">
-        <Aliases>abc</Aliases>
+        <Aliases>abc,def</Aliases>
     </ProjectReference>
   </ItemGroup>
 
