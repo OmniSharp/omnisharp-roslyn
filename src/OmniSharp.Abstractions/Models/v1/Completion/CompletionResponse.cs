@@ -1,6 +1,6 @@
 ﻿#nullable enable
 
-using System.Collections.Immutable;
+using System.Collections.Generic;
 
 namespace OmniSharp.Models.v1.Completion
 {
@@ -14,6 +14,6 @@ namespace OmniSharp.Models.v1.Completion
         /// <summary>
         /// The completion items.
         /// </summary>
-        public ImmutableArray<CompletionItem> Items { get; set; }
+        public IReadOnlyList<CompletionItem> Items { get; set; } = null!;
     }
 }
