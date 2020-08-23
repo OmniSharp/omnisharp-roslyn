@@ -67,7 +67,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
             {
                 var newDocument = changeEvent.NewSolution.GetDocument(changeEvent.DocumentId);
 
-                EmitDiagnostics(new [] {newDocument.Id}.Concat(_workspace.GetOpenDocumentIds()).Select(x => _workspace.CurrentSolution.GetDocument(x).FilePath).ToArray());
+                EmitDiagnostics(new [] {newDocument.Id}.Union(_workspace.GetOpenDocumentIds()).Select(x => _workspace.CurrentSolution.GetDocument(x).FilePath).ToArray());
             }
             else if (changeEvent.Kind == WorkspaceChangeKind.ProjectAdded || changeEvent.Kind == WorkspaceChangeKind.ProjectReloaded)
             {

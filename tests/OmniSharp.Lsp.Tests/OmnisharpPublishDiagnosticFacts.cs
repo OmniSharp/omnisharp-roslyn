@@ -74,27 +74,6 @@ namespace OmniSharp.Lsp.Tests
                 x => x.Code == "CS0029");
         }
 
-        // [Theory]
-        // [InlineData(true)]
-        // [InlineData(false)]
-        // public async Task WhenFileIsDeletedFromWorkSpaceThenResultsAreNotReturnedAnyMore(bool roslynAnalyzersEnabled)
-        // {
-        //     await ReadyHost(roslynAnalyzersEnabled);
-        //     AddFilesToWorkspace(new TestFile("a.cs", "class C1 { int n = true; }"));
-        //         await host.RequestCodeCheckAsync();
-        //
-        //         foreach (var doc in host.Workspace.CurrentSolution.Projects.SelectMany(x => x.Documents))
-        //         {
-        //             // Theres document for each targeted framework, lets delete all.
-        //             host.Workspace.RemoveDocument(doc.Id);
-        //         }
-        //
-        //         var quickFixes = await host.RequestCodeCheckAsync();
-        //
-        //         Assert.DoesNotContain(quickFixes.QuickFixes.OfType<DiagnosticLocation>(),
-        //             x => x.Id == "CS0029" && x.FileName == "a.cs");
-        // }
-
         [Fact]
         public async Task AnalysisSupportBuiltInIDEAnalysers()
         {
