@@ -31,7 +31,7 @@ variables:
   DotNetVersion: "3.1.401"
   CakeVersion: "0.32.1"
   NuGetVersion: "4.9.2"
-  GitVersionVersion: "5.3.7"
+  GitVersionVersion: "5.1.1"
   MonoVersion: "6.10.0"
   Coverage: "$(Agent.BuildDirectory)/c"
   VstsCoverage: "$(Coverage)"
