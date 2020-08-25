@@ -15,8 +15,9 @@ public sealed class Platform
     public bool IsMacOS => _os == "MacOS";
     public bool IsLinux => _os == "Linux";
 
-    public bool Is32Bit => _architecture == "x86";
-    public bool Is64Bit => _architecture == "x64";
+    public bool IsX86 => _architecture == "x86";
+    public bool IsX64 => _architecture == "x64";
+    public bool IsArm64 => _architecture == "arm64";
 
     private Platform(string os, string architecture, Version version, string distroName = null)
     {
@@ -43,9 +44,14 @@ public sealed class Platform
             {
                 architecture = "x86";
             }
+            else if (Environment.GetEnvironmentVariable("PROCESSOR_ARCHITECTURE") == "ARM64" &&
+                Environment.GetEnvironmentVariable("PROCESSOR_ARCHITEW6432") == null)
+            {
+                architecture = "arm64";
+            }
             else
             {
-                architecture = "x64";
+                architecture = "arm64";
             }
         }
         else
@@ -67,6 +73,11 @@ public sealed class Platform
             else if (osArch.Equals("x86_64", StringComparison.OrdinalIgnoreCase))
             {
                 architecture = "x64";
+            }
+            else if (osArch.Equals("aarch64", StringComparison.OrdinalIgnoreCase)
+                || osArch.Equals("arm64", StringComparison.OrdinalIgnoreCase))
+            {
+                architecture = "arm64";
             }
             else
             {
