@@ -51,7 +51,7 @@ public sealed class Platform
             }
             else
             {
-                architecture = "arm64";
+                architecture = "x64";
             }
         }
         else
