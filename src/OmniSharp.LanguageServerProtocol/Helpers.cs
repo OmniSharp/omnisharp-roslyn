@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using Microsoft.VisualStudio.TestPlatform.CoreUtilities.Extensions;
 using OmniSharp.Extensions.LanguageServer.Protocol;
 using OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
@@ -16,16 +17,23 @@ namespace OmniSharp.LanguageServerProtocol
     {
         public static Diagnostic ToDiagnostic(this DiagnosticLocation location)
         {
+            var tags = new List<DiagnosticTag>();
+            foreach (var tag in location?.Tags ?? Array.Empty<string>())
+            {
+                if (tag == "Unnecessary") tags.Add(DiagnosticTag.Unnecessary);
+                if (tag == "Deprecated") tags.Add(DiagnosticTag.Deprecated);
+            }
             return new Diagnostic()
             {
                 // We don't have a code at the moment
                 // Code = quickFix.,
-                Message = location.Text,
+                Message = !string.IsNullOrWhiteSpace(location.Text) ? location.Text : location.Id,
                 Range = location.ToRange(),
                 Severity = ToDiagnosticSeverity(location.LogLevel),
                 Code = location.Id,
                 // TODO: We need to forward this type though if we add something like Vb Support
                 Source = "csharp",
+                Tags = tags,
             };
         }
 
@@ -133,6 +141,7 @@ namespace OmniSharp.LanguageServerProtocol
             { OmniSharp.Models.V2.SymbolKinds.Interface, SymbolKind.Interface },
             { OmniSharp.Models.V2.SymbolKinds.Struct, SymbolKind.Struct },
             { OmniSharp.Models.V2.SymbolKinds.Constant, SymbolKind.Constant },
+            { OmniSharp.Models.V2.SymbolKinds.Constructor, SymbolKind.Constructor },
             { OmniSharp.Models.V2.SymbolKinds.Destructor, SymbolKind.Method },
             { OmniSharp.Models.V2.SymbolKinds.EnumMember, SymbolKind.EnumMember },
             { OmniSharp.Models.V2.SymbolKinds.Event, SymbolKind.Event },

@@ -18,7 +18,6 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             _testOutput = testOutput;
         }
 
-
         [Theory]
         [InlineData(true)]
         [InlineData(false)]
