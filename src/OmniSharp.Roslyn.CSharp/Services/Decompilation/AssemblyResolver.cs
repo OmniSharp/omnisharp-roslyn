@@ -39,6 +39,12 @@ namespace OmniSharp.Roslyn.CSharp.Services.Decompilation
             }
         }
 
+        public bool IsGacAssembly(IAssemblyReference reference)
+        {
+            // not called at the moment
+            throw new NotSupportedException();
+        }
+
         public PEFile Resolve(IAssemblyReference name)
         {
             Log("Resolving: {0}", name.FullName);
