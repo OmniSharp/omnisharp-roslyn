@@ -38,12 +38,10 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
             _workspace.DocumentClosed += OnDocumentOpened;
 
             _disposable = openDocumentsSubject
-                .GroupByUntil(x => true, group => Observable.Amb(
-                    group.Throttle(TimeSpan.FromMilliseconds(200)),
-                    group.Distinct().Skip(99))
-                )
-                .Select(x => x.ToArray())
-                .Merge()
+                .Buffer(() => Observable.Amb(
+                    openDocumentsSubject.Skip(99).Select(z => Unit.Default),
+                    Observable.Timer(TimeSpan.FromMilliseconds(100)).Select(z => Unit.Default)
+                ))
                 .SubscribeOn(TaskPoolScheduler.Default)
                 .Select(ProcessQueue)
                 .Merge()
@@ -69,7 +67,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
             {
                 var newDocument = changeEvent.NewSolution.GetDocument(changeEvent.DocumentId);
 
-                EmitDiagnostics(_workspace.GetOpenDocumentIds().Select(x => _workspace.CurrentSolution.GetDocument(x).FilePath).ToArray());
+                EmitDiagnostics(new [] {newDocument.Id}.Union(_workspace.GetOpenDocumentIds()).Select(x => _workspace.CurrentSolution.GetDocument(x).FilePath).ToArray());
             }
             else if (changeEvent.Kind == WorkspaceChangeKind.ProjectAdded || changeEvent.Kind == WorkspaceChangeKind.ProjectReloaded)
             {

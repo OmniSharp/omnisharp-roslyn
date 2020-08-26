@@ -270,11 +270,12 @@ namespace OmniSharp.LanguageServerProtocol
             // and not loose any functionality.
             server.Register(r =>
             {
+                var defaultOptions = new JsonRpcHandlerOptions() {RequestProcessType = RequestProcessType.Parallel};
                 var interop = InitializeInterop(compositionHost);
                 foreach (var osHandler in interop)
                 {
                     var method = $"o#/{osHandler.Key.Trim('/').ToLowerInvariant()}";
-                    r.OnJsonRequest(method, CreateInteropHandler(osHandler.Value));
+                    r.OnJsonRequest(method, CreateInteropHandler(osHandler.Value), defaultOptions);
                     logger.LogTrace("O# Handler: {Method}", method);
                 }
 
@@ -286,12 +287,12 @@ namespace OmniSharp.LanguageServerProtocol
                 };
 
                 r.OnRequest<JToken, object>($"o#/{OmniSharpEndpoints.CheckAliveStatus.Trim('/').ToLowerInvariant()}",
-                    (request, cancellationToken) => Task.FromResult<object>(true));
+                    (request, cancellationToken) => Task.FromResult<object>(true), defaultOptions);
                 r.OnRequest<JToken, object>($"o#/{OmniSharpEndpoints.CheckReadyStatus.Trim('/').ToLowerInvariant()}",
                     (request, cancellationToken) =>
-                        Task.FromResult<object>(compositionHost.GetExport<OmniSharpWorkspace>().Initialized));
+                        Task.FromResult<object>(compositionHost.GetExport<OmniSharpWorkspace>().Initialized), defaultOptions);
                 r.OnRequest<JToken, object>($"o#/{OmniSharpEndpoints.StopServer.Trim('/').ToLowerInvariant()}",
-                    async (request, cancellationToken) => await server.Shutdown.ToTask(cancellationToken));
+                    async (request, cancellationToken) => await server.Shutdown.ToTask(cancellationToken), defaultOptions);
             });
             logger.LogTrace("--- Handler Definitions ---");
 
