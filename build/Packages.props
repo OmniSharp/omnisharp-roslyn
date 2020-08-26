@@ -14,7 +14,7 @@
 
     <PackageReference Update="Dotnet.Script.DependencyModel" Version="0.53.0" />
     <PackageReference Update="Dotnet.Script.DependencyModel.NuGet" Version="0.53.0" />
-    <PackageReference Update="ICSharpCode.Decompiler" Version="5.0.2.5153" />
+    <PackageReference Update="ICSharpCode.Decompiler" Version="6.1.0.5902" />
     <PackageReference Update="McMaster.Extensions.CommandLineUtils" Version="2.2.4" />
 
     <PackageReference Update="Microsoft.AspNetCore.Diagnostics" Version="2.1.1" />
@@ -62,8 +62,8 @@
     <PackageReference Update="NuGet.ProjectModel" Version="$(NuGetPackageVersion)" />
     <PackageReference Update="NuGet.Versioning" Version="$(NuGetPackageVersion)" />
 
-    <PackageReference Update="OmniSharp.Extensions.LanguageServer" Version="0.18.0-beta0079" />
-    <PackageReference Update="OmniSharp.Extensions.LanguageProtocol.Testing" Version="0.18.0-beta0079" />
+    <PackageReference Update="OmniSharp.Extensions.LanguageServer" Version="0.18.0-beta0081" />
+    <PackageReference Update="OmniSharp.Extensions.LanguageProtocol.Testing" Version="0.18.0-beta0081" />
 
     <PackageReference Update="SQLitePCLRaw.bundle_green" Version="1.1.2" />
     <PackageReference Update="System.Collections.Immutable" Version="1.4.0" />

@@ -10,7 +10,7 @@ namespace OmniSharp.Helpers
     internal static class DiagnosticExtensions
     {
         private static readonly ImmutableHashSet<string> _tagFilter =
-            ImmutableHashSet.Create("Unnecessary");
+            ImmutableHashSet.Create("Unnecessary", "Deprecated");
 
         internal static DiagnosticLocation ToDiagnosticLocation(this Diagnostic diagnostic)
         {
