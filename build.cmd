@@ -1,2 +1,2 @@
 @echo off
-powershell.exe -ExecutionPolicy Bypass -NoProfile .\build.ps1 "%*"
+powershell.exe -NoProfile -ExecutionPolicy Bypass .\build.ps1 "%*"
