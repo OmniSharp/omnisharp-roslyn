@@ -1,5 +1,4 @@
 #addin "nuget:?package=Newtonsoft.Json&version=11.0.2"
-#tool "nuget:?package=GitVersion.CommandLine&prerelease&version=5.0.1"
 
 #load "platform.cake"
 
@@ -293,7 +292,13 @@ public class BuildEnvironment
         }
         else
         {
-            return context.GitVersion();
+            return new GitVersion
+            {
+                NuGetVersion = "0.0.1-local",
+                AssemblySemVer = "0.0.1.0",
+                InformationalVersion = "0.0.1-local",
+                SemVer = "0.0.1-local"
+            };
         }
     }
 
