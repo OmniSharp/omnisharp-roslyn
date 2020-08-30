@@ -35,6 +35,7 @@ All changes to `master` will be pushed to this feed and will be made available w
 -   `os/arch` will be one of the following:
     -   `win-x64`
     -   `win-x86`
+    -   `win-arm64`
     -   `linux-x64`
     -   `linux-x86`
     -   `osx`

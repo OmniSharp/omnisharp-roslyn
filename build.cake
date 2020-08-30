@@ -396,6 +396,7 @@ Task("CreateMSBuildFolder")
     {
         CopyDotNetHostResolver(env, "win", "x86", "hostfxr.dll", msbuildSdkResolverTargetFolder, copyToArchSpecificFolder: true);
         CopyDotNetHostResolver(env, "win", "x64", "hostfxr.dll", msbuildSdkResolverTargetFolder, copyToArchSpecificFolder: true);
+        CopyDotNetHostResolver(env, "win", "arm64", "hostfxr.dll", msbuildSdkResolverTargetFolder, copyToArchSpecificFolder: true);
     }
     else if (Platform.Current.IsMacOS)
     {
@@ -853,20 +854,27 @@ Task("PublishWindowsBuilds")
 
         if (publishAll)
         {
-            var outputFolder32 = PublishWindowsBuild(project, env, buildPlan, configuration, "win7-x86");
-            var outputFolder64 = PublishWindowsBuild(project, env, buildPlan, configuration, "win7-x64");
+            var outputFolderX86 = PublishWindowsBuild(project, env, buildPlan, configuration, "win7-x86");
+            var outputFolderX64 = PublishWindowsBuild(project, env, buildPlan, configuration, "win7-x64");
+            var outputFolderArm64 = PublishWindowsBuild(project, env, buildPlan, configuration, "win10-arm64");
 
-            outputFolder = Platform.Current.Is32Bit
-                ? outputFolder32
-                : outputFolder64;
+            outputFolder = Platform.Current.IsX86
+                ? outputFolderX86
+                : Platform.Current.IsX64
+                    ? outputFolderX64
+                    : outputFolderArm64;
         }
-        else if (Platform.Current.Is32Bit)
+        else if (Platform.Current.IsX86)
         {
             outputFolder = PublishWindowsBuild(project, env, buildPlan, configuration, "win7-x86");
         }
-        else
+        else if (Platform.Current.IsX64)
         {
             outputFolder = PublishWindowsBuild(project, env, buildPlan, configuration, "win7-x64");
+        }
+        else
+        {
+            outputFolder = PublishWindowsBuild(project, env, buildPlan, configuration, "win10-arm64");
         }
 
         CreateRunScript(project, outputFolder, env.Folders.ArtifactsScripts);
@@ -949,9 +957,11 @@ Task("Install")
         string platform;
         if (Platform.Current.IsWindows)
         {
-            platform = Platform.Current.Is32Bit
+            platform = Platform.Current.IsX86
                 ? "win7-x86"
-                : "win7-x64";
+                : Platform.Current.IsX64
+                    ? "win7-x64"
+                    : "win10-arm64";
         }
         else
         {

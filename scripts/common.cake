@@ -239,11 +239,11 @@ public class BuildEnvironment
         }
         else if (Platform.Current.IsLinux)
         {
-            if (Platform.Current.Is32Bit)
+            if (Platform.Current.IsX86)
             {
                 this.CurrentMonoRuntime = this.MonoRuntimes[1];
             }
-            else if (Platform.Current.Is64Bit)
+            else if (Platform.Current.IsX64)
             {
                 this.CurrentMonoRuntime = this.MonoRuntimes[2];
             }
