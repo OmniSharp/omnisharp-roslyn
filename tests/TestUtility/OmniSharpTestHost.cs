@@ -87,8 +87,9 @@ namespace TestUtility
             IEnumerable<ExportDescriptorProvider> additionalExports = null,
             [CallerMemberName] string callerName = "")
         {
+            var environment = serviceProvider.GetRequiredService<IOmniSharpEnvironment>();
             var compositionHost = new CompositionHostBuilder(serviceProvider, s_lazyAssemblies.Value, additionalExports)
-                .Build(workingDirectory: null);
+                .Build(environment.TargetDirectory);
 
             WorkspaceInitializer.Initialize(serviceProvider, compositionHost);
 
