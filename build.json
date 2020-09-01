@@ -11,7 +11,8 @@
     "MonoRuntimeLinux32": "mono.linux-x86-6.10.0.104.zip",
     "MonoRuntimeLinux64": "mono.linux-x86_64-6.10.0.104.zip",
     "HostProjects": [
-        "OmniSharp.Stdio.Driver"
+        "OmniSharp.Stdio.Driver",
+        "OmniSharp.Http.Driver"
     ],
     "TestProjects": [
         "OmniSharp.MSBuild.Tests",

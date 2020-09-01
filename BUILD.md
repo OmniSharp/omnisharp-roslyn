@@ -2,7 +2,7 @@
 
 ## Windows
 
-In order to build OmniSharp, the [.NET 4.6.1 targeting pack](https://www.microsoft.com/en-us/download/details.aspx?id=49978) must be installed if it isn't already.
+In order to build OmniSharp, the [.NET 4.7.2 targeting pack](https://dotnet.microsoft.com/download/dotnet-framework/thank-you/net472-developer-pack-offline-installer) must be installed if it isn't already.
 
 ## macOS
 
@@ -42,7 +42,7 @@ Note: The arguments below should prefixed with a single hyphen on Windows (Power
   `-install-path Path`: Path used for the **Install** target.
     Defaults to `(%USERPROFILE%|$HOME)/.omnisharp`
 
-  `-publish-all`: Publishes all platforms for the current OS. On Windows, specifying this argument would produce win7-x86 and win7-x64 builds. On OSX/Linux, this argument causes osx, linux-x86, and linux-x64 builds to be published.
+  `-publish-all`: Publishes all platforms for the current OS. On Windows, specifying this argument would produce win7-x86, win7-x64, and win10-arm64 builds. On OSX/Linux, this argument causes osx, linux-x86, and linux-x64 builds to be published.
 
   `-archive`: Enable the generation of publishable archives after a build.
 
