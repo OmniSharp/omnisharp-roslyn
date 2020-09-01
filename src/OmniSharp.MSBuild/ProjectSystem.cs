@@ -40,6 +40,7 @@ namespace OmniSharp.MSBuild
         private readonly ILoggerFactory _loggerFactory;
         private readonly ILogger _logger;
         private readonly IAnalyzerAssemblyLoader _assemblyLoader;
+        private readonly DotNetInfo _dotNetInfo;
         private readonly ImmutableArray<IMSBuildEventSink> _eventSinks;
         private PackageDependencyChecker _packageDependencyChecker;
         private ProjectManager _manager;
@@ -66,7 +67,8 @@ namespace OmniSharp.MSBuild
             ILoggerFactory loggerFactory,
             CachingCodeFixProviderForProjects codeFixesForProjects,
             IAnalyzerAssemblyLoader assemblyLoader,
-            [ImportMany] IEnumerable<IMSBuildEventSink> eventSinks)
+            [ImportMany] IEnumerable<IMSBuildEventSink> eventSinks,
+            DotNetInfo dotNetInfo)
         {
             _environment = environment;
             _workspace = workspace;
@@ -81,6 +83,7 @@ namespace OmniSharp.MSBuild
             _eventSinks = eventSinks.ToImmutableArray();
             _logger = loggerFactory.CreateLogger<ProjectSystem>();
             _assemblyLoader = assemblyLoader;
+            _dotNetInfo = dotNetInfo;
         }
 
         public void Initalize(IConfiguration configuration)
@@ -102,8 +105,7 @@ namespace OmniSharp.MSBuild
             _packageDependencyChecker = new PackageDependencyChecker(_loggerFactory, _eventEmitter, _dotNetCli, _options);
             _loader = new ProjectLoader(_options, _environment.TargetDirectory, _propertyOverrides, _loggerFactory, _sdksPathResolver);
 
-            var dotNetInfo = GetDotNetInfo();
-            _manager = new ProjectManager(_loggerFactory, _options, _eventEmitter, _fileSystemWatcher, _metadataFileReferenceCache, _packageDependencyChecker, _loader, _workspace, _assemblyLoader, _eventSinks, dotNetInfo);
+            _manager = new ProjectManager(_loggerFactory, _options, _eventEmitter, _fileSystemWatcher, _metadataFileReferenceCache, _packageDependencyChecker, _loader, _workspace, _assemblyLoader, _eventSinks, _dotNetInfo);
             Initialized = true;
 
             if (_options.LoadProjectsOnDemand)
@@ -124,15 +126,6 @@ namespace OmniSharp.MSBuild
 
                 _manager.QueueProjectUpdate(projectFilePath, allowAutoRestore: true, projectIdInfo);
             }
-        }
-
-        private DotNetInfo GetDotNetInfo()
-        {
-            var workingDirectory = string.IsNullOrEmpty(_environment.SolutionFilePath)
-                ? _environment.TargetDirectory
-                : Path.GetDirectoryName(_environment.SolutionFilePath);
-
-            return _dotNetCli.GetInfo(workingDirectory);
         }
 
         private IEnumerable<(string, ProjectIdInfo)> GetInitialProjectPathsAndIds()
