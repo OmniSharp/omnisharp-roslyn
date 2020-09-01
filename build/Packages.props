@@ -5,8 +5,8 @@
   <PropertyGroup>
     <MSBuildPackageVersion>16.6.0</MSBuildPackageVersion>
     <NuGetPackageVersion>5.2.0</NuGetPackageVersion>
-    <RoslynPackageVersion>3.8.0-1.20363.1</RoslynPackageVersion>
-    <XunitPackageVersion>2.4.0</XunitPackageVersion>
+    <RoslynPackageVersion>3.8.0-3.20451.2</RoslynPackageVersion>
+    <XunitPackageVersion>2.4.1</XunitPackageVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -78,7 +78,7 @@
 
     <PackageReference Update="System.Reflection.DispatchProxy" Version="4.5.1" />
 
-    <PackageReference Update="xunit.runner.visualstudio" Version="$(XunitPackageVersion)" />
+    <PackageReference Update="xunit.runner.visualstudio" Version="2.4.3" />
     <PackageReference Update="xunit" Version="$(XunitPackageVersion)" />
   </ItemGroup>
   <ItemGroup>
