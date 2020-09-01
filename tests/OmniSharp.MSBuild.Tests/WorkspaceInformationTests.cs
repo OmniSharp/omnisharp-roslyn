@@ -125,6 +125,31 @@ namespace OmniSharp.MSBuild.Tests
         }
 
         [Fact]
+        public async Task TwoProjectsWithSolutionAndCustomConfigurations()
+        {
+            var configData = new Dictionary<string, string> { [$"MsBuild:{nameof(Options.MSBuildOptions.Configuration)}"] = "ReleaseSln" };
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("TwoProjectsWithSolutionAndCustomConfigurations"))
+            using (var host = CreateMSBuildTestHost(testProject.Directory, configurationData: configData.ToConfiguration()))
+            {
+                var workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
+
+                Assert.Equal("TwoProjectsWithSolutionAndCustomConfigurations.sln", Path.GetFileName(workspaceInfo.SolutionPath));
+                Assert.NotNull(workspaceInfo.Projects);
+                Assert.Equal(2, workspaceInfo.Projects.Count);
+
+                var firstProject = workspaceInfo.Projects[0];
+                Assert.Equal("App.csproj", Path.GetFileName(firstProject.Path));
+                Assert.Equal(".NETCoreApp,Version=v2.1", firstProject.TargetFramework);
+                Assert.Equal("netcoreapp2.1", firstProject.TargetFrameworks[0].ShortName);
+
+                var secondProject = workspaceInfo.Projects[1];
+                Assert.Equal("Lib.csproj", Path.GetFileName(secondProject.Path));
+                Assert.Equal(".NETStandard,Version=v1.3", secondProject.TargetFramework);
+                Assert.Equal("netstandard1.3", secondProject.TargetFrameworks[0].ShortName);
+            }
+        }
+
+        [Fact]
         public async Task TwoProjectWithGeneratedFile()
         {
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithGeneratedFile"))
