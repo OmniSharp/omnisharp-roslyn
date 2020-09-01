@@ -171,6 +171,29 @@ namespace OmniSharp.MSBuild
             var processedProjects = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             var result = new List<(string, ProjectIdInfo)>();
 
+            var solutionConfigurations = new Dictionary<ProjectId, Dictionary<string, string>>();
+            foreach (var globalSection in solutionFile.GlobalSections)
+            {
+                // Try parse project configurations if they are remapped in solution file
+                if (globalSection.Name == "ProjectConfigurationPlatforms")
+                {
+                    _logger.LogDebug($"Parsing ProjectConfigurationPlatforms of '{solutionFilePath}'.");
+                    foreach (var entry in globalSection.Properties)
+                    {
+                        var guid = Guid.Parse(entry.Name.Substring(0, 38));
+                        var projId = ProjectId.CreateFromSerialized(guid);
+                        var solutionConfig = entry.Name.Substring(39);
+
+                        if (!solutionConfigurations.TryGetValue(projId, out var dict))
+                        {
+                            dict = new Dictionary<string, string>();
+                            solutionConfigurations.Add(projId, dict);
+                        }
+                        dict.Add(solutionConfig, entry.Value);
+                    }
+                }
+            }
+
             foreach (var project in solutionFile.Projects)
             {
                 if (project.IsNotSupported)
@@ -192,6 +215,10 @@ namespace OmniSharp.MSBuild
                 if (string.Equals(Path.GetExtension(projectFilePath), ".csproj", StringComparison.OrdinalIgnoreCase))
                 {
                     var projectIdInfo = new ProjectIdInfo(ProjectId.CreateFromSerialized(new Guid(project.ProjectGuid)), true);
+                    if (solutionConfigurations.TryGetValue(projectIdInfo.Id, out var configurations))
+                    {
+                        projectIdInfo.SolutionConfiguration = configurations;
+                    }
                     result.Add((projectFilePath, projectIdInfo));
                 }
 
