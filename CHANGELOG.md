@@ -1,7 +1,7 @@
 # Changelog
 All changes to the project will be documented in this file.
 
-## [1.37.1] - Not Yet Released
+## [1.37.1] - 2020-09-01
 * Ensure that all quickinfo sections have linebreaks between them, and don't add unecessary duplicate linebreaks (PR: [#1900](https://github.com/OmniSharp/omnisharp-roslyn/pull/1900))
 * Support completion of unimported types (PR: [#1896](https://github.com/OmniSharp/omnisharp-roslyn/pull/1896))
 * Exclude Misc project from InternalsVisibleTo completion (PR: [#1902](https://github.com/OmniSharp/omnisharp-roslyn/pull/1902))
@@ -17,6 +17,7 @@ All changes to the project will be documented in this file.
 * Use ExecutionPolicy Bypass when running powershell.exe (PR: [#1917](https://github.com/OmniSharp/omnisharp-roslyn/pull/1917))
 * Update the package that Arch Linux users need to install (PR: [#1921](https://github.com/OmniSharp/omnisharp-roslyn/pull/1921))
 * Updated the docs to mention .NET 4.7.2 targeting pack (PR: [#1922](https://github.com/OmniSharp/omnisharp-roslyn/pull/1922))
+* Support for configurations remapping in solution files ([#1828](https://github.com/OmniSharp/omnisharp-roslyn/issues/1828), PR: [#1835](https://github.com/OmniSharp/omnisharp-roslyn/pull/1835))
 * Update build tool versions for NET 5 RC1 (PR: [#1926](https://github.com/OmniSharp/omnisharp-roslyn/pull/1926))
 * Update Roslyn to 3.8.0-3.20451.2 (PR: [#1927](https://github.com/OmniSharp/omnisharp-roslyn/pull/1927))
 
