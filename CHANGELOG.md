@@ -18,6 +18,7 @@ All changes to the project will be documented in this file.
 * Update the package that Arch Linux users need to install (PR: [#1921](https://github.com/OmniSharp/omnisharp-roslyn/pull/1921))
 * Updated the docs to mention .NET 4.7.2 targeting pack (PR: [#1922](https://github.com/OmniSharp/omnisharp-roslyn/pull/1922))
 * Support for configurations remapping in solution files ([#1828](https://github.com/OmniSharp/omnisharp-roslyn/issues/1828), PR: [#1835](https://github.com/OmniSharp/omnisharp-roslyn/pull/1835))
+* Only run dotnet --info once for the working directory (PR: [#1925](https://github.com/OmniSharp/omnisharp-roslyn/pull/1925))
 * Update build tool versions for NET 5 RC1 (PR: [#1926](https://github.com/OmniSharp/omnisharp-roslyn/pull/1926))
 * Update Roslyn to 3.8.0-3.20451.2 (PR: [#1927](https://github.com/OmniSharp/omnisharp-roslyn/pull/1927))
 
