@@ -910,7 +910,6 @@ Task("Publish")
 ///  Execute the run script.
 /// </summary>
 Task("ExecuteRunScript")
-    .WithCriteria(() => !(Platform.Current.IsMacOS && TravisCI.IsRunningOnTravisCI))
     .Does(() =>
 {
     // TODO: Pass configuration into run script to ensure that MSBuild output paths are handled correctly.
