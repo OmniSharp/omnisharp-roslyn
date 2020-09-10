@@ -297,5 +297,38 @@ namespace OmniSharp.Extensions
         }
 
         private static string Folderize(string path) => string.Join("/", path.Split('.'));
+
+        public static bool IsInterfaceType(this ISymbol symbol) => (symbol as ITypeSymbol)?.IsInterfaceType() == true;
+
+        public static bool IsInterfaceType(this ITypeSymbol symbol) => symbol?.TypeKind == TypeKind.Interface;
+
+        public static bool IsImplementableMember(this ISymbol symbol)
+        {
+            if (symbol != null && symbol.ContainingType != null && symbol.ContainingType.TypeKind == TypeKind.Interface)
+            {
+                if (symbol.Kind == SymbolKind.Event)
+                {
+                    return true;
+                }
+
+                if (symbol.Kind == SymbolKind.Property)
+                {
+                    return true;
+                }
+
+                if (symbol.Kind == SymbolKind.Method)
+                {
+                    var methodSymbol = (IMethodSymbol)symbol;
+                    if (methodSymbol.MethodKind == MethodKind.Ordinary ||
+                        methodSymbol.MethodKind == MethodKind.PropertyGet ||
+                        methodSymbol.MethodKind == MethodKind.PropertySet)
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
     }
 }
