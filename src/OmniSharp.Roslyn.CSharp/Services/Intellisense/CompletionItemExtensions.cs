@@ -69,8 +69,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
             CompletionItem item,
             TextSpan completionListSpan,
             char? commitCharacter = null,
+            bool disallowAddingImports = false,
             CancellationToken cancellationToken = default)
-            => (Task<CompletionChange>)_getChangeAsync.Invoke(completionService, new object[] { document, item, completionListSpan, commitCharacter, cancellationToken });
+            => (Task<CompletionChange>)_getChangeAsync.Invoke(completionService, new object[] { document, item, completionListSpan, commitCharacter, disallowAddingImports, cancellationToken });
 
         public static async Task<IEnumerable<ISymbol>> GetCompletionSymbolsAsync(this CompletionItem completionItem, IEnumerable<ISymbol> recommendedSymbols, Document document)
         {
