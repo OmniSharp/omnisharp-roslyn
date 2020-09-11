@@ -304,7 +304,7 @@ namespace OmniSharp.Extensions
 
         public static bool IsImplementableMember(this ISymbol symbol)
         {
-            if (symbol != null && symbol.ContainingType != null && symbol.ContainingType.TypeKind == TypeKind.Interface)
+            if (symbol?.ContainingType?.TypeKind == TypeKind.Interface)
             {
                 if (symbol.Kind == SymbolKind.Event)
                 {
