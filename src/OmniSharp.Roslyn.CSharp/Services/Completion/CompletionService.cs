@@ -59,7 +59,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
             { WellKnownTags.Keyword, CompletionItemKind.Keyword },
             { WellKnownTags.Label, CompletionItemKind.Text },
             { WellKnownTags.Local, CompletionItemKind.Variable },
-            { WellKnownTags.Namespace, CompletionItemKind.Text },
+            { WellKnownTags.Namespace, CompletionItemKind.Module },
             { WellKnownTags.Method, CompletionItemKind.Method },
             { WellKnownTags.Module, CompletionItemKind.Module },
             { WellKnownTags.Operator, CompletionItemKind.Operator },
