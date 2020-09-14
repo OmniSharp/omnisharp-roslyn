@@ -242,6 +242,19 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                                     break;
                                 }
 
+                                // If the span we are using is re-using part of the typed text we just need to grab the completion an prefix it
+                                // with the existing text. Such as Onenabled -> OnEnabled, this will re-use On of the typed text
+                                if (typedSpan.Start < change.TextChange.Span.Start && typedSpan.Start < change.TextChange.Span.End && typedSpan.End == change.TextChange.Span.End)
+                                {
+                                    var prefix = typedText.Substring(0, change.TextChange.Span.Start - typedSpan.Start);
+                                    
+                                    (insertText, insertTextFormat) = getAdjustedInsertTextWithPosition(change, position, newOffset: 0);
+
+                                    insertText = prefix + insertText;
+
+                                    break;
+                                }
+
                                 int additionalEditEndOffset;
                                 (additionalTextEdits, additionalEditEndOffset) = await GetAdditionalTextEdits(change, sourceText, (CSharpParseOptions)syntax!.Options, typedSpan, completion.DisplayText, providerName);
 
