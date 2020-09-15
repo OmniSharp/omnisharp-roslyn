@@ -1,6 +1,9 @@
 # Changelog
 All changes to the project will be documented in this file.
 
+## [1.37.2] - Not Yet Released
+* Add support for new quick info endpoint when working with Cake (PR: [#1945](https://github.com/OmniSharp/omnisharp-roslyn/pull/1945))
+
 ## [1.37.1] - 2020-09-01
 * Ensure that all quickinfo sections have linebreaks between them, and don't add unecessary duplicate linebreaks (PR: [#1900](https://github.com/OmniSharp/omnisharp-roslyn/pull/1900))
 * Support completion of unimported types (PR: [#1896](https://github.com/OmniSharp/omnisharp-roslyn/pull/1896))
