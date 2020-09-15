@@ -1,12 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Cake.Services.RequestHandlers.Completion;
-using OmniSharp.Cake.Services.RequestHandlers.Intellisense;
-using OmniSharp.Models.AutoComplete;
 using OmniSharp.Models.UpdateBuffer;
 using OmniSharp.Models.v1.Completion;
 using TestUtility;
@@ -17,6 +15,7 @@ namespace OmniSharp.Cake.Tests
 {
     public class CompletionFacts : CakeSingleRequestHandlerTestFixture<CompletionHandler>
     {
+        private const int ImportCompletionTimeout = 1000;
         private readonly ILogger _logger;
 
         public CompletionFacts(ITestOutputHelper testOutput) : base(testOutput)
@@ -86,21 +85,106 @@ namespace OmniSharp.Cake.Tests
             }
         }
 
-        // [Fact]
-        // public async Task ShouldGetCompletionWithAdditionalTextEdits()
-        // {
-        //     const string input = @"Regex.Repl$$";
-        //
-        //     using (var testProject = await TestAssets.Instance.GetTestProjectAsync("CakeProject", shadowCopy : false))
-        //     using (var host = CreateOmniSharpHost(testProject.Directory))
-        //     {
-        //         var fileName = Path.Combine(testProject.Directory, "build.cake");
-        //         var completions = await FindCompletionsAsync(fileName, input, host);
-        //
-        //         Assert.Contains("Replace", completions.Items.Select(c => c.Label));
-        //         Assert.Contains("Replace", completions.Items.Select(c => c.InsertText));
-        //     }
-        // }
+        [Fact]
+        public async Task ShouldRemoveAdditionalTextEditsFromResolvedCompletions()
+        {
+            const string input = @"var regex = new Rege$$";
+
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("CakeProject", shadowCopy : false))
+            using (var host = CreateOmniSharpHost(testProject.Directory,
+                new[] { new KeyValuePair<string, string>("RoslynExtensionsOptions:EnableImportCompletion", "true") }))
+            {
+                var fileName = Path.Combine(testProject.Directory, "build.cake");
+
+                // First completion request should kick off the task to update the completion cache.
+                var completions = await FindCompletionsAsync(fileName, input, host);
+                Assert.True(completions.IsIncomplete);
+                Assert.DoesNotContain("Regex", completions.Items.Select(c => c.InsertText));
+
+                // Populating the completion cache should take no more than a few ms, don't let it take too
+                // long
+                var cts = new CancellationTokenSource(millisecondsDelay: ImportCompletionTimeout);
+                await Task.Run(async () =>
+                {
+                    while (completions.IsIncomplete)
+                    {
+                        completions = await FindCompletionsAsync(fileName, input, host);
+                        cts.Token.ThrowIfCancellationRequested();
+                    }
+                }, cts.Token);
+
+                Assert.False(completions.IsIncomplete);
+                Assert.Contains("Regex", completions.Items.Select(c => c.InsertText));
+
+                var completion = completions.Items.First(c => c.InsertText == "Regex");
+                var resolved = await ResolveCompletionAsync(completion, host);
+
+                // Due to the fact that AdditionalTextEdits return the complete buffer, we can't currently use that in Cake.
+                // Revisit when we have a solution. At this point it's probably just best to remove AdditionalTextEdits.
+                Assert.Null(resolved.Item.AdditionalTextEdits);
+            }
+        }
+
+        [Fact]
+        public async Task ShouldGetAdditionalTextEditsFromOverrideCompletion()
+        {
+            const string source = @"
+class Foo
+{
+    public virtual void Test(string text) {}
+    public virtual void Test(string text, string moreText) {}
+}
+
+class FooChild : Foo
+{
+    override $$
+}
+";
+
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("CakeProject", shadowCopy : false))
+            using (var host = CreateOmniSharpHost(testProject.Directory))
+            {
+                var fileName = Path.Combine(testProject.Directory, "build.cake");
+                var completions = await FindCompletionsAsync(fileName, source, host);
+                Assert.Equal(
+                    new[]
+                    {
+                        "Equals(object obj)", "GetHashCode()", "Test(string text)",
+                        "Test(string text, string moreText)", "ToString()"
+                    },
+                    completions.Items.Select(c => c.Label));
+                Assert.Equal(new[]
+                    {
+                        "Equals(object obj)\n    {\n        return base.Equals(obj);$0\n    \\}",
+                        "GetHashCode()\n    {\n        return base.GetHashCode();$0\n    \\}",
+                        "Test(string text)\n    {\n        base.Test(text);$0\n    \\}",
+                        "Test(string text, string moreText)\n    {\n        base.Test(text, moreText);$0\n    \\}",
+                        "ToString()\n    {\n        return base.ToString();$0\n    \\}"
+                    },
+                    completions.Items.Select<CompletionItem, string>(c => c.InsertText));
+
+                Assert.Equal(new[]
+                    {
+                        "public override bool",
+                        "public override int",
+                        "public override void",
+                        "public override void",
+                        "public override string"
+                    },
+                    completions.Items.Select(c => c.AdditionalTextEdits.Single().NewText));
+
+                Assert.All(completions.Items.Select(c => c.AdditionalTextEdits.Single()),
+                    r =>
+                    {
+                        Assert.Equal(9, r.StartLine);
+                        Assert.Equal(4, r.StartColumn);
+                        Assert.Equal(9, r.EndLine);
+                        Assert.Equal(12, r.EndColumn);
+                    });
+
+                Assert.All(completions.Items, c => Assert.Equal(InsertTextFormat.Snippet, c.InsertTextFormat));
+            }
+        }
 
         private async Task<CompletionResponse> FindCompletionsAsync(string filename, string source, OmniSharpTestHost host, char? triggerChar = null, TestFile[] additionalFiles = null)
         {
