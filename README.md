@@ -64,7 +64,7 @@ For more details, see [Build](https://github.com/OmniSharp/omnisharp-roslyn/blob
 
 ### VS Code
 
-Add the following setting to your [User Settings or Workspace Settings](https://code.visualstudio.com/Docs/customization/userandworkspace).
+Add the following setting to your [User Settings](https://code.visualstudio.com/Docs/customization/userandworkspace).
 
 ```JSON
 {
@@ -77,7 +77,7 @@ The above option can also be set to:
 -   "latest" - To consume the latest build from the master branch
 -   A specific version number like `1.29.2-beta.60`
 
-In order to be able to attach a debugger, add the following setting:
+In order to be able to attach a debugger, add the following setting to your [User or Workspace settings](https://code.visualstudio.com/Docs/customization/userandworkspace):
 
 ```JSON
 {
