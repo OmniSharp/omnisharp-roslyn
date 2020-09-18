@@ -1339,7 +1339,7 @@ class C
         [Theory]
         [InlineData("dummy.cs")]
         [InlineData("dummy.csx")]
-        public async Task ChangeSpanIsExpected(string filename)
+        public async Task PrefixHeaderIsFullyCorrect(string filename)
         {
             const string input =
 @"public class Base
@@ -1355,6 +1355,51 @@ public class Derived : Base
             var onEnable = completions.Items.Single(c => c.TextEdit.NewText.Contains("OnEnable"));
             Assert.Equal(onEnable.TextEdit.StartLine, onEnable.TextEdit.EndLine);
             Assert.Equal(2, onEnable.TextEdit.EndColumn - onEnable.TextEdit.StartColumn);
+            Assert.Equal("OnEnable()\n    {\n        base.OnEnable();$0\n    \\}", onEnable.TextEdit.NewText);
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task PrefixHeaderIsPartiallyCorrect_1(string filename)
+        {
+            const string input =
+@"public class Base
+{
+    protected virtual void OnEnable() {}
+}
+public class Derived : Base
+{
+    protected override void ON$$
+}";
+
+            var completions = await FindCompletionsAsync(filename, input, SharedOmniSharpTestHost);
+            var onEnable = completions.Items.Single(c => c.TextEdit.NewText.Contains("OnEnable"));
+            Assert.Equal(onEnable.TextEdit.StartLine, onEnable.TextEdit.EndLine);
+            Assert.Equal(2, onEnable.TextEdit.EndColumn - onEnable.TextEdit.StartColumn);
+            Assert.Equal("OnEnable()\n    {\n        base.OnEnable();$0\n    \\}", onEnable.TextEdit.NewText);
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task PrefixHeaderIsPartiallyCorrect_2(string filename)
+        {
+            const string input =
+@"public class Base
+{
+    protected virtual void OnEnable() {}
+}
+public class Derived : Base
+{
+    protected override void on$$
+}";
+
+            var completions = await FindCompletionsAsync(filename, input, SharedOmniSharpTestHost);
+            var onEnable = completions.Items.Single(c => c.TextEdit.NewText.Contains("OnEnable"));
+            Assert.Equal(onEnable.TextEdit.StartLine, onEnable.TextEdit.EndLine);
+            Assert.Equal(2, onEnable.TextEdit.EndColumn - onEnable.TextEdit.StartColumn);
+            Assert.Equal("OnEnable()\n    {\n        base.OnEnable();$0\n    \\}", onEnable.TextEdit.NewText);
         }
 
         private CompletionService GetCompletionService(OmniSharpTestHost host)

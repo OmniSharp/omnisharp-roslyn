@@ -162,8 +162,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
             bool expectingImportedItems = expandedItemsAvailable && _workspace.Options.GetOption(CompletionItemExtensions.ShowItemsFromUnimportedNamespaces, LanguageNames.CSharp) == true;
             var syntax = await document.GetSyntaxTreeAsync();
 
-            var typedSpanStartPosition = sourceText.Lines.GetLinePosition(typedSpan.Start);
-            var typedSpanEndPosition = sourceText.Lines.GetLinePosition(typedSpan.End);
+            var replacingSpanStartPosition = sourceText.Lines.GetLinePosition(typedSpan.Start);
+            var replacingSpanEndPosition = sourceText.Lines.GetLinePosition(typedSpan.End);
 
             for (int i = 0; i < completions.Items.Length; i++)
             {
@@ -236,25 +236,28 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
 
                                 var change = await completionService.GetChangeAsync(document, completion);
 
-                                // If the span we're using to key the completion off is the same as the replacement
-                                // span, then we don't need to do anything special, just snippitize the text and
-                                // exit
                                 if (typedSpan == change.TextChange.Span)
                                 {
+                                    // If the span we're using to key the completion off is the same as the replacement
+                                    // span, then we don't need to do anything special, just snippitize the text and
+                                    // exit
                                     (insertText, insertTextFormat) = getAdjustedInsertTextWithPosition(change, position, newOffset: 0);
                                     break;
                                 }
-
-                                // If the span we are using is re-using part of the typed text we just need to grab the completion an prefix it
-                                // with the existing text. Such as Onenabled -> OnEnabled, this will re-use On of the typed text
-                                if (typedSpan.Start < change.TextChange.Span.Start && typedSpan.Start < change.TextChange.Span.End && typedSpan.End == change.TextChange.Span.End)
+                                if (change.TextChange.Span.Start > typedSpan.Start)
                                 {
+                                    // If the span we're using to key the replacement span within the original typed span
+                                    // span, we want to prepend the missing text from the original typed text to here. The
+                                    // reason is that some lsp clients, such as vscode, use the range from the text edit as
+                                    // the selector for what filter text to use. This can lead to odd scenarios where invoking
+                                    // completion and typing `EQ` will bring up the Equals override, but then dismissing and
+                                    // reinvoking completion will have a range that just replaces the Q. Vscode will then consider
+                                    // that capital Q to be the start of the filter text, and filter out the Equals overload
+                                    // leaving the user with no completion and no explanation
+                                    Debug.Assert(change.TextChange.Span.End == typedSpan.End);
                                     var prefix = typedText.Substring(0, change.TextChange.Span.Start - typedSpan.Start);
-                                    
-                                    (insertText, insertTextFormat) = getAdjustedInsertTextWithPosition(change, position, newOffset: 0);
 
-                                    insertText = prefix + insertText;
-
+                                    (insertText, insertTextFormat) = getAdjustedInsertTextWithPosition(change, position, newOffset: 0, prefix);
                                     break;
                                 }
 
@@ -290,10 +293,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                     TextEdit = new LinePositionSpanTextChange
                     {
                         NewText = insertText,
-                        StartLine = typedSpanStartPosition.Line,
-                        StartColumn = typedSpanStartPosition.Character,
-                        EndLine = typedSpanEndPosition.Line,
-                        EndColumn = typedSpanEndPosition.Character
+                        StartLine = replacingSpanStartPosition.Line,
+                        StartColumn = replacingSpanStartPosition.Character,
+                        EndLine = replacingSpanEndPosition.Line,
+                        EndColumn = replacingSpanEndPosition.Character
                     },
                     InsertTextFormat = insertTextFormat,
                     AdditionalTextEdits = additionalTextEdits,
@@ -382,7 +385,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
             static (string, InsertTextFormat) getAdjustedInsertTextWithPosition(
                 CompletionChange change,
                 int originalPosition,
-                int newOffset)
+                int newOffset,
+                string? prependText = null)
             {
                 // We often have to trim part of the given change off the front, but we
                 // still want to turn the resulting change into a snippet and control
@@ -398,7 +402,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                 if (!(change.NewPosition is int newPosition)
                     || newPosition >= (change.TextChange.Span.Start + newText.Length))
                 {
-                    return (newText.Substring(newOffset), InsertTextFormat.PlainText);
+                    return (prependText + newText.Substring(newOffset), InsertTextFormat.PlainText);
                 }
 
                 if (newPosition < (originalPosition + newOffset))
@@ -412,7 +416,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                 // requested start to the new position, and from the new position to the end of the
                 // string.
                 int midpoint = newPosition - change.TextChange.Span.Start;
-                var beforeText = LspSnippetHelpers.Escape(newText.Substring(newOffset, midpoint - newOffset));
+                var beforeText = LspSnippetHelpers.Escape(prependText + newText.Substring(newOffset, midpoint - newOffset));
                 var afterText = LspSnippetHelpers.Escape(newText.Substring(midpoint));
 
                 return (beforeText + "$0" + afterText, InsertTextFormat.Snippet);
