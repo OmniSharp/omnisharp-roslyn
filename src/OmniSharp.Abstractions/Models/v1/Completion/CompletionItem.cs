@@ -61,9 +61,16 @@ namespace OmniSharp.Models.v1.Completion
         public string? InsertText { get; set; }
 
         /// <summary>
-        /// The format of <see cref="InsertText"/>.
+        /// The format of <see cref="InsertText"/>. This applies to both <see cref="InsertText"/> and
+        /// <see cref="TextEdit"/>.<see cref="LinePositionSpanTextChange.NewText"/>.
         /// </summary>
         public InsertTextFormat? InsertTextFormat { get; set; }
+
+        /// <summary>
+        /// An edit which is applied to a document when selecting this completion. When an edit is provided the value of
+        /// <see cref="InsertText"/> is ignored.
+        /// </summary>
+        public LinePositionSpanTextChange? TextEdit { get; set; }
 
         /// <summary>
         /// An optional set of characters that when pressed while this completion is active will accept it first and
