@@ -1336,7 +1336,7 @@ class C
             Assert.Equal("AssemblyNameVal", completions.Items[0].InsertText);
         }
 
-        [Theory]
+        [ConditionalTheory(typeof(WindowsOnly))]
         [InlineData("dummy.cs")]
         [InlineData("dummy.csx")]
         public async Task RegexCompletionInNormalString(string filename)
@@ -1357,7 +1357,7 @@ class Foo
             Assert.Equal(@"\\A", aCompletion.InsertText);
         }
 
-        [Theory]
+        [ConditionalTheory(typeof(WindowsOnly))]
         [InlineData("dummy.cs")]
         [InlineData("dummy.csx")]
         public async Task RegexCompletionInVerbatimString(string filename)
