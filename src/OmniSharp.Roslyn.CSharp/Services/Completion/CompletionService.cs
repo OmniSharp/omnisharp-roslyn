@@ -162,6 +162,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
             bool expectingImportedItems = expandedItemsAvailable && _workspace.Options.GetOption(CompletionItemExtensions.ShowItemsFromUnimportedNamespaces, LanguageNames.CSharp) == true;
             var syntax = await document.GetSyntaxTreeAsync();
 
+            var typedSpanStartPosition = sourceText.Lines.GetLinePosition(typedSpan.Start);
+            var typedSpanEndPosition = sourceText.Lines.GetLinePosition(typedSpan.End);
+
             for (int i = 0; i < completions.Items.Length; i++)
             {
                 var completion = completions.Items[i];
@@ -284,7 +287,14 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                 completionsBuilder.Add(new CompletionItem
                 {
                     Label = completion.DisplayTextPrefix + completion.DisplayText + completion.DisplayTextSuffix,
-                    InsertText = insertText,
+                    TextEdit = new LinePositionSpanTextChange
+                    {
+                        NewText = insertText,
+                        StartLine = typedSpanStartPosition.Line,
+                        StartColumn = typedSpanStartPosition.Character,
+                        EndLine = typedSpanEndPosition.Line,
+                        EndColumn = typedSpanEndPosition.Character
+                    },
                     InsertTextFormat = insertTextFormat,
                     AdditionalTextEdits = additionalTextEdits,
                     // Ensure that unimported items are sorted after things already imported.
