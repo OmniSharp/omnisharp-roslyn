@@ -1336,6 +1336,48 @@ class C
             Assert.Equal("AssemblyNameVal", completions.Items[0].InsertText);
         }
 
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task RegexCompletionInNormalString(string filename)
+        {
+            const string input = @"
+using System.Text.RegularExpressions;
+class Foo
+{
+    public void M()
+    {
+        _ = new Regex(""$$"");
+    }
+}";
+
+            var completions = await FindCompletionsAsync(filename, input, SharedOmniSharpTestHost);
+            var aCompletion = completions.Items.First(c => c.Label == @"\A");
+            Assert.NotNull(aCompletion);
+            Assert.Equal(@"\\A", aCompletion.InsertText);
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task RegexCompletionInVerbatimString(string filename)
+        {
+            const string input = @"
+using System.Text.RegularExpressions;
+class Foo
+{
+    public void M()
+    {
+        _ = new Regex(@""$$"");
+    }
+}";
+
+            var completions = await FindCompletionsAsync(filename, input, SharedOmniSharpTestHost);
+            var aCompletion = completions.Items.First(c => c.Label == @"\A");
+            Assert.NotNull(aCompletion);
+            Assert.Equal(@"\A", aCompletion.InsertText);
+        }
+
         private CompletionService GetCompletionService(OmniSharpTestHost host)
             => host.GetRequestHandler<CompletionService>(EndpointName);
 
