@@ -1402,6 +1402,48 @@ public class Derived : Base
             Assert.Equal("OnEnable()\n    {\n        base.OnEnable();$0\n    \\}", onEnable.TextEdit.NewText);
         }
 
+        [ConditionalTheory(typeof(WindowsOnly))]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task RegexCompletionInNormalString(string filename)
+        {
+            const string input = @"
+using System.Text.RegularExpressions;
+class Foo
+{
+    public void M()
+    {
+        _ = new Regex(""$$"");
+    }
+}";
+
+            var completions = await FindCompletionsAsync(filename, input, SharedOmniSharpTestHost);
+            var aCompletion = completions.Items.First(c => c.Label == @"\A");
+            Assert.NotNull(aCompletion);
+            Assert.Equal(@"\\A", aCompletion.InsertText);
+        }
+
+        [ConditionalTheory(typeof(WindowsOnly))]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task RegexCompletionInVerbatimString(string filename)
+        {
+            const string input = @"
+using System.Text.RegularExpressions;
+class Foo
+{
+    public void M()
+    {
+        _ = new Regex(@""$$"");
+    }
+}";
+
+            var completions = await FindCompletionsAsync(filename, input, SharedOmniSharpTestHost);
+            var aCompletion = completions.Items.First(c => c.Label == @"\A");
+            Assert.NotNull(aCompletion);
+            Assert.Equal(@"\A", aCompletion.InsertText);
+        }
+
         private CompletionService GetCompletionService(OmniSharpTestHost host)
             => host.GetRequestHandler<CompletionService>(EndpointName);
 
