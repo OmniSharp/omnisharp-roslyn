@@ -415,13 +415,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                     return (prependText + newText.Substring(newOffset), InsertTextFormat.PlainText);
                 }
 
-                if (newPosition < (originalPosition + newOffset))
-                {
-                    Debug.Fail($"Unknown case of attempting to move cursor before the text that needs to be cut off. Requested cutoff: {newOffset}. New Position: {newPosition}");
-                    // Gracefully handle as best we can in release
-                    return (newText.Substring(newOffset), InsertTextFormat.PlainText);
-                }
-
                 // Roslyn wants to move the cursor somewhere inside the result. Substring from the
                 // requested start to the new position, and from the new position to the end of the
                 // string.

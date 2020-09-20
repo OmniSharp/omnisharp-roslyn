@@ -1,5 +1,6 @@
 ﻿#nullable enable
 
+using System;
 using System.Collections.Generic;
 
 namespace OmniSharp.Models.v1.Completion
@@ -58,6 +59,7 @@ namespace OmniSharp.Models.v1.Completion
         /// A string that should be inserted into a document when selecting
         /// this completion.When null or empty the label is used.
         /// </summary>
+        [Obsolete("Use TextEdit instead", error: true)]
         public string? InsertText { get; set; }
 
         /// <summary>

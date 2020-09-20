@@ -1420,7 +1420,7 @@ class Foo
             var completions = await FindCompletionsAsync(filename, input, SharedOmniSharpTestHost);
             var aCompletion = completions.Items.First(c => c.Label == @"\A");
             Assert.NotNull(aCompletion);
-            Assert.Equal(@"\\A", aCompletion.InsertText);
+            Assert.Equal(@"\\A", aCompletion.TextEdit.NewText);
         }
 
         [ConditionalTheory(typeof(WindowsOnly))]
@@ -1441,7 +1441,7 @@ class Foo
             var completions = await FindCompletionsAsync(filename, input, SharedOmniSharpTestHost);
             var aCompletion = completions.Items.First(c => c.Label == @"\A");
             Assert.NotNull(aCompletion);
-            Assert.Equal(@"\A", aCompletion.InsertText);
+            Assert.Equal(@"\A", aCompletion.TextEdit.NewText);
         }
 
         private CompletionService GetCompletionService(OmniSharpTestHost host)
