@@ -26,7 +26,7 @@ When starting the server you must specify a solution file, or a directory where 
 The server will detect the project and start up the project systems for the types of projects it finds. There's no way of loading new projects after the server has started.
 
 ## Verbose logging
-You can turn on verbose logging with the `-v` switch, and debug with `-l debug`.
+You can turn on verbose logging with the `-v` switch.
 
 ## Auto-shutdown
 OmniSharp supports the ability to shut it self down in the event its host process dies.  If for example it crashed, or the user force killed the process.
