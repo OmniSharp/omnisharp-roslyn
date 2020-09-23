@@ -392,6 +392,10 @@ Task("CreateMSBuildFolder")
         source: CombinePaths(msbuildSdkResolverSourceFolder, "Microsoft.DotNet.MSBuildSdkResolver.dll"),
         destination: CombinePaths(msbuildSdkResolverTargetFolder, "Microsoft.DotNet.MSBuildSdkResolver.dll"));
 
+    FileHelper.Copy(
+        source: CombinePaths(msbuildSdkResolverSourceFolder, "Microsoft.DotNet.SdkResolver.dll"),
+        destination: CombinePaths(msbuildSdkResolverTargetFolder, "Microsoft.DotNet.SdkResolver.dll"));
+
     if (Platform.Current.IsWindows)
     {
         CopyDotNetHostResolver(env, "win", "x86", "hostfxr.dll", msbuildSdkResolverTargetFolder, copyToArchSpecificFolder: true);
@@ -906,7 +910,6 @@ Task("Publish")
 ///  Execute the run script.
 /// </summary>
 Task("ExecuteRunScript")
-    .WithCriteria(() => !(Platform.Current.IsMacOS && TravisCI.IsRunningOnTravisCI))
     .Does(() =>
 {
     // TODO: Pass configuration into run script to ensure that MSBuild output paths are handled correctly.

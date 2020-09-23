@@ -59,7 +59,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
             { WellKnownTags.Keyword, CompletionItemKind.Keyword },
             { WellKnownTags.Label, CompletionItemKind.Text },
             { WellKnownTags.Local, CompletionItemKind.Variable },
-            { WellKnownTags.Namespace, CompletionItemKind.Text },
+            { WellKnownTags.Namespace, CompletionItemKind.Module },
             { WellKnownTags.Method, CompletionItemKind.Method },
             { WellKnownTags.Module, CompletionItemKind.Module },
             { WellKnownTags.Operator, CompletionItemKind.Operator },
@@ -174,6 +174,16 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                     string providerName = completion.GetProviderName();
                     switch (providerName)
                     {
+                        case CompletionItemExtensions.EmeddedLanguageCompletionProvider:
+                            // The Regex completion provider can change escapes based on whether
+                            // we're in a verbatim string or not
+                            {
+                                CompletionChange change = await completionService.GetChangeAsync(document, completion);
+                                Debug.Assert(typedSpan == change.TextChange.Span);
+                                insertText = change.TextChange.NewText!;
+                            }
+                            break;
+
                         case CompletionItemExtensions.InternalsVisibleToCompletionProvider:
                             // The IVT completer doesn't add extra things before the completion
                             // span, only assembly keys at the end if they exist.

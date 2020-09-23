@@ -6,7 +6,7 @@
 
 OmniSharp is a .NET development platform based on [Roslyn](https://github.com/dotnet/roslyn) workspaces. It provides project dependencies and C# language services to various IDEs and plugins.
 
-OmniSharp is built with the [.NET Core SDK](https://dot.net/) on Windows and [Mono](http://www.mono-project.com/) on OSX/Linux. It targets the _net472_ target framework. For platforms other than Windows, OmniSharp ships with an _embedded Mono_ which is based on version _5.18.0_, includes MSBuild _16.3.0_ and is provisioned during the build script. If _Mono_ is globally installed on the system, OmniSharp will prefer it over the embedded version, however version _>=6.4.0_ is required (the lowest version with at least MSBuild _16.3.0_).
+OmniSharp is built with the [.NET Core SDK](https://dot.net/) on Windows and [Mono](http://www.mono-project.com/) on OSX/Linux. It targets the _net472_ target framework. For platforms other than Windows, OmniSharp ships with an _embedded Mono_ which is based on version _6.10.0_, includes MSBuild _16.8.0_ and is provisioned during the build script. If _Mono_ is globally installed on the system, OmniSharp will prefer it over the embedded version, however version _>=6.4.0_ is required (the lowest version with at least MSBuild _16.3.0_).
 
 For Arch Linux users, you need package [mono-msbuild](https://www.archlinux.org/packages/community/x86_64/mono-msbuild/) (>= 16.3).
 
@@ -64,7 +64,7 @@ For more details, see [Build](https://github.com/OmniSharp/omnisharp-roslyn/blob
 
 ### VS Code
 
-Add the following setting to your [User Settings or Workspace Settings](https://code.visualstudio.com/Docs/customization/userandworkspace).
+Add the following setting to your [User Settings](https://code.visualstudio.com/Docs/customization/userandworkspace).
 
 ```JSON
 {
@@ -77,7 +77,7 @@ The above option can also be set to:
 -   "latest" - To consume the latest build from the master branch
 -   A specific version number like `1.29.2-beta.60`
 
-In order to be able to attach a debugger, add the following setting:
+In order to be able to attach a debugger, add the following setting to your [User or Workspace settings](https://code.visualstudio.com/Docs/customization/userandworkspace):
 
 ```JSON
 {
