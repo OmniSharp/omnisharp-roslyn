@@ -286,41 +286,30 @@ namespace OmniSharp.MSBuild.ProjectFile
 
                 var projectReferences = ImmutableArray.CreateBuilder<string>();
                 var projectReferenceAliases = ImmutableDictionary.CreateBuilder<string, string>();
-                var projectReferencesAdded = new HashSet<string>();
-                foreach (var projectReferenceItem in projectInstance.GetItems(ItemNames.ProjectReference))
-                {
-                    var fullPath = projectReferenceItem.GetMetadataValue(MetadataNames.FullPath);
-
-                    if (IsCSharpProject(fullPath) && projectReferencesAdded.Add(fullPath))
-                    {
-                        projectReferences.Add(fullPath);
-
-                        var aliases = projectReferenceItem.GetMetadataValue(MetadataNames.Aliases);
-                        if (!string.IsNullOrEmpty(aliases))
-                        {
-                            projectReferenceAliases[fullPath] = aliases;
-                        }
-                    }
-                }
 
                 var references = ImmutableArray.CreateBuilder<string>();
                 var referenceAliases = ImmutableDictionary.CreateBuilder<string, string>();
                 foreach (var referencePathItem in projectInstance.GetItems(ItemNames.ReferencePath))
                 {
                     var referenceSourceTarget = referencePathItem.GetMetadataValue(MetadataNames.ReferenceSourceTarget);
+                    var aliases = referencePathItem.GetMetadataValue(MetadataNames.Aliases);
 
+                    // If this reference came from a project reference, count it as such. We never want to directly look
+                    // at the ProjectReference items in the project, as those don't always create project references
+                    // if things like OutputItemType or ReferenceOutputAssembly are set. It's also possible that other
+                    // MSBuild logic is adding or removing properties too.
                     if (StringComparer.OrdinalIgnoreCase.Equals(referenceSourceTarget, ItemNames.ProjectReference))
                     {
-                        // If the reference was sourced from a project reference, we have two choices:
-                        //
-                        //   1. If the reference is a C# project reference, we shouldn't add it because it'll just duplicate
-                        //      the project reference.
-                        //   2. If the reference is *not* a C# project reference, we should keep this reference because the
-                        //      project reference was already removed.
-
-                        var originalItemSpec = referencePathItem.GetMetadataValue(MetadataNames.OriginalItemSpec);
-                        if (originalItemSpec.EndsWith(".csproj", StringComparison.OrdinalIgnoreCase))
+                        var sourceProjectFile = referencePathItem.GetMetadataValue(MetadataNames.MSBuildSourceProjectFile);
+                        if (sourceProjectFile.EndsWith(".csproj", StringComparison.OrdinalIgnoreCase))
                         {
+                            projectReferences.Add(sourceProjectFile);
+
+                            if (!string.IsNullOrEmpty(aliases))
+                            {
+                                projectReferenceAliases[sourceProjectFile] = aliases;
+                            }
+
                             continue;
                         }
                     }
@@ -330,7 +319,6 @@ namespace OmniSharp.MSBuild.ProjectFile
                     {
                         references.Add(fullPath);
 
-                        var aliases = referencePathItem.GetMetadataValue(MetadataNames.Aliases);
                         if (!string.IsNullOrEmpty(aliases))
                         {
                             referenceAliases[fullPath] = aliases;
@@ -394,9 +382,6 @@ namespace OmniSharp.MSBuild.ProjectFile
 
                 return null;
             }
-
-            private static bool IsCSharpProject(string filePath)
-                => filePath.EndsWith(".csproj", StringComparison.OrdinalIgnoreCase);
 
             private static bool FileNameIsNotGenerated(string filePath)
                 => !Path.GetFileName(filePath).StartsWith("TemporaryGeneratedFile_", StringComparison.OrdinalIgnoreCase);
