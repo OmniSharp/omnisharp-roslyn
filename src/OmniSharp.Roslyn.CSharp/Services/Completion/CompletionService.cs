@@ -152,7 +152,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
             }
 
             var triggerCharactersBuilder = ImmutableArray.CreateBuilder<char>(completions.Rules.DefaultCommitCharacters.Length);
-            var completionsBuilder = ImmutableArray.CreateBuilder<CompletionItem>();
+            var completionsBuilder = ImmutableArray.CreateBuilder<CompletionItem>(completions.Items.Length);
 
             // If we don't encounter any unimported types, and the completion context thinks that some would be available, then
             // that completion provider is still creating the cache. We'll mark this completion list as not completed, and the
@@ -254,9 +254,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                                     (insertText, insertTextFormat) = getAdjustedInsertTextWithPosition(change, position, newOffset: 0);
                                     break;
                                 }
+
                                 if (change.TextChange.Span.Start > typedSpan.Start)
                                 {
-                                    // If the span we're using to key the replacement span within the original typed span
+                                    // If the span we're using to key the replacement span is within the original typed span
                                     // span, we want to prepend the missing text from the original typed text to here. The
                                     // reason is that some lsp clients, such as vscode, use the range from the text edit as
                                     // the selector for what filter text to use. This can lead to odd scenarios where invoking
@@ -272,7 +273,17 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                                 }
 
                                 int additionalEditEndOffset;
-                                (additionalTextEdits, additionalEditEndOffset) = await GetAdditionalTextEdits(change, sourceText, (CSharpParseOptions)syntax!.Options, typedSpan, completion.DisplayText, providerName);
+                                (additionalTextEdits, additionalEditEndOffset) = GetAdditionalTextEdits(change, sourceText, (CSharpParseOptions)syntax!.Options, typedSpan, completion.DisplayText, providerName);
+
+                                if (additionalEditEndOffset < 0)
+                                {
+                                    // We couldn't find the position of the change in the new text. This shouldn't happen in normal cases,
+                                    // but handle as best we can in release
+                                    Debug.Fail("Couldn't find the new cursor position in the replacement text!");
+                                    additionalTextEdits = null;
+                                    insertText = completion.DisplayText;
+                                    break;
+                                }
 
                                 // Now that we have the additional edit, adjust the rest of the new text
                                 (insertText, insertTextFormat) = getAdjustedInsertTextWithPosition(change, position, additionalEditEndOffset);
@@ -324,7 +335,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
             return new CompletionResponse
             {
                 IsIncomplete = !seenUnimportedCompletions && expectingImportedItems,
-                Items = completionsBuilder.ToImmutableArray()
+                Items = completionsBuilder.Capacity == completionsBuilder.Count ? completionsBuilder.MoveToImmutable() : completionsBuilder.ToImmutable()
             };
 
             CompletionTrigger getCompletionTrigger(bool includeTriggerCharacter)
@@ -477,7 +488,12 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                     var sourceText = await document.GetTextAsync();
                     var typedSpan = completionService.GetDefaultCompletionListSpan(sourceText, position);
                     var change = await completionService.GetChangeAsync(document, lastCompletionItem, typedSpan);
-                    (request.Item.AdditionalTextEdits, _) = await GetAdditionalTextEdits(change, sourceText, (CSharpParseOptions)syntax!.Options, typedSpan, lastCompletionItem.DisplayText, providerName);
+                    var (additionalTextEdits, offset) = GetAdditionalTextEdits(change, sourceText, (CSharpParseOptions)syntax!.Options, typedSpan, lastCompletionItem.DisplayText, providerName);
+                    if (offset > 0)
+                    {
+                        Debug.Assert(additionalTextEdits is object);
+                        request.Item.AdditionalTextEdits = additionalTextEdits;
+                    }
                     break;
             }
 
@@ -487,7 +503,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
             };
         }
 
-        private async ValueTask<(IReadOnlyList<LinePositionSpanTextChange> edits, int endOffset)> GetAdditionalTextEdits(
+        private (IReadOnlyList<LinePositionSpanTextChange>? edits, int endOffset) GetAdditionalTextEdits(
             CompletionChange change,
             SourceText sourceText,
             CSharpParseOptions parseOptions,
@@ -500,7 +516,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
             // as the additional edit is not allowed to overlap with the insertion point.
             var additionalEditStartPosition = sourceText.Lines.GetLinePosition(change.TextChange.Span.Start);
             var additionalEditEndPosition = sourceText.Lines.GetLinePosition(typedSpan.Start - 1);
-            int additionalEditEndOffset = await getAdditionalTextEditEndOffset(change, sourceText, parseOptions, typedSpan, completionDisplayText, providerName);
+            int additionalEditEndOffset = getAdditionalTextEditEndOffset(change, sourceText, parseOptions, completionDisplayText, providerName);
             if (additionalEditEndOffset < 1)
             {
                 // The first index of this was either 0 and the edit span was wrong,
@@ -508,7 +524,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                 // send the whole string wtih no additional edits and log a warning.
                 _logger.LogWarning("Could not find the first index of the display text.\nDisplay text: {0}.\nCompletion Text: {1}",
                     completionDisplayText, change.TextChange.NewText);
-                return default;
+                return (null, -1);
             }
 
             return (ImmutableArray.Create(new LinePositionSpanTextChange
@@ -521,20 +537,12 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                 EndColumn = additionalEditEndPosition.Character,
             }), additionalEditEndOffset);
 
-            static async ValueTask<int> getAdditionalTextEditEndOffset(CompletionChange change, SourceText sourceText, CSharpParseOptions parseOptions, TextSpan typedSpan, string completionDisplayText, string providerName)
+            static int getAdditionalTextEditEndOffset(CompletionChange change, SourceText sourceText, CSharpParseOptions parseOptions, string completionDisplayText, string providerName)
             {
-                // For many simple cases, we can just find the first or last index of the completionDisplayText and that's good
-                // enough
-                int endOffset = (providerName == CompletionItemExtensions.ExtensionMethodImportCompletionProvider ||
-                                 providerName == CompletionItemExtensions.TypeImportCompletionProvider)
-                    // Import completion will put the displaytext at the end of the line, override completion will
-                    // put it at the front.
-                    ? change.TextChange.NewText!.LastIndexOf(completionDisplayText)
-                    : change.TextChange.NewText!.IndexOf(completionDisplayText);
-
-                if (endOffset > -1)
+                if (providerName == CompletionItemExtensions.ExtensionMethodImportCompletionProvider ||
+                    providerName == CompletionItemExtensions.TypeImportCompletionProvider)
                 {
-                    return endOffset;
+                    return change.TextChange.NewText!.LastIndexOf(completionDisplayText);
                 }
 
                 // The DisplayText wasn't in the final string. This can happen in a few cases:
@@ -550,13 +558,30 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                 // to adjust the API here.
                 //
                 // In order to find the correct location here, we parse the change. The location
-                // of the name of the last method is the correct location in the string.
+                // of the method or property that contains the new cursor position is the location
+                // of the new changes
                 Debug.Assert(providerName == CompletionItemExtensions.OverrideCompletionProvider ||
                              providerName == CompletionItemExtensions.PartialMethodCompletionProvider);
+                Debug.Assert(change.NewPosition.HasValue);
 
-                var parsedTree = CSharpSyntaxTree.ParseText(change.TextChange.NewText, parseOptions);
-                var lastMethodDecl = (await parsedTree.GetRootAsync()).DescendantNodes().OfType<MethodDeclarationSyntax>().Last();
-                return lastMethodDecl.Identifier.SpanStart;
+                var parsedTree = CSharpSyntaxTree.ParseText(sourceText.WithChanges(change.TextChange).ToString(), parseOptions);
+
+                var tokenOfNewPosition = parsedTree.GetRoot().FindToken(change.NewPosition!.Value);
+                var finalNode = tokenOfNewPosition.Parent;
+                while (finalNode != null)
+                {
+                    switch (finalNode)
+                    {
+                        case MethodDeclarationSyntax decl:
+                            return decl.Identifier.SpanStart - change.TextChange.Span.Start;
+                        case PropertyDeclarationSyntax prop:
+                            return prop.Identifier.SpanStart - change.TextChange.Span.Start;
+                    }
+
+                    finalNode = finalNode.Parent;
+                }
+
+                return -1;
             }
         }
     }

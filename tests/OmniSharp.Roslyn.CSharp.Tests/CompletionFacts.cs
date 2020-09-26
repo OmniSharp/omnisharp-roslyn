@@ -851,6 +851,67 @@ public class Derived : Base
         [Theory]
         [InlineData("dummy.cs")]
         [InlineData("dummy.csx")]
+        public async Task OverrideCompletion_PropertyGetSet(string filename)
+        {
+            const string source = @"
+using System;
+public class Base
+{
+    public abstract string Prop { get; set; }
+}
+public class Derived : Base
+{
+    override $$
+}
+";
+
+            var completions = await FindCompletionsAsync(filename, source, SharedOmniSharpTestHost);
+            var item = completions.Items.Single(c => c.Label.StartsWith("Prop"));
+            Assert.Equal("Prop", item.Label);
+
+            Assert.Single(item.AdditionalTextEdits);
+            Assert.Equal("public override string", item.AdditionalTextEdits[0].NewText);
+            Assert.Equal(8, item.AdditionalTextEdits[0].StartLine);
+            Assert.Equal(4, item.AdditionalTextEdits[0].StartColumn);
+            Assert.Equal(8, item.AdditionalTextEdits[0].EndLine);
+            Assert.Equal(12, item.AdditionalTextEdits[0].EndColumn);
+            Assert.Equal("Prop { get => throw new NotImplementedException()$0; set => throw new NotImplementedException(); \\}", item.TextEdit.NewText);
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task OverrideCompletion_PropertyGet(string filename)
+        {
+            const string source = @"
+using System;
+public class Base
+{
+    public abstract string Prop { get; }
+}
+public class Derived : Base
+{
+    override $$
+}
+";
+
+            var completions = await FindCompletionsAsync(filename, source, SharedOmniSharpTestHost);
+            var item = completions.Items.Single(c => c.Label.StartsWith("Prop"));
+            Assert.Equal("Prop", item.Label);
+
+            Assert.Single(item.AdditionalTextEdits);
+            Assert.Equal("public override string", item.AdditionalTextEdits[0].NewText);
+            Assert.Equal(8, item.AdditionalTextEdits[0].StartLine);
+            Assert.Equal(4, item.AdditionalTextEdits[0].StartColumn);
+            Assert.Equal(8, item.AdditionalTextEdits[0].EndLine);
+            Assert.Equal(12, item.AdditionalTextEdits[0].EndColumn);
+            Assert.Equal("Prop => throw new NotImplementedException();", item.TextEdit.NewText);
+            Assert.Equal(InsertTextFormat.PlainText, item.InsertTextFormat);
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
         public async Task PartialCompletion(string filename)
         {
             const string source = @"
