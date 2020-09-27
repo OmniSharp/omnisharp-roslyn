@@ -56,13 +56,6 @@ namespace OmniSharp.Models.v1.Completion
         public string? FilterText { get; set; }
 
         /// <summary>
-        /// A string that should be inserted into a document when selecting
-        /// this completion.When null or empty the label is used.
-        /// </summary>
-        [Obsolete("Use TextEdit instead", error: true)]
-        public string? InsertText { get; set; }
-
-        /// <summary>
         /// The format of <see cref="InsertText"/>. This applies to both <see cref="InsertText"/> and
         /// <see cref="TextEdit"/>.<see cref="LinePositionSpanTextChange.NewText"/>.
         /// </summary>
