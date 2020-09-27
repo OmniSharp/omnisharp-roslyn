@@ -240,8 +240,10 @@ namespace OmniSharp.MSBuild.ProjectFile
                     documentationFile, preprocessorSymbolNames, suppressedDiagnosticIds, warningsAsErrors, warningsNotAsErrors, signAssembly, assemblyOriginatorKeyFile, treatWarningsAsErrors, defaultNamespace, runAnalyzers, runAnalyzersDuringLiveAnalysis, ruleset: null);
             }
 
-            public static ProjectData Create(MSB.Execution.ProjectInstance projectInstance, MSB.Evaluation.Project project)
+            public static ProjectData Create(string projectFilePath, MSB.Execution.ProjectInstance projectInstance, MSB.Evaluation.Project project)
             {
+                var projectFolderPath = Path.GetDirectoryName(projectFilePath);
+
                 var guid = PropertyConverter.ToGuid(projectInstance.GetPropertyValue(PropertyNames.ProjectGuid));
                 var name = projectInstance.GetPropertyValue(PropertyNames.ProjectName);
                 var assemblyName = projectInstance.GetPropertyValue(PropertyNames.AssemblyName);
@@ -300,14 +302,16 @@ namespace OmniSharp.MSBuild.ProjectFile
                     // MSBuild logic is adding or removing properties too.
                     if (StringComparer.OrdinalIgnoreCase.Equals(referenceSourceTarget, ItemNames.ProjectReference))
                     {
-                        var sourceProjectFile = referencePathItem.GetMetadataValue(MetadataNames.MSBuildSourceProjectFile);
-                        if (sourceProjectFile.EndsWith(".csproj", StringComparison.OrdinalIgnoreCase))
+                        var projectReferenceOriginalItemSpec = referencePathItem.GetMetadataValue(MetadataNames.ProjectReferenceOriginalItemSpec);
+                        if (projectReferenceOriginalItemSpec.EndsWith(".csproj", StringComparison.OrdinalIgnoreCase))
                         {
-                            projectReferences.Add(sourceProjectFile);
+                            var projectReferenceFilePath = Path.GetFullPath(Path.Combine(projectFolderPath, projectReferenceOriginalItemSpec));
+
+                            projectReferences.Add(projectReferenceFilePath);
 
                             if (!string.IsNullOrEmpty(aliases))
                             {
-                                projectReferenceAliases[sourceProjectFile] = aliases;
+                                projectReferenceAliases[projectReferenceFilePath] = aliases;
                             }
 
                             continue;
