@@ -70,14 +70,10 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         {
             using (var host = GetHost(true))
             {
-                var originalText =
-                @"
-                    class C{}
-                ";
+                var originalText = "    class C{}";
 
                 // If filtering isn't set, this should also add 'internal' etc which
                 // should not appear now as result.
-                var expectedText = "\nclass C { }\n";
 
                 var testFilePath = CreateTestProjectWithDocument(host, originalText);
 
@@ -94,9 +90,9 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
                 string textAfterFix = await GetContentOfDocumentFromWorkspace(host, testFilePath);
 
-                Assert.Equal(expectedText, textAfterFix);
+                Assert.Equal("class C { }", textAfterFix);
 
-                Assert.Equal(expectedText, ((ModifiedFileResponse)response.Changes.Single()).Changes.Single().NewText);
+                Assert.Equal("class C { ", ((ModifiedFileResponse)response.Changes.Single()).Changes.Single().NewText);
             }
         }
 
