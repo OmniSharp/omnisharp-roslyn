@@ -37,7 +37,7 @@ namespace OmniSharp.Cake.Tests
                 var completions = await FindCompletionsAsync(fileName, input, host);
 
                 Assert.Contains("TaskSetup", completions.Items.Select(c => c.Label));
-                Assert.Contains("TaskSetup", completions.Items.Select(c => c.InsertText));
+                Assert.Contains("TaskSetup", completions.Items.Select(c => c.TextEdit.NewText));
             }
         }
 
@@ -57,7 +57,7 @@ namespace OmniSharp.Cake.Tests
                 var completions = await FindCompletionsAsync(fileName, input, host);
 
                 Assert.Contains("Information", completions.Items.Select(c => c.Label));
-                Assert.Contains("Information", completions.Items.Select(c => c.InsertText));
+                Assert.Contains("Information", completions.Items.Select(c => c.TextEdit.NewText));
             }
         }
 
@@ -75,7 +75,7 @@ namespace OmniSharp.Cake.Tests
             {
                 var fileName = Path.Combine(testProject.Directory, "build.cake");
                 var completion = (await FindCompletionsAsync(fileName, input, host))
-                    .Items.First(x => x.Preselect && x.InsertText == "Information");
+                    .Items.First(x => x.Preselect && x.TextEdit.NewText == "Information");
 
                 var resolved = await ResolveCompletionAsync(completion, host);
 
@@ -99,7 +99,7 @@ namespace OmniSharp.Cake.Tests
                 // First completion request should kick off the task to update the completion cache.
                 var completions = await FindCompletionsAsync(fileName, input, host);
                 Assert.True(completions.IsIncomplete);
-                Assert.DoesNotContain("Regex", completions.Items.Select(c => c.InsertText));
+                Assert.DoesNotContain("Regex", completions.Items.Select(c => c.TextEdit.NewText));
 
                 // Populating the completion cache should take no more than a few ms, don't let it take too
                 // long
@@ -114,9 +114,9 @@ namespace OmniSharp.Cake.Tests
                 }, cts.Token);
 
                 Assert.False(completions.IsIncomplete);
-                Assert.Contains("Regex", completions.Items.Select(c => c.InsertText));
+                Assert.Contains("Regex", completions.Items.Select(c => c.TextEdit.NewText));
 
-                var completion = completions.Items.First(c => c.InsertText == "Regex");
+                var completion = completions.Items.First(c => c.TextEdit.NewText == "Regex");
                 var resolved = await ResolveCompletionAsync(completion, host);
 
                 // Due to the fact that AdditionalTextEdits return the complete buffer, we can't currently use that in Cake.
@@ -161,7 +161,7 @@ class FooChild : Foo
                         "Test(string text, string moreText)\n    {\n        base.Test(text, moreText);$0\n    \\}",
                         "ToString()\n    {\n        return base.ToString();$0\n    \\}"
                     },
-                    completions.Items.Select<CompletionItem, string>(c => c.InsertText));
+                    completions.Items.Select<CompletionItem, string>(c => c.TextEdit.NewText));
 
                 Assert.Equal(new[]
                     {
