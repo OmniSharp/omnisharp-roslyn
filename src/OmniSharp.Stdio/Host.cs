@@ -232,6 +232,8 @@ namespace OmniSharp.Stdio
             }
             finally
             {
+                // response gets logged when Debug or more detailed log level is enabled
+                // or when we have unsuccessful response (exception)
                 if (logger.IsEnabled(LogLevel.Debug) || !response.Success)
                 {
                     LogResponse(response.ToString(), logger, response.Success);
