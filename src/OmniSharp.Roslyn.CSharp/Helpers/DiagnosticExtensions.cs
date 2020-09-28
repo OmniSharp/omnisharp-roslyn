@@ -35,7 +35,7 @@ namespace OmniSharp.Helpers
         internal static IEnumerable<DiagnosticLocation> DistinctDiagnosticLocationsByProject(this IEnumerable<DocumentDiagnostics> documentDiagnostic)
         {
             return documentDiagnostic
-                .SelectMany(x => x.Diagnostics, (parent, child) => (projectName: parent.ProjectName, diagnostic: child))
+                .SelectMany(x => x.Diagnostics, (parent, child) => (projectName: parent.Project.Name, diagnostic: child))
                 .Select(x => new
                 {
                     location = x.diagnostic.ToDiagnosticLocation(),

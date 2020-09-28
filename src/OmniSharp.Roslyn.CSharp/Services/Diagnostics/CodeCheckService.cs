@@ -47,7 +47,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
         {
             var diagnosticLocations = diagnostics
                 .Where(x => string.IsNullOrEmpty(fileName)
-                    || x.DocumentPath == fileName)
+                    || x.Document.FilePath == fileName)
                 .DistinctDiagnosticLocationsByProject()
                 .Where(x => x.FileName != null);
 

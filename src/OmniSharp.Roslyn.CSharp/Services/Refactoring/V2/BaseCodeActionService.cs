@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -16,12 +17,15 @@ using OmniSharp.Extensions;
 using OmniSharp.Mef;
 using OmniSharp.Models;
 using OmniSharp.Models.V2.CodeActions;
+using OmniSharp.Roslyn.CSharp.Helpers;
 using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
 using OmniSharp.Roslyn.CSharp.Workers.Diagnostics;
 using OmniSharp.Roslyn.Utilities;
 using OmniSharp.Services;
 using OmniSharp.Utilities;
 using FixAllScope = OmniSharp.Abstractions.Models.V1.FixAll.FixAllScope;
+
+#nullable enable
 
 namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 {
@@ -30,8 +34,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
         protected readonly OmniSharpWorkspace Workspace;
         protected readonly IEnumerable<ICodeActionProvider> Providers;
         protected readonly ILogger Logger;
-        private readonly ICsDiagnosticWorker diagnostics;
-        private readonly CachingCodeFixProviderForProjects codeFixesForProject;
+        private readonly ICsDiagnosticWorker _diagnostics;
+        private readonly CachingCodeFixProviderForProjects _codeFixesForProject;
         private readonly MethodInfo _getNestedCodeActions;
 
         protected Lazy<List<CodeRefactoringProvider>> OrderedCodeRefactoringProviders;
@@ -52,8 +56,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             Workspace = workspace;
             Providers = providers;
             Logger = logger;
-            this.diagnostics = diagnostics;
-            this.codeFixesForProject = codeFixesForProject;
+            _diagnostics = diagnostics;
+            _codeFixesForProject = codeFixesForProject;
             OrderedCodeRefactoringProviders = new Lazy<List<CodeRefactoringProvider>>(() => GetSortedCodeRefactoringProviders());
 
             // Sadly, the CodeAction.NestedCodeActions property is still internal.
@@ -123,7 +127,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
         private async Task CollectCodeFixesActions(Document document, TextSpan span, List<CodeAction> codeActions)
         {
-            var diagnosticsWithProjects = await diagnostics.GetDiagnostics(ImmutableArray.Create(document.FilePath));
+            var diagnosticsWithProjects = await _diagnostics.GetDiagnostics(ImmutableArray.Create(document), skipCache: false);
 
             var groupedBySpan = diagnosticsWithProjects
                     .SelectMany(x => x.Diagnostics)
@@ -163,7 +167,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
         private List<CodeFixProvider> GetSortedCodeFixProviders(Document document)
         {
-            return ExtensionOrderer.GetOrderedOrUnorderedList<CodeFixProvider, ExportCodeFixProviderAttribute>(codeFixesForProject.GetAllCodeFixesForProject(document.Project.Id), attribute => attribute.Name).ToList();
+            return ExtensionOrderer.GetOrderedOrUnorderedList<CodeFixProvider, ExportCodeFixProviderAttribute>(_codeFixesForProject.GetAllCodeFixesForProject(document.Project), attribute => attribute.Name).ToList();
         }
 
         private List<CodeRefactoringProvider> GetSortedCodeRefactoringProviders()
@@ -211,33 +215,47 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             });
         }
 
-        // Mapping means: each mapped item has one document that has one code fix provider and it's corresponding diagnostics.
-        // If same document has multiple codefixers (diagnostics with different fixers) will them be mapped as separate items.
-        protected async Task<ImmutableArray<DocumentWithFixProvidersAndMatchingDiagnostics>> GetDiagnosticsMappedWithFixAllProviders(FixAllScope scope, string fileName)
+        protected async Task<(DocumentId DocumentId, Diagnostic Diagnostic)> GetDocumentIdAndDiagnosticForGivenId(FixAllScope scope, Document document, string diagnosticId)
         {
-            ImmutableArray<DocumentDiagnostics> allDiagnostics = await GetCorrectDiagnosticsInScope(scope, fileName);
+            var allDocumentDiagnostics = await GetDiagnosticsAsync(scope, document);
 
-            var mappedProvidersWithDiagnostics = allDiagnostics
-                .SelectMany(diagnosticsInDocument =>
-                    DocumentWithFixProvidersAndMatchingDiagnostics.CreateWithMatchingProviders(codeFixesForProject.GetAllCodeFixesForProject(diagnosticsInDocument.ProjectId), diagnosticsInDocument));
+            foreach (var documentAndDiagnostics in allDocumentDiagnostics)
+            {
+                if (documentAndDiagnostics.Diagnostics.FirstOrDefault(d => d.Id == diagnosticId) is Diagnostic diagnostic)
+                {
+                    return (documentAndDiagnostics.Document.Id, diagnostic);
+                }
+            }
 
-            return mappedProvidersWithDiagnostics.ToImmutableArray();
+            return default;
         }
 
-        private async Task<ImmutableArray<DocumentDiagnostics>> GetCorrectDiagnosticsInScope(FixAllScope scope, string fileName)
+        protected ImmutableArray<CodeFixProvider> GetCodeFixProviders(Project project)
+        {
+            return _codeFixesForProject.GetAllCodeFixesForProject(project);
+        }
+
+        protected CodeFixProvider? GetCodeFixProviderForId(Document document, string id)
+        {
+            // If Roslyn ever comes up with a UI for selecting what provider the user prefers, we might consider replicating.
+            // https://github.com/dotnet/roslyn/issues/27066
+            return _codeFixesForProject.GetAllCodeFixesForProject(document.Project).FirstOrDefault(provider => provider.HasFixForId(id));
+        }
+
+        protected async Task<ImmutableArray<DocumentDiagnostics>> GetDiagnosticsAsync(FixAllScope scope, Document document)
         {
             switch (scope)
             {
                 case FixAllScope.Solution:
-                    var documentsInSolution = Workspace.CurrentSolution.Projects.SelectMany(x => x.Documents).Select(x => x.FilePath).ToImmutableArray();
-                    return await diagnostics.GetDiagnostics(documentsInSolution);
+                    var documentsInSolution = document.Project.Solution.Projects.SelectMany(p => p.Documents).ToImmutableArray();
+                    return await _diagnostics.GetDiagnostics(documentsInSolution, skipCache: true);
                 case FixAllScope.Project:
-                    var documentsInProject = Workspace.GetDocument(fileName).Project.Documents.Select(x => x.FilePath).ToImmutableArray();
-                    return await diagnostics.GetDiagnostics(documentsInProject);
+                    var documensInProject = document.Project.Documents.ToImmutableArray();
+                    return await _diagnostics.GetDiagnostics(documensInProject, skipCache: true);
                 case FixAllScope.Document:
-                    return await diagnostics.GetDiagnostics(ImmutableArray.Create(fileName));
+                    return await _diagnostics.GetDiagnostics(ImmutableArray.Create(document), skipCache: true);
                 default:
-                    throw new NotImplementedException();
+                    throw new InvalidOperationException();
             }
         }
 
@@ -253,7 +271,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
                 foreach (var documentId in projectChange.GetAddedDocuments())
                 {
                     var newDocument = newSolution.GetDocument(documentId);
-                    var text = await newDocument.GetTextAsync();
+                    var text = await newDocument!.GetTextAsync();
 
                     var newFilePath = newDocument.FilePath == null || !Path.IsPathRooted(newDocument.FilePath)
                         ? Path.Combine(directory, newDocument.Name)
@@ -307,14 +325,16 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
                 {
                     var newDocument = newSolution.GetDocument(documentId);
                     var oldDocument = oldSolution.GetDocument(documentId);
-                    var filePath = newDocument.FilePath;
+                    Debug.Assert(oldDocument!.FilePath != null);
+                    Debug.Assert(newDocument!.FilePath != null);
+                    string filePath = newDocument.FilePath!;
 
                     // file rename
                     if (oldDocument != null && newDocument.Name != oldDocument.Name)
                     {
                         if (wantsAllCodeActionOperations)
                         {
-                            var newFilePath = GetNewFilePath(newDocument.Name, oldDocument.FilePath);
+                            var newFilePath = GetNewFilePath(newDocument.Name, oldDocument.FilePath!);
                             var text = await oldDocument.GetTextAsync();
                             var temp = solution.RemoveDocument(documentId);
                             solution = temp.AddDocument(DocumentId.CreateNewId(oldDocument.Project.Id, newDocument.Name), newDocument.Name, text, oldDocument.Folders, newFilePath);

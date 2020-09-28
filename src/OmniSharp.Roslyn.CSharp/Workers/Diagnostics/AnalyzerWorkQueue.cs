@@ -17,8 +17,8 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
                 Throttling = throttling;
             }
 
-            public ImmutableHashSet<DocumentId> WorkWaitingToExecute { get; set; } = ImmutableHashSet<DocumentId>.Empty;
-            public ImmutableHashSet<DocumentId> WorkExecuting { get; set; } = ImmutableHashSet<DocumentId>.Empty;
+            public ImmutableHashSet<Document> WorkWaitingToExecute { get; set; } = ImmutableHashSet<Document>.Empty;
+            public ImmutableHashSet<Document> WorkExecuting { get; set; } = ImmutableHashSet<Document>.Empty;
             public DateTime LastThrottlingBegan { get; set; } = DateTime.UtcNow;
             public TimeSpan Throttling { get; }
             public CancellationTokenSource WorkPendingToken { get; set; }
@@ -44,7 +44,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
             _maximumDelayWhenWaitingForResults = timeoutForPendingWorkMs;
         }
 
-        public void PutWork(IReadOnlyCollection<DocumentId> documentIds, AnalyzerWorkType workType)
+        public void PutWork(IReadOnlyCollection<Document> documents, AnalyzerWorkType workType)
         {
             lock (_queueLock)
             {
@@ -56,21 +56,21 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
                 if (queue.WorkPendingToken == null)
                     queue.WorkPendingToken = new CancellationTokenSource();
 
-                queue.WorkWaitingToExecute = queue.WorkWaitingToExecute.Union(documentIds);
+                queue.WorkWaitingToExecute = queue.WorkWaitingToExecute.Union(documents);
             }
         }
 
-        public IReadOnlyCollection<DocumentId> TakeWork(AnalyzerWorkType workType)
+        public IReadOnlyCollection<Document> TakeWork(AnalyzerWorkType workType)
         {
             lock (_queueLock)
             {
                 var queue = _queues[workType];
 
                 if (IsThrottlingActive(queue) || queue.WorkWaitingToExecute.IsEmpty)
-                    return ImmutableHashSet<DocumentId>.Empty;
+                    return ImmutableHashSet<Document>.Empty;
 
                 queue.WorkExecuting = queue.WorkWaitingToExecute;
-                queue.WorkWaitingToExecute = ImmutableHashSet<DocumentId>.Empty;
+                queue.WorkWaitingToExecute = ImmutableHashSet<Document>.Empty;
                 return queue.WorkExecuting;
             }
         }
@@ -89,7 +89,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
 
                 _queues[workType].WorkPendingToken?.Cancel();
                 _queues[workType].WorkPendingToken = null;
-                _queues[workType].WorkExecuting = ImmutableHashSet<DocumentId>.Empty;
+                _queues[workType].WorkExecuting = ImmutableHashSet<Document>.Empty;
             }
         }
 
@@ -107,11 +107,11 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
                 .ContinueWith(task => LogTimeouts(task));
         }
 
-        public bool TryPromote(DocumentId id)
+        public bool TryPromote(Document document)
         {
-            if (_queues[AnalyzerWorkType.Background].WorkWaitingToExecute.Contains(id) || _queues[AnalyzerWorkType.Background].WorkExecuting.Contains(id))
+            if (_queues[AnalyzerWorkType.Background].WorkWaitingToExecute.Contains(document) || _queues[AnalyzerWorkType.Background].WorkExecuting.Contains(document))
             {
-                PutWork(new[] { id }, AnalyzerWorkType.Foreground);
+                PutWork(new[] { document }, AnalyzerWorkType.Foreground);
                 return true;
             }
 

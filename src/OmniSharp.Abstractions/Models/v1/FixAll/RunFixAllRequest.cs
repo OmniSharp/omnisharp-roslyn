@@ -13,5 +13,7 @@ namespace OmniSharp.Abstractions.Models.V1.FixAll
         public int Timeout { get; set; } = 3000;
         public bool WantsAllCodeActionOperations { get; set; }
         public bool WantsTextChanges { get; set; }
+        // Nullable for backcompat: null == true, for requests that don't set it
+        public bool? ApplyChanges { get; set; }
     }
 }

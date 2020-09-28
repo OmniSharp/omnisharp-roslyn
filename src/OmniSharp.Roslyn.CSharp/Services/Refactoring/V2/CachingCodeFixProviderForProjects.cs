@@ -41,16 +41,14 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             };
         }
 
-        public ImmutableArray<CodeFixProvider> GetAllCodeFixesForProject(ProjectId projectId)
+        public ImmutableArray<CodeFixProvider> GetAllCodeFixesForProject(Project project)
         {
-            if (_cache.ContainsKey(projectId))
-                return _cache[projectId];
-
-            var project = _workspace.CurrentSolution.GetProject(projectId);
+            if (_cache.ContainsKey(project.Id))
+                return _cache[project.Id];
 
             if (project == null)
             {
-                _cache.TryRemove(projectId, out _);
+                _cache.TryRemove(project.Id, out _);
                 return ImmutableArray<CodeFixProvider>.Empty;
             }
 

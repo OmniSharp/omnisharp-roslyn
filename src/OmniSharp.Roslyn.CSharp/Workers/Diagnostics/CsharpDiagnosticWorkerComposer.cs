@@ -77,6 +77,11 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
             return _implementation.GetDiagnostics(documentPaths);
         }
 
+        public Task<ImmutableArray<DocumentDiagnostics>> GetDiagnostics(ImmutableArray<Document> documents, bool skipCache)
+        {
+            return _implementation.GetDiagnostics(documents, skipCache);
+        }
+
         public ImmutableArray<DocumentId> QueueDocumentsForDiagnostics()
         {
             return _implementation.QueueDocumentsForDiagnostics();
