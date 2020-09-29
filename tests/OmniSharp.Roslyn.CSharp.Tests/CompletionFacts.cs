@@ -44,7 +44,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             var completions = await FindCompletionsAsync(filename, input, SharedOmniSharpTestHost);
             Assert.Contains("Foo", completions.Items.Select(c => c.Label));
-            Assert.Contains("Foo", completions.Items.Select(c => c.InsertText));
+            Assert.Contains("Foo", completions.Items.Select(c => c.TextEdit.NewText));
         }
 
         [Theory]
@@ -63,7 +63,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             var completions = await FindCompletionsAsync(filename, input, SharedOmniSharpTestHost);
             Assert.Contains("foo", completions.Items.Select(c => c.Label));
-            Assert.Contains("foo", completions.Items.Select(c => c.InsertText));
+            Assert.Contains("foo", completions.Items.Select(c => c.TextEdit.NewText));
         }
 
         [Theory]
@@ -105,7 +105,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     }";
 
             var completions = await FindCompletionsAsync(filename, input, SharedOmniSharpTestHost);
-            Assert.Contains("TryParse", completions.Items.Select(c => c.InsertText));
+            Assert.Contains("TryParse", completions.Items.Select(c => c.TextEdit.NewText));
         }
 
         [Theory]
@@ -123,7 +123,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             var completions = await FindCompletionsAsync(filename, input, SharedOmniSharpTestHost);
             Assert.False(completions.IsIncomplete);
-            Assert.DoesNotContain("Guid", completions.Items.Select(c => c.InsertText));
+            Assert.DoesNotContain("Guid", completions.Items.Select(c => c.TextEdit.NewText));
         }
 
         [Theory]
@@ -144,7 +144,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             // First completion request should kick off the task to update the completion cache.
             var completions = await FindCompletionsAsync(filename, input, host);
             Assert.True(completions.IsIncomplete);
-            Assert.DoesNotContain("Guid", completions.Items.Select(c => c.InsertText));
+            Assert.DoesNotContain("Guid", completions.Items.Select(c => c.TextEdit.NewText));
 
             // Populating the completion cache should take no more than a few ms, don't let it take too
             // long
@@ -159,7 +159,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             }, cts.Token);
 
             Assert.False(completions.IsIncomplete);
-            Assert.Contains("Guid", completions.Items.Select(c => c.InsertText));
+            Assert.Contains("Guid", completions.Items.Select(c => c.TextEdit.NewText));
         }
 
         [Theory]
@@ -179,8 +179,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             using var host = GetImportCompletionHost();
             var completions = await FindCompletionsWithImportedAsync(filename, input, host);
-            CompletionItem localCompletion = completions.Items.First(c => c.InsertText == "guid");
-            CompletionItem typeCompletion = completions.Items.First(c => c.InsertText == "Guid");
+            CompletionItem localCompletion = completions.Items.First(c => c.TextEdit.NewText == "guid");
+            CompletionItem typeCompletion = completions.Items.First(c => c.TextEdit.NewText == "Guid");
             Assert.True(localCompletion.Data < typeCompletion.Data);
             Assert.StartsWith("0", localCompletion.SortText);
             Assert.StartsWith("1", typeCompletion.SortText);
@@ -215,7 +215,7 @@ namespace N2
 
             using var host = GetImportCompletionHost();
             var completions = await FindCompletionsWithImportedAsync(filename, input, host);
-            Assert.Contains("Test", completions.Items.Select(c => c.InsertText));
+            Assert.Contains("Test", completions.Items.Select(c => c.TextEdit.NewText));
             VerifySortOrders(completions.Items);
         }
 
@@ -247,7 +247,7 @@ namespace N2
 
             using var host = GetImportCompletionHost();
             var completions = await FindCompletionsWithImportedAsync(filename, input, host);
-            var resolved = await ResolveCompletionAsync(completions.Items.First(c => c.InsertText == "Test"), host);
+            var resolved = await ResolveCompletionAsync(completions.Items.First(c => c.TextEdit.NewText == "Test"), host);
 
             Assert.Single(resolved.Item.AdditionalTextEdits);
             var additionalEdit = resolved.Item.AdditionalTextEdits[0];
@@ -288,7 +288,7 @@ namespace N2
 
             using var host = GetImportCompletionHost();
             var completions = await FindCompletionsWithImportedAsync(filename, input, host);
-            var resolved = await ResolveCompletionAsync(completions.Items.First(c => c.InsertText == "Guid"), host);
+            var resolved = await ResolveCompletionAsync(completions.Items.First(c => c.TextEdit.NewText == "Guid"), host);
 
             Assert.Single(resolved.Item.AdditionalTextEdits);
             var additionalEdit = resolved.Item.AdditionalTextEdits[0];
@@ -335,7 +335,7 @@ namespace N3
 
             using var host = GetImportCompletionHost();
             var completions = await FindCompletionsWithImportedAsync(filename, input, host);
-            var resolved = await ResolveCompletionAsync(completions.Items.First(c => c.InsertText == "C2"), host);
+            var resolved = await ResolveCompletionAsync(completions.Items.First(c => c.TextEdit.NewText == "C2"), host);
 
             Assert.Single(resolved.Item.AdditionalTextEdits);
             var additionalEdit = resolved.Item.AdditionalTextEdits[0];
@@ -500,7 +500,7 @@ namespace N3
 
             var completions = await FindCompletionsAsync(filename, source, SharedOmniSharpTestHost);
             Assert.Contains(completions.Items, c => c.Label == "Bar");
-            Assert.Contains(completions.Items, c => c.InsertText == "Bar");
+            Assert.Contains(completions.Items, c => c.TextEdit.NewText == "Bar");
             Assert.All(completions.Items, c =>
             {
                 switch (c.Label)
@@ -538,7 +538,7 @@ namespace N3
             var completions = await FindCompletionsAsync(filename, source, SharedOmniSharpTestHost);
             Assert.Single(completions.Items);
             Assert.Equal("Foo", completions.Items[0].Label);
-            Assert.Equal("Foo", completions.Items[0].InsertText);
+            Assert.Equal("Foo", completions.Items[0].TextEdit.NewText);
         }
 
         [Theory]
@@ -564,7 +564,7 @@ namespace N3
             var completions = await FindCompletionsAsync(filename, source, SharedOmniSharpTestHost);
             var item = completions.Items.First(c => c.Label == "text:");
             Assert.NotNull(item);
-            Assert.Equal("text", item.InsertText);
+            Assert.Equal("text", item.TextEdit.NewText);
             Assert.All(completions.Items, c =>
             {
                 switch (c.Label)
@@ -624,7 +624,7 @@ class FooChild : Foo
                                  "Test(string text, string moreText)\n    {\n        base.Test(text, moreText);$0\n    \\}",
                                  "ToString()\n    {\n        return base.ToString();$0\n    \\}"
                                 },
-                         completions.Items.Select<CompletionItem, string>(c => c.InsertText));
+                         completions.Items.Select<CompletionItem, string>(c => c.TextEdit.NewText));
 
             Assert.Equal(new[] { "public override bool",
                                  "public override int",
@@ -678,7 +678,7 @@ namespace N3
                                  "GetN1()\n        {\n            throw new System.NotImplementedException();$0\n        \\}",
                                  "ToString()\n        {\n            return base.ToString();$0\n        \\}"
                                },
-                         completions.Items.Select(c => c.InsertText));
+                         completions.Items.Select(c => c.TextEdit.NewText));
 
             Assert.Equal(new[] { "public override bool",
                                  "public override int",
@@ -717,7 +717,7 @@ class C
                                  "int GetHashCode()\n    {\n        return base.GetHashCode();$0\n    \\}",
                                  "string ToString()\n    {\n        return base.ToString();$0\n    \\}"
                                },
-                         completions.Items.Select(c => c.InsertText));
+                         completions.Items.Select(c => c.TextEdit.NewText));
 
             Assert.All(completions.Items.Select(c => c.AdditionalTextEdits), a => Assert.Null(a));
             Assert.All(completions.Items, c => Assert.Equal(InsertTextFormat.Snippet, c.InsertTextFormat));
@@ -739,7 +739,7 @@ class C
                          completions.Items.Select(c => c.Label));
 
             Assert.Equal(new[] { "Equals(object obj)\n    {\n        return base.Equals(obj);$0\n    \\}" },
-                         completions.Items.Select(c => c.InsertText));
+                         completions.Items.Select(c => c.TextEdit.NewText));
 
             Assert.All(completions.Items.Select(c => c.AdditionalTextEdits), a => Assert.Null(a));
             Assert.All(completions.Items, c => Assert.Equal(InsertTextFormat.Snippet, c.InsertTextFormat));
@@ -770,7 +770,7 @@ class Derived : Base
                                  "Test()\n    {\n        throw new System.NotImplementedException();$0\n    \\}",
                                  "ToString()\n    {\n        return base.ToString();$0\n    \\}"
                                },
-                         completions.Items.Select(c => c.InsertText));
+                         completions.Items.Select(c => c.TextEdit.NewText));
 
             Assert.Equal(new[] { "public override bool",
                                  "public override int",
@@ -817,7 +817,7 @@ public class Derived : Base
             Assert.Equal(0, item.AdditionalTextEdits[0].StartColumn);
             Assert.Equal(3, item.AdditionalTextEdits[0].EndLine);
             Assert.Equal(12, item.AdditionalTextEdits[0].EndColumn);
-            Assert.Equal("GetAction(Action a)\n    {\n        return base.GetAction(a);$0\n    \\}", item.InsertText);
+            Assert.Equal("GetAction(Action a)\n    {\n        return base.GetAction(a);$0\n    \\}", item.TextEdit.NewText);
         }
 
         [Fact]
@@ -845,7 +845,68 @@ public class Derived : Base
             Assert.Equal(4, item.AdditionalTextEdits[0].StartColumn);
             Assert.Equal(9, item.AdditionalTextEdits[0].EndLine);
             Assert.Equal(12, item.AdditionalTextEdits[0].EndColumn);
-            Assert.Equal("M1(object param)\n    {\n        return base.M1(param);$0\n    \\}", item.InsertText);
+            Assert.Equal("M1(object param)\n    {\n        return base.M1(param);$0\n    \\}", item.TextEdit.NewText);
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task OverrideCompletion_PropertyGetSet(string filename)
+        {
+            const string source = @"
+using System;
+public class Base
+{
+    public abstract string Prop { get; set; }
+}
+public class Derived : Base
+{
+    override $$
+}
+";
+
+            var completions = await FindCompletionsAsync(filename, source, SharedOmniSharpTestHost);
+            var item = completions.Items.Single(c => c.Label.StartsWith("Prop"));
+            Assert.Equal("Prop", item.Label);
+
+            Assert.Single(item.AdditionalTextEdits);
+            Assert.Equal("public override string", item.AdditionalTextEdits[0].NewText);
+            Assert.Equal(8, item.AdditionalTextEdits[0].StartLine);
+            Assert.Equal(4, item.AdditionalTextEdits[0].StartColumn);
+            Assert.Equal(8, item.AdditionalTextEdits[0].EndLine);
+            Assert.Equal(12, item.AdditionalTextEdits[0].EndColumn);
+            Assert.Equal("Prop { get => throw new NotImplementedException()$0; set => throw new NotImplementedException(); \\}", item.TextEdit.NewText);
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task OverrideCompletion_PropertyGet(string filename)
+        {
+            const string source = @"
+using System;
+public class Base
+{
+    public abstract string Prop { get; }
+}
+public class Derived : Base
+{
+    override $$
+}
+";
+
+            var completions = await FindCompletionsAsync(filename, source, SharedOmniSharpTestHost);
+            var item = completions.Items.Single(c => c.Label.StartsWith("Prop"));
+            Assert.Equal("Prop", item.Label);
+
+            Assert.Single(item.AdditionalTextEdits);
+            Assert.Equal("public override string", item.AdditionalTextEdits[0].NewText);
+            Assert.Equal(8, item.AdditionalTextEdits[0].StartLine);
+            Assert.Equal(4, item.AdditionalTextEdits[0].StartColumn);
+            Assert.Equal(8, item.AdditionalTextEdits[0].EndLine);
+            Assert.Equal(12, item.AdditionalTextEdits[0].EndColumn);
+            Assert.Equal("Prop => throw new NotImplementedException();", item.TextEdit.NewText);
+            Assert.Equal(InsertTextFormat.PlainText, item.InsertTextFormat);
         }
 
         [Theory]
@@ -869,7 +930,7 @@ partial class C
                          completions.Items.Select(c => c.Label));
 
             Assert.Equal(new[] { "void M1(string param)\n    {\n        throw new System.NotImplementedException();$0\n    \\}" },
-                         completions.Items.Select(c => c.InsertText));
+                         completions.Items.Select(c => c.TextEdit.NewText));
 
             Assert.All(completions.Items.Select(c => c.AdditionalTextEdits), a => Assert.Null(a));
             Assert.All(completions.Items, c => Assert.Equal(InsertTextFormat.Snippet, c.InsertTextFormat));
@@ -901,7 +962,7 @@ public partial class C
             Assert.Equal(0, item.AdditionalTextEdits[0].StartColumn);
             Assert.Equal(3, item.AdditionalTextEdits[0].EndLine);
             Assert.Equal(11, item.AdditionalTextEdits[0].EndColumn);
-            Assert.Equal("M(Action a)\n    {\n        throw new NotImplementedException();$0\n    \\}", item.InsertText);
+            Assert.Equal("M(Action a)\n    {\n        throw new NotImplementedException();$0\n    \\}", item.TextEdit.NewText);
         }
 
         [Fact]
@@ -923,7 +984,7 @@ public partial class C
             var item = completions.Items.Single(c => c.Label.StartsWith("M1"));
             Assert.Equal("M1(object param)", item.Label);
             Assert.Null(item.AdditionalTextEdits);
-            Assert.Equal("void M1(object param)\n    {\n        throw new System.NotImplementedException();$0\n    \\}", item.InsertText);
+            Assert.Equal("void M1(object param)\n    {\n        throw new System.NotImplementedException();$0\n    \\}", item.TextEdit.NewText);
         }
 
         [Theory]
@@ -945,7 +1006,7 @@ class C
                                  "GetHashCode()\n    {\n        return base.GetHashCode();$0\n    \\}",
                                  "ToString()\n    {\n        return base.ToString();$0\n    \\}"
                                },
-                         completions.Items.Select(c => c.InsertText));
+                         completions.Items.Select(c => c.TextEdit.NewText));
 
             Assert.Equal(new[] { "public override bool",
                                  "public override int",
@@ -1030,8 +1091,8 @@ class C
                                  "see cref=\"$0\"/>",
                                  "seealso cref=\"$0\"/>"
                          },
-                         completions.Items.Select(c => c.InsertText));
-            Assert.All(completions.Items, c => Assert.Equal(c.InsertText.Contains("$0"), c.InsertTextFormat == InsertTextFormat.Snippet));
+                         completions.Items.Select(c => c.TextEdit.NewText));
+            Assert.All(completions.Items, c => Assert.Equal(c.TextEdit.NewText.Contains("$0"), c.InsertTextFormat == InsertTextFormat.Snippet));
         }
 
         [Fact]
@@ -1307,7 +1368,7 @@ class C
             var completions = await FindCompletionsAsync("dummy.cs", input, SharedOmniSharpTestHost);
             Assert.Single(completions.Items);
             Assert.Equal("AssemblyNameVal", completions.Items[0].Label);
-            Assert.Equal("AssemblyNameVal", completions.Items[0].InsertText);
+            Assert.Equal("AssemblyNameVal", completions.Items[0].TextEdit.NewText);
         }
 
         [Fact]
@@ -1333,7 +1394,73 @@ class C
             var completions = await FindCompletionsAsync("dummy.cs", input, SharedOmniSharpTestHost);
             Assert.Single(completions.Items);
             Assert.Equal("AssemblyNameVal", completions.Items[0].Label);
-            Assert.Equal("AssemblyNameVal", completions.Items[0].InsertText);
+            Assert.Equal("AssemblyNameVal", completions.Items[0].TextEdit.NewText);
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task PrefixHeaderIsFullyCorrect(string filename)
+        {
+            const string input =
+@"public class Base
+{
+    protected virtual void OnEnable() {}
+}
+public class Derived : Base
+{
+    protected override void On$$
+}";
+
+            var completions = await FindCompletionsAsync(filename, input, SharedOmniSharpTestHost);
+            var onEnable = completions.Items.Single(c => c.TextEdit.NewText.Contains("OnEnable"));
+            Assert.Equal(onEnable.TextEdit.StartLine, onEnable.TextEdit.EndLine);
+            Assert.Equal(2, onEnable.TextEdit.EndColumn - onEnable.TextEdit.StartColumn);
+            Assert.Equal("OnEnable()\n    {\n        base.OnEnable();$0\n    \\}", onEnable.TextEdit.NewText);
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task PrefixHeaderIsPartiallyCorrect_1(string filename)
+        {
+            const string input =
+@"public class Base
+{
+    protected virtual void OnEnable() {}
+}
+public class Derived : Base
+{
+    protected override void ON$$
+}";
+
+            var completions = await FindCompletionsAsync(filename, input, SharedOmniSharpTestHost);
+            var onEnable = completions.Items.Single(c => c.TextEdit.NewText.Contains("OnEnable"));
+            Assert.Equal(onEnable.TextEdit.StartLine, onEnable.TextEdit.EndLine);
+            Assert.Equal(2, onEnable.TextEdit.EndColumn - onEnable.TextEdit.StartColumn);
+            Assert.Equal("OnEnable()\n    {\n        base.OnEnable();$0\n    \\}", onEnable.TextEdit.NewText);
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task PrefixHeaderIsPartiallyCorrect_2(string filename)
+        {
+            const string input =
+@"public class Base
+{
+    protected virtual void OnEnable() {}
+}
+public class Derived : Base
+{
+    protected override void on$$
+}";
+
+            var completions = await FindCompletionsAsync(filename, input, SharedOmniSharpTestHost);
+            var onEnable = completions.Items.Single(c => c.TextEdit.NewText.Contains("OnEnable"));
+            Assert.Equal(onEnable.TextEdit.StartLine, onEnable.TextEdit.EndLine);
+            Assert.Equal(2, onEnable.TextEdit.EndColumn - onEnable.TextEdit.StartColumn);
+            Assert.Equal("OnEnable()\n    {\n        base.OnEnable();$0\n    \\}", onEnable.TextEdit.NewText);
         }
 
         [ConditionalTheory(typeof(WindowsOnly))]
@@ -1354,7 +1481,7 @@ class Foo
             var completions = await FindCompletionsAsync(filename, input, SharedOmniSharpTestHost);
             var aCompletion = completions.Items.First(c => c.Label == @"\A");
             Assert.NotNull(aCompletion);
-            Assert.Equal(@"\\A", aCompletion.InsertText);
+            Assert.Equal(@"\\A", aCompletion.TextEdit.NewText);
         }
 
         [ConditionalTheory(typeof(WindowsOnly))]
@@ -1375,7 +1502,7 @@ class Foo
             var completions = await FindCompletionsAsync(filename, input, SharedOmniSharpTestHost);
             var aCompletion = completions.Items.First(c => c.Label == @"\A");
             Assert.NotNull(aCompletion);
-            Assert.Equal(@"\A", aCompletion.InsertText);
+            Assert.Equal(@"\A", aCompletion.TextEdit.NewText);
         }
 
         private CompletionService GetCompletionService(OmniSharpTestHost host)

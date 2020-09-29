@@ -229,5 +229,19 @@ namespace OmniSharp.MSBuild.Tests
                 Assert.Equal(ReportDiagnostic.Suppress, compilationOptions.SpecificDiagnosticOptions["CS7081"]);
             }
         }
+
+        [Fact]
+        public async Task ProjectReferenceProducingAnalyzerItems()
+        {
+            using (var host = CreateOmniSharpHost())
+            using (var testProject = await _testAssets.GetTestProjectAsync("ProjectWithAnalyzersFromReference"))
+            {
+                var projectFilePath = Path.Combine(testProject.Directory, "ConsumingProject", "ConsumingProject.csproj");
+                var projectFileInfo = CreateProjectFileInfo(host, testProject, projectFilePath);
+                Assert.Empty(projectFileInfo.ProjectReferences);
+                var analyzerFileReference = Assert.Single(projectFileInfo.Analyzers);
+                Assert.EndsWith("Analyzer.dll", analyzerFileReference);
+            }
+        }
     }
 }
