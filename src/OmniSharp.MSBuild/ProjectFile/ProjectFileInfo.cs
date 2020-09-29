@@ -119,7 +119,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 return (null, diagnostics, null);
             }
 
-            var data = ProjectData.Create(projectInstance, project);
+            var data = ProjectData.Create(filePath, projectInstance, project);
             var projectFileInfo = new ProjectFileInfo(projectIdInfo, filePath, data, sessionId, dotNetInfo);
             var eventArgs = new ProjectLoadedEventArgs(projectIdInfo.Id,
                                                        project,
@@ -143,7 +143,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 return (null, diagnostics, null);
             }
 
-            var data = ProjectData.Create(projectInstance, project);
+            var data = ProjectData.Create(FilePath, projectInstance, project);
             var projectFileInfo = new ProjectFileInfo(ProjectIdInfo, FilePath, data, SessionId, DotNetInfo);
             var eventArgs = new ProjectLoadedEventArgs(Id,
                                                        project,
