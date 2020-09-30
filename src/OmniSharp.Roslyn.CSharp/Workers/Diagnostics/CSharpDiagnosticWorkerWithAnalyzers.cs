@@ -78,9 +78,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
         public async Task<ImmutableArray<DocumentDiagnostics>> GetDiagnostics(ImmutableArray<string> documentPaths)
         {
-            var documentIds = GetDocumentIdsFromPaths(documentPaths);
+            var documentIds = GetDocumentFromPaths(documentPaths);
 
-            return await GetDiagnosticsByDocumentIds(documentIds, waitForDocuments: true);
+            return await GetDiagnosticsByDocument(documentIds, waitForDocuments: true);
         }
 
         public async Task<ImmutableArray<DocumentDiagnostics>> GetDiagnostics(ImmutableArray<Document> documents, bool skipCache)
@@ -106,10 +106,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
             var documentIds = documents.SelectAsArray(d => d.Id);
 
-            return await GetDiagnosticsByDocumentIds(documents, waitForDocuments: true);
+            return await GetDiagnosticsByDocument(documents, waitForDocuments: true);
         }
 
-        private async Task<ImmutableArray<DocumentDiagnostics>> GetDiagnosticsByDocumentIds(ImmutableArray<Document> documents, bool waitForDocuments)
+        private async Task<ImmutableArray<DocumentDiagnostics>> GetDiagnosticsByDocument(ImmutableArray<Document> documents, bool waitForDocuments)
         {
             if (waitForDocuments)
             {
@@ -127,7 +127,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                 .ToImmutableArray();
         }
 
-        private ImmutableArray<Document> GetDocumentIdsFromPaths(ImmutableArray<string> documentPaths)
+        private ImmutableArray<Document> GetDocumentFromPaths(ImmutableArray<string> documentPaths)
         {
             return documentPaths
                 .Select(docPath => _workspace.GetDocument(docPath))
@@ -349,16 +349,16 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
         public async Task<ImmutableArray<DocumentDiagnostics>> GetAllDiagnosticsAsync()
         {
             var allDocuments = _workspace.CurrentSolution.Projects.SelectMany(x => x.Documents).ToImmutableArray();
-            return await GetDiagnosticsByDocumentIds(allDocuments, waitForDocuments: false);
+            return await GetDiagnosticsByDocument(allDocuments, waitForDocuments: false);
         }
 
         public ImmutableArray<DocumentId> QueueDocumentsForDiagnostics(ImmutableArray<ProjectId> projectIds)
         {
-            var documentIds = projectIds
+            var documents = projectIds
                 .SelectMany(projectId => _workspace.CurrentSolution.GetProject(projectId).Documents)
                 .ToImmutableArray();
-            QueueForAnalysis(documentIds, AnalyzerWorkType.Background);
-            return documentIds.SelectAsArray(d => d.Id);
+            QueueForAnalysis(documents, AnalyzerWorkType.Background);
+            return documents.SelectAsArray(d => d.Id);
         }
 
         public void Dispose()
