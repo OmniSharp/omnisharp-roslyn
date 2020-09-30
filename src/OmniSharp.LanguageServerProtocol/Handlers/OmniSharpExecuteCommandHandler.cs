@@ -130,7 +130,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
 
                         // _runTestsInClassHandler.Handle() will block for some time before it yields
                         // but we want to return from the command handler as fast as possible, thus the wrapping in Task.Run()
-                        var _backgroundTestRunTask = _runTestsInClassHandler.Handle(omnisharpRequest);
+                        var _ignored = Task.Run(() => _runTestsInClassHandler.Handle(omnisharpRequest));
                     }
                     else
                     {
