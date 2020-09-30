@@ -15,6 +15,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json.Linq;
 using OmniSharp.Endpoint;
+using OmniSharp.Eventing;
 using OmniSharp.Extensions.JsonRpc;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OmniSharp.Extensions.LanguageServer.Protocol.Server;
@@ -333,6 +334,8 @@ namespace OmniSharp.LanguageServerProtocol
             var serializer = server.Services.GetRequiredService<ISerializer>();
             server.Register(s =>
             {
+                var eventEmitter = new LanguageServerEventEmitter(server);
+
                 foreach (var handler in OmniSharpTextDocumentSyncHandler.Enumerate(handlers, workspace, documentVersions)
                     .Concat(OmniSharpDefinitionHandler.Enumerate(handlers))
                     .Concat(OmniSharpHoverHandler.Enumerate(handlers))
@@ -343,6 +346,7 @@ namespace OmniSharp.LanguageServerProtocol
                     .Concat(OmniSharpDocumentSymbolHandler.Enumerate(handlers))
                     .Concat(OmniSharpReferencesHandler.Enumerate(handlers))
                     .Concat(OmniSharpCodeLensHandler.Enumerate(handlers))
+                    .Concat(OmniSharpExecuteCommandHandler.Enumerate(handlers, eventEmitter))
                     .Concat(OmniSharpCodeActionHandler.Enumerate(handlers, serializer, server, documentVersions))
                     .Concat(OmniSharpDocumentFormattingHandler.Enumerate(handlers))
                     .Concat(OmniSharpDocumentFormatRangeHandler.Enumerate(handlers))
