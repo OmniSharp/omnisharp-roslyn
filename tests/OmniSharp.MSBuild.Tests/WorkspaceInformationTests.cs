@@ -32,8 +32,8 @@ namespace OmniSharp.MSBuild.Tests
                 var project = Assert.Single(workspaceInfo.Projects);
 
                 Assert.Equal("ProjectAndSolution", project.AssemblyName);
-                Assert.Equal("bin/Debug/netcoreapp2.1/", project.OutputPath.EnsureForwardSlashes());
-                Assert.Equal("obj/Debug/netcoreapp2.1/", project.IntermediateOutputPath.EnsureForwardSlashes());
+                Assert.Equal("bin/Debug/netcoreapp3.1/", project.OutputPath.EnsureForwardSlashes());
+                Assert.Equal("obj/Debug/netcoreapp3.1/", project.IntermediateOutputPath.EnsureForwardSlashes());
                 var expectedTargetPath = $"{testProject.Directory}/{project.OutputPath}ProjectAndSolution.dll".EnsureForwardSlashes();
                 Assert.Equal(expectedTargetPath, project.TargetPath.EnsureForwardSlashes());
                 Assert.Equal("Debug", project.Configuration);
@@ -41,9 +41,9 @@ namespace OmniSharp.MSBuild.Tests
                 Assert.True(project.IsExe);
                 Assert.False(project.IsUnityProject);
 
-                Assert.Equal(".NETCoreApp,Version=v2.1", project.TargetFramework);
+                Assert.Equal(".NETCoreApp,Version=v3.1", project.TargetFramework);
                 var targetFramework = Assert.Single(project.TargetFrameworks);
-                Assert.Equal("netcoreapp2.1", targetFramework.ShortName);
+                Assert.Equal("netcoreapp3.1", targetFramework.ShortName);
             }
         }
 
@@ -58,24 +58,24 @@ namespace OmniSharp.MSBuild.Tests
                 Assert.Equal("ProjectAndSolutionWithProjectSection.sln", Path.GetFileName(workspaceInfo.SolutionPath));
                 Assert.NotNull(workspaceInfo.Projects);
                 var project = Assert.Single(workspaceInfo.Projects);
-                Assert.Equal(".NETCoreApp,Version=v2.1", project.TargetFramework);
-                Assert.Equal("netcoreapp2.1", project.TargetFrameworks[0].ShortName);
+                Assert.Equal(".NETCoreApp,Version=v3.1", project.TargetFramework);
+                Assert.Equal("netcoreapp3.1", project.TargetFrameworks[0].ShortName);
             }
         }
 
         [Fact]
-        public async Task NetCore31Project()
+        public async Task NetCore21Project()
         {
-            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("NetCore31Project"))
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("NetCore21Project"))
             using (var host = CreateMSBuildTestHost(testProject.Directory))
             {
                 var workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
 
                 Assert.NotNull(workspaceInfo.Projects);
                 var project = Assert.Single(workspaceInfo.Projects);
-                Assert.Equal("NetCore31Project", project.AssemblyName);
-                Assert.Equal(".NETCoreApp,Version=v3.1", project.TargetFramework);
-                Assert.Equal("netcoreapp3.1", project.TargetFrameworks[0].ShortName);
+                Assert.Equal("NetCore21Project", project.AssemblyName);
+                Assert.Equal(".NETCoreApp,Version=v2.1", project.TargetFramework);
+                Assert.Equal("netcoreapp2.1", project.TargetFrameworks[0].ShortName);
             }
         }
 
@@ -114,8 +114,8 @@ namespace OmniSharp.MSBuild.Tests
 
                 var firstProject = workspaceInfo.Projects[0];
                 Assert.Equal("App.csproj", Path.GetFileName(firstProject.Path));
-                Assert.Equal(".NETCoreApp,Version=v2.1", firstProject.TargetFramework);
-                Assert.Equal("netcoreapp2.1", firstProject.TargetFrameworks[0].ShortName);
+                Assert.Equal(".NETCoreApp,Version=v3.1", firstProject.TargetFramework);
+                Assert.Equal("netcoreapp3.1", firstProject.TargetFrameworks[0].ShortName);
 
                 var secondProject = workspaceInfo.Projects[1];
                 Assert.Equal("Lib.csproj", Path.GetFileName(secondProject.Path));
@@ -139,8 +139,8 @@ namespace OmniSharp.MSBuild.Tests
 
                 var firstProject = workspaceInfo.Projects[0];
                 Assert.Equal("App.csproj", Path.GetFileName(firstProject.Path));
-                Assert.Equal(".NETCoreApp,Version=v2.1", firstProject.TargetFramework);
-                Assert.Equal("netcoreapp2.1", firstProject.TargetFrameworks[0].ShortName);
+                Assert.Equal(".NETCoreApp,Version=v3.1", firstProject.TargetFramework);
+                Assert.Equal("netcoreapp3.1", firstProject.TargetFrameworks[0].ShortName);
 
                 var secondProject = workspaceInfo.Projects[1];
                 Assert.Equal("Lib.csproj", Path.GetFileName(secondProject.Path));
