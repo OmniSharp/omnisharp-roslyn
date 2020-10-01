@@ -113,13 +113,13 @@ namespace OmniSharp.MSBuild.ProjectFile
                 return (null, ImmutableArray<MSBuildDiagnostic>.Empty, null);
             }
 
-            var (projectInstance, project, diagnostics) = loader.BuildProject(filePath);
+            var (projectInstance, project, diagnostics) = loader.BuildProject(filePath, projectIdInfo?.SolutionConfiguration);
             if (projectInstance == null)
             {
                 return (null, diagnostics, null);
             }
 
-            var data = ProjectData.Create(projectInstance, project);
+            var data = ProjectData.Create(filePath, projectInstance, project);
             var projectFileInfo = new ProjectFileInfo(projectIdInfo, filePath, data, sessionId, dotNetInfo);
             var eventArgs = new ProjectLoadedEventArgs(projectIdInfo.Id,
                                                        project,
@@ -137,13 +137,13 @@ namespace OmniSharp.MSBuild.ProjectFile
 
         public (ProjectFileInfo, ImmutableArray<MSBuildDiagnostic>, ProjectLoadedEventArgs) Reload(ProjectLoader loader)
         {
-            var (projectInstance, project, diagnostics) = loader.BuildProject(FilePath);
+            var (projectInstance, project, diagnostics) = loader.BuildProject(FilePath, ProjectIdInfo?.SolutionConfiguration);
             if (projectInstance == null)
             {
                 return (null, diagnostics, null);
             }
 
-            var data = ProjectData.Create(projectInstance, project);
+            var data = ProjectData.Create(FilePath, projectInstance, project);
             var projectFileInfo = new ProjectFileInfo(ProjectIdInfo, FilePath, data, SessionId, DotNetInfo);
             var eventArgs = new ProjectLoadedEventArgs(Id,
                                                        project,

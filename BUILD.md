@@ -2,7 +2,7 @@
 
 ## Windows
 
-In order to build OmniSharp, the [.NET 4.6.1 targeting pack](https://www.microsoft.com/en-us/download/details.aspx?id=49978) must be installed if it isn't already.
+In order to build OmniSharp, the [.NET 4.7.2 targeting pack](https://dotnet.microsoft.com/download/dotnet-framework/thank-you/net472-developer-pack-offline-installer) must be installed if it isn't already.
 
 ## macOS
 

@@ -59,12 +59,12 @@ namespace OmniSharp
             // We must register an MSBuild instance before composing MEF to ensure that
             // our AssemblyResolve event is hooked up first.
             var msbuildLocator = _serviceProvider.GetRequiredService<IMSBuildLocator>();
+            var dotNetInfo = dotNetCliService.GetInfo(workingDirectory);
 
             // Don't register the default instance if an instance is already registered!
             // This is for tests, where the MSBuild instance may be registered early.
             if (msbuildLocator.RegisteredInstance == null)
             {
-                var dotNetInfo = dotNetCliService.GetInfo(workingDirectory);
                 msbuildLocator.RegisterDefaultInstance(logger, dotNetInfo);
             }
 
@@ -82,7 +82,8 @@ namespace OmniSharp
                 .WithProvider(MefValueProvider.From(analyzerAssemblyLoader))
                 .WithProvider(MefValueProvider.From(dotNetCliService))
                 .WithProvider(MefValueProvider.From(msbuildLocator))
-                .WithProvider(MefValueProvider.From(eventEmitter));
+                .WithProvider(MefValueProvider.From(eventEmitter))
+                .WithProvider(MefValueProvider.From(dotNetInfo));
 
             foreach (var exportDescriptorProvider in _exportDescriptorProviders)
             {

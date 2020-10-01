@@ -42,7 +42,7 @@ http://cakebuild.net
 Param(
     [parameter(position=0)]
     [string]$Target = "Default",
-    [string]$Script = "build.cake",
+    [string]$Script = "$PSScriptRoot/build.cake",
     [ValidateSet("Release", "Debug")]
     [string]$Configuration = "Debug",
     [ValidateSet("Quiet", "Minimal", "Normal", "Verbose", "Diagnostic")]
@@ -84,10 +84,6 @@ function MD5HashFile([string] $filePath)
 }
 
 Write-Host "Preparing to run build script..."
-
-if(!$PSScriptRoot){
-    $PSScriptRoot = Split-Path $MyInvocation.MyCommand.Path -Parent
-}
 
 $TOOLS_DIR = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot "tools"))
 $NUGET_EXE = Join-Path $TOOLS_DIR "nuget.exe"

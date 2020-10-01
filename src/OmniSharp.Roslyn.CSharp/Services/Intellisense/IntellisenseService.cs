@@ -15,6 +15,7 @@ using OmniSharp.Roslyn.CSharp.Services.Documentation;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
 {
+    [Obsolete("Please use CompletionService.")]
     [OmniSharpHandler(OmniSharpEndpoints.AutoComplete, LanguageNames.CSharp)]
     public class IntellisenseService : IRequestHandler<AutoCompleteRequest, IEnumerable<AutoCompleteResponse>>
     {
