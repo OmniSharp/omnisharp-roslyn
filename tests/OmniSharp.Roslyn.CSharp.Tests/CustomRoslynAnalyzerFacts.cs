@@ -266,7 +266,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             return TestHelpers.AddProjectToWorkspace(
                             host.Workspace,
                             "project.csproj",
-                            new[] { "netcoreapp2.1" },
+                            new[] { "netcoreapp3.1" },
                             new[] { testFile },
                             analyzerRefs: analyzerReferences)
                     .Single();

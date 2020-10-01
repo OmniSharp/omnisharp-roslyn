@@ -87,7 +87,7 @@ namespace OmniSharp.MSBuild.Tests
         public async Task The_target_framework_is_emitted()
         {
             // Arrange
-            var expectedTFM = "netcoreapp2.1";
+            var expectedTFM = "netcoreapp3.1";
             var emitter = new ProjectLoadTestEventEmitter();
 
             using var testProject = await TestAssets.Instance.GetTestProjectAsync("HelloWorld");
@@ -170,7 +170,7 @@ namespace OmniSharp.MSBuild.Tests
             // Arrange
             var emitter = new ProjectLoadTestEventEmitter();
 
-            using var testProject = await TestAssets.Instance.GetTestProjectAsync("NetCore31Project");
+            using var testProject = await TestAssets.Instance.GetTestProjectAsync("NetCore21Project");
             using var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory));
             Assert.Single(emitter.ReceivedMessages);
             Assert.Equal((int)OutputKind.ConsoleApplication, emitter.ReceivedMessages[0].OutputKind);
@@ -182,7 +182,7 @@ namespace OmniSharp.MSBuild.Tests
             // Arrange
             var emitter = new ProjectLoadTestEventEmitter();
 
-            using var testProject = await TestAssets.Instance.GetTestProjectAsync("NetCore31Project");
+            using var testProject = await TestAssets.Instance.GetTestProjectAsync("NetCore21Project");
             using var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory));
             Assert.Single(emitter.ReceivedMessages);
             Assert.Equal("GenerateDocumentationFile CSharp Managed ReferencesFolder LanguageService RelativePathDerivedDefaultNamespace AssemblyReferences COMReferences ProjectReferences SharedProjectReferences OutputGroups AllTargetOutputGroups VisualStudioWellKnownOutputGroups SingleFileGenerators DeclaredSourceItems UserSourceItems BuildWindowsDesktopTarget CrossPlatformExecutable Pack", string.Join(" ", emitter.ReceivedMessages[0].ProjectCapabilities));
@@ -194,7 +194,7 @@ namespace OmniSharp.MSBuild.Tests
             // Arrange
             var emitter = new ProjectLoadTestEventEmitter();
 
-            using var testProject = await TestAssets.Instance.GetTestProjectAsync("NetCore31Project");
+            using var testProject = await TestAssets.Instance.GetTestProjectAsync("NetCore21Project");
             using var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory));
             Assert.Single(emitter.ReceivedMessages);
             Assert.Equal(GetHashedFileExtension("3.1.402"), emitter.ReceivedMessages[0].SdkVersion);
