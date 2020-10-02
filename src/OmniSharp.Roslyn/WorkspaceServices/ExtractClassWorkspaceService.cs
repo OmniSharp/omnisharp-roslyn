@@ -50,11 +50,11 @@ namespace OmniSharp
                 .First()
                 .MakeGenericMethod(extractClassMemberAnalysisResultType).Invoke(null, new object[]
                 {
-                    // at this point we have IEnumerable<object> and need to cas to IEnumerable<ExtractClassMemberAnalysisResult>
+                    // at this point we have IEnumerable<object> and need to cast to IEnumerable<ExtractClassMemberAnalysisResult>
                     // which we can then pass to ImmutableArray.CreateRange<ExtractClassMemberAnalysisResult>()
                     genericCast.Invoke(null, new object[]
                     {
-                        // this constrcutor corresponds to
+                        // this constructor corresponds to
                         // http://sourceroslyn.io/#Microsoft.CodeAnalysis.Features/ExtractClass/ExtractClassOptions.cs,ced9042e0a010e24
                         // public ExtractClassMemberAnalysisResult(ISymbol member,bool makeAbstract)
                         // if it changes, this implementation must be changed accordingly
@@ -68,7 +68,7 @@ namespace OmniSharp
 
             const string name = "NewBaseType";
 
-            // this constrcutor corresponds to
+            // this constructor corresponds to
             // http://sourceroslyn.io/#Microsoft.CodeAnalysis.Features/ExtractClass/ExtractClassOptions.cs,6f65491c71285819,references
             // public ExtractClassOptions(string fileName, string typeName, bool sameFile, ImmutableArray<ExtractClassMemberAnalysisResult> memberAnalysisResults)
             // if it changes, this implementation must be changed accordingly
