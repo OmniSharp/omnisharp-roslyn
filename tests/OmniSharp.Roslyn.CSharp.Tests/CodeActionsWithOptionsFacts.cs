@@ -36,6 +36,10 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 public class Class1 : NewBaseType
                 {
                 }";
+
+            // TODO: this refactoring was renamed to 'Extract base class...' in latest Roslyn
+            // it needs to be updated accordingly when we pull in new Roslyn build
+            // https://github.com/dotnet/roslyn/commit/2d98f81de3908f39cd582d3de0c51c738c558700
             var response = await RunRefactoringAsync(code, "Pull member(s) up to new base class...");
             AssertUtils.AssertIgnoringIndent(expected, ((ModifiedFileResponse)response.Changes.First()).Buffer);
         }
@@ -60,6 +64,10 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 {
                     public void Method() { }
                 }";
+
+            // TODO: this refactoring was renamed to 'Extract base class...' in latest Roslyn
+            // it needs to be updated accordingly when we pull in new Roslyn build
+            // https://github.com/dotnet/roslyn/commit/2d98f81de3908f39cd582d3de0c51c738c558700
             var response = await RunRefactoringAsync(code, "Pull member(s) up to new base class...");
             AssertUtils.AssertIgnoringIndent(expected, ((ModifiedFileResponse)response.Changes.First()).Buffer);
         }
