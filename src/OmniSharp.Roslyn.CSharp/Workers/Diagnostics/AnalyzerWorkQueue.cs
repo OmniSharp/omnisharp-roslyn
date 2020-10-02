@@ -84,7 +84,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
         {
             lock (_queueLock)
             {
-                if(_queues[workType].WorkExecuting.IsEmpty)
+                if (_queues[workType].WorkExecuting.IsEmpty)
                     return;
 
                 _queues[workType].WorkPendingToken?.Cancel();
@@ -107,15 +107,9 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
                 .ContinueWith(task => LogTimeouts(task));
         }
 
-        public bool TryPromote(Document document)
+        public void QueueDocumentForeground(Document document)
         {
-            if (_queues[AnalyzerWorkType.Background].WorkWaitingToExecute.Contains(document) || _queues[AnalyzerWorkType.Background].WorkExecuting.Contains(document))
-            {
-                PutWork(new[] { document }, AnalyzerWorkType.Foreground);
-                return true;
-            }
-
-            return false;
+            PutWork(new[] { document }, AnalyzerWorkType.Foreground);
         }
 
         private void LogTimeouts(Task task)

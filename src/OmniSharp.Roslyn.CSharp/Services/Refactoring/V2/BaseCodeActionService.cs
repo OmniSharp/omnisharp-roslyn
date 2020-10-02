@@ -127,7 +127,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
         private async Task CollectCodeFixesActions(Document document, TextSpan span, List<CodeAction> codeActions)
         {
-            var diagnosticsWithProjects = await _diagnostics.GetDiagnostics(ImmutableArray.Create(document), skipCache: false);
+            var diagnosticsWithProjects = await _diagnostics.GetDiagnostics(ImmutableArray.Create(document));
 
             var groupedBySpan = diagnosticsWithProjects
                     .SelectMany(x => x.Diagnostics)
@@ -248,12 +248,12 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             {
                 case FixAllScope.Solution:
                     var documentsInSolution = document.Project.Solution.Projects.SelectMany(p => p.Documents).ToImmutableArray();
-                    return await _diagnostics.GetDiagnostics(documentsInSolution, skipCache: true);
+                    return await _diagnostics.GetDiagnostics(documentsInSolution);
                 case FixAllScope.Project:
-                    var documensInProject = document.Project.Documents.ToImmutableArray();
-                    return await _diagnostics.GetDiagnostics(documensInProject, skipCache: true);
+                    var documentsInProject = document.Project.Documents.ToImmutableArray();
+                    return await _diagnostics.GetDiagnostics(documentsInProject);
                 case FixAllScope.Document:
-                    return await _diagnostics.GetDiagnostics(ImmutableArray.Create(document), skipCache: true);
+                    return await _diagnostics.GetDiagnostics(ImmutableArray.Create(document));
                 default:
                     throw new InvalidOperationException();
             }

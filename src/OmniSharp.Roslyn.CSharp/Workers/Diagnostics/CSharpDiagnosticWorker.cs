@@ -148,7 +148,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
             return await GetDiagnostics(documents);
         }
 
-        public Task<ImmutableArray<DocumentDiagnostics>> GetDiagnostics(ImmutableArray<Document> documents, bool skipCache)
+        public Task<ImmutableArray<DocumentDiagnostics>> GetDiagnostics(ImmutableArray<Document> documents)
         {
             return GetDiagnostics(documents);
         }
@@ -185,18 +185,18 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
             }
         }
 
-        public ImmutableArray<DocumentId> QueueDocumentsForDiagnostics()
+        public ImmutableArray<Document> QueueDocumentsForDiagnostics()
         {
-            var documents = _workspace.CurrentSolution.Projects.SelectMany(x => x.Documents);
+            var documents = _workspace.CurrentSolution.Projects.SelectMany(x => x.Documents).ToImmutableArray();
             QueueForDiagnosis(documents.Select(x => x.FilePath).ToImmutableArray());
-            return documents.Select(d => d.Id).ToImmutableArray();
+            return documents;
         }
 
-        public ImmutableArray<DocumentId> QueueDocumentsForDiagnostics(ImmutableArray<ProjectId> projectIds)
+        public ImmutableArray<Document> QueueDocumentsForDiagnostics(ImmutableArray<ProjectId> projectIds)
         {
-            var documents = projectIds.SelectMany(projectId => _workspace.CurrentSolution.GetProject(projectId).Documents);
+            var documents = projectIds.SelectMany(projectId => _workspace.CurrentSolution.GetProject(projectId).Documents).ToImmutableArray();
             QueueForDiagnosis(documents.Select(x => x.FilePath).ToImmutableArray());
-            return documents.Select(d => d.Id).ToImmutableArray();
+            return documents;
         }
 
         public Task<ImmutableArray<DocumentDiagnostics>> GetAllDiagnosticsAsync()

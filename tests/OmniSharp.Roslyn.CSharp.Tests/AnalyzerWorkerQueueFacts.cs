@@ -248,7 +248,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         }
 
         [Fact]
-        public void WhenSingleFileIsPromoted_ThenPromoteItFromBackgroundQueueToForeground()
+        public void WhenSingleFileIsQueued_ThenPromoteItFromBackgroundQueueToForeground()
         {
             var now = DateTime.UtcNow;
             var queue = new AnalyzerWorkQueue(new TestLoggerFactory(), utcNow: () => now, timeoutForPendingWorkMs: 10*1000);
@@ -256,7 +256,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             queue.PutWork(new[] { document }, AnalyzerWorkType.Background);
 
-            queue.TryPromote(document);
+            queue.QueueDocumentForeground(document);
 
             now = PassOverThrotlingPeriod(now);
 
@@ -264,17 +264,17 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         }
 
         [Fact]
-        public void WhenFileIsntAtBackgroundQueueAndTriedToBePromoted_ThenDontDoNothing()
+        public void WhenFileIsntAtBackgroundQueueAndTriedToBeQueued_ThenQueue()
         {
             var now = DateTime.UtcNow;
             var queue = new AnalyzerWorkQueue(new TestLoggerFactory(), utcNow: () => now, timeoutForPendingWorkMs: 10*1000);
             var document = CreateTestDocumentId();
 
-            queue.TryPromote(document);
+            queue.QueueDocumentForeground(document);
 
             now = PassOverThrotlingPeriod(now);
 
-            Assert.Empty(queue.TakeWork(AnalyzerWorkType.Foreground));
+            Assert.Equal(document, queue.TakeWork(AnalyzerWorkType.Foreground).Single());
         }
 
         [Fact]
@@ -290,7 +290,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             var activeWork = queue.TakeWork(AnalyzerWorkType.Background);
 
-            queue.TryPromote(document);
+            queue.QueueDocumentForeground(document);
 
             now = PassOverThrotlingPeriod(now);
 

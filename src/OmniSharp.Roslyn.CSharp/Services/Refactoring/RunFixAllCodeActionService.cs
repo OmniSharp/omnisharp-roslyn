@@ -193,13 +193,13 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
 
             public override async Task<IEnumerable<Diagnostic>> GetAllDiagnosticsAsync(Project project, CancellationToken cancellationToken)
             {
-                var diagnostics = await _diagnosticWorker.GetDiagnostics(project.Documents.ToImmutableArray(), skipCache: true);
+                var diagnostics = await _diagnosticWorker.GetDiagnostics(project.Documents.ToImmutableArray());
                 return diagnostics.SelectMany(x => x.Diagnostics);
             }
 
             public override async Task<IEnumerable<Diagnostic>> GetDocumentDiagnosticsAsync(Document document, CancellationToken cancellationToken)
             {
-                var documentDiagnostics = await _diagnosticWorker.GetDiagnostics(ImmutableArray.Create(document), skipCache: true);
+                var documentDiagnostics = await _diagnosticWorker.GetDiagnostics(ImmutableArray.Create(document));
 
                 if (!documentDiagnostics.Any())
                     return new Diagnostic[] { };
@@ -209,7 +209,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
 
             public override async Task<IEnumerable<Diagnostic>> GetProjectDiagnosticsAsync(Project project, CancellationToken cancellationToken)
             {
-                var diagnostics = await _diagnosticWorker.GetDiagnostics(project.Documents.ToImmutableArray(), skipCache: true);
+                var diagnostics = await _diagnosticWorker.GetDiagnostics(project.Documents.ToImmutableArray());
                 return diagnostics.SelectMany(x => x.Diagnostics);
             }
         }
