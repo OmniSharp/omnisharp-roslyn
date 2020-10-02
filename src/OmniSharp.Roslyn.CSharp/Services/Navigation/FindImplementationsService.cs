@@ -39,6 +39,11 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
                 var quickFixes = new List<QuickFix>();
                 var symbol = await SymbolFinder.FindSymbolAtPositionAsync(semanticModel, position, _workspace);
 
+                if (symbol == null)
+                {
+                    return response;
+                }
+
                 if (symbol.IsInterfaceType() || symbol.IsImplementableMember())
                 {
                     // SymbolFinder.FindImplementationsAsync will not include the method overrides
