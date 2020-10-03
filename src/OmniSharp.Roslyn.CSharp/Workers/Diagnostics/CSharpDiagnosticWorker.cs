@@ -150,7 +150,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
 
         public Task<ImmutableArray<DocumentDiagnostics>> GetDiagnostics(ImmutableArray<Document> documents)
         {
-            return GetDiagnostics(documents);
+            return GetDiagnostics((IEnumerable<Document>)documents);
         }
 
         private async Task<ImmutableArray<DocumentDiagnostics>> GetDiagnostics(IEnumerable<Document> documents)
