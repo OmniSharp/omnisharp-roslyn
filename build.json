@@ -2,7 +2,7 @@
     "DotNetInstallScriptURL": "https://dot.net/v1",
     "DotNetChannel": "Preview",
     "DotNetVersions": [
-        "3.1.401",
+        "3.1.402",
         "5.0.100-rc.1.20452.10"
     ],
     "RequiredMonoVersion": "6.6.0",
@@ -43,7 +43,7 @@
         "ProjectWithDisabledAnalyzers",
         "ProjectWithDisabledAnalyzers2",
         "ProjectWithAnalyzers",
-        "NetCore31Project",
+        "NetCore21Project",
         "Net50Project",
         "ProjectWithAnalyzersAndEditorConfig",
         "ProjectWithParentEditorConfig"
