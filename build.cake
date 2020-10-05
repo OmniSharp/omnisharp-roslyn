@@ -267,55 +267,18 @@ Task("CreateMSBuildFolder")
         "Workflow.targets",
     };
 
-    string sdkResolverTFM;
-
-    if (Platform.Current.IsWindows)
+    if (!Platform.Current.IsWindows)
     {
-        Information("Copying MSBuild runtime...");
-
-        var msbuildSourceFolder = CombinePaths(env.Folders.Tools, "Microsoft.Build.Runtime", "contentFiles", "any", "net472");
-        DirectoryHelper.Copy(msbuildSourceFolder, msbuildCurrentBinTargetFolder, copySubDirectories: false);
-
-        var msbuild15SourceFolder = CombinePaths(msbuildSourceFolder, "Current");
-        DirectoryHelper.Copy(msbuild15SourceFolder, msbuildCurrentTargetFolder);
-
-        Information("Copying MSBuild libraries...");
-
-        foreach (var library in msbuildLibraries)
-        {
-            var libraryFileName = library + ".dll";
-            var librarySourcePath = CombinePaths(env.Folders.Tools, library, "lib", "net472", libraryFileName);
-            var libraryTargetPath = CombinePaths(msbuildCurrentBinTargetFolder, libraryFileName);
-            if (FileHelper.Exists(librarySourcePath))
-            {
-                FileHelper.Copy(librarySourcePath, libraryTargetPath);
-            }
-        }
-
-        Information("Copying MSBuild dependencies...");
-
-        foreach (var dependency in msBuildDependencies)
-        {
-            var dependencyFileName = dependency + ".dll";
-            var dependencySourcePath = CombinePaths(env.Folders.Tools, dependency, "lib", "netstandard2.0", dependencyFileName);
-            var dependencyTargetPath = CombinePaths(msbuildCurrentBinTargetFolder, dependencyFileName);
-            if (FileHelper.Exists(dependencySourcePath))
-            {
-                FileHelper.Copy(dependencySourcePath, dependencyTargetPath);
-            }
-        }
-
-        sdkResolverTFM = "net472";
-    }
-    else
-    {
-        Information("Copying Mono MSBuild runtime...");
+        // Copy Mono MSBuild files before overwriting with the latest MSBuild from NuGet since Mono requires
+        // some extra targets and ref assemblies not present in the NuGet packages.
 
         var monoBasePath = Platform.Current.IsMacOS
             ? "/Library/Frameworks/Mono.framework/Versions/Current/lib/mono"
             : "/usr/lib/mono";
         var monoMSBuildPath = $"{monoBasePath}/msbuild/Current/bin";
         var monoXBuildPath = $"{monoBasePath}/xbuild/Current";
+
+        Information("Copying Mono MSBuild runtime...");
 
         var commonTargetsSourcePath = CombinePaths(monoXBuildPath, "Microsoft.Common.props");
         var commonTargetsTargetPath = CombinePaths(msbuildCurrentTargetFolder, "Microsoft.Common.props");
@@ -331,34 +294,13 @@ Task("CreateMSBuildFolder")
             }
         }
 
-        Information("Copying MSBuild runtime...");
-
-        var msbuildSourceFolder = CombinePaths(env.Folders.Tools, "Microsoft.Build.Runtime", "contentFiles", "any", "net472");
-        DirectoryHelper.Copy(msbuildSourceFolder, msbuildCurrentBinTargetFolder, copySubDirectories: false);
-
-        var msbuild15SourceFolder = CombinePaths(msbuildSourceFolder, "Current");
-        DirectoryHelper.Copy(msbuild15SourceFolder, msbuildCurrentTargetFolder);
-
-        Information("Copying MSBuild libraries...");
-
-        foreach (var library in msbuildLibraries)
-        {
-            var libraryFileName = library + ".dll";
-            var librarySourcePath = CombinePaths(env.Folders.Tools, library, "lib", "net472", libraryFileName);
-            var libraryTargetPath = CombinePaths(msbuildCurrentBinTargetFolder, libraryFileName);
-            if (FileHelper.Exists(librarySourcePath))
-            {
-                FileHelper.Copy(librarySourcePath, libraryTargetPath);
-            }
-        }
-
-        Information("Copying MSBuild Ref Libraries...");
+        Information("Copying Mono MSBuild Ref Libraries...");
 
         foreach (var refLibrary in msbuildRefLibraries)
         {
             var refLibraryFileName = refLibrary + ".dll";
 
-            // copy MSBuild from current Mono
+            // copy MSBuild Ref Libraries from current Mono
             var refLibrarySourcePath = CombinePaths(monoMSBuildPath, refLibraryFileName);
             var refLibraryTargetPath = CombinePaths(msbuildCurrentBinTargetFolder, refLibraryFileName);
             if (FileHelper.Exists(refLibrarySourcePath))
@@ -366,26 +308,45 @@ Task("CreateMSBuildFolder")
                 FileHelper.Copy(refLibrarySourcePath, refLibraryTargetPath);
             }
         }
+    }
 
-        Information("Copying MSBuild dependencies...");
+    Information("Copying MSBuild runtime...");
 
-        foreach (var dependency in msBuildDependencies)
+    var msbuildSourceFolder = CombinePaths(env.Folders.Tools, "Microsoft.Build.Runtime", "contentFiles", "any", "net472");
+    DirectoryHelper.Copy(msbuildSourceFolder, msbuildCurrentBinTargetFolder, copySubDirectories: false);
+
+    var msbuild15SourceFolder = CombinePaths(msbuildSourceFolder, "Current");
+    DirectoryHelper.Copy(msbuild15SourceFolder, msbuildCurrentTargetFolder);
+
+    Information("Copying MSBuild libraries...");
+
+    foreach (var library in msbuildLibraries)
+    {
+        var libraryFileName = library + ".dll";
+        var librarySourcePath = CombinePaths(env.Folders.Tools, library, "lib", "net472", libraryFileName);
+        var libraryTargetPath = CombinePaths(msbuildCurrentBinTargetFolder, libraryFileName);
+        if (FileHelper.Exists(librarySourcePath))
         {
-            var dependencyFileName = dependency + ".dll";
-            var dependencySourcePath = CombinePaths(env.Folders.Tools, dependency, "lib", "netstandard2.0", dependencyFileName);
-            var dependencyTargetPath = CombinePaths(msbuildCurrentBinTargetFolder, dependencyFileName);
-            if (FileHelper.Exists(dependencySourcePath))
-            {
-                FileHelper.Copy(dependencySourcePath, dependencyTargetPath);
-            }
+            FileHelper.Copy(librarySourcePath, libraryTargetPath);
         }
+    }
 
-        sdkResolverTFM = "netstandard2.0";
+    Information("Copying MSBuild dependencies...");
+
+    foreach (var dependency in msBuildDependencies)
+    {
+        var dependencyFileName = dependency + ".dll";
+        var dependencySourcePath = CombinePaths(env.Folders.Tools, dependency, "lib", "netstandard2.0", dependencyFileName);
+        var dependencyTargetPath = CombinePaths(msbuildCurrentBinTargetFolder, dependencyFileName);
+        if (FileHelper.Exists(dependencySourcePath))
+        {
+            FileHelper.Copy(dependencySourcePath, dependencyTargetPath);
+        }
     }
 
     // Copy MSBuild SDK Resolver and DotNetHostResolver
     Information("Copying MSBuild SDK resolver...");
-    var msbuildSdkResolverSourceFolder = CombinePaths(env.Folders.Tools, "Microsoft.DotNet.MSBuildSdkResolver", "lib", sdkResolverTFM);
+    var msbuildSdkResolverSourceFolder = CombinePaths(env.Folders.Tools, "Microsoft.DotNet.MSBuildSdkResolver", "lib", "net472");
     var msbuildSdkResolverTargetFolder = CombinePaths(msbuildCurrentBinTargetFolder, "SdkResolvers", "Microsoft.DotNet.MSBuildSdkResolver");
     DirectoryHelper.ForceCreate(msbuildSdkResolverTargetFolder);
     FileHelper.Copy(
@@ -408,7 +369,7 @@ Task("CreateMSBuildFolder")
     }
 
     Information("Copying NuGet SDK resolver...");
-    var nugetSdkResolverSourceFolder = CombinePaths(env.Folders.Tools, "Microsoft.Build.NuGetSdkResolver", "lib", sdkResolverTFM);
+    var nugetSdkResolverSourceFolder = CombinePaths(env.Folders.Tools, "Microsoft.Build.NuGetSdkResolver", "lib", "net472");
     var nugetSdkResolverTargetFolder = CombinePaths(msbuildCurrentBinTargetFolder, "SdkResolvers", "Microsoft.Build.NuGetSdkResolver");
     DirectoryHelper.ForceCreate(nugetSdkResolverTargetFolder);
     FileHelper.Copy(
