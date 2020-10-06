@@ -16,6 +16,57 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         }
 
         [Fact]
+        public async Task Can_extract_base_class()
+        {
+            const string code =
+                @"public class Class1[||]
+                {
+                    public string Property { get; set; }
+
+                    public void Method() { }
+                }";
+            const string expected =
+                @"public class NewBaseType
+                {
+                    public string Property { get; set; }
+
+                    public void Method() { }
+                }
+
+                public class Class1 : NewBaseType
+                {
+                }";
+
+            var response = await RunRefactoringAsync(code, "Extract base class...");
+            AssertUtils.AssertIgnoringIndent(expected, ((ModifiedFileResponse)response.Changes.First()).Buffer);
+        }
+
+        [Fact]
+        public async Task Can_extract_base_class_from_specific_member()
+        {
+            const string code =
+                @"public class Class1
+                {
+                    public string Property[||] { get; set; }
+
+                    public void Method() { }
+                }";
+            const string expected =
+                @"public class NewBaseType
+                {
+                    public string Property { get; set; }
+                }
+
+                public class Class1 : NewBaseType
+                {
+                    public void Method() { }
+                }";
+
+            var response = await RunRefactoringAsync(code, "Extract base class...");
+            AssertUtils.AssertIgnoringIndent(expected, ((ModifiedFileResponse)response.Changes.First()).Buffer);
+        }
+
+        [Fact]
         public async Task Can_generate_constructor_with_default_arguments()
         {
             const string code =
