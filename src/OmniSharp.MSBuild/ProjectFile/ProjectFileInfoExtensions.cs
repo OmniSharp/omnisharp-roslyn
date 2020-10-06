@@ -81,7 +81,7 @@ namespace OmniSharp.MSBuild.ProjectFile
 
         public static ProjectInfo CreateProjectInfo(this ProjectFileInfo projectFileInfo, IAnalyzerAssemblyLoader analyzerAssemblyLoader)
         {
-            var analyzerReferences = ResolveAnalyzerReferencesForProject(projectFileInfo, analyzerAssemblyLoader);
+            var analyzerReferences = projectFileInfo.ResolveAnalyzerReferencesForProject(analyzerAssemblyLoader);
 
             return ProjectInfo.Create(
                 id: projectFileInfo.Id,
@@ -95,11 +95,11 @@ namespace OmniSharp.MSBuild.ProjectFile
                 analyzerReferences: analyzerReferences).WithDefaultNamespace(projectFileInfo.DefaultNamespace);
         }
 
-        private static IEnumerable<AnalyzerReference> ResolveAnalyzerReferencesForProject(ProjectFileInfo projectFileInfo, IAnalyzerAssemblyLoader analyzerAssemblyLoader)
+        public static ImmutableArray<AnalyzerFileReference> ResolveAnalyzerReferencesForProject(this ProjectFileInfo projectFileInfo, IAnalyzerAssemblyLoader analyzerAssemblyLoader)
         {
             if (!projectFileInfo.RunAnalyzers || !projectFileInfo.RunAnalyzersDuringLiveAnalysis)
             {
-                return Enumerable.Empty<AnalyzerReference>();
+                return ImmutableArray<AnalyzerFileReference>.Empty;
             }
 
             foreach(var analyzerAssemblyPath in projectFileInfo.Analyzers.Distinct())
@@ -107,7 +107,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 analyzerAssemblyLoader.AddDependencyLocation(analyzerAssemblyPath);
             }
 
-            return projectFileInfo.Analyzers.Select(analyzerCandicatePath => new AnalyzerFileReference(analyzerCandicatePath, analyzerAssemblyLoader));
+            return projectFileInfo.Analyzers.Select(analyzerCandicatePath => new AnalyzerFileReference(analyzerCandicatePath, analyzerAssemblyLoader)).ToImmutableArray();
         }
     }
 }
