@@ -16,6 +16,63 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         }
 
         [Fact]
+        public async Task Can_extract_base_class()
+        {
+            const string code =
+                @"public class Class1[||]
+                {
+                    public string Property { get; set; }
+
+                    public void Method() { }
+                }";
+            const string expected =
+                @"public class NewBaseType
+                {
+                    public string Property { get; set; }
+
+                    public void Method() { }
+                }
+
+                public class Class1 : NewBaseType
+                {
+                }";
+
+            // TODO: this refactoring was renamed to 'Extract base class...' in latest Roslyn
+            // it needs to be updated accordingly when we pull in new Roslyn build
+            // https://github.com/dotnet/roslyn/commit/2d98f81de3908f39cd582d3de0c51c738c558700
+            var response = await RunRefactoringAsync(code, "Pull member(s) up to new base class...");
+            AssertUtils.AssertIgnoringIndent(expected, ((ModifiedFileResponse)response.Changes.First()).Buffer);
+        }
+
+        [Fact]
+        public async Task Can_extract_base_class_from_specific_member()
+        {
+            const string code =
+                @"public class Class1
+                {
+                    public string Property[||] { get; set; }
+
+                    public void Method() { }
+                }";
+            const string expected =
+                @"public class NewBaseType
+                {
+                    public string Property { get; set; }
+                }
+
+                public class Class1 : NewBaseType
+                {
+                    public void Method() { }
+                }";
+
+            // TODO: this refactoring was renamed to 'Extract base class...' in latest Roslyn
+            // it needs to be updated accordingly when we pull in new Roslyn build
+            // https://github.com/dotnet/roslyn/commit/2d98f81de3908f39cd582d3de0c51c738c558700
+            var response = await RunRefactoringAsync(code, "Pull member(s) up to new base class...");
+            AssertUtils.AssertIgnoringIndent(expected, ((ModifiedFileResponse)response.Changes.First()).Buffer);
+        }
+
+        [Fact]
         public async Task Can_generate_constructor_with_default_arguments()
         {
             const string code =
