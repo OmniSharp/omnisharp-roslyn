@@ -366,6 +366,8 @@ namespace OmniSharp.MSBuild
             var newSolution = _workspace.CurrentSolution.AddProject(projectInfo);
             _workspace.AddDocumentInclusionRuleForProject(projectInfo.Id, (filePath) => projectFileInfo.IsFileIncluded(filePath));
 
+            SubscribeToAnalyzerReferenceLoadFailures(projectInfo.AnalyzerReferences.Cast<AnalyzerFileReference>(), _logger);
+
             if (!_workspace.TryApplyChanges(newSolution))
             {
                 _logger.LogError($"Failed to add project to workspace: '{projectFileInfo.FilePath}'");
@@ -476,17 +478,22 @@ namespace OmniSharp.MSBuild
 
         private void UpdateAnalyzerReferences(Project project, ProjectFileInfo projectFileInfo)
         {
-            if (!projectFileInfo.RunAnalyzers || !projectFileInfo.RunAnalyzersDuringLiveAnalysis)
-            {
-                _workspace.SetAnalyzerReferences(project.Id, ImmutableArray<AnalyzerFileReference>.Empty);
-                return;
-            }
+            var analyzerFileReferences = projectFileInfo.ResolveAnalyzerReferencesForProject(_analyzerAssemblyLoader);
 
-            var analyzerFileReferences = projectFileInfo.Analyzers
-                .Select(analyzerReferencePath => new AnalyzerFileReference(analyzerReferencePath, _analyzerAssemblyLoader))
-                .ToImmutableArray();
+            SubscribeToAnalyzerReferenceLoadFailures(analyzerFileReferences, _logger);
 
             _workspace.SetAnalyzerReferences(project.Id, analyzerFileReferences);
+        }
+
+        private void SubscribeToAnalyzerReferenceLoadFailures(IEnumerable<AnalyzerFileReference> analyzerFileReferences, ILogger logger)
+        {
+            foreach (var analyzerFileReference in analyzerFileReferences)
+            {
+                analyzerFileReference.AnalyzerLoadFailed += (sender, e) =>
+                {
+                    logger.LogError($"Failure while loading the analyzer reference '{analyzerFileReference.Display}': {e.Message}");
+                };
+            }
         }
 
         private void UpdateProjectProperties(Project project, ProjectFileInfo projectFileInfo)
