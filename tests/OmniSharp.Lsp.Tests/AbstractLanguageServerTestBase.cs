@@ -50,6 +50,11 @@ namespace OmniSharp.Lsp.Tests
 
         protected ILogger Logger { get; }
 
+        static AbstractLanguageServerTestBase()
+        {
+            TestHelpers.SetDefaultCulture();
+        }
+
         protected AbstractLanguageServerTestBase(ITestOutputHelper output, IConfiguration configuration = null) : this(
             output,
             new LoggerFactory().AddXunit(output))
