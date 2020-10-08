@@ -14,6 +14,10 @@ All changes to the project will be documented in this file.
 * Improved performance of find implementations (PR: [#1935](https://github.com/OmniSharp/omnisharp-roslyn/pull/1935))
 * Add support for new quick info endpoint when working with Cake (PR: [#1945](https://github.com/OmniSharp/omnisharp-roslyn/pull/1945))
 * Add support for new completion endpoints when working with Cake ([#1939](https://github.com/OmniSharp/omnisharp-roslyn/issues/1939), PR: [#1944](https://github.com/OmniSharp/omnisharp-roslyn/pull/1944))
+* When an analyzer fails to load, log an error (PR: [#1972](https://github.com/OmniSharp/omnisharp-roslyn/pull/1972))
+* Added support for 'extract base class' (PR: [#1969](https://github.com/OmniSharp/omnisharp-roslyn/pull/1969))
+* OmniSharp.Path can only be set in user settings (PR: [#1946](https://github.com/OmniSharp/omnisharp-roslyn/pull/1946))
+* Add support for code actions besides ApplyChangesOperation's (PR: [#1724](https://github.com/OmniSharp/omnisharp-roslyn/pull/1724))
 
 ## [1.37.1] - 2020-09-01
 * Ensure that all quickinfo sections have linebreaks between them, and don't add unecessary duplicate linebreaks (PR: [#1900](https://github.com/OmniSharp/omnisharp-roslyn/pull/1900))
