@@ -2,7 +2,6 @@
 All changes to the project will be documented in this file.
 
 ## [1.37.2] - Not Yet Released
-* Mono versions update in the readme (PR: [#1929](https://github.com/OmniSharp/omnisharp-roslyn/pull/1929))
 * Added binding redirects for Microsoft.CodeAnalysis.Features and Microsoft.CodeAnalysis.CSharp.Features (PR: [#1964](https://github.com/OmniSharp/omnisharp-roslyn/pull/1964))
 * Always log error responses with error level (PR: [#1963](https://github.com/OmniSharp/omnisharp-roslyn/pull/1963))
 * Added support for override property completion. **Warning**: contains breaking change, as `InsertText` was removed from the response, please use `TextEdit` instead (PR: [#1957](https://github.com/OmniSharp/omnisharp-roslyn/pull/1957))
@@ -16,15 +15,9 @@ All changes to the project will be documented in this file.
 * Add support for new quick info endpoint when working with Cake (PR: [#1945](https://github.com/OmniSharp/omnisharp-roslyn/pull/1945))
 * Add support for new completion endpoints when working with Cake ([#1939](https://github.com/OmniSharp/omnisharp-roslyn/issues/1939), PR: [#1944](https://github.com/OmniSharp/omnisharp-roslyn/pull/1944))
 * When an analyzer fails to load, log an error (PR: [#1972](https://github.com/OmniSharp/omnisharp-roslyn/pull/1972))
-* Bump Roslyn to 3.8.0-4.20503.2 (PR: [#1974](https://github.com/OmniSharp/omnisharp-roslyn/pull/1974))
-* Updated build tool version for NET 5 RC2 (PR: [#1971](https://github.com/OmniSharp/omnisharp-roslyn/pull/1971))
 * Added support for 'extract base class' (PR: [#1969](https://github.com/OmniSharp/omnisharp-roslyn/pull/1969))
-* Moved most test asset projects to .NET Core 3.1 (PR: [#1968](https://github.com/OmniSharp/omnisharp-roslyn/pull/1968))
-* Upgraded to SDK 3.1.402 (PR: [#1966](https://github.com/OmniSharp/omnisharp-roslyn/pull/1966))
 * OmniSharp.Path can only be set in user settings (PR: [#1946](https://github.com/OmniSharp/omnisharp-roslyn/pull/1946))
-* Adds support for /completion and /completion/resolve endpoints for Cake. (PR: [#1944](https://github.com/OmniSharp/omnisharp-roslyn/pull/1944))
 * Add support for code actions besides ApplyChangesOperation's (PR: [#1724](https://github.com/OmniSharp/omnisharp-roslyn/pull/1724))
-* Allow build.cmd to run from any directory (PR: [#1937](https://github.com/OmniSharp/omnisharp-roslyn/pull/1937))
 
 ## [1.37.1] - 2020-09-01
 * Ensure that all quickinfo sections have linebreaks between them, and don't add unecessary duplicate linebreaks (PR: [#1900](https://github.com/OmniSharp/omnisharp-roslyn/pull/1900))
