@@ -342,6 +342,7 @@ namespace OmniSharp.LanguageServerProtocol
                     .Concat(OmniSharpWorkspaceSymbolsHandler.Enumerate(handlers))
                     .Concat(OmniSharpDocumentSymbolHandler.Enumerate(handlers))
                     .Concat(OmniSharpReferencesHandler.Enumerate(handlers))
+                    .Concat(OmniSharpImplementationHandler.Enumerate(handlers))
                     .Concat(OmniSharpCodeLensHandler.Enumerate(handlers))
                     .Concat(OmniSharpCodeActionHandler.Enumerate(handlers, serializer, server, documentVersions))
                     .Concat(OmniSharpDocumentFormattingHandler.Enumerate(handlers))
