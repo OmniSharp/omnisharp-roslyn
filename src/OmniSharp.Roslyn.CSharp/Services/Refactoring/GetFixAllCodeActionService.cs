@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Composition;
 using System.Linq;
 using System.Threading.Tasks;
@@ -6,6 +7,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Abstractions.Models.V1.FixAll;
 using OmniSharp.Mef;
+using OmniSharp.Roslyn.CSharp.Helpers;
 using OmniSharp.Roslyn.CSharp.Services.Refactoring.V2;
 using OmniSharp.Roslyn.CSharp.Workers.Diagnostics;
 using OmniSharp.Services;
@@ -28,17 +30,30 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
 
         public override async Task<GetFixAllResponse> Handle(GetFixAllRequest request)
         {
-            var availableFixes = await GetDiagnosticsMappedWithFixAllProviders(request.Scope, request.FileName);
+            var document = Workspace.GetDocument(request.FileName);
+            if (document is null)
+            {
+                Logger.LogWarning("Could not find document for file {0}", request.FileName);
+                return new GetFixAllResponse(ImmutableArray<FixAllItem>.Empty);
+            }
 
-            var distinctDiagnosticsThatCanBeFixed = availableFixes
-                .SelectMany(x => x.FixableDiagnostics)
-                .GroupBy(x => x.id) // Distinct isn't good fit here since theres cases where Id has multiple different messages based on location, just show one of them.
-                .Select(x => x.First())
-                .Select(x => new FixAllItem(x.id, x.messsage))
+            var allDiagnostics = await GetDiagnosticsAsync(request.Scope, document);
+            var validFixes = allDiagnostics
+                .GroupBy(docAndDiag => docAndDiag.Document.Project)
+                .SelectMany(grouping =>
+                {
+                    var projectFixProviders = GetCodeFixProviders(grouping.Key);
+                    return grouping
+                        .SelectMany(docAndDiag => docAndDiag.Diagnostics)
+                        .Where(diag => projectFixProviders.Any(provider => provider.HasFixForId(diag.Id)));
+                })
+                .GroupBy(diag => diag.Id)
+                .Select(grouping => grouping.First())
+                .Select(x => new FixAllItem(x.Id, x.GetMessage()))
                 .OrderBy(x => x.Id)
                 .ToArray();
 
-            return new GetFixAllResponse(distinctDiagnosticsThatCanBeFixed);
+            return new GetFixAllResponse(validFixes);
         }
     }
 }
