@@ -1,7 +1,8 @@
 # Changelog
 All changes to the project will be documented in this file.
 
-## [1.37.2] - Not Yet Released
+## [1.37.2] - 2020-10-09
+* Decouple FixAll from the workspace ([#1960](https://github.com/OmniSharp/omnisharp-roslyn/issues/1960), PR: [#1962](https://github.com/OmniSharp/omnisharp-roslyn/pull/1962))
 * Added binding redirects for Microsoft.CodeAnalysis.Features and Microsoft.CodeAnalysis.CSharp.Features (PR: [#1964](https://github.com/OmniSharp/omnisharp-roslyn/pull/1964))
 * Always log error responses with error level (PR: [#1963](https://github.com/OmniSharp/omnisharp-roslyn/pull/1963))
 * Added support for override property completion. **Warning**: contains breaking change, as `InsertText` was removed from the response, please use `TextEdit` instead (PR: [#1957](https://github.com/OmniSharp/omnisharp-roslyn/pull/1957))
@@ -10,6 +11,7 @@ All changes to the project will be documented in this file.
 * Fixed escapes in regex completions ([#1949](https://github.com/OmniSharp/omnisharp-roslyn/issues/1949), PR: [#1950](https://github.com/OmniSharp/omnisharp-roslyn/pull/1950))
 * Fixed completion on part of existing string ([omnisharp-vscode#4063](https://github.com/OmniSharp/omnisharp-vscode/issues/4063), PR: [#1941](https://github.com/OmniSharp/omnisharp-roslyn/pull/1941))
 * Fixed LSP completion item kinds (PR: [#1940](https://github.com/OmniSharp/omnisharp-roslyn/pull/1940))
+* Added support for textDocument/implementation in LSP mode (PR: [#1970](https://github.com/OmniSharp/omnisharp-roslyn/pull/1970))
 * Fixed namespace icon in completion response ([omnisharp-vscode#4051](https://github.com/OmniSharp/omnisharp-vscode/issues/4051), PR: [#1936](https://github.com/OmniSharp/omnisharp-roslyn/pull/1936))
 * Improved performance of find implementations (PR: [#1935](https://github.com/OmniSharp/omnisharp-roslyn/pull/1935))
 * Add support for new quick info endpoint when working with Cake (PR: [#1945](https://github.com/OmniSharp/omnisharp-roslyn/pull/1945))
