@@ -105,7 +105,7 @@ namespace OmniSharp.Tests
             TestHelpers.AddProjectToWorkspace(workspace,
                 filePath: Path.Combine("src", "root", "foo", "bar", "insane.csproj"),
                 frameworks: null,
-                testFiles: new [] { new TestFile(Path.Combine("src", "root", "foo", "bar", "nested", "code.cs"), "class C2 {}") });
+                testFiles: new[] { new TestFile(Path.Combine("src", "root", "foo", "bar", "nested", "code.cs"), "class C2 {}") });
 
             await workspace.BufferManager.UpdateBufferAsync(new Request() { FileName = Path.Combine("src", "root", "bar.cs"), Buffer = "enum E {}" });
             var documents = workspace.GetDocuments(Path.Combine("src", "root", "bar.cs"));
@@ -121,13 +121,14 @@ namespace OmniSharp.Tests
         }
 
         [Fact]
-        public async Task UpdateRequestHandleChanges()
+        public async Task UpdateRequestHandleSerialChanges()
         {
             var workspace = GetWorkspaceWithProjects();
 
             await workspace.BufferManager.UpdateBufferAsync(new Request()
             {
                 FileName = Path.Combine("src", "a.cs"),
+                ApplyChangesTogether = false,
                 Changes = new LinePositionSpanTextChange[]
                 {
                     // class C {} -> interface C {}
@@ -167,12 +168,12 @@ namespace OmniSharp.Tests
             TestHelpers.AddProjectToWorkspace(workspace,
                 filePath: Path.Combine("src", "project.json"),
                 frameworks: new[] { "dnx451", "dnxcore50" },
-                testFiles: new [] { new TestFile(Path.Combine("src", "a.cs"), "class C {}") });
+                testFiles: new[] { new TestFile(Path.Combine("src", "a.cs"), "class C {}") });
 
             TestHelpers.AddProjectToWorkspace(workspace,
                 filePath: Path.Combine("test", "project.json"),
                 frameworks: new[] { "dnx451", "dnxcore50" },
-                testFiles: new [] { new TestFile(Path.Combine("test", "b.cs"), "class C {}") });
+                testFiles: new[] { new TestFile(Path.Combine("test", "b.cs"), "class C {}") });
 
             Assert.Equal(4, workspace.CurrentSolution.Projects.Count());
             foreach (var project in workspace.CurrentSolution.Projects)
@@ -181,6 +182,70 @@ namespace OmniSharp.Tests
             }
 
             return workspace;
+        }
+
+        [Fact]
+        public async Task UpdateRequestHandleBulkChanges()
+        {
+            var testFileName = "test.cs";
+            var testCode =
+@"using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace N
+{
+    class C
+    {
+        List<string> P { get; set; }
+    }
+}
+";
+
+            var expectedCode =
+@"using System.Collections.Generic;
+
+namespace N
+{
+    class C
+    {
+        List<string> P { get; set; }
+    }
+}
+";
+
+            using (var host = CreateOmniSharpHost(new TestFile(testFileName, testCode)))
+            {
+                await host.Workspace.BufferManager.UpdateBufferAsync(new Request()
+                {
+                    FileName = testFileName,
+                    ApplyChangesTogether = true,
+                    Changes = new LinePositionSpanTextChange[]
+                    {
+                        // Remove `using System;`
+                        new LinePositionSpanTextChange() {
+                            StartLine = 0,
+                            StartColumn = 0,
+                            EndLine = 1,
+                            EndColumn = 0,
+                            NewText = ""
+                        },
+                        // Remove `using System.Linq;`
+                        new LinePositionSpanTextChange() {
+                            StartLine = 2,
+                            StartColumn = 0,
+                            EndLine = 3,
+                            EndColumn = 0,
+                            NewText = ""
+                        }
+                    }
+                });
+
+                var document = host.Workspace.GetDocument(testFileName);
+                var text = await document.GetTextAsync();
+
+                Assert.Equal(expectedCode, text.ToString());
+            }
         }
     }
 }
