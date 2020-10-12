@@ -2,7 +2,8 @@
 All changes to the project will be documented in this file.
 
 ## [1.37.3] - not yet released
-* Fixed a bug when the server wouldn't start on MacOS/Linux when a username contained a space (PR: 1979https://github.com/OmniSharp/omnisharp-roslyn/pull/1979))
+* Fixed a bug when the server wouldn't start on MacOS/Linux when a username contained a space (PR: [#1979](https://github.com/OmniSharp/omnisharp-roslyn/pull/1979))
+* Update to Mono 6.12.0 (PR: [#1981](https://github.com/OmniSharp/omnisharp-roslyn/pull/1981))
 
 ## [1.37.2] - 2020-10-09
 * Updated MSBuild, MSBuild resolvers and Roslyn to match .NET Core 5.0 RC2 and VS 16.8 Preview 4. (PR: [#1971](https://github.com/OmniSharp/omnisharp-roslyn/pull/1971), PR: [#1974](https://github.com/OmniSharp/omnisharp-roslyn/pull/1974))
