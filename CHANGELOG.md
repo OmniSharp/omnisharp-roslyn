@@ -1,7 +1,11 @@
 # Changelog
 All changes to the project will be documented in this file.
 
+## [1.37.3] - not yet released
+* Fixed a bug when the server wouldn't start on MacOS/Linux when a username contained a space (PR: 1979https://github.com/OmniSharp/omnisharp-roslyn/pull/1979))
+
 ## [1.37.2] - 2020-10-09
+* Updated MSBuild, MSBuild resolvers and Roslyn to match .NET Core 5.0 RC2 and VS 16.8 Preview 4. (PR: [#1971](https://github.com/OmniSharp/omnisharp-roslyn/pull/1971), PR: [#1974](https://github.com/OmniSharp/omnisharp-roslyn/pull/1974))
 * Decouple FixAll from the workspace ([#1960](https://github.com/OmniSharp/omnisharp-roslyn/issues/1960), PR: [#1962](https://github.com/OmniSharp/omnisharp-roslyn/pull/1962))
 * Added binding redirects for Microsoft.CodeAnalysis.Features and Microsoft.CodeAnalysis.CSharp.Features (PR: [#1964](https://github.com/OmniSharp/omnisharp-roslyn/pull/1964))
 * Always log error responses with error level (PR: [#1963](https://github.com/OmniSharp/omnisharp-roslyn/pull/1963))
