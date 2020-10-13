@@ -7,9 +7,9 @@
     ],
     "RequiredMonoVersion": "6.6.0",
     "DownloadURL": "https://roslynomnisharp.blob.core.windows.net/ext",
-    "MonoRuntimeMacOS": "mono.macOS-6.10.0.104.zip",
-    "MonoRuntimeLinux32": "mono.linux-x86-6.10.0.104.zip",
-    "MonoRuntimeLinux64": "mono.linux-x86_64-6.10.0.104.zip",
+    "MonoRuntimeMacOS": "mono.macOS-6.12.0.90.zip",
+    "MonoRuntimeLinux32": "mono.linux-x86-6.12.0.90.zip",
+    "MonoRuntimeLinux64": "mono.linux-x86_64-6.12.0.90.zip",
     "HostProjects": [
         "OmniSharp.Stdio.Driver",
         "OmniSharp.Http.Driver"
