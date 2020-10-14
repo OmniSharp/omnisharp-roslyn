@@ -127,7 +127,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
         private async Task CollectCodeFixesActions(Document document, TextSpan span, List<CodeAction> codeActions)
         {
-            var diagnosticsWithProjects = await _diagnostics.GetDiagnostics(ImmutableArray.Create(document));
+            var diagnosticsWithProjects = await _diagnostics.GetDiagnostics(ImmutableArray.Create(document.FilePath));
 
             var groupedBySpan = diagnosticsWithProjects
                     .SelectMany(x => x.Diagnostics)
@@ -167,7 +167,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
         private List<CodeFixProvider> GetSortedCodeFixProviders(Document document)
         {
-            return ExtensionOrderer.GetOrderedOrUnorderedList<CodeFixProvider, ExportCodeFixProviderAttribute>(_codeFixesForProject.GetAllCodeFixesForProject(document.Project), attribute => attribute.Name).ToList();
+            return ExtensionOrderer.GetOrderedOrUnorderedList<CodeFixProvider, ExportCodeFixProviderAttribute>(_codeFixesForProject.GetAllCodeFixesForProject(document.Project.Id), attribute => attribute.Name).ToList();
         }
 
         private List<CodeRefactoringProvider> GetSortedCodeRefactoringProviders()
@@ -223,14 +223,14 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             {
                 if (documentAndDiagnostics.Diagnostics.FirstOrDefault(d => d.Id == diagnosticId) is Diagnostic diagnostic)
                 {
-                    return (documentAndDiagnostics.Document.Id, diagnostic);
+                    return (documentAndDiagnostics.DocumentId, diagnostic);
                 }
             }
 
             return default;
         }
 
-        protected ImmutableArray<CodeFixProvider> GetCodeFixProviders(Project project)
+        protected ImmutableArray<CodeFixProvider> GetCodeFixProviders(ProjectId project)
         {
             return _codeFixesForProject.GetAllCodeFixesForProject(project);
         }
@@ -239,7 +239,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
         {
             // If Roslyn ever comes up with a UI for selecting what provider the user prefers, we might consider replicating.
             // https://github.com/dotnet/roslyn/issues/27066
-            return _codeFixesForProject.GetAllCodeFixesForProject(document.Project).FirstOrDefault(provider => provider.HasFixForId(id));
+            return _codeFixesForProject.GetAllCodeFixesForProject(document.Project.Id).FirstOrDefault(provider => provider.HasFixForId(id));
         }
 
         protected async Task<ImmutableArray<DocumentDiagnostics>> GetDiagnosticsAsync(FixAllScope scope, Document document)
@@ -247,13 +247,13 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             switch (scope)
             {
                 case FixAllScope.Solution:
-                    var documentsInSolution = document.Project.Solution.Projects.SelectMany(p => p.Documents).ToImmutableArray();
+                    var documentsInSolution = document.Project.Solution.Projects.SelectMany(p => p.Documents).Select(d => d.FilePath).ToImmutableArray();
                     return await _diagnostics.GetDiagnostics(documentsInSolution);
                 case FixAllScope.Project:
-                    var documentsInProject = document.Project.Documents.ToImmutableArray();
+                    var documentsInProject = document.Project.Documents.Select(d => d.FilePath).ToImmutableArray();
                     return await _diagnostics.GetDiagnostics(documentsInProject);
                 case FixAllScope.Document:
-                    return await _diagnostics.GetDiagnostics(ImmutableArray.Create(document));
+                    return await _diagnostics.GetDiagnostics(ImmutableArray.Create(document.FilePath));
                 default:
                     throw new InvalidOperationException();
             }

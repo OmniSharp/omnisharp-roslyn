@@ -7,6 +7,7 @@ using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
@@ -200,6 +201,24 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
             _workspace.DocumentOpened -= OnDocumentOpened;
             _workspace.DocumentClosed -= OnDocumentOpened;
             _disposable.Dispose();
+        }
+
+        public async Task<IEnumerable<Diagnostic>> AnalyzeDocumentAsync(Document document, CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            return await GetDiagnosticsForDocument(document, document.Project.Name);
+        }
+
+        public async Task<IEnumerable<Diagnostic>> AnalyzeProjectsAsync(Project project, CancellationToken cancellationToken)
+        {
+            var diagnostics = new List<Diagnostic>();
+            foreach (var document in project.Documents)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                diagnostics.AddRange(await GetDiagnosticsForDocument(document, project.Name));
+            }
+
+            return diagnostics;
         }
     }
 }

@@ -92,5 +92,15 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
             if (_implementation is IDisposable disposable) disposable.Dispose();
             _onChange.Dispose();
         }
+
+        public Task<IEnumerable<Diagnostic>> AnalyzeDocumentAsync(Document document, CancellationToken cancellationToken)
+        {
+            return _implementation.AnalyzeDocumentAsync(document, cancellationToken);
+        }
+
+        public Task<IEnumerable<Diagnostic>> AnalyzeProjectsAsync(Project project, CancellationToken cancellationToken)
+        {
+            return _implementation.AnalyzeProjectsAsync(project, cancellationToken);
+        }
     }
 }
