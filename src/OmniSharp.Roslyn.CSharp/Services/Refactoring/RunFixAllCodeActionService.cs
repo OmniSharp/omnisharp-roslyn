@@ -192,26 +192,13 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
             }
 
             public override async Task<IEnumerable<Diagnostic>> GetAllDiagnosticsAsync(Project project, CancellationToken cancellationToken)
-            {
-                var diagnostics = await _diagnosticWorker.GetDiagnostics(project.Documents.ToImmutableArray());
-                return diagnostics.SelectMany(x => x.Diagnostics);
-            }
+                => await _diagnosticWorker.AnalyzeProjectsAsync(project, cancellationToken);
 
             public override async Task<IEnumerable<Diagnostic>> GetDocumentDiagnosticsAsync(Document document, CancellationToken cancellationToken)
-            {
-                var documentDiagnostics = await _diagnosticWorker.GetDiagnostics(ImmutableArray.Create(document));
-
-                if (!documentDiagnostics.Any())
-                    return new Diagnostic[] { };
-
-                return documentDiagnostics.First().Diagnostics;
-            }
+                => await _diagnosticWorker.AnalyzeDocumentAsync(document, cancellationToken);
 
             public override async Task<IEnumerable<Diagnostic>> GetProjectDiagnosticsAsync(Project project, CancellationToken cancellationToken)
-            {
-                var diagnostics = await _diagnosticWorker.GetDiagnostics(project.Documents.ToImmutableArray());
-                return diagnostics.SelectMany(x => x.Diagnostics);
-            }
+                => await _diagnosticWorker.AnalyzeProjectsAsync(project, cancellationToken);
         }
     }
 }

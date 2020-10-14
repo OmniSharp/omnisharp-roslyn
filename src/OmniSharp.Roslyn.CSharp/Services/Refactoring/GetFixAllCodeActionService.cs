@@ -39,7 +39,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
 
             var allDiagnostics = await GetDiagnosticsAsync(request.Scope, document);
             var validFixes = allDiagnostics
-                .GroupBy(docAndDiag => docAndDiag.Document.Project)
+                .GroupBy(docAndDiag => docAndDiag.ProjectId)
                 .SelectMany(grouping =>
                 {
                     var projectFixProviders = GetCodeFixProviders(grouping.Key);

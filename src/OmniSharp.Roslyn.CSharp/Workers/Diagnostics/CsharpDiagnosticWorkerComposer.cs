@@ -77,17 +77,12 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
             return _implementation.GetDiagnostics(documentPaths);
         }
 
-        public Task<ImmutableArray<DocumentDiagnostics>> GetDiagnostics(ImmutableArray<Document> documents)
-        {
-            return _implementation.GetDiagnostics(documents);
-        }
-
-        public ImmutableArray<Document> QueueDocumentsForDiagnostics()
+        public ImmutableArray<DocumentId> QueueDocumentsForDiagnostics()
         {
             return _implementation.QueueDocumentsForDiagnostics();
         }
 
-        public ImmutableArray<Document> QueueDocumentsForDiagnostics(ImmutableArray<ProjectId> projectIds)
+        public ImmutableArray<DocumentId> QueueDocumentsForDiagnostics(ImmutableArray<ProjectId> projectIds)
         {
             return _implementation.QueueDocumentsForDiagnostics(projectIds);
         }
@@ -96,6 +91,16 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
         {
             if (_implementation is IDisposable disposable) disposable.Dispose();
             _onChange.Dispose();
+        }
+
+        public Task<IEnumerable<Diagnostic>> AnalyzeDocumentAsync(Document document, CancellationToken cancellationToken)
+        {
+            return _implementation.AnalyzeDocumentAsync(document, cancellationToken);
+        }
+
+        public Task<IEnumerable<Diagnostic>> AnalyzeProjectsAsync(Project project, CancellationToken cancellationToken)
+        {
+            return _implementation.AnalyzeProjectsAsync(project, cancellationToken);
         }
     }
 }
