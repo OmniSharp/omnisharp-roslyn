@@ -5,14 +5,19 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 {
     public class DocumentDiagnostics
     {
-        public DocumentDiagnostics(Document document, ImmutableArray<Diagnostic> diagnostics)
+        public DocumentDiagnostics(DocumentId documentId, string documentPath, ProjectId projectId, string projectName, ImmutableArray<Diagnostic> diagnostics)
         {
+            DocumentId = documentId;
+            DocumentPath = documentPath;
+            ProjectId = projectId;
+            ProjectName = projectName;
             Diagnostics = diagnostics;
-            Document = document;
         }
 
-        public Document Document { get;  }
-        public Project Project => Document.Project;
+        public DocumentId DocumentId { get; }
+        public ProjectId ProjectId { get; }
+        public string ProjectName { get; }
+        public string DocumentPath { get; }
         public ImmutableArray<Diagnostic> Diagnostics { get; }
     }
 }
