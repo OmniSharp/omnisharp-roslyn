@@ -38,7 +38,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                 return GetResponseFromDiagnostics(allDiagnostics, fileName: null);
             }
 
-            var diagnostics = await _diagWorker.GetDiagnostics(new [] { request.FileName }.ToImmutableArray());
+            var diagnostics = await _diagWorker.GetDiagnostics(ImmutableArray.Create(request.FileName));
 
             return GetResponseFromDiagnostics(diagnostics, request.FileName);
         }
