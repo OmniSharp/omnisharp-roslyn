@@ -195,6 +195,7 @@ namespace OmniSharp.Stdio
 
         private async Task HandleRequest(string json, ILogger logger)
         {
+            Stopwatch sw = Stopwatch.StartNew();
             var request = RequestPacket.Parse(json);
             if (logger.IsEnabled(LogLevel.Debug))
             {
@@ -232,11 +233,12 @@ namespace OmniSharp.Stdio
             }
             finally
             {
+                sw.Stop();
                 // response gets logged when Debug or more detailed log level is enabled
                 // or when we have unsuccessful response (exception)
                 if (logger.IsEnabled(LogLevel.Debug) || !response.Success)
                 {
-                    LogResponse(response.ToString(), logger, response.Success);
+                    LogResponse(response.ToString(), logger, response.Success, sw);
                 }
 
                 // actually write it
@@ -249,7 +251,7 @@ namespace OmniSharp.Stdio
             var builder = _cachedStringBuilder.Acquire();
             try
             {
-                builder.AppendLine("************ Request ************");
+                builder.AppendLine($"************ Request ************ @ {DateTime.Now.ToString("s")}");
                 builder.Append(JToken.Parse(json).ToString(Formatting.Indented));
                 logger.LogDebug(builder.ToString());
             }
@@ -259,12 +261,13 @@ namespace OmniSharp.Stdio
             }
         }
 
-        void LogResponse(string json, ILogger logger, bool isSuccess)
+        void LogResponse(string json, ILogger logger, bool isSuccess, Stopwatch stopwatch = null)
         {
             var builder = _cachedStringBuilder.Acquire();
             try
             {
-                builder.AppendLine("************  Response ************ ");
+                var suffix = stopwatch != null? $", elapsed {stopwatch.ElapsedMilliseconds}millis": "";
+                builder.AppendLine($"************  Response ************ @ {DateTime.Now.ToString("s")}{suffix}");
                 builder.Append(JToken.Parse(json).ToString(Formatting.Indented));
 
                 if (isSuccess)
