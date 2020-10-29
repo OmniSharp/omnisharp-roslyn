@@ -234,11 +234,12 @@ namespace OmniSharp.Stdio
             finally
             {
                 sw.Stop();
+                response.ResponseDuration = sw.Elapsed;
                 // response gets logged when Debug or more detailed log level is enabled
                 // or when we have unsuccessful response (exception)
                 if (logger.IsEnabled(LogLevel.Debug) || !response.Success)
                 {
-                    LogResponse(response.ToString(), logger, response.Success, sw);
+                    LogResponse(response.ToString(), logger, response.Success);
                 }
 
                 // actually write it
@@ -261,13 +262,12 @@ namespace OmniSharp.Stdio
             }
         }
 
-        void LogResponse(string json, ILogger logger, bool isSuccess, Stopwatch stopwatch = null)
+        void LogResponse(string json, ILogger logger, bool isSuccess)
         {
             var builder = _cachedStringBuilder.Acquire();
             try
             {
-                var suffix = stopwatch != null? $", elapsed {stopwatch.ElapsedMilliseconds}millis": "";
-                builder.AppendLine($"************  Response ************ @ {DateTime.Now.ToString("s")}{suffix}");
+                builder.AppendLine($"************  Response ************ ");
                 builder.Append(JToken.Parse(json).ToString(Formatting.Indented));
 
                 if (isSuccess)

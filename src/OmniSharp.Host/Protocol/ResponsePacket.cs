@@ -1,4 +1,6 @@
-﻿namespace OmniSharp.Protocol
+﻿using System;
+
+namespace OmniSharp.Protocol
 {
     public class ResponsePacket : Packet
     {
@@ -13,6 +15,8 @@
         public string Message { get; set; }
 
         public object Body { get; set; }
+
+        public TimeSpan ResponseDuration {get; set; }
 
         public ResponsePacket() : base("response")
         {
