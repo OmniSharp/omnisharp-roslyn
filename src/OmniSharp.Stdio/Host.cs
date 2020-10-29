@@ -195,7 +195,6 @@ namespace OmniSharp.Stdio
 
         private async Task HandleRequest(string json, ILogger logger)
         {
-            Stopwatch sw = Stopwatch.StartNew();
             var request = RequestPacket.Parse(json);
             if (logger.IsEnabled(LogLevel.Debug))
             {
@@ -233,8 +232,6 @@ namespace OmniSharp.Stdio
             }
             finally
             {
-                sw.Stop();
-                response.ResponseDuration = sw.Elapsed;
                 // response gets logged when Debug or more detailed log level is enabled
                 // or when we have unsuccessful response (exception)
                 if (logger.IsEnabled(LogLevel.Debug) || !response.Success)
@@ -252,7 +249,7 @@ namespace OmniSharp.Stdio
             var builder = _cachedStringBuilder.Acquire();
             try
             {
-                builder.AppendLine($"************ Request ************ @ {DateTime.Now.ToString("s")}");
+                builder.AppendLine("************ Request ************");
                 builder.Append(JToken.Parse(json).ToString(Formatting.Indented));
                 logger.LogDebug(builder.ToString());
             }
@@ -267,7 +264,7 @@ namespace OmniSharp.Stdio
             var builder = _cachedStringBuilder.Acquire();
             try
             {
-                builder.AppendLine($"************  Response ************ ");
+                builder.AppendLine("************  Response ************ ");
                 builder.Append(JToken.Parse(json).ToString(Formatting.Indented));
 
                 if (isSuccess)
