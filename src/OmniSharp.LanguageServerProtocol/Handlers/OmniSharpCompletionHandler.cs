@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using OmniSharp.Extensions.JsonRpc;
 using OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities;
+using OmniSharp.Extensions.LanguageServer.Protocol.Document;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OmniSharp.Extensions.LanguageServer.Protocol.Server;
 using OmniSharp.Models.AutoComplete;
@@ -26,10 +27,10 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
         private static readonly IDictionary<string, CompletionItemKind> _kind = new Dictionary<string, CompletionItemKind>{
             // types
             { "Class",  CompletionItemKind.Class },
-            { "Delegate", CompletionItemKind.Class }, // need a better option for this.
+            { "Delegate", CompletionItemKind.Function },
             { "Enum", CompletionItemKind.Enum },
             { "Interface", CompletionItemKind.Interface },
-            { "Struct", CompletionItemKind.Class }, // TODO: Is struct missing from enum?
+            { "Struct", CompletionItemKind.Struct },
 
             // variables
             { "Local", CompletionItemKind.Variable },
@@ -37,15 +38,15 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             { "RangeVariable", CompletionItemKind.Variable },
 
             // members
-            { "Const", CompletionItemKind.Value }, // TODO: Is const missing from enum?
+            { "Const", CompletionItemKind.Constant },
             { "EnumMember", CompletionItemKind.Enum },
-            { "Event", CompletionItemKind.Function }, // TODO: Is event missing from enum?
+            { "Event", CompletionItemKind.Event }, 
             { "Field", CompletionItemKind.Field },
             { "Method", CompletionItemKind.Method },
             { "Property", CompletionItemKind.Property },
 
             // other stuff
-            { "Label", CompletionItemKind.Unit }, // need a better option for this.
+            { "Label", CompletionItemKind.Text },
             { "Keyword", CompletionItemKind.Keyword },
             { "Namespace", CompletionItemKind.Module }
         };
@@ -100,7 +101,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                 var completionItem = new CompletionItem
                 {
                     Label = response.CompletionText,
-                    Detail = !string.IsNullOrEmpty(response.ReturnType) ?
+                    Detail = string.IsNullOrEmpty(response.ReturnType) ?
                             response.DisplayText :
                             $"{response.ReturnType} {response.DisplayText}",
                     Documentation = response.Description,
@@ -136,12 +137,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
 
         public override Task<CompletionItem> Handle(CompletionItem request, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
-        }
-
-        public override bool CanResolve(CompletionItem value)
-        {
-            return false;
+            return Task.FromResult(request);
         }
     }
 }

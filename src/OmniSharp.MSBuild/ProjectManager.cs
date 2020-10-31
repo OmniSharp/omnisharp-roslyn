@@ -62,7 +62,7 @@ namespace OmniSharp.MSBuild
         private readonly CancellationTokenSource _processLoopCancellation;
         private readonly Task _processLoopTask;
         private readonly IAnalyzerAssemblyLoader _analyzerAssemblyLoader;
-        private readonly IDotNetCliService _dotNetCli;
+        private readonly DotNetInfo _dotNetInfo;
         private bool _processingQueue;
         private readonly Guid _sessionId = Guid.NewGuid();
 
@@ -79,7 +79,7 @@ namespace OmniSharp.MSBuild
             OmniSharpWorkspace workspace,
             IAnalyzerAssemblyLoader analyzerAssemblyLoader,
             ImmutableArray<IMSBuildEventSink> eventSinks,
-            IDotNetCliService dotNetCliService)
+            DotNetInfo dotNetInfo)
         {
             _logger = loggerFactory.CreateLogger<ProjectManager>();
             _options = options ?? new MSBuildOptions();
@@ -93,7 +93,7 @@ namespace OmniSharp.MSBuild
             _projectLoader = projectLoader;
             _workspace = workspace;
             _eventSinks = eventSinks;
-            _dotNetCli = dotNetCliService;
+            _dotNetInfo = dotNetInfo;
             _queue = new BufferBlock<ProjectToUpdate>();
             _processLoopCancellation = new CancellationTokenSource();
             _processLoopTask = Task.Run(() => ProcessLoopAsync(_processLoopCancellation.Token));
@@ -292,7 +292,7 @@ namespace OmniSharp.MSBuild
         }
 
         private (ProjectFileInfo, ProjectLoadedEventArgs) LoadProject(string projectFilePath, ProjectIdInfo idInfo)
-            => LoadOrReloadProject(projectFilePath, () => ProjectFileInfo.Load(projectFilePath, idInfo, _projectLoader, _sessionId, _dotNetCli));
+            => LoadOrReloadProject(projectFilePath, () => ProjectFileInfo.Load(projectFilePath, idInfo, _projectLoader, _sessionId, _dotNetInfo));
 
         private (ProjectFileInfo, ProjectLoadedEventArgs) ReloadProject(ProjectFileInfo projectFileInfo)
             => LoadOrReloadProject(projectFileInfo.FilePath, () => projectFileInfo.Reload(_projectLoader));
@@ -358,6 +358,9 @@ namespace OmniSharp.MSBuild
             var projectInfo = projectFileInfo.CreateProjectInfo(_analyzerAssemblyLoader);
 
             var newSolution = _workspace.CurrentSolution.AddProject(projectInfo);
+            _workspace.AddDocumentInclusionRuleForProject(projectInfo.Id, (filePath) => projectFileInfo.IsFileIncluded(filePath));
+
+            SubscribeToAnalyzerReferenceLoadFailures(projectInfo.AnalyzerReferences.Cast<AnalyzerFileReference>(), _logger);
 
             if (!_workspace.TryApplyChanges(newSolution))
             {
@@ -472,23 +475,29 @@ namespace OmniSharp.MSBuild
             UpdateAnalyzerConfigFiles(project, projectFileInfo.AnalyzerConfigFiles);
             UpdateProjectProperties(project, projectFileInfo);
 
+            _workspace.AddDocumentInclusionRuleForProject(project.Id, (path) => projectFileInfo.IsFileIncluded(path));
             _workspace.TryPromoteMiscellaneousDocumentsToProject(project);
             _workspace.UpdateCompilationOptionsForProject(project.Id, projectFileInfo.CreateCompilationOptions());
         }
 
         private void UpdateAnalyzerReferences(Project project, ProjectFileInfo projectFileInfo)
         {
-            if (!projectFileInfo.RunAnalyzers || !projectFileInfo.RunAnalyzersDuringLiveAnalysis)
-            {
-                _workspace.SetAnalyzerReferences(project.Id, ImmutableArray<AnalyzerFileReference>.Empty);
-                return;
-            }
+            var analyzerFileReferences = projectFileInfo.ResolveAnalyzerReferencesForProject(_analyzerAssemblyLoader);
 
-            var analyzerFileReferences = projectFileInfo.Analyzers
-                .Select(analyzerReferencePath => new AnalyzerFileReference(analyzerReferencePath, _analyzerAssemblyLoader))
-                .ToImmutableArray();
+            SubscribeToAnalyzerReferenceLoadFailures(analyzerFileReferences, _logger);
 
             _workspace.SetAnalyzerReferences(project.Id, analyzerFileReferences);
+        }
+
+        private void SubscribeToAnalyzerReferenceLoadFailures(IEnumerable<AnalyzerFileReference> analyzerFileReferences, ILogger logger)
+        {
+            foreach (var analyzerFileReference in analyzerFileReferences)
+            {
+                analyzerFileReference.AnalyzerLoadFailed += (sender, e) =>
+                {
+                    logger.LogError($"Failure while loading the analyzer reference '{analyzerFileReference.Display}': {e.Message}");
+                };
+            }
         }
 
         private void UpdateProjectProperties(Project project, ProjectFileInfo projectFileInfo)
@@ -653,7 +662,7 @@ namespace OmniSharp.MSBuild
 
                         // We've found a project reference that we didn't know about already, but it exists on disk.
                         // This is likely a project that is outside of OmniSharp's TargetDirectory.
-                        referencedProject = ProjectFileInfo.CreateNoBuild(projectReferencePath, _projectLoader, _dotNetCli);
+                        referencedProject = ProjectFileInfo.CreateNoBuild(projectReferencePath, _projectLoader, _dotNetInfo);
                         AddProject(referencedProject);
 
                         QueueProjectUpdate(projectReferencePath, allowAutoRestore: true, referencedProject.ProjectIdInfo, FileChangeType.Unspecified);
@@ -672,8 +681,8 @@ namespace OmniSharp.MSBuild
                     if (projectFileInfo.ProjectReferenceAliases.TryGetValue(projectReferencePath, out var projectReferenceAliases))
                     {
                         if (!string.IsNullOrEmpty(projectReferenceAliases))
-                        {
-                            aliases = projectReferenceAliases.Split(';').ToImmutableArray();
+                        {                            
+                            aliases = ImmutableArray.CreateRange(projectReferenceAliases.Split(new char[]{','},StringSplitOptions.RemoveEmptyEntries).Select(a => a.Trim()));
                             _logger.LogDebug($"Setting aliases: {projectReferencePath}, {projectReferenceAliases} ");
                         }
                     }
@@ -742,7 +751,7 @@ namespace OmniSharp.MSBuild
                         {
                             if (!string.IsNullOrEmpty(aliases))
                             {
-                                reference = reference.WithAliases(aliases.Split(';'));
+                                reference = reference.WithAliases(aliases.Split(new char[]{','},StringSplitOptions.RemoveEmptyEntries).Select(a => a.Trim()));
                                 _logger.LogDebug($"setting aliases: {referencePath}, {aliases} ");
                             }
                         }

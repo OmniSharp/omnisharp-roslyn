@@ -60,7 +60,7 @@ namespace OmniSharp.Http
             _compositionHost = new CompositionHostBuilder(serviceProvider)
                 .WithOmniSharpAssemblies()
                 .WithAssemblies(assemblyLoader.LoadByAssemblyNameOrPath(logger, plugins).ToArray())
-                .Build();
+                .Build(_environment.TargetDirectory);
 
             return serviceProvider;
         }

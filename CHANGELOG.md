@@ -1,15 +1,92 @@
 # Changelog
 All changes to the project will be documented in this file.
 
-## [1.35.4] - Not yet released
+## [1.37.3] - 2020-10-14
+* Fixed a bug when the server wouldn't start on MacOS/Linux when a username contained a space (PR: [#1979](https://github.com/OmniSharp/omnisharp-roslyn/pull/1979))
+* Update to Mono 6.12.0 (PR: [#1981](https://github.com/OmniSharp/omnisharp-roslyn/pull/1981))
+* Fix responsiveness regression with targeted DiagnosticWorker revert ([#1982](https://github.com/OmniSharp/omnisharp-roslyn/issues/1982), [#1983](https://github.com/OmniSharp/omnisharp-roslyn/issues/1983), PR: [#1984](https://github.com/OmniSharp/omnisharp-roslyn/pull/1984))
+
+## [1.37.2] - 2020-10-09
+* Updated MSBuild, MSBuild resolvers and Roslyn to match .NET Core 5.0 RC2 and VS 16.8 Preview 4. (PR: [#1971](https://github.com/OmniSharp/omnisharp-roslyn/pull/1971), PR: [#1974](https://github.com/OmniSharp/omnisharp-roslyn/pull/1974))
+* Decouple FixAll from the workspace ([#1960](https://github.com/OmniSharp/omnisharp-roslyn/issues/1960), PR: [#1962](https://github.com/OmniSharp/omnisharp-roslyn/pull/1962))
+* Added binding redirects for Microsoft.CodeAnalysis.Features and Microsoft.CodeAnalysis.CSharp.Features (PR: [#1964](https://github.com/OmniSharp/omnisharp-roslyn/pull/1964))
+* Always log error responses with error level (PR: [#1963](https://github.com/OmniSharp/omnisharp-roslyn/pull/1963))
+* Added support for override property completion. **Warning**: contains breaking change, as `InsertText` was removed from the response, please use `TextEdit` instead (PR: [#1957](https://github.com/OmniSharp/omnisharp-roslyn/pull/1957))
+* Correctly handle <ProjectReferences> that don't produce references (PR: [#1956](https://github.com/OmniSharp/omnisharp-roslyn/pull/1956))
+* Marked `/autocomplete` endpoint as obsolete - the clients should be switching to `/completion` and `/completion/resolve` (PR: [#1951](https://github.com/OmniSharp/omnisharp-roslyn/pull/1951))
+* Fixed escapes in regex completions ([#1949](https://github.com/OmniSharp/omnisharp-roslyn/issues/1949), PR: [#1950](https://github.com/OmniSharp/omnisharp-roslyn/pull/1950))
+* Fixed completion on part of existing string ([omnisharp-vscode#4063](https://github.com/OmniSharp/omnisharp-vscode/issues/4063), PR: [#1941](https://github.com/OmniSharp/omnisharp-roslyn/pull/1941))
+* Fixed LSP completion item kinds (PR: [#1940](https://github.com/OmniSharp/omnisharp-roslyn/pull/1940))
+* Added support for textDocument/implementation in LSP mode (PR: [#1970](https://github.com/OmniSharp/omnisharp-roslyn/pull/1970))
+* Fixed namespace icon in completion response ([omnisharp-vscode#4051](https://github.com/OmniSharp/omnisharp-vscode/issues/4051), PR: [#1936](https://github.com/OmniSharp/omnisharp-roslyn/pull/1936))
+* Improved performance of find implementations (PR: [#1935](https://github.com/OmniSharp/omnisharp-roslyn/pull/1935))
+* Add support for new quick info endpoint when working with Cake (PR: [#1945](https://github.com/OmniSharp/omnisharp-roslyn/pull/1945))
+* Add support for new completion endpoints when working with Cake ([#1939](https://github.com/OmniSharp/omnisharp-roslyn/issues/1939), PR: [#1944](https://github.com/OmniSharp/omnisharp-roslyn/pull/1944))
+* When an analyzer fails to load, log an error (PR: [#1972](https://github.com/OmniSharp/omnisharp-roslyn/pull/1972))
+* Added support for 'extract base class' (PR: [#1969](https://github.com/OmniSharp/omnisharp-roslyn/pull/1969))
+* OmniSharp.Path can only be set in user settings (PR: [#1946](https://github.com/OmniSharp/omnisharp-roslyn/pull/1946))
+* Add support for code actions besides ApplyChangesOperation's (PR: [#1724](https://github.com/OmniSharp/omnisharp-roslyn/pull/1724))
+
+## [1.37.1] - 2020-09-01
+* Ensure that all quickinfo sections have linebreaks between them, and don't add unecessary duplicate linebreaks (PR: [#1900](https://github.com/OmniSharp/omnisharp-roslyn/pull/1900))
+* Support completion of unimported types (PR: [#1896](https://github.com/OmniSharp/omnisharp-roslyn/pull/1896))
+* Exclude Misc project from InternalsVisibleTo completion (PR: [#1902](https://github.com/OmniSharp/omnisharp-roslyn/pull/1902))
+* Ensure unimported things are sorted after imported things (PR: [#1903](https://github.com/OmniSharp/omnisharp-roslyn/pull/1903))
+* Updated lsp library to fix issue with signature help, etc ([#1887](https://github.com/OmniSharp/omnisharp-roslyn/issues/1887), PR: [#1890](https://github.com/OmniSharp/omnisharp-roslyn/pull/1890))
+* Correctly handle multiple reference aliases (PR: [#1905](https://github.com/OmniSharp/omnisharp-roslyn/pull/1905))
+* Better handle completion when the display text is not in the final result (PR: [#1908](https://github.com/OmniSharp/omnisharp-roslyn/pull/1908))
+* Correctly mark hover markup content as markdown ([#1906](https://github.com/OmniSharp/omnisharp-roslyn/issues/1906), PR: [#1909](https://github.com/OmniSharp/omnisharp-roslyn/pull/1909))
+* Upgrade lsp ([#1898](https://github.com/OmniSharp/omnisharp-roslyn/issues/1898), PR: [#1911](https://github.com/OmniSharp/omnisharp-roslyn/pull/1911))
+* Updated to ILSpy 6.1.0.5902 (PR: [#1913](https://github.com/OmniSharp/omnisharp-roslyn/pull/1913))
+* Updated to NET 5.0 preview8 (PR: [#1916](https://github.com/OmniSharp/omnisharp-roslyn/pull/1916))
+* Add HTTP Driver back to build.json (PR: [#1918](https://github.com/OmniSharp/omnisharp-roslyn/pull/1918))
+* Use ExecutionPolicy Bypass when running powershell.exe (PR: [#1917](https://github.com/OmniSharp/omnisharp-roslyn/pull/1917))
+* Update the package that Arch Linux users need to install (PR: [#1921](https://github.com/OmniSharp/omnisharp-roslyn/pull/1921))
+* Updated the docs to mention .NET 4.7.2 targeting pack (PR: [#1922](https://github.com/OmniSharp/omnisharp-roslyn/pull/1922))
+* Support for configurations remapping in solution files ([#1828](https://github.com/OmniSharp/omnisharp-roslyn/issues/1828), PR: [#1835](https://github.com/OmniSharp/omnisharp-roslyn/pull/1835))
+* Only run dotnet --info once for the working directory (PR: [#1925](https://github.com/OmniSharp/omnisharp-roslyn/pull/1925))
+* Update build tool versions for NET 5 RC1 (PR: [#1926](https://github.com/OmniSharp/omnisharp-roslyn/pull/1926))
+* Update Roslyn to 3.8.0-3.20451.2 (PR: [#1927](https://github.com/OmniSharp/omnisharp-roslyn/pull/1927))
+
+## [1.37.0] - 2020-08-18
+* Update Roslyn version and tooling to match .NET 5 Preview8 (PR: [#1897](https://github.com/OmniSharp/omnisharp-roslyn/pull/1897))
+* Updated lsp library to fix issue with signature help, etc (PR: [#1890](https://github.com/OmniSharp/omnisharp-roslyn/pull/1890))
+* Include version matched target files with minimal MSBuild (PR: [#1895](https://github.com/OmniSharp/omnisharp-roslyn/pull/1895))
+* Fix lack of trailing italics in quickinfo (PR: [#1894](https://github.com/OmniSharp/omnisharp-roslyn/pull/1894))
+* Added System.Reflection.Emit.* to embedded mono script (PR: [#1892](https://github.com/OmniSharp/omnisharp-roslyn/pull/1892))
+* Start moving omnisharp to directly using Roslyn's completion service (PR: [#1877](https://github.com/OmniSharp/omnisharp-roslyn/pull/1877))
+* Add asynchronous test completed events (PR: [#1802](https://github.com/OmniSharp/omnisharp-roslyn/pull/1802))
+
+## [1.36.1] - 2020-08-12
+* Fix MSBuild version mismatch with new SDKs ([omnisharp-vscode#3951](https://github.com/OmniSharp/omnisharp-vscode/issues/3951), PR: [#1883](https://github.com/OmniSharp/omnisharp-roslyn/pull/1883))
+
+## [1.36.0] - 2020-08-10
+* Introduced a new `/quickinfo` endpoint to provide a richer set of information compared to `/typeinfo`. Consumers are encouraged to use it as their hover provider ([#1808](https://github.com/OmniSharp/omnisharp-roslyn/issues/1808), PR: [#1860](https://github.com/OmniSharp/omnisharp-roslyn/pull/1860))
+* Updated LSP hover provider to use the new QuickInfo based services (PR: [#1870](https://github.com/OmniSharp/omnisharp-roslyn/pull/1870))
+* Fixed return type in LSP completion handler ([#1864](https://github.com/OmniSharp/omnisharp-roslyn/issues/1864), PR: [#1869](https://github.com/OmniSharp/omnisharp-roslyn/pull/1869))
+* Upgraded to the latest version of the csharp-language-server-protocol [#1815](https://github.com/OmniSharp/omnisharp-roslyn/pull/1815)
+* Added support for Roslyn `EmbeddedLanguageCompletionProvider` which enables completions for string literals for `DateTime` and `Regex` ([#1871](https://github.com/OmniSharp/omnisharp-roslyn/pull/1871))
+* Improve performance of the `textDocument/codeAction` request. (PR: [#1814](https://github.com/OmniSharp/omnisharp-roslyn/pull/1814))
+* Updated Roslyn to Roslyn version and tools to match .NET 5 Preview8 (PR: [#1867](https://github.com/OmniSharp/omnisharp-roslyn/pull/1867))
+* Provide a warning when the discovered MSBuild version is lower than the minimumMSBuildVersion supported by the configured SDK (PR: [#1875](https://github.com/OmniSharp/omnisharp-roslyn/pull/1875))
+* Use the real MSBuild product version during discovery (PR: [#1876](https://github.com/OmniSharp/omnisharp-roslyn/pull/1876))
+* Fixed debugging in .NET 5 preview SDKs ([omnisharp-vscode#3459](https://github.com/OmniSharp/omnisharp-vscode/issues/3459), PR: [#1862](https://github.com/OmniSharp/omnisharp-roslyn/pull/1862))
+
+## [1.35.4] - 2020-07-22
+* Update to Roslyn `3.8.0-1.20357.3` (PR: [#1849](https://github.com/OmniSharp/omnisharp-roslyn/pull/1849))
 * Added LSP handler for the `workspace/symbol` request. (PR: [#1799](https://github.com/OmniSharp/omnisharp-roslyn/pull/1799))
+* Use global MSBuild property when resetting target framework ([#1738](https://github.com/OmniSharp/omnisharp-roslyn/issues/1738), PR: [#1846](https://github.com/OmniSharp/omnisharp-roslyn/pull/1846))
+* Do not use Visual Studio MSBuild if it doesn't have .NET SDK resolver ([#1842](https://github.com/OmniSharp/omnisharp-roslyn/issues/1842), [#1730](https://github.com/OmniSharp/omnisharp-roslyn/issues/1730), PR: [#1845](https://github.com/OmniSharp/omnisharp-roslyn/pull/1845))
+* Only request dotnet info once for the solution or directory ([#1844](https://github.com/OmniSharp/omnisharp-roslyn/issues/1844), PR: [#1857](https://github.com/OmniSharp/omnisharp-roslyn/pull/1857))
+* Allow client to specify symbol filter for FindSymbols Endpoint. (PR: [#1823](https://github.com/OmniSharp/omnisharp-roslyn/pull/1823))
+* Exclude additive classifications from "/highlight" requests ([#1576](https://github.com/OmniSharp/omnisharp-roslyn/issues/1576), PR: [#1726](https://github.com/OmniSharp/omnisharp-roslyn/pull/1726))
+* Upgraded to Mono 6.10.0.105, msbuild 16.6 and added missing targets (PR: [#1854](https://github.com/OmniSharp/omnisharp-roslyn/pull/1854))
 
 ## [1.35.3] - 2020-06-11
 * Added LSP handler for `textDocument/codeAction` request. (PR: [#1795](https://github.com/OmniSharp/omnisharp-roslyn/pull/1795))
 * Expose a custom LSP `omnisharp/client/findReferences` command via code lens (meant to be handled by LSP client). (PR: [#1807](https://github.com/OmniSharp/omnisharp-roslyn/pull/1807))
 * Added `DirectoryDelete` option to `FileChangeType` allowing clients to report deleted directories that need to be removed (along all the files) from the workspace (PR: [#1821](https://github.com/OmniSharp/omnisharp-roslyn/pull/1821))
 * Do not crash when plugin assembly cannot be loaded ([#1307](https://github.com/OmniSharp/omnisharp-roslyn/issues/1307), PR: [#1827](https://github.com/OmniSharp/omnisharp-roslyn/pull/1827))
-* Update to Roslyn `3.7.0-4.20311.4` (PR: [#1832](https://github.com/OmniSharp/omnisharp-roslyn/pull/1832))
 
 ## [1.35.2] - 2020-05-20
 * Added support for `WarningsAsErrors` in csproj files (PR: [#1779](https://github.com/OmniSharp/omnisharp-roslyn/pull/1779))

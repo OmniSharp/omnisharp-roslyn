@@ -20,12 +20,13 @@ using OmniSharp.Services;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 {
-    public class CSharpDiagnosticWorkerWithAnalyzers : ICsDiagnosticWorker
+    public class CSharpDiagnosticWorkerWithAnalyzers : ICsDiagnosticWorker, IDisposable
     {
         private readonly AnalyzerWorkQueue _workQueue;
         private readonly ILogger<CSharpDiagnosticWorkerWithAnalyzers> _logger;
-        private readonly ConcurrentDictionary<DocumentId, (string projectName, ImmutableArray<Diagnostic> diagnostics)> _currentDiagnosticResults =
-            new ConcurrentDictionary<DocumentId, (string projectName, ImmutableArray<Diagnostic> diagnostics)>();
+
+        private readonly ConcurrentDictionary<DocumentId, DocumentDiagnostics> _currentDiagnosticResultLookup =
+            new ConcurrentDictionary<DocumentId, DocumentDiagnostics>();
         private readonly ImmutableArray<ICodeActionProvider> _providers;
         private readonly DiagnosticEventForwarder _forwarder;
         private readonly OmniSharpOptions _options;
@@ -35,7 +36,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
         // Currently roslyn doesn't expose official way to use IDE analyzers during analysis.
         // This options gives certain IDE analysis access for services that are not yet publicly available.
         private readonly ConstructorInfo _workspaceAnalyzerOptionsConstructor;
-        private bool _initialSolutionAnalysisInvoked = false;
 
         public CSharpDiagnosticWorkerWithAnalyzers(
             OmniSharpWorkspace workspace,
@@ -59,49 +59,45 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                 ?? throw new InvalidOperationException("Could not resolve 'Microsoft.CodeAnalysis.Diagnostics.WorkspaceAnalyzerOptions' for IDE analyzers.");
 
             _workspace.WorkspaceChanged += OnWorkspaceChanged;
+            _workspace.OnInitialized += OnWorkspaceInitialized;
 
             Task.Factory.StartNew(() => Worker(AnalyzerWorkType.Foreground), TaskCreationOptions.LongRunning);
             Task.Factory.StartNew(() => Worker(AnalyzerWorkType.Background), TaskCreationOptions.LongRunning);
+
+            OnWorkspaceInitialized(_workspace.Initialized);
         }
 
-        private Task InitializeWithWorkspaceDocumentsIfNotYetDone()
+        public void OnWorkspaceInitialized(bool isInitialized)
         {
-            if (_initialSolutionAnalysisInvoked)
-                return Task.CompletedTask;
-
-            _initialSolutionAnalysisInvoked = true;
-
-            return Task.Run(async () =>
-            {
-                while (!_workspace.Initialized) await Task.Delay(50);
-            })
-            .ContinueWith(_ => Task.Delay(50))
-            .ContinueWith(_ =>
+            if (isInitialized)
             {
                 var documentIds = QueueDocumentsForDiagnostics();
                 _logger.LogInformation($"Solution initialized -> queue all documents for code analysis. Initial document count: {documentIds.Length}.");
-            });
+            }
         }
 
-        public async Task<ImmutableArray<(string projectName, Diagnostic diagnostic)>> GetDiagnostics(ImmutableArray<string> documentPaths)
+        public async Task<ImmutableArray<DocumentDiagnostics>> GetDiagnostics(ImmutableArray<string> documentPaths)
         {
-            await InitializeWithWorkspaceDocumentsIfNotYetDone();
-
             var documentIds = GetDocumentIdsFromPaths(documentPaths);
 
-            return await GetDiagnosticsByDocumentIds(documentIds);
+            return await GetDiagnosticsByDocumentIds(documentIds, waitForDocuments: true);
         }
 
-        private async Task<ImmutableArray<(string projectName, Diagnostic diagnostic)>> GetDiagnosticsByDocumentIds(ImmutableArray<DocumentId> documentIds)
+        private async Task<ImmutableArray<DocumentDiagnostics>> GetDiagnosticsByDocumentIds(ImmutableArray<DocumentId> documentIds, bool waitForDocuments)
         {
-            if(documentIds.Length == 1)
+            if (waitForDocuments)
             {
-                _workQueue.TryPromote(documentIds.Single());
+                foreach (var documentId in documentIds)
+                {
+                    _workQueue.TryPromote(documentId);
+                }
+
                 await _workQueue.WaitForegroundWorkComplete();
             }
-            return _currentDiagnosticResults
-                .Where(x => documentIds.Any(docId => docId == x.Key))
-                .SelectMany(x => x.Value.diagnostics, (k, v) => ((k.Value.projectName, v)))
+
+            return documentIds
+                .Where(x => _currentDiagnosticResultLookup.ContainsKey(x))
+                .Select(x => _currentDiagnosticResultLookup[x])
                 .ToImmutableArray();
         }
 
@@ -109,6 +105,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
         {
             return documentPaths
                 .Select(docPath => _workspace.GetDocumentId(docPath))
+                .Where(x => x != default)
                 .ToImmutableArray();
         }
 
@@ -162,7 +159,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
         private void OnWorkspaceChanged(object sender, WorkspaceChangeEventArgs changeEvent)
         {
-            switch(changeEvent.Kind)
+            switch (changeEvent.Kind)
             {
                 case WorkspaceChangeKind.DocumentChanged:
                 case WorkspaceChangeKind.DocumentAdded:
@@ -171,11 +168,11 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                     QueueForAnalysis(ImmutableArray.Create(changeEvent.DocumentId), AnalyzerWorkType.Foreground);
                     break;
                 case WorkspaceChangeKind.DocumentRemoved:
-                    if(_currentDiagnosticResults.TryRemove(changeEvent.DocumentId, out _))
+                    if(_currentDiagnosticResultLookup.TryRemove(changeEvent.DocumentId, out _))
                     {
                         var existingDocumentsInProject = _workspace.CurrentSolution.GetProject(changeEvent.ProjectId).Documents.Select(x => x.Id).ToImmutableArray();
                         QueueForAnalysis(existingDocumentsInProject, AnalyzerWorkType.Background);
-                    };
+                    }
                     break;
                 case WorkspaceChangeKind.ProjectAdded:
                 case WorkspaceChangeKind.ProjectChanged:
@@ -184,19 +181,48 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                     var projectDocumentIds = _workspace.CurrentSolution.GetProject(changeEvent.ProjectId).Documents.Select(x => x.Id).ToImmutableArray();
                     QueueForAnalysis(projectDocumentIds, AnalyzerWorkType.Background);
                     break;
-                case WorkspaceChangeKind.ProjectRemoved:
-                    var removedProject = changeEvent.OldSolution.GetProject(changeEvent.ProjectId);
-
-                    _forwarder.ProjectAnalyzedInBackground(removedProject.FilePath, ProjectDiagnosticStatus.Started);
-
-                    foreach(var removedDocument in removedProject.Documents)
-                    {
-                        _currentDiagnosticResults.TryRemove(removedDocument.Id, out _);
-                    }
-
-                    _forwarder.ProjectAnalyzedInBackground(removedProject.FilePath, ProjectDiagnosticStatus.Ready);
+                case WorkspaceChangeKind.SolutionAdded:
+                case WorkspaceChangeKind.SolutionChanged:
+                case WorkspaceChangeKind.SolutionReloaded:
+                    QueueDocumentsForDiagnostics();
                     break;
+
             }
+        }
+
+        public async Task<IEnumerable<Diagnostic>> AnalyzeDocumentAsync(Document document, CancellationToken cancellationToken)
+        {
+            Project project = document.Project;
+            var allAnalyzers = _providers
+                .SelectMany(x => x.CodeDiagnosticAnalyzerProviders)
+                .Concat(project.AnalyzerReferences.SelectMany(x => x.GetAnalyzers(project.Language)))
+                .ToImmutableArray();
+
+            var compilation = await project.GetCompilationAsync();
+            var workspaceAnalyzerOptions = (AnalyzerOptions)_workspaceAnalyzerOptionsConstructor.Invoke(new object[] { project.AnalyzerOptions, project.Solution });
+
+            cancellationToken.ThrowIfCancellationRequested();
+            return await AnalyzeDocument(project, allAnalyzers, compilation, workspaceAnalyzerOptions, document);
+        }
+
+        public async Task<IEnumerable<Diagnostic>> AnalyzeProjectsAsync(Project project, CancellationToken cancellationToken)
+        {
+            var diagnostics = new List<Diagnostic>();
+            var allAnalyzers = _providers
+                .SelectMany(x => x.CodeDiagnosticAnalyzerProviders)
+                .Concat(project.AnalyzerReferences.SelectMany(x => x.GetAnalyzers(project.Language)))
+                .ToImmutableArray();
+
+            var compilation = await project.GetCompilationAsync();
+            var workspaceAnalyzerOptions = (AnalyzerOptions)_workspaceAnalyzerOptionsConstructor.Invoke(new object[] { project.AnalyzerOptions, project.Solution });
+
+            foreach (var document in project.Documents)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                diagnostics.AddRange(await AnalyzeDocument(project, allAnalyzers, compilation, workspaceAnalyzerOptions, document));
+            }
+
+            return diagnostics;
         }
 
         private async Task AnalyzeProject(Solution solution, IGrouping<ProjectId, DocumentId> documentsGroupedByProject)
@@ -210,16 +236,15 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                     .Concat(project.AnalyzerReferences.SelectMany(x => x.GetAnalyzers(project.Language)))
                     .ToImmutableArray();
 
-                var compiled = await project
-                    .GetCompilationAsync();
+                var compilation = await project.GetCompilationAsync();
 
-                var workspaceAnalyzerOptions =
-                    (AnalyzerOptions)_workspaceAnalyzerOptionsConstructor.Invoke(new object[] { project.AnalyzerOptions, project.Solution });
+                var workspaceAnalyzerOptions = (AnalyzerOptions)_workspaceAnalyzerOptionsConstructor.Invoke(new object[] { project.AnalyzerOptions, project.Solution });
 
                 foreach (var documentId in documentsGroupedByProject)
                 {
                     var document = project.GetDocument(documentId);
-                    await AnalyzeDocument(project, allAnalyzers, compiled, workspaceAnalyzerOptions, document);
+                    var diagnostics = await AnalyzeDocument(project, allAnalyzers, compilation, workspaceAnalyzerOptions, document);
+                    UpdateCurrentDiagnostics(project, document, diagnostics);
                 }
             }
             catch (Exception ex)
@@ -228,27 +253,29 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             }
         }
 
-        private async Task AnalyzeDocument(Project project, ImmutableArray<DiagnosticAnalyzer> allAnalyzers, Compilation compiled, AnalyzerOptions workspaceAnalyzerOptions, Document document)
+        private async Task<ImmutableArray<Diagnostic>> AnalyzeDocument(Project project, ImmutableArray<DiagnosticAnalyzer> allAnalyzers, Compilation compilation, AnalyzerOptions workspaceAnalyzerOptions, Document document)
         {
             try
             {
                 // There's real possibility that bug in analyzer causes analysis hang at document.
-                var perDocumentTimeout = new CancellationTokenSource(_options.RoslynExtensionsOptions.DocumentAnalysisTimeoutMs);
+                var perDocumentTimeout =
+                    new CancellationTokenSource(_options.RoslynExtensionsOptions.DocumentAnalysisTimeoutMs);
 
                 var documentSemanticModel = await document.GetSemanticModelAsync(perDocumentTimeout.Token);
 
                 var diagnostics = ImmutableArray<Diagnostic>.Empty;
 
                 // Only basic syntax check is available if file is miscellanous like orphan .cs file.
-                // Those projects are on hard coded virtual project named 'MiscellaneousFiles.csproj'.
-                if (project.Name == "MiscellaneousFiles.csproj")
+                // Those projects are on hard coded virtual project
+                if (project.Name == $"{Configuration.OmniSharpMiscProjectName}.csproj")
                 {
                     var syntaxTree = await document.GetSyntaxTreeAsync();
                     diagnostics = syntaxTree.GetDiagnostics().ToImmutableArray();
                 }
                 else if (allAnalyzers.Any()) // Analyzers cannot be called with empty analyzer list.
                 {
-                    var compilationWithAnalyzers = compiled.WithAnalyzers(allAnalyzers, new CompilationWithAnalyzersOptions(workspaceAnalyzerOptions,
+                    var compilationWithAnalyzers = compilation.WithAnalyzers(allAnalyzers, new CompilationWithAnalyzersOptions(
+                        workspaceAnalyzerOptions,
                         onAnalyzerException: OnAnalyzerException,
                         concurrentAnalysis: false,
                         logAnalyzerExecutionTime: false,
@@ -267,14 +294,15 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                 }
                 else
                 {
-                    diagnostics = documentSemanticModel.GetDiagnostics().ToImmutableArray();
+                    diagnostics = documentSemanticModel.GetDiagnostics();
                 }
 
-                UpdateCurrentDiagnostics(project, document, diagnostics);
+                return diagnostics;
             }
             catch (Exception ex)
             {
                 _logger.LogError($"Analysis of document {document.Name} failed or cancelled by timeout: {ex.Message}, analysers: {string.Join(", ", allAnalyzers)}");
+                return ImmutableArray<Diagnostic>.Empty;
             }
         }
 
@@ -288,23 +316,24 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
         private void UpdateCurrentDiagnostics(Project project, Document document, ImmutableArray<Diagnostic> diagnosticsWithAnalyzers)
         {
-            _currentDiagnosticResults[document.Id] = (project.Name, diagnosticsWithAnalyzers);
-            EmitDiagnostics(_currentDiagnosticResults[document.Id].diagnostics);
+            _currentDiagnosticResultLookup[document.Id] = new DocumentDiagnostics(document.Id, document.FilePath, project.Id, project.Name, diagnosticsWithAnalyzers);
+            EmitDiagnostics(_currentDiagnosticResultLookup[document.Id]);
         }
 
-        private void EmitDiagnostics(ImmutableArray<Diagnostic> results)
+        private void EmitDiagnostics(DocumentDiagnostics results)
         {
-            if (results.Any())
+            _forwarder.Forward(new DiagnosticMessage
             {
-                _forwarder.Forward(new DiagnosticMessage
+                Results = new[]
                 {
-                    Results = results
-                        .Select(x => x.ToDiagnosticLocation())
-                        .Where(x => x.FileName != null)
-                        .GroupBy(x => x.FileName)
-                        .Select(group => new DiagnosticResult { FileName = group.Key, QuickFixes = group.ToList() })
-                });
-            }
+                    new DiagnosticResult
+                    {
+                        FileName = results.DocumentPath, QuickFixes = results.Diagnostics
+                            .Select(x => x.ToDiagnosticLocation())
+                            .ToList()
+                    }
+                }
+            });
         }
 
         public ImmutableArray<DocumentId> QueueDocumentsForDiagnostics()
@@ -314,18 +343,25 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             return documentIds;
         }
 
-        public async Task<ImmutableArray<(string projectName, Diagnostic diagnostic)>> GetAllDiagnosticsAsync()
+        public async Task<ImmutableArray<DocumentDiagnostics>> GetAllDiagnosticsAsync()
         {
-            await InitializeWithWorkspaceDocumentsIfNotYetDone();
             var allDocumentsIds = _workspace.CurrentSolution.Projects.SelectMany(x => x.DocumentIds).ToImmutableArray();
-            return await GetDiagnosticsByDocumentIds(allDocumentsIds);
+            return await GetDiagnosticsByDocumentIds(allDocumentsIds, waitForDocuments: false);
         }
 
         public ImmutableArray<DocumentId> QueueDocumentsForDiagnostics(ImmutableArray<ProjectId> projectIds)
         {
-            var documentIds = projectIds.SelectMany(projectId => _workspace.CurrentSolution.GetProject(projectId).Documents.Select(x => x.Id)).ToImmutableArray();
+            var documentIds = projectIds
+                .SelectMany(projectId => _workspace.CurrentSolution.GetProject(projectId).Documents.Select(x => x.Id))
+                .ToImmutableArray();
             QueueForAnalysis(documentIds, AnalyzerWorkType.Background);
             return documentIds;
+        }
+
+        public void Dispose()
+        {
+            _workspace.WorkspaceChanged -= OnWorkspaceChanged;
+            _workspace.OnInitialized -= OnWorkspaceInitialized;
         }
     }
 }

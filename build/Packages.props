@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="14.0"
-  xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <PropertyGroup>
-    <MSBuildPackageVersion>16.5.0</MSBuildPackageVersion>
+    <MSBuildPackageVersion>16.6.0</MSBuildPackageVersion>
     <NuGetPackageVersion>5.2.0</NuGetPackageVersion>
-    <RoslynPackageVersion>3.7.0-4.20311.4</RoslynPackageVersion>
-    <XunitPackageVersion>2.4.0</XunitPackageVersion>
+    <RoslynPackageVersion>3.8.0-4.20503.2</RoslynPackageVersion>
+    <XunitPackageVersion>2.4.1</XunitPackageVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -14,7 +14,7 @@
 
     <PackageReference Update="Dotnet.Script.DependencyModel" Version="0.53.0" />
     <PackageReference Update="Dotnet.Script.DependencyModel.NuGet" Version="0.53.0" />
-    <PackageReference Update="ICSharpCode.Decompiler" Version="5.0.2.5153" />
+    <PackageReference Update="ICSharpCode.Decompiler" Version="6.1.0.5902" />
     <PackageReference Update="McMaster.Extensions.CommandLineUtils" Version="2.2.4" />
 
     <PackageReference Update="Microsoft.AspNetCore.Diagnostics" Version="2.1.1" />
@@ -57,12 +57,13 @@
 
     <PackageReference Update="Newtonsoft.Json" Version="12.0.3" />
 
-    <PackageReference Update="Nuget.Packaging" Version="$(NuGetPackageVersion)" />
-    <PackageReference Update="Nuget.Packaging.Core" Version="$(NuGetPackageVersion)" />
-    <PackageReference Update="Nuget.ProjectModel" Version="$(NuGetPackageVersion)" />
-    <PackageReference Update="Nuget.Versioning" Version="$(NuGetPackageVersion)" />
+    <PackageReference Update="NuGet.Packaging" Version="$(NuGetPackageVersion)" />
+    <PackageReference Update="NuGet.Packaging.Core" Version="$(NuGetPackageVersion)" />
+    <PackageReference Update="NuGet.ProjectModel" Version="$(NuGetPackageVersion)" />
+    <PackageReference Update="NuGet.Versioning" Version="$(NuGetPackageVersion)" />
 
-    <PackageReference Update="OmniSharp.Extensions.LanguageServer" Version="0.14.2" />
+    <PackageReference Update="OmniSharp.Extensions.LanguageServer" Version="0.18.0-beta0081" />
+    <PackageReference Update="OmniSharp.Extensions.LanguageProtocol.Testing" Version="0.18.0-beta0081" />
 
     <PackageReference Update="SQLitePCLRaw.bundle_green" Version="1.1.2" />
     <PackageReference Update="System.Collections.Immutable" Version="1.4.0" />
@@ -71,19 +72,16 @@
     <PackageReference Update="System.Reflection.DispatchProxy" Version="4.5.1" />
     <PackageReference Update="System.Reflection.Metadata" Version="1.4.2" />
     <PackageReference Update="System.Threading.Tasks.Dataflow" Version="4.9.0" />
-    <PackageReference Update="System.ValueTuple" Version="4.4.0" />
+    <PackageReference Update="System.ValueTuple" Version="4.5.0" />
 
-    <PackageReference Update="System.Reactive" Version="4.1.2" />
+    <PackageReference Update="System.Reactive" Version="4.4.1" />
 
     <PackageReference Update="System.Reflection.DispatchProxy" Version="4.5.1" />
 
-    <PackageReference Update="xunit.runner.visualstudio" Version="$(XunitPackageVersion)" />
+    <PackageReference Update="xunit.runner.visualstudio" Version="2.4.3" />
     <PackageReference Update="xunit" Version="$(XunitPackageVersion)" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
   </ItemGroup>
-
-
-
 </Project>

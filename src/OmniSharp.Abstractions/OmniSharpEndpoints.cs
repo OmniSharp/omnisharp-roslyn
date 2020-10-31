@@ -34,7 +34,8 @@ namespace OmniSharp
         public const string WorkspaceInformation = "/projects";
         public const string ProjectInformation = "/project";
         public const string FixUsings = "/fixusings";
-
+        public const string RunFixAll = "/runfixall";
+        public const string GetFixAll = "/getfixall";
         public const string CheckAliveStatus = "/checkalivestatus";
         public const string CheckReadyStatus = "/checkreadystatus";
         public const string StopServer = "/stopserver";
@@ -44,6 +45,10 @@ namespace OmniSharp
         public const string Diagnostics = "/diagnostics";
 
         public const string ReAnalyze = "/reanalyze";
+        public const string QuickInfo = "/quickinfo";
+
+        public const string Completion = "/completion";
+        public const string CompletionResolve = "/completion/resolve";
 
         public static class V2
         {
@@ -65,6 +70,7 @@ namespace OmniSharp
             public const string CodeStructure = "/v2/codestructure";
 
             public const string Highlight = "/v2/highlight";
+
         }
     }
 }

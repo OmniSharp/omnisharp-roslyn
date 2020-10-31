@@ -4,6 +4,8 @@ using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Runtime.Versioning;
+using Microsoft.Build.Evaluation;
+using Microsoft.Build.Globbing;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using NuGet.Packaging.Core;
@@ -43,6 +45,7 @@ namespace OmniSharp.MSBuild.ProjectFile
             public bool SignAssembly { get; }
             public string AssemblyOriginatorKeyFile { get; }
 
+            public ImmutableArray<IMSBuildGlob> FileInclusionGlobs { get; }
             public ImmutableArray<string> SourceFiles { get; }
             public ImmutableArray<string> ProjectReferences { get; }
             public ImmutableArray<string> References { get; }
@@ -77,6 +80,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 ReferenceAliases = ImmutableDictionary<string, string>.Empty;
                 ProjectReferenceAliases = ImmutableDictionary<string, string>.Empty;
                 WarningsAsErrors = ImmutableArray<string>.Empty;
+                FileInclusionGlobs = ImmutableArray<IMSBuildGlob>.Empty;
                 WarningsNotAsErrors = ImmutableArray<string>.Empty;
             }
 
@@ -173,7 +177,8 @@ namespace OmniSharp.MSBuild.ProjectFile
                 bool runAnalyzersDuringLiveAnalysis,
                 RuleSet ruleset,
                 ImmutableDictionary<string, string> referenceAliases,
-                ImmutableDictionary<string, string> projectReferenceAliases)
+                ImmutableDictionary<string, string> projectReferenceAliases,
+                ImmutableArray<IMSBuildGlob> fileInclusionGlobs)
                 : this(guid, name, assemblyName, targetPath, outputPath, intermediateOutputPath, projectAssetsFile,
                       configuration, platform, targetFramework, targetFrameworks, outputKind, languageVersion, nullableContextOptions, allowUnsafeCode, checkForOverflowUnderflow,
                       documentationFile, preprocessorSymbolNames, suppressedDiagnosticIds, warningsAsErrors, warningsNotAsErrors, signAssembly, assemblyOriginatorKeyFile, treatWarningsAsErrors, defaultNamespace, runAnalyzers, runAnalyzersDuringLiveAnalysis, ruleset)
@@ -187,6 +192,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 AnalyzerConfigFiles = analyzerConfigFiles.EmptyIfDefault();
                 ReferenceAliases = referenceAliases;
                 ProjectReferenceAliases = projectReferenceAliases;
+                FileInclusionGlobs = fileInclusionGlobs;
             }
 
             public static ProjectData Create(MSB.Evaluation.Project project)
@@ -234,8 +240,10 @@ namespace OmniSharp.MSBuild.ProjectFile
                     documentationFile, preprocessorSymbolNames, suppressedDiagnosticIds, warningsAsErrors, warningsNotAsErrors, signAssembly, assemblyOriginatorKeyFile, treatWarningsAsErrors, defaultNamespace, runAnalyzers, runAnalyzersDuringLiveAnalysis, ruleset: null);
             }
 
-            public static ProjectData Create(MSB.Execution.ProjectInstance projectInstance)
+            public static ProjectData Create(string projectFilePath, MSB.Execution.ProjectInstance projectInstance, MSB.Evaluation.Project project)
             {
+                var projectFolderPath = Path.GetDirectoryName(projectFilePath);
+
                 var guid = PropertyConverter.ToGuid(projectInstance.GetPropertyValue(PropertyNames.ProjectGuid));
                 var name = projectInstance.GetPropertyValue(PropertyNames.ProjectName);
                 var assemblyName = projectInstance.GetPropertyValue(PropertyNames.AssemblyName);
@@ -280,41 +288,32 @@ namespace OmniSharp.MSBuild.ProjectFile
 
                 var projectReferences = ImmutableArray.CreateBuilder<string>();
                 var projectReferenceAliases = ImmutableDictionary.CreateBuilder<string, string>();
-                var projectReferencesAdded = new HashSet<string>();
-                foreach (var projectReferenceItem in projectInstance.GetItems(ItemNames.ProjectReference))
-                {
-                    var fullPath = projectReferenceItem.GetMetadataValue(MetadataNames.FullPath);
-
-                    if (IsCSharpProject(fullPath) && projectReferencesAdded.Add(fullPath))
-                    {
-                        projectReferences.Add(fullPath);
-
-                        var aliases = projectReferenceItem.GetMetadataValue(MetadataNames.Aliases);
-                        if (!string.IsNullOrEmpty(aliases))
-                        {
-                            projectReferenceAliases[fullPath] = aliases;
-                        }
-                    }
-                }
 
                 var references = ImmutableArray.CreateBuilder<string>();
                 var referenceAliases = ImmutableDictionary.CreateBuilder<string, string>();
                 foreach (var referencePathItem in projectInstance.GetItems(ItemNames.ReferencePath))
                 {
                     var referenceSourceTarget = referencePathItem.GetMetadataValue(MetadataNames.ReferenceSourceTarget);
+                    var aliases = referencePathItem.GetMetadataValue(MetadataNames.Aliases);
 
+                    // If this reference came from a project reference, count it as such. We never want to directly look
+                    // at the ProjectReference items in the project, as those don't always create project references
+                    // if things like OutputItemType or ReferenceOutputAssembly are set. It's also possible that other
+                    // MSBuild logic is adding or removing properties too.
                     if (StringComparer.OrdinalIgnoreCase.Equals(referenceSourceTarget, ItemNames.ProjectReference))
                     {
-                        // If the reference was sourced from a project reference, we have two choices:
-                        //
-                        //   1. If the reference is a C# project reference, we shouldn't add it because it'll just duplicate
-                        //      the project reference.
-                        //   2. If the reference is *not* a C# project reference, we should keep this reference because the
-                        //      project reference was already removed.
-
-                        var originalItemSpec = referencePathItem.GetMetadataValue(MetadataNames.OriginalItemSpec);
-                        if (originalItemSpec.EndsWith(".csproj", StringComparison.OrdinalIgnoreCase))
+                        var projectReferenceOriginalItemSpec = referencePathItem.GetMetadataValue(MetadataNames.ProjectReferenceOriginalItemSpec);
+                        if (projectReferenceOriginalItemSpec.EndsWith(".csproj", StringComparison.OrdinalIgnoreCase))
                         {
+                            var projectReferenceFilePath = Path.GetFullPath(Path.Combine(projectFolderPath, projectReferenceOriginalItemSpec));
+
+                            projectReferences.Add(projectReferenceFilePath);
+
+                            if (!string.IsNullOrEmpty(aliases))
+                            {
+                                projectReferenceAliases[projectReferenceFilePath] = aliases;
+                            }
+
                             continue;
                         }
                     }
@@ -324,7 +323,6 @@ namespace OmniSharp.MSBuild.ProjectFile
                     {
                         references.Add(fullPath);
 
-                        var aliases = referencePathItem.GetMetadataValue(MetadataNames.Aliases);
                         if (!string.IsNullOrEmpty(aliases))
                         {
                             referenceAliases[fullPath] = aliases;
@@ -336,14 +334,47 @@ namespace OmniSharp.MSBuild.ProjectFile
                 var analyzers = GetFullPaths(projectInstance.GetItems(ItemNames.Analyzer));
                 var additionalFiles = GetFullPaths(projectInstance.GetItems(ItemNames.AdditionalFiles));
                 var editorConfigFiles = GetFullPaths(projectInstance.GetItems(ItemNames.EditorConfigFiles));
+                var includeGlobs = project.GetAllGlobs().Select(x => x.MsBuildGlob).ToImmutableArray();
 
-                return new ProjectData(guid, name,
-                    assemblyName, targetPath, outputPath, intermediateOutputPath, projectAssetsFile,
-                    configuration, platform, targetFramework, targetFrameworks,
-                    outputKind, languageVersion, nullableContextOptions, allowUnsafeCode, checkForOverflowUnderflow, documentationFile, preprocessorSymbolNames, suppressedDiagnosticIds, warningsAsErrors, warningsNotAsErrors,
-                    signAssembly, assemblyOriginatorKeyFile,
-                    sourceFiles, projectReferences.ToImmutable(), references.ToImmutable(), packageReferences, analyzers, additionalFiles, editorConfigFiles, treatWarningsAsErrors, defaultNamespace, runAnalyzers, runAnalyzersDuringLiveAnalysis, ruleset,
-                    referenceAliases.ToImmutableDictionary(), projectReferenceAliases.ToImmutable());
+                return new ProjectData(
+                    guid,
+                    name,
+                    assemblyName,
+                    targetPath,
+                    outputPath,
+                    intermediateOutputPath,
+                    projectAssetsFile,
+                    configuration,
+                    platform,
+                    targetFramework,
+                    targetFrameworks,
+                    outputKind,
+                    languageVersion,
+                    nullableContextOptions,
+                    allowUnsafeCode,
+                    checkForOverflowUnderflow,
+                    documentationFile,
+                    preprocessorSymbolNames,
+                    suppressedDiagnosticIds,
+                    warningsAsErrors,
+                    warningsNotAsErrors,
+                    signAssembly,
+                    assemblyOriginatorKeyFile,
+                    sourceFiles,
+                    projectReferences.ToImmutable(),
+                    references.ToImmutable(),
+                    packageReferences,
+                    analyzers,
+                    additionalFiles,
+                    editorConfigFiles,
+                    treatWarningsAsErrors,
+                    defaultNamespace,
+                    runAnalyzers,
+                    runAnalyzersDuringLiveAnalysis,
+                    ruleset,
+                    referenceAliases.ToImmutableDictionary(),
+                    projectReferenceAliases.ToImmutable(),
+                    includeGlobs);
             }
 
             private static RuleSet ResolveRulesetIfAny(MSB.Execution.ProjectInstance projectInstance)
@@ -355,9 +386,6 @@ namespace OmniSharp.MSBuild.ProjectFile
 
                 return null;
             }
-
-            private static bool IsCSharpProject(string filePath)
-                => filePath.EndsWith(".csproj", StringComparison.OrdinalIgnoreCase);
 
             private static bool FileNameIsNotGenerated(string filePath)
                 => !Path.GetFileName(filePath).StartsWith("TemporaryGeneratedFile_", StringComparison.OrdinalIgnoreCase);

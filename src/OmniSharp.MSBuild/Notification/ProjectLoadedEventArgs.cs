@@ -11,6 +11,7 @@ namespace OmniSharp.MSBuild.Notification
     public class ProjectLoadedEventArgs
     {
         public ProjectId Id { get; }
+        public MSB.Evaluation.Project Project { get; }
         public Guid SessionId { get; }
         public MSB.Execution.ProjectInstance ProjectInstance { get; }
         public ImmutableArray<MSBuildDiagnostic> Diagnostics { get; }
@@ -22,6 +23,7 @@ namespace OmniSharp.MSBuild.Notification
 
         public ProjectLoadedEventArgs(
             ProjectId id,
+            MSB.Evaluation.Project project,
             Guid sessionId,
             MSB.Execution.ProjectInstance projectInstance,
             ImmutableArray<MSBuildDiagnostic> diagnostics,
@@ -32,6 +34,7 @@ namespace OmniSharp.MSBuild.Notification
             IEnumerable<string> references = null)
         {
             Id = id;
+            Project = project;
             SessionId = sessionId;
             ProjectInstance = projectInstance;
             Diagnostics = diagnostics;

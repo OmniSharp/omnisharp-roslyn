@@ -129,7 +129,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
                 AddProjectWitFile(host, testFile);
 
-                var result = await host.RequestCodeCheckAsync();
+                var result = await host.RequestCodeCheckAsync(testFile.FileName);
 
                 Assert.Contains(result.QuickFixes.OfType<DiagnosticLocation>().Where(x => x.FileName == testFile.FileName), f => f.Id.Contains("CS"));
             }
@@ -155,7 +155,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
                 host.Workspace.UpdateDiagnosticOptionsForProject(projectId, testRules.ToImmutableDictionary());
 
-                var result = await host.RequestCodeCheckAsync();
+                var result = await host.RequestCodeCheckAsync(testFile.FileName);
 
                 Assert.Contains(result.QuickFixes.OfType<DiagnosticLocation>(), f => f.Id == "CS0162" && f.LogLevel == "Hidden");
             }
@@ -266,7 +266,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             return TestHelpers.AddProjectToWorkspace(
                             host.Workspace,
                             "project.csproj",
-                            new[] { "netcoreapp2.1" },
+                            new[] { "netcoreapp3.1" },
                             new[] { testFile },
                             analyzerRefs: analyzerReferences)
                     .Single();

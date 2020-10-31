@@ -1,4 +1,5 @@
-﻿using OmniSharp.Services;
+﻿using NuGet.Versioning;
+using OmniSharp.Services;
 using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
@@ -7,9 +8,20 @@ namespace OmniSharp.Tests
 {
     public class DotNetCliServiceFacts : AbstractTestFixture
     {
+        private const string DotNetVersion = "3.1.402";
+        private int Major { get; }
+        private int Minor { get; }
+        private int Patch { get; }
+        private string Release { get; }
+
         public DotNetCliServiceFacts(ITestOutputHelper output)
             : base(output)
         {
+            var version = SemanticVersion.Parse(DotNetVersion);
+            Major = version.Major;
+            Minor = version.Minor;
+            Patch = version.Patch;
+            Release = version.Release;
         }
 
         [Fact]
@@ -21,10 +33,10 @@ namespace OmniSharp.Tests
 
                 var version = dotNetCli.GetVersion();
 
-                Assert.Equal(3, version.Major);
-                Assert.Equal(1, version.Minor);
-                Assert.Equal(201, version.Patch);
-                Assert.Equal("", version.Release);
+                Assert.Equal(Major, version.Major);
+                Assert.Equal(Minor, version.Minor);
+                Assert.Equal(Patch, version.Patch);
+                Assert.Equal(Release, version.Release);
             }
         }
 
@@ -37,10 +49,10 @@ namespace OmniSharp.Tests
 
                 var info = dotNetCli.GetInfo();
 
-                Assert.Equal(3, info.Version.Major);
-                Assert.Equal(1, info.Version.Minor);
-                Assert.Equal(201, info.Version.Patch);
-                Assert.Equal("", info.Version.Release);
+                Assert.Equal(Major, info.Version.Major);
+                Assert.Equal(Minor, info.Version.Minor);
+                Assert.Equal(Patch, info.Version.Patch);
+                Assert.Equal(Release, info.Version.Release);
             }
         }
     }
