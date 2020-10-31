@@ -40,6 +40,7 @@ namespace OmniSharp.MSBuild
         private readonly ILoggerFactory _loggerFactory;
         private readonly ILogger _logger;
         private readonly IAnalyzerAssemblyLoader _assemblyLoader;
+        private readonly DotNetInfo _dotNetInfo;
         private readonly ImmutableArray<IMSBuildEventSink> _eventSinks;
         private PackageDependencyChecker _packageDependencyChecker;
         private ProjectManager _manager;
@@ -66,7 +67,8 @@ namespace OmniSharp.MSBuild
             ILoggerFactory loggerFactory,
             CachingCodeFixProviderForProjects codeFixesForProjects,
             IAnalyzerAssemblyLoader assemblyLoader,
-            [ImportMany] IEnumerable<IMSBuildEventSink> eventSinks)
+            [ImportMany] IEnumerable<IMSBuildEventSink> eventSinks,
+            DotNetInfo dotNetInfo)
         {
             _environment = environment;
             _workspace = workspace;
@@ -81,6 +83,7 @@ namespace OmniSharp.MSBuild
             _eventSinks = eventSinks.ToImmutableArray();
             _logger = loggerFactory.CreateLogger<ProjectSystem>();
             _assemblyLoader = assemblyLoader;
+            _dotNetInfo = dotNetInfo;
         }
 
         public void Initalize(IConfiguration configuration)
@@ -102,7 +105,7 @@ namespace OmniSharp.MSBuild
             _packageDependencyChecker = new PackageDependencyChecker(_loggerFactory, _eventEmitter, _dotNetCli, _options);
             _loader = new ProjectLoader(_options, _environment.TargetDirectory, _propertyOverrides, _loggerFactory, _sdksPathResolver);
 
-            _manager = new ProjectManager(_loggerFactory, _options, _eventEmitter, _fileSystemWatcher, _metadataFileReferenceCache, _packageDependencyChecker, _loader, _workspace, _assemblyLoader, _eventSinks, _dotNetCli);
+            _manager = new ProjectManager(_loggerFactory, _options, _eventEmitter, _fileSystemWatcher, _metadataFileReferenceCache, _packageDependencyChecker, _loader, _workspace, _assemblyLoader, _eventSinks, _dotNetInfo);
             Initialized = true;
 
             if (_options.LoadProjectsOnDemand)
@@ -199,6 +202,29 @@ namespace OmniSharp.MSBuild
             var processedProjects = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             var result = new List<(string, ProjectIdInfo)>();
 
+            var solutionConfigurations = new Dictionary<ProjectId, Dictionary<string, string>>();
+            foreach (var globalSection in solutionFile.GlobalSections)
+            {
+                // Try parse project configurations if they are remapped in solution file
+                if (globalSection.Name == "ProjectConfigurationPlatforms")
+                {
+                    _logger.LogDebug($"Parsing ProjectConfigurationPlatforms of '{solutionFilePath}'.");
+                    foreach (var entry in globalSection.Properties)
+                    {
+                        var guid = Guid.Parse(entry.Name.Substring(0, 38));
+                        var projId = ProjectId.CreateFromSerialized(guid);
+                        var solutionConfig = entry.Name.Substring(39);
+
+                        if (!solutionConfigurations.TryGetValue(projId, out var dict))
+                        {
+                            dict = new Dictionary<string, string>();
+                            solutionConfigurations.Add(projId, dict);
+                        }
+                        dict.Add(solutionConfig, entry.Value);
+                    }
+                }
+            }
+
             foreach (var project in solutionFile.Projects)
             {
                 if (project.IsNotSupported)
@@ -220,6 +246,10 @@ namespace OmniSharp.MSBuild
                 if (string.Equals(Path.GetExtension(projectFilePath), ".csproj", StringComparison.OrdinalIgnoreCase))
                 {
                     var projectIdInfo = new ProjectIdInfo(ProjectId.CreateFromSerialized(new Guid(project.ProjectGuid)), true);
+                    if (solutionConfigurations.TryGetValue(projectIdInfo.Id, out var configurations))
+                    {
+                        projectIdInfo.SolutionConfiguration = configurations;
+                    }
                     result.Add((projectFilePath, projectIdInfo));
                 }
 

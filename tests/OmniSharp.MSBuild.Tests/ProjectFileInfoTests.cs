@@ -28,7 +28,6 @@ namespace OmniSharp.MSBuild.Tests
         {
             var msbuildLocator = host.GetExport<IMSBuildLocator>();
             var sdksPathResolver = host.GetExport<SdksPathResolver>();
-            var dotNetCli = host.GetExport<IDotNetCliService>();
 
             var loader = new ProjectLoader(
                 options: new MSBuildOptions(),
@@ -38,7 +37,7 @@ namespace OmniSharp.MSBuild.Tests
                 sdksPathResolver: sdksPathResolver);
 
             var projectIdInfo = new ProjectIdInfo(ProjectId.CreateNewId(), false);
-            var (projectFileInfo, _, _) = ProjectFileInfo.Load(projectFilePath, projectIdInfo, loader, sessionId: Guid.NewGuid(), dotNetCli);
+            var (projectFileInfo, _, _) = ProjectFileInfo.Load(projectFilePath, projectIdInfo, loader, sessionId: Guid.NewGuid(), DotNetInfo.Empty);
 
             return projectFileInfo;
         }
@@ -56,9 +55,9 @@ namespace OmniSharp.MSBuild.Tests
                 Assert.NotNull(projectFileInfo);
                 Assert.Equal(projectFilePath, projectFileInfo.FilePath);
                 var targetFramework = Assert.Single(projectFileInfo.TargetFrameworks);
-                Assert.Equal("netcoreapp2.1", targetFramework);
-                Assert.Equal("bin/Debug/netcoreapp2.1/", projectFileInfo.OutputPath.EnsureForwardSlashes());
-                Assert.Equal("obj/Debug/netcoreapp2.1/", projectFileInfo.IntermediateOutputPath.EnsureForwardSlashes());
+                Assert.Equal("netcoreapp3.1", targetFramework);
+                Assert.Equal("bin/Debug/netcoreapp3.1/", projectFileInfo.OutputPath.EnsureForwardSlashes());
+                Assert.Equal("obj/Debug/netcoreapp3.1/", projectFileInfo.IntermediateOutputPath.EnsureForwardSlashes());
                 Assert.Equal(3, projectFileInfo.SourceFiles.Length); // Program.cs, AssemblyInfo.cs, AssemblyAttributes.cs
                 Assert.Equal(LanguageVersion.CSharp7_1, projectFileInfo.LanguageVersion);
                 Assert.True(projectFileInfo.TreatWarningsAsErrors);
@@ -84,9 +83,9 @@ namespace OmniSharp.MSBuild.Tests
                 Assert.NotNull(projectFileInfo);
                 Assert.Equal(projectFilePath, projectFileInfo.FilePath);
                 var targetFramework = Assert.Single(projectFileInfo.TargetFrameworks);
-                Assert.Equal("netcoreapp2.1", targetFramework);
-                Assert.Equal("bin/Debug/netcoreapp2.1/", projectFileInfo.OutputPath.EnsureForwardSlashes());
-                Assert.Equal("obj/Debug/netcoreapp2.1/", projectFileInfo.IntermediateOutputPath.EnsureForwardSlashes());
+                Assert.Equal("netcoreapp3.1", targetFramework);
+                Assert.Equal("bin/Debug/netcoreapp3.1/", projectFileInfo.OutputPath.EnsureForwardSlashes());
+                Assert.Equal("obj/Debug/netcoreapp3.1/", projectFileInfo.IntermediateOutputPath.EnsureForwardSlashes());
                 Assert.Equal(3, projectFileInfo.SourceFiles.Length); // Program.cs, AssemblyInfo.cs, AssemblyAttributes.cs
                 Assert.Equal("Debug", projectFileInfo.Configuration);
                 Assert.Equal("AnyCPU", projectFileInfo.Platform);
@@ -110,10 +109,10 @@ namespace OmniSharp.MSBuild.Tests
                 Assert.NotNull(projectFileInfo);
                 Assert.Equal(projectFilePath, projectFileInfo.FilePath);
                 Assert.Equal(2, projectFileInfo.TargetFrameworks.Length);
-                Assert.Equal("netcoreapp2.1", projectFileInfo.TargetFrameworks[0]);
+                Assert.Equal("netcoreapp3.1", projectFileInfo.TargetFrameworks[0]);
                 Assert.Equal("netstandard1.5", projectFileInfo.TargetFrameworks[1]);
-                Assert.Equal("bin/Debug/netcoreapp2.1/", projectFileInfo.OutputPath.EnsureForwardSlashes());
-                Assert.Equal("obj/Debug/netcoreapp2.1/", projectFileInfo.IntermediateOutputPath.EnsureForwardSlashes());
+                Assert.Equal("bin/Debug/netcoreapp3.1/", projectFileInfo.OutputPath.EnsureForwardSlashes());
+                Assert.Equal("obj/Debug/netcoreapp3.1/", projectFileInfo.IntermediateOutputPath.EnsureForwardSlashes());
                 Assert.Equal(3, projectFileInfo.SourceFiles.Length); // Program.cs, AssemblyInfo.cs, AssemblyAttributes.cs
                 Assert.Equal("Debug", projectFileInfo.Configuration);
                 Assert.Equal("AnyCPU", projectFileInfo.Platform);
@@ -160,7 +159,7 @@ namespace OmniSharp.MSBuild.Tests
 
                 var libpath = Path.Combine(testProject.Directory, "ExternAlias.Lib", "bin", "Debug", "netstandard2.0", "ExternAlias.Lib.dll");
                 Assert.True(projectFileInfo.ReferenceAliases.ContainsKey(libpath));
-                Assert.Equal("abc", projectFileInfo.ReferenceAliases[libpath]);
+                Assert.Equal("abc,def", projectFileInfo.ReferenceAliases[libpath]);
             }
         }
 
@@ -180,7 +179,7 @@ namespace OmniSharp.MSBuild.Tests
 
                 var projectReferencePath = Path.Combine(testProject.Directory, "ExternAlias.Lib", "ExternAlias.Lib.csproj");
                 Assert.True(projectFileInfo.ProjectReferenceAliases.ContainsKey(projectReferencePath));
-                Assert.Equal("abc", projectFileInfo.ProjectReferenceAliases[projectReferencePath]);
+                Assert.Equal("abc,def", projectFileInfo.ProjectReferenceAliases[projectReferencePath]);
             }
         }
 
@@ -228,6 +227,20 @@ namespace OmniSharp.MSBuild.Tests
                 Assert.Equal(ReportDiagnostic.Warn, compilationOptions.SpecificDiagnosticOptions["CS7082"]);
                 // CS7081 is both WarningsAsErrors and NoWarn, but NoWarn are higher priority
                 Assert.Equal(ReportDiagnostic.Suppress, compilationOptions.SpecificDiagnosticOptions["CS7081"]);
+            }
+        }
+
+        [Fact]
+        public async Task ProjectReferenceProducingAnalyzerItems()
+        {
+            using (var host = CreateOmniSharpHost())
+            using (var testProject = await _testAssets.GetTestProjectAsync("ProjectWithAnalyzersFromReference"))
+            {
+                var projectFilePath = Path.Combine(testProject.Directory, "ConsumingProject", "ConsumingProject.csproj");
+                var projectFileInfo = CreateProjectFileInfo(host, testProject, projectFilePath);
+                Assert.Empty(projectFileInfo.ProjectReferences);
+                var analyzerFileReference = Assert.Single(projectFileInfo.Analyzers);
+                Assert.EndsWith("Analyzer.dll", analyzerFileReference);
             }
         }
     }

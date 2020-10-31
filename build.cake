@@ -15,6 +15,7 @@ var installFolder = Argument("install-path",
     CombinePaths(Environment.GetEnvironmentVariable(Platform.Current.IsWindows ? "USERPROFILE" : "HOME"), ".omnisharp"));
 var publishAll = HasArgument("publish-all");
 var useGlobalDotNetSdk = HasArgument("use-global-dotnet-sdk");
+var testProjectArgument = Argument("test-project", "");
 
 Log.Context = Context;
 
@@ -114,7 +115,7 @@ Task("InstallDotNetCoreSdk")
 {
     if (!useGlobalDotNetSdk)
     {
-        foreach (var dotnetVersion in buildPlan.DotNetVersions) 
+        foreach (var dotnetVersion in buildPlan.DotNetVersions)
         {
             InstallDotNetSdk(env, buildPlan,
                 version: dotnetVersion,
@@ -205,11 +206,30 @@ Task("CreateMSBuildFolder")
         "Microsoft.Build",
         "Microsoft.Build.Framework",
         "Microsoft.Build.Tasks.Core",
-        "Microsoft.Build.Utilities.Core",
+        "Microsoft.Build.Utilities.Core"
+    };
+
+    var msbuildRefLibraries = new []
+    {
         "Microsoft.Build.Tasks.v4.0",
         "Microsoft.Build.Tasks.v12.0",
         "Microsoft.Build.Utilities.v4.0",
-        "Microsoft.Build.Utilities.v12.0"
+        "Microsoft.Build.Utilities.v12.0",
+    };
+
+    var msBuildDependencies = new []
+    {
+        "Microsoft.Bcl.AsyncInterfaces",
+        "System.Buffers",
+        "System.Collections.Immutable",
+        "System.Memory",
+        "System.Numerics.Vectors",
+        "System.Resources.Extensions",
+        "System.Runtime.CompilerServices.Unsafe",
+        "System.Text.Encodings.Web",
+        "System.Text.Json",
+        "System.Threading.Tasks.Dataflow",
+        "System.Threading.Tasks.Extensions",
     };
 
     var msbuildRuntimeFiles = new []
@@ -225,7 +245,9 @@ Task("CreateMSBuildFolder")
         "Microsoft.CSharp.Mono.targets",
         "Microsoft.CSharp.targets",
         "Microsoft.Data.Entity.targets",
+        "Microsoft.Managed.After.targets",
         "Microsoft.Managed.targets",
+        "Microsoft.Managed.Before.targets",
         "Microsoft.NET.props",
         "Microsoft.NETFramework.CurrentVersion.props",
         "Microsoft.NETFramework.CurrentVersion.targets",
@@ -241,53 +263,22 @@ Task("CreateMSBuildFolder")
         "Microsoft.Xaml.targets",
         "MSBuild.dll",
         "MSBuild.dll.config",
-        "System.Buffers.dll",
-        "System.Collections.Immutable.dll",
-        "System.Memory.dll",
-        "System.Numerics.Vectors.dll",
-        "System.Reflection.Metadata.dll",
-        "System.Resources.Extensions.dll",
-        "System.Threading.Tasks.Dataflow.dll",
         "Workflow.VisualBasic.targets",
-        "Workflow.targets"
+        "Workflow.targets",
     };
 
-    string sdkResolverTFM;
-
-    if (Platform.Current.IsWindows)
+    if (!Platform.Current.IsWindows)
     {
-        Information("Copying MSBuild runtime...");
-
-        var msbuildSourceFolder = CombinePaths(env.Folders.Tools, "Microsoft.Build.Runtime", "contentFiles", "any", "net472");
-        DirectoryHelper.Copy(msbuildSourceFolder, msbuildCurrentBinTargetFolder, copySubDirectories: false);
-
-        var msbuild15SourceFolder = CombinePaths(msbuildSourceFolder, "Current");
-        DirectoryHelper.Copy(msbuild15SourceFolder, msbuildCurrentTargetFolder);
-
-        Information("Copying MSBuild libraries...");
-
-        foreach (var library in msbuildLibraries)
-        {
-            var libraryFileName = library + ".dll";
-            var librarySourcePath = CombinePaths(env.Folders.Tools, library, "lib", "net472", libraryFileName);
-            var libraryTargetPath = CombinePaths(msbuildCurrentBinTargetFolder, libraryFileName);
-            if (FileHelper.Exists(librarySourcePath))
-            {
-                FileHelper.Copy(librarySourcePath, libraryTargetPath);
-            }
-        }
-
-        sdkResolverTFM = "net472";
-    }
-    else
-    {
-        Information("Copying Mono MSBuild runtime...");
+        // Copy Mono MSBuild files before overwriting with the latest MSBuild from NuGet since Mono requires
+        // some extra targets and ref assemblies not present in the NuGet packages.
 
         var monoBasePath = Platform.Current.IsMacOS
             ? "/Library/Frameworks/Mono.framework/Versions/Current/lib/mono"
             : "/usr/lib/mono";
         var monoMSBuildPath = $"{monoBasePath}/msbuild/Current/bin";
         var monoXBuildPath = $"{monoBasePath}/xbuild/Current";
+
+        Information("Copying Mono MSBuild runtime...");
 
         var commonTargetsSourcePath = CombinePaths(monoXBuildPath, "Microsoft.Common.props");
         var commonTargetsTargetPath = CombinePaths(msbuildCurrentTargetFolder, "Microsoft.Common.props");
@@ -303,27 +294,59 @@ Task("CreateMSBuildFolder")
             }
         }
 
-        Information("Copying MSBuild libraries...");
+        Information("Copying Mono MSBuild Ref Libraries...");
 
-        foreach (var library in msbuildLibraries)
+        foreach (var refLibrary in msbuildRefLibraries)
         {
-            var libraryFileName = library + ".dll";
+            var refLibraryFileName = refLibrary + ".dll";
 
-            // copy MSBuild from current Mono (should be 6.4.0+)
-            var librarySourcePath = CombinePaths(monoMSBuildPath, libraryFileName);
-            var libraryTargetPath = CombinePaths(msbuildCurrentBinTargetFolder, libraryFileName);
-            if (FileHelper.Exists(librarySourcePath))
+            // copy MSBuild Ref Libraries from current Mono
+            var refLibrarySourcePath = CombinePaths(monoMSBuildPath, refLibraryFileName);
+            var refLibraryTargetPath = CombinePaths(msbuildCurrentBinTargetFolder, refLibraryFileName);
+            if (FileHelper.Exists(refLibrarySourcePath))
             {
-                FileHelper.Copy(librarySourcePath, libraryTargetPath);
+                FileHelper.Copy(refLibrarySourcePath, refLibraryTargetPath);
             }
         }
+    }
 
-        sdkResolverTFM = "netstandard2.0";
+    Information("Copying MSBuild runtime...");
+
+    var msbuildSourceFolder = CombinePaths(env.Folders.Tools, "Microsoft.Build.Runtime", "contentFiles", "any", "net472");
+    DirectoryHelper.Copy(msbuildSourceFolder, msbuildCurrentBinTargetFolder, copySubDirectories: false);
+
+    var msbuild15SourceFolder = CombinePaths(msbuildSourceFolder, "Current");
+    DirectoryHelper.Copy(msbuild15SourceFolder, msbuildCurrentTargetFolder);
+
+    Information("Copying MSBuild libraries...");
+
+    foreach (var library in msbuildLibraries)
+    {
+        var libraryFileName = library + ".dll";
+        var librarySourcePath = CombinePaths(env.Folders.Tools, library, "lib", "net472", libraryFileName);
+        var libraryTargetPath = CombinePaths(msbuildCurrentBinTargetFolder, libraryFileName);
+        if (FileHelper.Exists(librarySourcePath))
+        {
+            FileHelper.Copy(librarySourcePath, libraryTargetPath);
+        }
+    }
+
+    Information("Copying MSBuild dependencies...");
+
+    foreach (var dependency in msBuildDependencies)
+    {
+        var dependencyFileName = dependency + ".dll";
+        var dependencySourcePath = CombinePaths(env.Folders.Tools, dependency, "lib", "netstandard2.0", dependencyFileName);
+        var dependencyTargetPath = CombinePaths(msbuildCurrentBinTargetFolder, dependencyFileName);
+        if (FileHelper.Exists(dependencySourcePath))
+        {
+            FileHelper.Copy(dependencySourcePath, dependencyTargetPath);
+        }
     }
 
     // Copy MSBuild SDK Resolver and DotNetHostResolver
     Information("Copying MSBuild SDK resolver...");
-    var msbuildSdkResolverSourceFolder = CombinePaths(env.Folders.Tools, "Microsoft.DotNet.MSBuildSdkResolver", "lib", sdkResolverTFM);
+    var msbuildSdkResolverSourceFolder = CombinePaths(env.Folders.Tools, "Microsoft.DotNet.MSBuildSdkResolver", "lib", "net472");
     var msbuildSdkResolverTargetFolder = CombinePaths(msbuildCurrentBinTargetFolder, "SdkResolvers", "Microsoft.DotNet.MSBuildSdkResolver");
     DirectoryHelper.ForceCreate(msbuildSdkResolverTargetFolder);
     FileHelper.Copy(
@@ -334,6 +357,7 @@ Task("CreateMSBuildFolder")
     {
         CopyDotNetHostResolver(env, "win", "x86", "hostfxr.dll", msbuildSdkResolverTargetFolder, copyToArchSpecificFolder: true);
         CopyDotNetHostResolver(env, "win", "x64", "hostfxr.dll", msbuildSdkResolverTargetFolder, copyToArchSpecificFolder: true);
+        CopyDotNetHostResolver(env, "win", "arm64", "hostfxr.dll", msbuildSdkResolverTargetFolder, copyToArchSpecificFolder: true);
     }
     else if (Platform.Current.IsMacOS)
     {
@@ -345,7 +369,7 @@ Task("CreateMSBuildFolder")
     }
 
     Information("Copying NuGet SDK resolver...");
-    var nugetSdkResolverSourceFolder = CombinePaths(env.Folders.Tools, "Microsoft.Build.NuGetSdkResolver", "lib", sdkResolverTFM);
+    var nugetSdkResolverSourceFolder = CombinePaths(env.Folders.Tools, "Microsoft.Build.NuGetSdkResolver", "lib", "net472");
     var nugetSdkResolverTargetFolder = CombinePaths(msbuildCurrentBinTargetFolder, "SdkResolvers", "Microsoft.Build.NuGetSdkResolver");
     DirectoryHelper.ForceCreate(nugetSdkResolverTargetFolder);
     FileHelper.Copy(
@@ -403,9 +427,9 @@ Task("CreateMSBuildFolder")
         source: CombinePaths(env.Folders.Tools, "Newtonsoft.Json", "lib", "net45", "Newtonsoft.Json.dll"),
         destination: CombinePaths(msbuildCurrentBinTargetFolder, "Newtonsoft.Json.dll"));
 
-    // Copy content of Microsoft.Net.Compilers
-    Information("Copying Microsoft.Net.Compilers...");
-    var compilersSourceFolder = CombinePaths(env.Folders.Tools, "Microsoft.Net.Compilers", "tools");
+    // Copy content of Microsoft.Net.Compilers.Toolset
+    Information("Copying Microsoft.Net.Compilers.Toolset...");
+    var compilersSourceFolder = CombinePaths(env.Folders.Tools, "Microsoft.Net.Compilers.Toolset", "tasks", "net472");
     var compilersTargetFolder = CombinePaths(msbuildCurrentBinTargetFolder, "Roslyn");
 
     DirectoryHelper.Copy(compilersSourceFolder, compilersTargetFolder);
@@ -584,7 +608,8 @@ Task("Test")
     .IsDependentOn("PrepareTestAssets")
     .Does(() =>
 {
-        foreach (var testProject in buildPlan.TestProjects)
+        var testProjects = string.IsNullOrEmpty(testProjectArgument) ? buildPlan.TestProjects : testProjectArgument.Split(',');
+        foreach (var testProject in testProjects)
         {
             PrintBlankLine();
             var instanceFolder = CombinePaths(env.Folders.Bin, configuration, testProject, "net472");
@@ -790,20 +815,27 @@ Task("PublishWindowsBuilds")
 
         if (publishAll)
         {
-            var outputFolder32 = PublishWindowsBuild(project, env, buildPlan, configuration, "win7-x86");
-            var outputFolder64 = PublishWindowsBuild(project, env, buildPlan, configuration, "win7-x64");
+            var outputFolderX86 = PublishWindowsBuild(project, env, buildPlan, configuration, "win7-x86");
+            var outputFolderX64 = PublishWindowsBuild(project, env, buildPlan, configuration, "win7-x64");
+            var outputFolderArm64 = PublishWindowsBuild(project, env, buildPlan, configuration, "win10-arm64");
 
-            outputFolder = Platform.Current.Is32Bit
-                ? outputFolder32
-                : outputFolder64;
+            outputFolder = Platform.Current.IsX86
+                ? outputFolderX86
+                : Platform.Current.IsX64
+                    ? outputFolderX64
+                    : outputFolderArm64;
         }
-        else if (Platform.Current.Is32Bit)
+        else if (Platform.Current.IsX86)
         {
             outputFolder = PublishWindowsBuild(project, env, buildPlan, configuration, "win7-x86");
         }
-        else
+        else if (Platform.Current.IsX64)
         {
             outputFolder = PublishWindowsBuild(project, env, buildPlan, configuration, "win7-x64");
+        }
+        else
+        {
+            outputFolder = PublishWindowsBuild(project, env, buildPlan, configuration, "win10-arm64");
         }
 
         CreateRunScript(project, outputFolder, env.Folders.ArtifactsScripts);
@@ -835,7 +867,6 @@ Task("Publish")
 ///  Execute the run script.
 /// </summary>
 Task("ExecuteRunScript")
-    .WithCriteria(() => !(Platform.Current.IsMacOS && TravisCI.IsRunningOnTravisCI))
     .Does(() =>
 {
     // TODO: Pass configuration into run script to ensure that MSBuild output paths are handled correctly.
@@ -846,7 +877,7 @@ Task("ExecuteRunScript")
         var projectFolder = CombinePaths(env.Folders.Source, project);
 
         var scriptPath = GetScriptPath(env.Folders.ArtifactsScripts, project);
-        var didNotExitWithError = Run(env.ShellCommand, $"{env.ShellArgument}  \"{scriptPath}\" -s \"{projectFolder}\"",
+        var didNotExitWithError = Run(env.ShellCommand, $"{env.ShellArgument} \"{scriptPath}\" -s \"{projectFolder}\"",
                                     new RunOptions(waitForIdle: true))
                                 .WasIdle;
         if (!didNotExitWithError)
@@ -886,9 +917,11 @@ Task("Install")
         string platform;
         if (Platform.Current.IsWindows)
         {
-            platform = Platform.Current.Is32Bit
+            platform = Platform.Current.IsX86
                 ? "win7-x86"
-                : "win7-x64";
+                : Platform.Current.IsX64
+                    ? "win7-x64"
+                    : "win10-arm64";
         }
         else
         {
@@ -921,6 +954,15 @@ Task("All")
 /// </summary>
 Task("Default")
     .IsDependentOn("All");
+
+/// <summary>
+///  Task aliases for CI (excluding tests) as they are parallelized
+/// </summary>
+Task("CI")
+    .IsDependentOn("Cleanup")
+    .IsDependentOn("Build")
+    .IsDependentOn("Publish")
+    .IsDependentOn("ExecuteRunScript");
 
 Teardown(context =>
 {

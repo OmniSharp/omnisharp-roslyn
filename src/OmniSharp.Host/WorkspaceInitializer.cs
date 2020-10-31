@@ -30,6 +30,7 @@ namespace OmniSharp
             var projectSystems = compositionHost.GetExports<IProjectSystem>();
 
             workspace.EditorConfigEnabled = options.CurrentValue.FormattingOptions.EnableEditorConfigSupport;
+            options.OnChange(x => workspace.EditorConfigEnabled = x.FormattingOptions.EnableEditorConfigSupport);
 
             foreach (var projectSystem in projectSystems)
             {

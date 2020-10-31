@@ -8,6 +8,7 @@ using MediatR;
 using OmniSharp.Extensions.JsonRpc;
 using OmniSharp.Extensions.LanguageServer.Protocol;
 using OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities;
+using OmniSharp.Extensions.LanguageServer.Protocol.Document;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OmniSharp.Extensions.LanguageServer.Protocol.Server;
 using OmniSharp.Extensions.LanguageServer.Protocol.Server.Capabilities;
@@ -22,7 +23,8 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
     {
         public static IEnumerable<IJsonRpcHandler> Enumerate(
             RequestHandlers handlers,
-            OmniSharpWorkspace workspace)
+            OmniSharpWorkspace workspace,
+            DocumentVersions documentVersions)
         {
             foreach (var (selector, openHandler, closeHandler, bufferHandler) in handlers
                 .OfType<
@@ -33,7 +35,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                 // TODO: Fix once cake has working support for incremental
                 var documentSyncKind = TextDocumentSyncKind.Incremental;
                 if (selector.ToString().IndexOf(".cake") > -1) documentSyncKind = TextDocumentSyncKind.Full;
-                yield return new OmniSharpTextDocumentSyncHandler(openHandler, closeHandler, bufferHandler, selector, documentSyncKind, workspace);
+                yield return new OmniSharpTextDocumentSyncHandler(openHandler, closeHandler, bufferHandler, selector, documentSyncKind, workspace, documentVersions);
             }
         }
 
@@ -42,6 +44,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
         private readonly Mef.IRequestHandler<FileCloseRequest, FileCloseResponse> _closeHandler;
         private readonly Mef.IRequestHandler<UpdateBufferRequest, object> _bufferHandler;
         private readonly OmniSharpWorkspace _workspace;
+        private readonly DocumentVersions _documentVersions;
 
         public OmniSharpTextDocumentSyncHandler(
             Mef.IRequestHandler<FileOpenRequest, FileOpenResponse> openHandler,
@@ -49,7 +52,8 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             Mef.IRequestHandler<UpdateBufferRequest, object> bufferHandler,
             DocumentSelector documentSelector,
             TextDocumentSyncKind documentSyncKind,
-            OmniSharpWorkspace workspace)
+            OmniSharpWorkspace workspace,
+            DocumentVersions documentVersions)
             : base(documentSyncKind, new TextDocumentSaveRegistrationOptions()
             {
                 DocumentSelector = documentSelector,
@@ -60,13 +64,15 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             _closeHandler = closeHandler;
             _bufferHandler = bufferHandler;
             _workspace = workspace;
+            _documentVersions = documentVersions;
         }
 
-        public override TextDocumentAttributes GetTextDocumentAttributes(Uri uri)
+        public override TextDocumentAttributes GetTextDocumentAttributes(DocumentUri uri)
         {
             var document = _workspace.GetDocument(Helpers.FromUri(uri));
-            if (document == null) return new TextDocumentAttributes(uri, "");
-            return new TextDocumentAttributes(uri, "");
+            var langaugeId = "csharp";
+            if (document == null) return new TextDocumentAttributes(uri, uri.Scheme, langaugeId);
+            return new TextDocumentAttributes(uri, uri.Scheme, langaugeId);
         }
 
         public async override Task<Unit> Handle(DidChangeTextDocumentParams notification, CancellationToken cancellationToken)
@@ -105,6 +111,8 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                 Changes = changes
             });
 
+            _documentVersions.Update(notification.TextDocument);
+
             return Unit.Value;
         }
 
@@ -117,6 +125,8 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                     Buffer = notification.TextDocument.Text,
                     FileName = Helpers.FromUri(notification.TextDocument.Uri)
                 });
+
+                _documentVersions.Reset(notification.TextDocument);
             }
 
             return Unit.Value;
@@ -130,6 +140,8 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                 {
                     FileName = Helpers.FromUri(notification.TextDocument.Uri)
                 });
+
+                _documentVersions.Remove(notification.TextDocument);
             }
 
             return Unit.Value;
@@ -144,6 +156,8 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                     FileName = Helpers.FromUri(notification.TextDocument.Uri),
                     Buffer = notification.Text
                 });
+
+                _documentVersions.Reset(notification.TextDocument);
             }
             return Unit.Value;
         }

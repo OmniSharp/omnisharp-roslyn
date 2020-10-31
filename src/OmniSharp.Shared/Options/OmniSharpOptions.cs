@@ -18,5 +18,15 @@ namespace OmniSharp.Options
         public OmniSharpExtensionsOptions Plugins { get; set; } = new OmniSharpExtensionsOptions();
 
         public override string ToString() => JsonConvert.SerializeObject(this);
+
+        public static void PostConfigure(OmniSharpOptions options)
+        {
+            options.RoslynExtensionsOptions ??= new RoslynExtensionsOptions();
+            options.FormattingOptions ??= new FormattingOptions();
+            options.FileOptions ??= new FileOptions();
+            options.RenameOptions ??= new RenameOptions();
+            options.ImplementTypeOptions ??= new ImplementTypeOptions();
+            options.Plugins ??= new OmniSharpExtensionsOptions();
+        }
     }
 }

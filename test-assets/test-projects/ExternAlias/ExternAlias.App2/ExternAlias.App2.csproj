@@ -2,13 +2,13 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
     <RootNamespace>ExternAlias.App</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="../ExternAlias.Lib/ExternAlias.Lib.csproj">
-        <Aliases>abc</Aliases>
+        <Aliases>abc,def</Aliases>
     </ProjectReference>
   </ItemGroup>
 

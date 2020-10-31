@@ -108,11 +108,13 @@ Try installing MSBuild into Mono (e.g. 'sudo apt-get install msbuild') to enable
                 propertyOverrides.Add("CscToolExe", "csc.exe");
             }
 
+            var version = GetMSBuildVersion(microsoftBuildPath);
+
             return ImmutableArray.Create(
                 new MSBuildInstance(
                     nameof(DiscoveryType.Mono),
                     toolsPath,
-                    new Version(16, 4),
+                    version,
                     DiscoveryType.Mono,
                     propertyOverrides.ToImmutable()));
         }

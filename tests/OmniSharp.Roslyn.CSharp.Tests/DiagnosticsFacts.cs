@@ -18,7 +18,6 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             _testOutput = testOutput;
         }
 
-
         [Theory]
         [InlineData(true)]
         [InlineData(false)]
@@ -36,7 +35,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
         private OmniSharpTestHost GetHost(bool roslynAnalyzersEnabled)
         {
-            return OmniSharpTestHost.Create(testOutput: _testOutput, configurationData: new Dictionary<string, string>() { { "RoslynExtensionsOptions:EnableAnalyzersSupport", roslynAnalyzersEnabled.ToString() } });
+            return OmniSharpTestHost.Create(testOutput: _testOutput, configurationData: new Dictionary<string, string>() { { "RoslynExtensionsOptions:EnableAnalyzersSupport", roslynAnalyzersEnabled.ToString() } }.ToConfiguration());
         }
 
         [Fact]
