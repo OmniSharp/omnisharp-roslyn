@@ -46,7 +46,7 @@ Note: The arguments below should prefixed with a single hyphen on Windows (Power
 
   `-archive`: Enable the generation of publishable archives after a build.
 
-Note: On macOS/Linux, be sure to pass the arguments above with double slashes! (e.g. `--target TargetName`).
+Note: On macOS/Linux, be sure to pass the arguments above with a double hyphen! (e.g. `--target TargetName`).
 
 # Targets
 
