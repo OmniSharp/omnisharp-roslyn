@@ -200,14 +200,17 @@ namespace OmniSharp.Cake.Extensions
         {
             foreach (var item in response.Items)
             {
-                if (item.AdditionalTextEdits is null)
+                if (item.TextEdit is null)
                 {
                     continue;
                 }
 
+                var (_, textEdit) = await item.TextEdit.TranslateAsync(workspace, request.FileName);
+                item.TextEdit = textEdit;
+
                 List<LinePositionSpanTextChange> additionalTextEdits = null;
 
-                foreach (var additionalTextEdit in item.AdditionalTextEdits)
+                foreach (var additionalTextEdit in item.AdditionalTextEdits ?? Enumerable.Empty<LinePositionSpanTextChange>())
                 {
                     var (_, change) = await additionalTextEdit.TranslateAsync(workspace, request.FileName);
 

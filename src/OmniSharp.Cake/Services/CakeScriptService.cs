@@ -55,6 +55,14 @@ namespace OmniSharp.Cake.Services
                 throw new InvalidOperationException("Service not initialized.");
             }
 
+            if (!fileChange.FromDisk && fileChange.Buffer is null && fileChange.LineChanges.Count == 0)
+            {
+                return new CakeScript
+                {
+                    Source = null
+                };
+            }
+
             var cakeScript = _generationService.Generate(fileChange);
 
             // Set line processor for generated aliases. TODO: Move to Cake.Bakery
