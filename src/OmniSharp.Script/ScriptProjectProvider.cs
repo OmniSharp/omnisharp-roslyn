@@ -133,16 +133,14 @@ namespace OmniSharp.Script
         {
             var defaultResolver = ScriptSourceResolver.Default;
 
-            if (searchPaths == null)
+            if (searchPaths != null)
             {
-                return defaultResolver;
-            }
+                defaultResolver = defaultResolver.WithSearchPaths(searchPaths);
 
-            defaultResolver = defaultResolver.WithSearchPaths(searchPaths);
-
-            foreach (string path in searchPaths)
-            {
-                _logger.LogInformation($"CSX source path: {path}.");
+                foreach (string path in searchPaths)
+                {
+                    _logger.LogInformation($"CSX source path: {path}.");
+                }
             }
 
             return defaultResolver;
