@@ -98,10 +98,14 @@ namespace OmniSharp.Script
                 _logger.LogDebug($"CSX global using statement: {ns}");
             }
 
+            var metadataReferenceResolver = CreateMetadataReferenceResolver(csharpCommandLineArguments?.ReferencePaths);
+            var sourceResolver = CreateScriptSourceResolver(csharpCommandLineArguments?.SourcePaths);
+
             compilationOptions = compilationOptions
                 .WithAllowUnsafe(true)
-                .WithMetadataReferenceResolver(CreateMetadataReferenceResolver())
-                .WithSourceReferenceResolver(ScriptSourceResolver.Default)
+
+                .WithMetadataReferenceResolver(metadataReferenceResolver)
+                .WithSourceReferenceResolver(sourceResolver)
                 .WithAssemblyIdentityComparer(DesktopAssemblyIdentityComparer.Default)
                 .WithSpecificDiagnosticOptions(!_scriptOptions.IsNugetEnabled()
                     ? CompilationOptionsHelper.GetDefaultSuppressedDiagnosticOptions()
@@ -125,9 +129,39 @@ namespace OmniSharp.Script
             return compilationOptions;
         }
 
-        private CachingScriptMetadataResolver CreateMetadataReferenceResolver()
+        private ScriptSourceResolver CreateScriptSourceResolver(IEnumerable<string> searchPaths)
+        {
+            var defaultResolver = ScriptSourceResolver.Default;
+
+            if (searchPaths == null)
+            {
+                return defaultResolver;
+            }
+
+            defaultResolver = defaultResolver.WithSearchPaths(searchPaths);
+
+            foreach (string path in searchPaths)
+            {
+                _logger.LogInformation($"CSX source path: {path}.");
+            }
+
+            return defaultResolver;
+        }
+
+        private CachingScriptMetadataResolver CreateMetadataReferenceResolver(IEnumerable<string> searchPaths)
         {
             var defaultResolver = ScriptMetadataResolver.Default.WithBaseDirectory(_env.TargetDirectory);
+
+            if (searchPaths != null)
+            {
+                defaultResolver = defaultResolver.WithSearchPaths(searchPaths);
+
+                foreach (string path in searchPaths)
+                {
+                    _logger.LogInformation($"CSX reference path: {path}.");
+                }
+            }
+
             InjectXMLDocumentationProviderIntoRuntimeMetadataReferenceResolver(defaultResolver);
 
             var decoratedResolver = _scriptOptions.EnableScriptNuGetReferences
