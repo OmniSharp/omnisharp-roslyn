@@ -226,7 +226,7 @@ namespace OmniSharp.LanguageServerProtocol
             if (!_canBeAggregated)
             {
                 throw new NotSupportedException(
-                    $"Must be able aggregate the response to spread them out across all plugins for {EndpointName}");
+                    $"Must be able to aggregate the response to spread them out across all plugins for {EndpointName}");
             }
 
             var exports = await _exports.Value;
@@ -280,24 +280,6 @@ namespace OmniSharp.LanguageServerProtocol
             }
 
             return response;
-        }
-
-        private JToken DeserializeRequestObject(Stream readStream)
-        {
-            try
-            {
-                using (var streamReader = new StreamReader(readStream))
-                {
-                    using (var textReader = new JsonTextReader(streamReader))
-                    {
-                        return JToken.Load(textReader);
-                    }
-                }
-            }
-            catch
-            {
-                return new JObject();
-            }
         }
     }
 }

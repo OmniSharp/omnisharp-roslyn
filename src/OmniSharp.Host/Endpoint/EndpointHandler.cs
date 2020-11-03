@@ -237,7 +237,7 @@ namespace OmniSharp.Endpoint
         {
             if (!_canBeAggregated)
             {
-                throw new NotSupportedException($"Must be able aggregate the response to spread them out across all plugins for {EndpointName}");
+                throw new NotSupportedException($"Must be able to aggregate the response to spread them out across all plugins for {EndpointName}");
             }
 
             var exports = await _exports.Value;

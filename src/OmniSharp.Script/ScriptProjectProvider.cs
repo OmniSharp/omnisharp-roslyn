@@ -28,7 +28,7 @@ namespace OmniSharp.Script
         private const string FileReferenceProviderField = "_fileReferenceProvider";
 
         // aligned with CSI.exe
-        // https://github.com/dotnet/roslyn/blob/version-2.0.0-rc3/src/Interactive/csi/csi.rsp
+        // https://github.com/dotnet/roslyn/blob/version-3.2.0/src/Interactive/csi/csi.desktop.rsp
         internal static readonly IEnumerable<string> DefaultNamespaces = new[]
         {
             "System",
