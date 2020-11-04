@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Scripting.Hosting;
 using OmniSharp.Models.FilesChanged;
 using OmniSharp.Models.WorkspaceInformation;
