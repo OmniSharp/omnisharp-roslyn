@@ -44,25 +44,24 @@ namespace OmniSharp.LanguageServerProtocol
         private readonly CancellationTokenSource _cancellationTokenSource;
         private CompositionHost _compositionHost;
         private IServiceProvider _serviceProvider;
+        private readonly Action<ILoggingBuilder> _configureLogging;
 
         public LanguageServerHost(
             Stream input,
             Stream output,
             CommandLineApplication application,
-            CancellationTokenSource cancellationTokenSource)
+            CancellationTokenSource cancellationTokenSource,
+            Action<ILoggingBuilder> configureLogging = null)
         {
             _options = new LanguageServerOptions()
                 .WithInput(input)
                 .WithOutput(output)
-                .ConfigureLogging(x => x
-                        .AddLanguageProtocolLogging()
-                // .SetMinimumLevel(application.LogLevel)
-                )
                 .OnInitialize(Initialize)
                 .WithServices(ConfigureServices);
 
             _application = application;
             _cancellationTokenSource = cancellationTokenSource;
+            _configureLogging = configureLogging;
         }
 
         /// <summary>
@@ -165,13 +164,14 @@ namespace OmniSharp.LanguageServerProtocol
             ILanguageServer server,
             InitializeParams initializeParams,
             CommandLineApplication application,
-            IServiceCollection services
-        )
+            IServiceCollection services,
+            Action<ILoggingBuilder> configureLogging)
         {
             var logLevel = GetLogLevel(initializeParams.Trace);
+            var root = Helpers.FromUri(initializeParams.RootUri);
             var environment = new OmniSharpEnvironment(
-                Helpers.FromUri(initializeParams.RootUri),
-                Convert.ToInt32(initializeParams.ProcessId ?? -1L),
+                string.IsNullOrEmpty(root) ? application.ApplicationRoot : root,
+                Convert.ToInt32(initializeParams.ProcessId ?? application.HostPid),
                 application.LogLevel < logLevel ? application.LogLevel : logLevel,
                 application.OtherArgs.ToArray());
 
@@ -188,7 +188,12 @@ namespace OmniSharp.LanguageServerProtocol
 
             var serviceProvider =
                 CompositionHostBuilder.CreateDefaultServiceProvider(environment, configurationRoot, eventEmitter,
-                    services);
+                    services, builder => {
+                        configureLogging?.Invoke(builder);
+                        builder
+                            .AddLanguageProtocolLogging()
+                            .SetMinimumLevel(environment.LogLevel);
+                    });
 
             var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
             var logger = loggerFactory.CreateLogger<LanguageServerHost>();
@@ -303,7 +308,7 @@ namespace OmniSharp.LanguageServerProtocol
             CancellationToken cancellationToken)
         {
             (_serviceProvider, _compositionHost) =
-                CreateCompositionHost(server, initializeParams, _application, _services);
+                CreateCompositionHost(server, initializeParams, _application, _services, _configureLogging);
             var handlers = ConfigureCompositionHost(server, _compositionHost);
             RegisterHandlers(server, _compositionHost, handlers);
 
