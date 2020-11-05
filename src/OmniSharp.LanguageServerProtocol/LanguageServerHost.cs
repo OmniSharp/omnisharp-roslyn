@@ -8,6 +8,9 @@ using System.Reactive;
 using System.Reactive.Threading.Tasks;
 using System.Threading;
 using System.Threading.Tasks;
+
+using MediatR;
+
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -45,6 +48,7 @@ namespace OmniSharp.LanguageServerProtocol
         private CompositionHost _compositionHost;
         private IServiceProvider _serviceProvider;
         private readonly Action<ILoggingBuilder> _configureLogging;
+        private readonly TaskCompletionSource<MediatR.Unit> _workspaceInitialLoadCompleted;
 
         public LanguageServerHost(
             Stream input,
@@ -64,6 +68,7 @@ namespace OmniSharp.LanguageServerProtocol
             _application = application;
             _cancellationTokenSource = cancellationTokenSource;
             _configureLogging = configureLogging;
+            _workspaceInitialLoadCompleted = new TaskCompletionSource<MediatR.Unit>();
         }
 
         /// <summary>
@@ -87,6 +92,7 @@ namespace OmniSharp.LanguageServerProtocol
             configureServer(_options);
 
             _cancellationTokenSource = cancellationTokenSource;
+            _workspaceInitialLoadCompleted = new TaskCompletionSource<MediatR.Unit>();
         }
 
         private void ConfigureServices(IServiceCollection services)
@@ -115,6 +121,14 @@ namespace OmniSharp.LanguageServerProtocol
             server.Exit.Subscribe(Observer.Create<int>(i => _cancellationTokenSource.Cancel()));
 
             WorkspaceInitializer.Initialize(_serviceProvider, _compositionHost);
+
+            await Task.WhenAll(
+                _compositionHost
+                .GetExports<IProjectSystem>()
+                .Select(ps => ps.WaitForIdleAsync())
+                .ToArray());
+
+            _workspaceInitialLoadCompleted.SetResult(MediatR.Unit.Value);
 
             var environment = _compositionHost.GetExport<IOmniSharpEnvironment>();
             var logger = _compositionHost.GetExport<ILoggerFactory>().CreateLogger<LanguageServerHost>();
@@ -315,7 +329,7 @@ namespace OmniSharp.LanguageServerProtocol
             (_serviceProvider, _compositionHost) =
                 CreateCompositionHost(server, initializeParams, _application, _services, _configureLogging);
             var handlers = ConfigureCompositionHost(server, _compositionHost);
-            RegisterHandlers(server, _compositionHost, handlers);
+            RegisterHandlers(server, _compositionHost, handlers, _workspaceInitialLoadCompleted.Task);
 
             server.Register(s =>
             {
@@ -334,7 +348,7 @@ namespace OmniSharp.LanguageServerProtocol
         }
 
         internal static void RegisterHandlers(ILanguageServer server, CompositionHost compositionHost,
-            RequestHandlers handlers)
+            RequestHandlers handlers, Task<MediatR.Unit> initialized)
         {
             // TODO: Make it easier to resolve handlers from MEF (without having to add more attributes to the services if we can help it)
             var workspace = compositionHost.GetExport<OmniSharpWorkspace>();
@@ -343,7 +357,7 @@ namespace OmniSharp.LanguageServerProtocol
             var serializer = server.Services.GetRequiredService<ISerializer>();
             server.Register(s =>
             {
-                foreach (var handler in OmniSharpTextDocumentSyncHandler.Enumerate(handlers, workspace, documentVersions)
+                foreach (var handler in OmniSharpTextDocumentSyncHandler.Enumerate(handlers, workspace, documentVersions, initialized)
                     .Concat(OmniSharpDefinitionHandler.Enumerate(handlers))
                     .Concat(OmniSharpHoverHandler.Enumerate(handlers))
                     .Concat(OmniSharpCompletionHandler.Enumerate(handlers))
