@@ -23,11 +23,19 @@ OmniSharp ships in two flavors:
 -   Stdio server
 -   HTTP server
 
-### Prerelease Versions
+### Downloading OmniSharp
 
-Pre-release versions are available in azure storage, they can be viewed [here](https://roslynomnisharp.blob.core.windows.net/releases?restype=container&comp=list).
+When using OmniSharp with an editor extension (e.g. VIM, Emacs, VS Code), the extension will download or bundle OmniSharp automatically. If you wish to download OmniSharp manually though, follow the steps below.
 
-All changes to `master` will be pushed to this feed and will be made available with the following convention:
+#### Stable releases
+
+Stable releases are published using [Github releases](https://github.com/OmniSharp/omnisharp-roslyn/releases). Each release contains a set of binaries for various operating systems and processing architectures.
+
+#### Pre-releases
+
+Pre-release versions are available in Azure Blob Storage, they can be viewed using the following URL `https://roslynomnisharp.blob.core.windows.net/releases?restype=container&comp=list&prefix={version}`, where the `{version}` placeholder can be found in the [changelog](https://github.com/OmniSharp/omnisharp-roslyn/blob/master/CHANGELOG.md). For example, all `1.37.x` versions (including all betas and prereleases such as `1.37.4-beta.5`) can be viewed using `https://roslynomnisharp.blob.core.windows.net/releases?restype=container&comp=list&prefix=1.37`. Please note that the listing is limited to 5000 entries.
+
+Every merge to `master` is automatically published to this feed and individual release is then available using the following URL convention:
 `https://roslynomnisharp.blob.core.windows.net/releases/{version}/{packagename}-{os/arch}.{ext}`
 
 -   Version is auto incremented and is visible in the travis or appveyor build output
