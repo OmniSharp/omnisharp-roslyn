@@ -97,7 +97,7 @@ namespace OmniSharp.Lsp.Tests
                         var handlers =
                             LanguageServerHost.ConfigureCompositionHost(server, OmniSharpTestHost.CompositionHost);
                         _host.UnderTest(OmniSharpTestHost.ServiceProvider, OmniSharpTestHost.CompositionHost);
-                        LanguageServerHost.RegisterHandlers(server, OmniSharpTestHost.CompositionHost, handlers, Unit.Task);
+                        LanguageServerHost.RegisterHandlers(server, OmniSharpTestHost.CompositionHost, handlers);
                         return Task.CompletedTask;
                     }),
                 CancellationTokenSource.CreateLinkedTokenSource(CancellationToken)
