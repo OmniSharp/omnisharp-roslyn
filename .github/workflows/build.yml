@@ -65,7 +65,7 @@ jobs:
       - name: 🍰 Run Cake
         run: |
           dotnet cake --bootstrap
-          dotnet cake --configuration Release --verbosity Verbose --target CI --publish-all --archive
+          dotnet cake --configuration=Release --verbosity=Verbose --target=CI --publish-all --archive
 
       - name: ⬆ Publish Logs
         uses: actions/upload-artifact@v2
