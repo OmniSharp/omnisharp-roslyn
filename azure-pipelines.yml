@@ -152,7 +152,7 @@ jobs:
           CakeVersion: $(CakeVersion)
           DotNetVersion: $(DotNetVersion)
           NuGetVersion: $(NuGetVersion)
-      - powershell: .\build.ps1 -configuration Release -verbosity Verbose -target CI -publish-all -archive
+      - powershell: .\build.ps1 --configuration Release --verbosity Verbose --target CI --publish-all --archive
         displayName: 'Build'
       - template: ./.pipelines/artifacts.yml
         parameters:
@@ -174,7 +174,7 @@ jobs:
           CakeVersion: $(CakeVersion)
           DotNetVersion: $(DotNetVersion)
           NuGetVersion: $(NuGetVersion)
-      - powershell: .\build.ps1 -configuration Debug -verbosity Verbose --test-project="$ENV:TEST_PROJECT" -target Test
+      - powershell: .\build.ps1 --configuration Debug --verbosity Verbose --test-project="$ENV:TEST_PROJECT" --target Test
         displayName: 'Build'
       - template: ./.pipelines/logs.yml
         parameters:
