@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
@@ -131,8 +132,6 @@ namespace OmniSharp.Lsp.Tests
                     }
                 }";
 
-            var refactorings = await FindRefactoringNamesAsync(code, roslynAnalyzersEnabled);
-
             List<string> expected = roslynAnalyzersEnabled
                 ? new List<string>
                 {
@@ -167,7 +166,22 @@ namespace OmniSharp.Lsp.Tests
                     "Extract method",
                     "Introduce local for 'Console.Write(\"should be using System;\")'"
                 };
-            Assert.Equal(expected.OrderBy(x => x), refactorings.OrderBy(x => x));
+
+            // test has intermittent failures during startup.
+            await TestHelpers.WaitUntil(async () =>
+            {
+                try
+                {
+                    var refactorings = await FindRefactoringNamesAsync(code, roslynAnalyzersEnabled);
+                    Assert.Equal(expected.OrderBy(x => x), refactorings.OrderBy(x => x));
+                    return true;
+                }
+                catch (EqualException)
+                {
+                    return false;
+                }
+            }, timeout: 30000);
+
         }
 
         [Theory]

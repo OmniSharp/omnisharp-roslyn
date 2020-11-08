@@ -24,6 +24,11 @@ namespace OmniSharp.Services
         void Initalize(IConfiguration configuration);
 
         /// <summary>
+        /// Wait until the project system is not busy.
+        /// </summary>
+        Task WaitForIdleAsync();
+
+        /// <summary>
         /// Get a model of the entire workspace loaded in this project system.
         /// </summary>
         Task<object> GetWorkspaceModelAsync(WorkspaceInformationRequest request);

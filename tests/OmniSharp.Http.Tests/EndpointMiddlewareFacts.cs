@@ -80,6 +80,8 @@ namespace OmniSharp.Http.Tests
             public bool EnabledByDefault { get; } = true;
             public bool Initialized { get; } = true;
 
+            public Task WaitForIdleAsync() => throw new NotImplementedException();
+
             public Task<object> GetWorkspaceModelAsync(WorkspaceInformationRequest request)
             {
                 throw new NotImplementedException();

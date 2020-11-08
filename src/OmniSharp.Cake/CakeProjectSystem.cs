@@ -231,6 +231,8 @@ namespace OmniSharp.Cake
             }
         }
 
+        public Task WaitForIdleAsync() => Task.CompletedTask;
+
         public Task<object> GetWorkspaceModelAsync(WorkspaceInformationRequest request)
         {
             var scriptContextModels = new List<CakeContextModel>();
