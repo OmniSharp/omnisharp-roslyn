@@ -30,7 +30,7 @@ variables:
   Verbosity: Diagnostic
   DotNetVersion: "3.1.402"
   CakeVersion: "0.32.1"
-  NuGetVersion: "4.9.2"
+  NuGetVersion: "5.7.0"
   GitVersionVersion: "5.0.1"
   MonoVersion: "6.12.0"
   Coverage: "$(Agent.BuildDirectory)/c"
