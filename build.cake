@@ -48,7 +48,7 @@ Task("Cleanup")
 
 Task("GitVersion")
     .WithCriteria(!BuildSystem.IsLocalBuild)
-    .WithCriteria(!TFBuild.IsRunningOnTFS)
+    .WithCriteria(!AzurePipelines.IsRunningOnAzurePipelines)
     .Does(() => {
         GitVersion(new GitVersionSettings{
             OutputType = GitVersionOutput.BuildServer
