@@ -62,10 +62,24 @@ jobs:
         run: |
           nuget install tools/packages.config -ExcludeVersion -OutputDirectory tools
 
+      # - name: 🍰 Run Cake
+      #   run: |
+      #     dotnet cake --bootstrap
+      #     dotnet cake --configuration=Release --verbosity=Verbose --target=CI --publish-all --archive
+
       - name: 🍰 Run Cake
+        if: ${{ runner.os == 'Linux' || runner.os == 'macOS' }}
+        shell: bash
         run: |
-          dotnet cake --bootstrap
-          dotnet cake --configuration=Release --verbosity=Verbose --target=CI --publish-all --archive
+          echo $PATH
+          chmod 755 ./build.sh
+          ./build.sh --configuration Release --verbosity Verbose --target=CI --publish-all --archive
+
+      - name: 🍰 Run Cake
+        if: ${{ runner.os == 'Windows' }}
+        shell: powershell
+        run: |
+          .\build.ps1 -configuration Release -verbosity Verbose --target=CI --publish-all --archive
 
       - name: ⬆ Publish Logs
         uses: actions/upload-artifact@v2
