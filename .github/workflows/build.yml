@@ -31,10 +31,13 @@ jobs:
           clean: 'false'
           fetch-depth: '0'
 
-      - name: 🔨 Use Mono ${{ env.MonoVersion }} SDK
-        uses: maxim-lobanov/setup-xamarin@v1
-        with:
-          mono-version: ${{ env.MonoVersion }}
+      # TODO: Need to figure out the correct way to install mono on linux / mac
+      # Currently the latest image has mono 6.12
+      # https://github.com/actions/virtual-environments/blob/main/images/linux/Ubuntu1804-README.md
+      # - name: 🔨 Use Mono ${{ env.MonoVersion }} SDK
+      #   uses: maxim-lobanov/setup-xamarin@v1
+      #   with:
+      #     mono-version: ${{ env.MonoVersion }}
 
       - name: Setup NuGet.exe
         uses: nuget/setup-nuget@v1
