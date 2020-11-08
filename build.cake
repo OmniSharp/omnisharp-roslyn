@@ -534,6 +534,9 @@ Task("PrepareTestAssets:CakeTestAssets")
         var toolsFolder = CombinePaths(env.Folders.TestAssets, "test-projects", project, "tools");
         var packagesConfig = CombinePaths(toolsFolder, "packages.config");
 
+        EnsureDirectoryExists(toolsFolder);
+        Run("chmod", $"777 '{toolsFolder}'");
+
         NuGetInstallFromConfig(packagesConfig, new NuGetInstallSettings {
             OutputDirectory = toolsFolder,
             Prerelease = true,
