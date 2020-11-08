@@ -41,7 +41,7 @@ namespace OmniSharp.LanguageServerProtocol
     public class LanguageProtocolInteropHandler<TRequest, TResponse> : LanguageProtocolInteropHandler
     {
         private readonly IPredicateHandler _languagePredicateHandler;
-        private readonly Lazy<Task<Dictionary<string, IRequestHandler<TRequest, TResponse>[]>>> _exports;
+        private readonly Lazy<Dictionary<string, IRequestHandler<TRequest, TResponse>[]>> _exports;
         private readonly bool _hasLanguageProperty;
         private readonly bool _hasFileNameProperty;
         private readonly bool _canBeAggregated;
@@ -60,11 +60,10 @@ namespace OmniSharp.LanguageServerProtocol
             _canBeAggregated = typeof(IAggregateResponse).IsAssignableFrom(metadata.ResponseType);
             _updateBufferHandler = updateBufferHandler;
 
-            _exports = new Lazy<Task<Dictionary<string, IRequestHandler<TRequest, TResponse>[]>>>(() =>
-                LoadExportHandlers(handlers));
+            _exports = new Lazy<Dictionary<string, IRequestHandler<TRequest, TResponse>[]>>(() =>LoadExportHandlers(handlers));
         }
 
-        private Task<Dictionary<string, IRequestHandler<TRequest, TResponse>[]>> LoadExportHandlers(
+        private Dictionary<string, IRequestHandler<TRequest, TResponse>[]> LoadExportHandlers(
             IEnumerable<Lazy<IRequestHandler, OmniSharpRequestHandlerMetadata>> handlers)
         {
             var interfaceHandlers = handlers
@@ -76,12 +75,12 @@ namespace OmniSharp.LanguageServerProtocol
             // .Select(plugin => (plugin.Config.Language, plugin));
 
             // Group handlers by language and sort each group for consistency
-            return Task.FromResult(interfaceHandlers
+            return interfaceHandlers
                 // .Concat(plugins)
                 .GroupBy(export => export.Language, StringComparer.OrdinalIgnoreCase)
                 .ToDictionary(
                     group => group.Key,
-                    group => group.OrderBy(g => g.Handler).Select(z => z.Handler).ToArray()));
+                    group => group.OrderBy(g => g.Handler).Select(z => z.Handler).ToArray());
         }
 
         public string EndpointName { get; }
@@ -207,7 +206,7 @@ namespace OmniSharp.LanguageServerProtocol
 
         private async Task<object> HandleRequestForLanguage(string language, TRequest request)
         {
-            var exports = await _exports.Value;
+            var exports = _exports.Value;
             if (exports.TryGetValue(language, out var handlers))
             {
                 if (_canBeAggregated)
@@ -229,7 +228,7 @@ namespace OmniSharp.LanguageServerProtocol
                     $"Must be able to aggregate the response to spread them out across all plugins for {EndpointName}");
             }
 
-            var exports = await _exports.Value;
+            var exports = _exports.Value;
 
             IAggregateResponse aggregateResponse = null;
             var responses = new List<Task<IAggregateResponse>>();
