@@ -15,15 +15,18 @@ var installFolder = Argument("install-path",
     CombinePaths(Environment.GetEnvironmentVariable(Platform.Current.IsWindows ? "USERPROFILE" : "HOME"), ".omnisharp"));
 var publishAll = HasArgument("publish-all");
 var useGlobalDotNetSdk = HasArgument("use-global-dotnet-sdk");
-var testProjectArgument = Argument("test-project", "");
 
 Log.Context = Context;
 
 var env = new BuildEnvironment(useGlobalDotNetSdk, Context);
 var buildPlan = BuildPlan.Load(env);
+var testProjectArgument = Argument("test-project", "");
+var testProjects = string.IsNullOrEmpty(testProjectArgument) ? buildPlan.TestProjects : testProjectArgument.Split(',');
+var nonCakeTestProjects = buildPlan.TestProjects.Except(new [] { "OmniSharp.Cake.Tests" });
 
 Information("");
 Information("Current platform: {0}", Platform.Current);
+Information("Test Projects: {0}", string.Join(", ", testProjects));
 Information("");
 
 /// <summary>
@@ -478,22 +481,37 @@ Task("PrepareTestAssets")
 
 Task("PrepareTestAssets:CommonTestAssets")
     .IsDependeeOf("PrepareTestAssets")
+    .WithCriteria(testProjects.Any(z => nonCakeTestProjects.Any(x => x == z)))
     .DoesForEach(buildPlan.TestAssets, (project) =>
     {
         Information("Restoring and building: {0}...", project);
 
         var folder = CombinePaths(env.Folders.TestAssets, "test-projects", project);
 
-        DotNetCoreBuild(folder, new DotNetCoreBuildSettings()
-        {
-            ToolPath = env.DotNetCommand,
-            WorkingDirectory = folder,
-            Verbosity = DotNetCoreVerbosity.Minimal
-        });
+        try {
+            DotNetCoreBuild(folder, new DotNetCoreBuildSettings()
+            {
+                ToolPath = env.DotNetCommand,
+                WorkingDirectory = folder,
+                Verbosity = DotNetCoreVerbosity.Minimal
+            });
+        } catch {
+            // ExternalAlias has issues once in a while, try building again to get it working.
+            if (project == "ExternAlias") {
+
+                DotNetCoreBuild(folder, new DotNetCoreBuildSettings()
+                {
+                    ToolPath = env.DotNetCommand,
+                    WorkingDirectory = folder,
+                    Verbosity = DotNetCoreVerbosity.Minimal
+                });
+            }
+        }
     });
 
 Task("PrepareTestAssets:RestoreOnlyTestAssets")
     .IsDependeeOf("PrepareTestAssets")
+    .WithCriteria(testProjects.Any(z => nonCakeTestProjects.Any(x => x == z)))
     .DoesForEach(buildPlan.RestoreOnlyTestAssets, (project) =>
     {
         Information("Restoring: {0}...", project);
@@ -511,6 +529,7 @@ Task("PrepareTestAssets:RestoreOnlyTestAssets")
 Task("PrepareTestAssets:WindowsOnlyTestAssets")
     .WithCriteria(Platform.Current.IsWindows)
     .IsDependeeOf("PrepareTestAssets")
+    .WithCriteria(testProjects.Any(z => nonCakeTestProjects.Any(x => x == z)))
     .DoesForEach(buildPlan.WindowsOnlyTestAssets, (project) =>
     {
         Information("Restoring and building: {0}...", project);
@@ -527,6 +546,7 @@ Task("PrepareTestAssets:WindowsOnlyTestAssets")
 
 Task("PrepareTestAssets:CakeTestAssets")
     .IsDependeeOf("PrepareTestAssets")
+    .WithCriteria(testProjects.Contains("OmniSharp.Cake.Tests"))
     .DoesForEach(buildPlan.CakeTestAssets, (project) =>
     {
         Information("Restoring: {0}...", project);
@@ -534,8 +554,11 @@ Task("PrepareTestAssets:CakeTestAssets")
         var toolsFolder = CombinePaths(env.Folders.TestAssets, "test-projects", project, "tools");
         var packagesConfig = CombinePaths(toolsFolder, "packages.config");
 
-        EnsureDirectoryExists(toolsFolder);
-        Run("chmod", $"777 '{toolsFolder}'");
+        if (!Platform.Current.IsWindows)
+        {
+            Warning($"TestAssets: {env.Folders.TestAssets}");
+            Run("chmod", $"777 {toolsFolder}");
+        }
 
         NuGetInstallFromConfig(packagesConfig, new NuGetInstallSettings {
             OutputDirectory = toolsFolder,
@@ -611,7 +634,6 @@ Task("Test")
     .IsDependentOn("PrepareTestAssets")
     .Does(() =>
 {
-        var testProjects = string.IsNullOrEmpty(testProjectArgument) ? buildPlan.TestProjects : testProjectArgument.Split(',');
         foreach (var testProject in testProjects)
         {
             PrintBlankLine();
