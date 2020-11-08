@@ -22,7 +22,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-18.04, windows-2019, macos-10.15]
         testProjects:
           - OmniSharp.DotNetTest.Tests
           - OmniSharp.MSBuild.Tests
@@ -33,6 +32,7 @@ jobs:
           - OmniSharp.Http.Tests
           - OmniSharp.Tests
           - OmniSharp.Lsp.Tests
+        os: [ubuntu-18.04, windows-2019, macos-10.15]
     name: 'Test'
     steps:
       - name: Checkout
@@ -83,13 +83,17 @@ jobs:
         run: |
           echo $PATH
           chmod 755 ./build.sh
-          ./build.sh --configuration Release --verbosity Verbose --target Test --test-project="${{ matrix.testProjects }}"
+          ./build.sh --configuration Release --verbosity Verbose --target Test --test-project="$TEST_PROJECT"
+        env:
+          TEST_PROJECT: ${{ matrix.testProjects }}
 
       - name: 🍰 Run Cake
         if: ${{ runner.os == 'Windows' }}
         shell: powershell
         run: |
-          .\build.ps1 -configuration Release -verbosity Verbose -target Test --test-project="${{ matrix.testProjects }}"
+          .\build.ps1 -configuration Release -verbosity Verbose -target Test --test-project="$ENV:TEST_PROJECT"
+        env:
+          TEST_PROJECT: ${{ matrix.testProjects }}
 
       - name: ⬆ Publish Logs
         uses: actions/upload-artifact@v2
