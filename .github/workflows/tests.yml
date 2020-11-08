@@ -75,7 +75,7 @@ jobs:
       - name: 🍰 Run Cake
         run: |
           dotnet cake --bootstrap
-          dotnet cake --configuration=Debug --verbosity=Verbose --target=Test --test-project="${{ matrix.testProjects }}"
+          dotnet cake --configuration=Debug --verbosity=Diagnostic --target=Test --test-project="${{ matrix.testProjects }}"
 
       - name: ⬆ Publish Logs
         uses: actions/upload-artifact@v2

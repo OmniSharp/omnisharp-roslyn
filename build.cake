@@ -556,8 +556,9 @@ Task("PrepareTestAssets:CakeTestAssets")
 
         if (!Platform.Current.IsWindows)
         {
-            Warning($"TestAssets: {env.Folders.TestAssets}");
-            Run("chmod", $"777 {toolsFolder}");
+            Warning($"TestAssets: {toolsFolder}");
+            Run("chmod", $"777 {toolsFolder}/");
+            Information($"TestAssets: {toolsFolder}");
         }
 
         NuGetInstallFromConfig(packagesConfig, new NuGetInstallSettings {
