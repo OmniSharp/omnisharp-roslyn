@@ -73,13 +73,13 @@ jobs:
         run: |
           echo $PATH
           chmod 755 ./build.sh
-          ./build.sh --configuration Release --verbosity Verbose --target=CI --publish-all --archive
+          ./build.sh --configuration Release --verbosity Verbose --target CI --publish-all --archive
 
       - name: 🍰 Run Cake
         if: ${{ runner.os == 'Windows' }}
         shell: powershell
         run: |
-          .\build.ps1 -configuration Release -verbosity Verbose --target=CI --publish-all --archive
+          .\build.ps1 -configuration Release -verbosity Verbose -target CI --publish-all --archive
 
       - name: ⬆ Publish Logs
         uses: actions/upload-artifact@v2

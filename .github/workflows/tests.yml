@@ -83,13 +83,13 @@ jobs:
         run: |
           echo $PATH
           chmod 755 ./build.sh
-          ./build.sh --configuration Release --verbosity Verbose --target=Test --test-project="${{ matrix.testProjects }}"
+          ./build.sh --configuration Release --verbosity Verbose --target Test --test-project="${{ matrix.testProjects }}"
 
       - name: 🍰 Run Cake
         if: ${{ runner.os == 'Windows' }}
         shell: powershell
         run: |
-          .\build.ps1 -configuration Release -verbosity Verbose --target=Test --test-project="${{ matrix.testProjects }}"
+          .\build.ps1 -configuration Release -verbosity Verbose -target Test --test-project="${{ matrix.testProjects }}"
 
       - name: ⬆ Publish Logs
         uses: actions/upload-artifact@v2
