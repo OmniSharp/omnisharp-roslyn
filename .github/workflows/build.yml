@@ -49,7 +49,7 @@ jobs:
         with:
           dotnet-version: '2.1.x'
 
-      - name: 🔨 Use .NET Core ${{ env.DotNetVersion }} SDK
+      - name: 🔨 Use .NET Core 3.1.402 SDK
         uses: actions/setup-dotnet@v1.7.2
         with:
           dotnet-version: ${{ env.DotNetVersion }}
@@ -64,6 +64,7 @@ jobs:
 
       - name: 🍰 Run Cake
         run: |
+          dotnet cake --bootstrap
           dotnet cake --configuration Release --verbosity Verbose --target CI --publish-all --archive
 
       - name: ⬆ Publish Logs
