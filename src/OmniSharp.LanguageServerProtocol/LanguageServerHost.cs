@@ -108,10 +108,18 @@ namespace OmniSharp.LanguageServerProtocol
             _cancellationTokenSource?.Dispose();
         }
 
+        private void Cancel()
+        {
+            try
+            {
+                _cancellationTokenSource.Cancel();
+            } catch (ObjectDisposedException){}
+        }
+
         public async Task Start()
         {
             var server = Server = await LanguageServer.From(_options);
-            server.Exit.Subscribe(Observer.Create<int>(i => _cancellationTokenSource.Cancel()));
+            server.Exit.Subscribe(Observer.Create<int>(i => Cancel()));
 
             WorkspaceInitializer.Initialize(_serviceProvider, _compositionHost);
 
@@ -122,7 +130,7 @@ namespace OmniSharp.LanguageServerProtocol
 
             Console.CancelKeyPress += (sender, e) =>
             {
-                _cancellationTokenSource.Cancel();
+                Cancel();
                 e.Cancel = true;
             };
 
@@ -132,13 +140,13 @@ namespace OmniSharp.LanguageServerProtocol
                 {
                     var hostProcess = Process.GetProcessById(environment.HostProcessId);
                     hostProcess.EnableRaisingEvents = true;
-                    hostProcess.OnExit(() => _cancellationTokenSource.Cancel());
+                    hostProcess.OnExit(Cancel);
                 }
                 catch
                 {
                     // If the process dies before we get here then request shutdown
                     // immediately
-                    _cancellationTokenSource.Cancel();
+                    Cancel();
                 }
             }
         }
