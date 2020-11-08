@@ -1,5 +1,5 @@
 
-name: 'Build OmniSharp'
+name: 'Build'
 env:
   DotNetVersion: "3.1.402"
   NuGetVersion: "5.7.0"
