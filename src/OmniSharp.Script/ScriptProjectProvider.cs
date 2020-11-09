@@ -28,7 +28,7 @@ namespace OmniSharp.Script
         private const string FileReferenceProviderField = "_fileReferenceProvider";
 
         // aligned with CSI.exe
-        // https://github.com/dotnet/roslyn/blob/version-2.0.0-rc3/src/Interactive/csi/csi.rsp
+        // https://github.com/dotnet/roslyn/blob/version-3.2.0/src/Interactive/csi/csi.desktop.rsp
         internal static readonly IEnumerable<string> DefaultNamespaces = new[]
         {
             "System",
@@ -43,7 +43,7 @@ namespace OmniSharp.Script
             "System.Threading.Tasks"
         };
 
-        private static readonly CSharpParseOptions ParseOptions = new CSharpParseOptions(LanguageVersion.CSharp8, DocumentationMode.Parse, SourceCodeKind.Script);
+        private static readonly CSharpParseOptions ParseOptions = new CSharpParseOptions(LanguageVersion.Latest, DocumentationMode.Parse, SourceCodeKind.Script);
 
         private readonly Lazy<CSharpCompilationOptions> _compilationOptions;
         private readonly Lazy<CSharpCommandLineArguments> _commandLineArgs;
@@ -117,7 +117,6 @@ namespace OmniSharp.Script
 
             compilationOptions = compilationOptions
                 .WithAllowUnsafe(true)
-
                 .WithMetadataReferenceResolver(metadataReferenceResolver)
                 .WithSourceReferenceResolver(sourceResolver)
                 .WithAssemblyIdentityComparer(DesktopAssemblyIdentityComparer.Default)

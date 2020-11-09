@@ -128,6 +128,8 @@ namespace OmniSharp.MSBuild
             }
         }
 
+        public Task WaitForIdleAsync() { return _manager.WaitForQueueEmptyAsync();  }
+
         private IEnumerable<(string, ProjectIdInfo)> GetInitialProjectPathsAndIds()
         {
             // If a solution was provided, use it.

@@ -152,6 +152,8 @@ namespace OmniSharp.Script
             return projectFileInfo;
         }
 
+        Task IProjectSystem.WaitForIdleAsync() => Task.CompletedTask;
+
         Task<object> IProjectSystem.GetProjectModelAsync(string filePath)
         {
             // only react to .CSX file paths

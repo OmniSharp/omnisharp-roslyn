@@ -19,7 +19,7 @@ using Diagnostic = OmniSharp.Extensions.LanguageServer.Protocol.Models.Diagnosti
 
 namespace OmniSharp.LanguageServerProtocol.Handlers
 {
-    internal sealed class OmniSharpCodeActionHandler : CodeActionHandler, IExecuteCommandHandler
+    internal sealed class OmniSharpCodeActionHandler : CodeActionHandlerBase, IExecuteCommandHandler
     {
         public static IEnumerable<IJsonRpcHandler> Enumerate(
             RequestHandlers handlers,
@@ -114,6 +114,11 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
 
             return new CommandOrCodeActionContainer(
                 codeActions.Select(ca => new CommandOrCodeAction(ca)));
+        }
+
+        public override Task<CodeAction> Handle(CodeAction request, CancellationToken cancellationToken)
+        {
+            return Task.FromResult(request);
         }
 
         public async Task<Unit> Handle(ExecuteCommandParams request, CancellationToken cancellationToken)

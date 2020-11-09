@@ -36,7 +36,11 @@ namespace OmniSharp.MSBuild.Discovery
         {
             if (RegisteredInstance != null)
             {
-                AppDomain.CurrentDomain.AssemblyResolve -= Resolve;
+                try
+                {
+                    AppDomain.CurrentDomain.AssemblyResolve -= Resolve;
+                }
+                catch (AppDomainUnloadedException){ } // Ignore if the AppDomain is going away (like during a test in xunit)
                 RegisteredInstance = null;
             }
         }

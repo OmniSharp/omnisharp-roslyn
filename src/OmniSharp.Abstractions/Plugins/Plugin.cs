@@ -107,6 +107,12 @@ namespace OmniSharp.Plugins
             Task.Run(() => Run());
         }
 
+        public Task WaitForIdleAsync()
+        {
+            // TODO: Call out to process
+            return Task.CompletedTask;
+        }
+
         public Task<object> GetWorkspaceModelAsync(WorkspaceInformationRequest request)
         {
             // TODO: Call out to process

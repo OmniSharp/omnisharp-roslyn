@@ -104,6 +104,8 @@ namespace OmniSharp.Stdio.Tests
 
             public bool Initialized => true;
 
+            public Task WaitForIdleAsync() => throw new NotImplementedException();
+
             public Task<object> GetProjectModelAsync(string filePath)
             {
                 throw new NotImplementedException();

@@ -62,8 +62,8 @@
     <PackageReference Update="NuGet.ProjectModel" Version="$(NuGetPackageVersion)" />
     <PackageReference Update="NuGet.Versioning" Version="$(NuGetPackageVersion)" />
 
-    <PackageReference Update="OmniSharp.Extensions.LanguageServer" Version="0.18.0-beta0081" />
-    <PackageReference Update="OmniSharp.Extensions.LanguageProtocol.Testing" Version="0.18.0-beta0081" />
+    <PackageReference Update="OmniSharp.Extensions.LanguageServer" Version="0.18.3" />
+    <PackageReference Update="OmniSharp.Extensions.LanguageProtocol.Testing" Version="0.18.3" />
 
     <PackageReference Update="SQLitePCLRaw.bundle_green" Version="1.1.2" />
     <PackageReference Update="System.Collections.Immutable" Version="1.4.0" />
