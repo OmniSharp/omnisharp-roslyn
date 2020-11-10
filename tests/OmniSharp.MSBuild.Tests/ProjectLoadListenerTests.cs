@@ -188,10 +188,6 @@ namespace OmniSharp.MSBuild.Tests
             Assert.Equal("GenerateDocumentationFile CSharp Managed ReferencesFolder LanguageService RelativePathDerivedDefaultNamespace AssemblyReferences COMReferences ProjectReferences SharedProjectReferences OutputGroups AllTargetOutputGroups VisualStudioWellKnownOutputGroups SingleFileGenerators DeclaredSourceItems UserSourceItems BuildWindowsDesktopTarget CrossPlatformExecutable Pack", string.Join(" ", emitter.ReceivedMessages[0].ProjectCapabilities));
         }
 
-        //[Theory]
-        //[InlineData("3.1.403", "NetCore21Project")]
-        //[InlineData("5.0.100", "Net50Project")]
-        //public async Task The_correct_sdk_version_is_emitted(string sdkVersion, string projectFolder)
         [Fact]
         public async Task The_correct_sdk_version_is_emitted()
         {
