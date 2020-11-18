@@ -533,6 +533,7 @@ namespace OmniSharp.MSBuild
         {
             if (!_workspace.EditorConfigEnabled)
             {
+                _logger.LogDebug($".editorconfig files were configured by the project {project.Name} but will not be respected because the feature is switched off in OmniSharp. Enable .editorconfig support in OmniSharp to take advantage of them.");
                 return;
             }
 
@@ -548,6 +549,10 @@ namespace OmniSharp.MSBuild
                 {
                     _logger.LogDebug($".editorconfig file for project {project.Name}: {file}");
                     _workspace.AddAnalyzerConfigDocument(project.Id, file);
+                }
+                else
+                {
+                    _logger.LogDebug($".editorconfig file for project {project.Name}: {file} was expected but not found on disk.");
                 }
             }
         }
