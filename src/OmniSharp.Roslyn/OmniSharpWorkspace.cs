@@ -149,6 +149,7 @@ namespace OmniSharp
             var newAnalyzerConfigFiles = EditorConfigFinder
                 .GetEditorConfigPaths(filePath)
                 .Except(analyzerConfigFiles);
+
             foreach (var analyzerConfigFile in newAnalyzerConfigFiles)
             {
                 AddAnalyzerConfigDocument(projectInfo.Id, analyzerConfigFile);
