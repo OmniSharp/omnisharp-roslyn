@@ -546,6 +546,7 @@ namespace OmniSharp.MSBuild
             {
                 if (File.Exists(file))
                 {
+                    _logger.LogDebug($".editorconfig file for project {project.Name}: {file}");
                     _workspace.AddAnalyzerConfigDocument(project.Id, file);
                 }
             }
