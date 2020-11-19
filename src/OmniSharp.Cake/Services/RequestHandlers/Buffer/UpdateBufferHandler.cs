@@ -46,6 +46,8 @@ namespace OmniSharp.Cake.Services.RequestHandlers.Buffer
                         NewText = change.NewText
                     });
                 }
+
+                fileChange.FromDisk = false;
             }
             else
             {
