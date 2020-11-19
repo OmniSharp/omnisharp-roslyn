@@ -602,7 +602,7 @@ namespace OmniSharp.MSBuild
                 {
                     // Use the buffer manager to add the new file to the appropriate projects
                     // Hosts that don't pass the FileChangeType may wind up updating the buffer twice
-                    _workspace.BufferManager.UpdateBufferAsync(new UpdateBufferRequest() { FileName = path, FromDisk = true }).Wait();
+                    _workspace.BufferManager.UpdateBufferAsync(new UpdateBufferRequest() { FileName = path, FromDisk = true }, isCreate: changeType == FileChangeType.Create).Wait();
                 }
             }
         }
