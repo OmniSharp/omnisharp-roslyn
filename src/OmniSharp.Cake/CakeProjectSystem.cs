@@ -12,6 +12,7 @@ using Cake.Scripting.Abstractions.Models;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Scripting;
+using Microsoft.CodeAnalysis.Text;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Cake.Services;
@@ -126,7 +127,7 @@ namespace OmniSharp.Cake
                 // add Cake project to workspace
                 _workspace.AddProject(project);
                 var documentId = DocumentId.CreateNewId(project.Id);
-                var loader = new CakeTextLoader(cakeFilePath, _scriptService);
+                var loader = TextLoader.From(TextAndVersion.Create(SourceText.From(cakeScript.Source), VersionStamp.Create(DateTime.UtcNow)));
                 var documentInfo = DocumentInfo.Create(
                     documentId,
                     cakeFilePath,

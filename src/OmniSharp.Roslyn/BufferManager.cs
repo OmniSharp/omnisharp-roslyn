@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
+using Microsoft.Extensions.Logging;
 using OmniSharp.FileWatching;
 using OmniSharp.Models;
 using OmniSharp.Models.ChangeBuffer;
@@ -20,14 +21,14 @@ namespace OmniSharp.Roslyn
         private readonly ISet<DocumentId> _transientDocumentIds = new HashSet<DocumentId>();
         private readonly object _lock = new object();
         private readonly IFileSystemWatcher _fileSystemWatcher;
-        private readonly Action<string, FileChangeType> _onFileChanged;
+        private readonly ILogger<BufferManager> _logger;
 
-        public BufferManager(OmniSharpWorkspace workspace, IFileSystemWatcher fileSystemWatcher)
+        public BufferManager(OmniSharpWorkspace workspace, ILoggerFactory loggerFactory, IFileSystemWatcher fileSystemWatcher)
         {
             _workspace = workspace;
             _workspace.WorkspaceChanged += OnWorkspaceChanged;
             _fileSystemWatcher = fileSystemWatcher;
-            _onFileChanged = OnFileChanged;
+            _logger = loggerFactory.CreateLogger<BufferManager>();
         }
 
         public bool IsTransientDocument(DocumentId documentId)
@@ -38,7 +39,7 @@ namespace OmniSharp.Roslyn
             }
         }
 
-        public async Task UpdateBufferAsync(Request request)
+        public async Task UpdateBufferAsync(Request request, bool isCreate = false)
         {
             var buffer = request.Buffer;
             var changes = request.Changes;
@@ -46,6 +47,7 @@ namespace OmniSharp.Roslyn
             if (request is UpdateBufferRequest updateRequest && updateRequest.FromDisk)
             {
                 buffer = File.ReadAllText(updateRequest.FileName);
+                _logger.LogDebug("Read file contents:\n{0}", buffer);
             }
 
             if (request.FileName == null || (buffer == null && changes == null))
@@ -64,7 +66,20 @@ namespace OmniSharp.Roslyn
 
                     foreach (var documentId in documentIds)
                     {
-                        solution = solution.WithDocumentText(documentId, sourceText);
+                        var document = solution.GetDocument(documentId);
+
+                        // This can happen when the client sends a create request for a file that we created on the server,
+                        // such as RunCodeAction. Unfortunately, previous attempts to have this fully controlled by the vscode
+                        // client (such that it sent both create event and then updated existing text) wasn't successful:
+                        // vscode seems to always trigger an update buffer event before triggering the create event.
+                        if (isCreate && string.IsNullOrEmpty(buffer) && (await document.GetTextAsync()).Length > 0)
+                        {
+                            _logger.LogDebug("File was created with content in workspace, ignoring disk update");
+                            continue;
+                        }
+
+                        solution = document.WithText(sourceText).Project.Solution;
+                        _logger.LogDebug("Updating file {0} with new text:\n{1}", request.FileName, sourceText);
                     }
                 }
                 else
@@ -100,6 +115,8 @@ namespace OmniSharp.Roslyn
                             }
                         }
 
+                        _logger.LogDebug("Updating file {0} with new text:\n{1}", document.FilePath, sourceText);
+
                         solution = solution.WithDocumentText(documentId, sourceText);
                     }
                 }
@@ -108,6 +125,7 @@ namespace OmniSharp.Roslyn
             }
             else if (buffer != null)
             {
+                _logger.LogDebug("Adding transient file for {0}\n{1}", request.FileName, buffer);
                 TryAddTransientDocument(request.FileName, buffer);
             }
         }

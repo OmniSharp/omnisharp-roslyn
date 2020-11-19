@@ -52,7 +52,7 @@ namespace OmniSharp
         public OmniSharpWorkspace(HostServicesAggregator aggregator, ILoggerFactory loggerFactory, IFileSystemWatcher fileSystemWatcher)
             : base(aggregator.CreateHostServices(), "Custom")
         {
-            BufferManager = new BufferManager(this, fileSystemWatcher);
+            BufferManager = new BufferManager(this, loggerFactory, fileSystemWatcher);
             _logger = loggerFactory.CreateLogger<OmniSharpWorkspace>();
             fileSystemWatcher.WatchDirectories(OnDirectoryRemoved);
         }
