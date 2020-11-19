@@ -72,7 +72,7 @@ namespace OmniSharp.Roslyn
                         // such as RunCodeAction. Unfortunately, previous attempts to have this fully controlled by the vscode
                         // client (such that it sent both create event and then updated existing text) wasn't successful:
                         // vscode seems to always trigger an update buffer event before triggering the create event.
-                        if ((await document.GetTextAsync()).Length > 0 && isCreate && string.IsNullOrEmpty(buffer))
+                        if (isCreate && string.IsNullOrEmpty(buffer) && (await document.GetTextAsync()).Length > 0)
                         {
                             _logger.LogDebug("File was created with content in workspace, ignoring disk update");
                             continue;
