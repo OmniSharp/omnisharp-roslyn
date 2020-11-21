@@ -1,12 +1,15 @@
 # Changelog
 All changes to the project will be documented in this file.
 
-## [1.37.4] - not yet released
+## [1.37.5] - not yet released
+* Update Roslyn version to 3.9.0-2.20570.24 (PR: [#2022](https://github.com/OmniSharp/omnisharp-roslyn/pull/2022))
+
+## [1.37.4] - 2020-11-20
 * Fixed global Mono MSBuild version reporting (PR: [#1988](https://github.com/OmniSharp/omnisharp-roslyn/pull/1988))
 * Fixed incremental changes and completion in Cake (PR: [#1997](https://github.com/OmniSharp/omnisharp-roslyn/pull/1997))
 * Omnisharp now uses libPaths and sourcePaths defined in custom .rsp file for scripting (PR: [#2000](https://github.com/OmniSharp/omnisharp-roslyn/pull/2000))
 * C# scripting should use language version "latest" by default (PR: [#2001](https://github.com/OmniSharp/omnisharp-roslyn/pull/2001))
-* Fixed null references in LSP mode when requests are handled before the server fully initializes ([#1742](https://github.com/OmniSharp/omnisharp-roslyn/issues/1742https://github.com/OmniSharp/omnisharp-roslyn/issues/1742), [#1515](https://github.com/OmniSharp/omnisharp-roslyn/issues/1515), [#1083](https://github.com/OmniSharp/omnisharp-roslyn/issues/1083)), PR: [#2005](https://github.com/OmniSharp/omnisharp-roslyn/pull/2005))
+* Fixed null references in LSP mode when requests are handled before the server fully initializes ([#1742](https://github.com/OmniSharp/omnisharp-roslyn/issues/1742https://github.com/OmniSharp/omnisharp-roslyn/issues/1742), [#1515](https://github.com/OmniSharp/omnisharp-roslyn/issues/1515), [#1083](https://github.com/OmniSharp/omnisharp-roslyn/issues/1083), PR: [#2005](https://github.com/OmniSharp/omnisharp-roslyn/pull/2005))
 * Fixed logging in LSP mode (PR: [#2002](https://github.com/OmniSharp/omnisharp-roslyn/pull/2002))
 * Upgraded LSP mode to `OmniSharp.Extensions.LanguageServer 0.18.3` (PR: [#1998](https://github.com/OmniSharp/omnisharp-roslyn/pull/1998))
 * Improve handling with Cake Script Service (PR: [#2013](https://github.com/OmniSharp/omnisharp-roslyn/pull/2013))
