@@ -32,7 +32,9 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 var changeBufferHandler = host.GetRequestHandler<ChangeBufferService>(OmniSharpEndpoints.ChangeBuffer);
                 var reAnalyzeHandler = host.GetRequestHandler<ReAnalyzeService>(OmniSharpEndpoints.ReAnalyze);
 
-                host.AddFilesToWorkspace(new TestFile("a.cs", "public class A: B { }"), new TestFile("b.cs", "public class B { }"));
+                var bContent = "public class B { }";
+
+                host.AddFilesToWorkspace(new TestFile("a.cs", "public class A: B { }"), new TestFile("b.cs", bContent));
 
                 await host.RequestCodeCheckAsync("a.cs");
 
@@ -43,7 +45,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     StartLine = 0,
                     StartColumn = 0,
                     EndLine = 0,
-                    EndColumn = newContent.Length,
+                    EndColumn = bContent.Length,
                     NewText = newContent,
                     FileName = "b.cs"
                 });
