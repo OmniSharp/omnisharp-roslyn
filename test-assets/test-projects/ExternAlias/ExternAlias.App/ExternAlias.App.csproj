@@ -5,6 +5,9 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="../ExternAlias.Lib/ExternAlias.Lib.csproj">
+        <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
     <Reference Include="ExternAlias.Lib">
         <HintPath>$(ProjectDir)../ExternAlias.Lib/bin/$(Configuration)/netstandard2.0/ExternAlias.Lib.dll</HintPath>
         <Aliases>abc,def</Aliases>
