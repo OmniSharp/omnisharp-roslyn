@@ -176,6 +176,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                 case WorkspaceChangeKind.ProjectAdded:
                 case WorkspaceChangeKind.ProjectChanged:
                 case WorkspaceChangeKind.ProjectReloaded:
+                // at the moment we remove and re-add analyzer documents when project update is requested
+                // therefore it is enough to just listen to "AnalyzerConfigDocumentAdded" event to trigger re-analysis
+                case WorkspaceChangeKind.AnalyzerConfigDocumentAdded:
                     _logger.LogDebug($"Project {changeEvent.ProjectId} updated, reanalyzing its diagnostics.");
                     var projectDocumentIds = _workspace.CurrentSolution.GetProject(changeEvent.ProjectId).Documents.Select(x => x.Id).ToImmutableArray();
                     QueueForAnalysis(projectDocumentIds, AnalyzerWorkType.Background);
