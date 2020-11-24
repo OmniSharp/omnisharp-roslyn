@@ -24,15 +24,13 @@ namespace OmniSharp.MSBuild.ProjectFile
                         .WithSpecificDiagnosticOptions(projectFileInfo.GetDiagnosticOptions())
                         .WithOverflowChecks(projectFileInfo.CheckForOverflowUnderflow);
 
-            if (projectFileInfo.AllowUnsafeCode)
+            if (projectFileInfo.AllowUnsafeCode != compilationOptions.AllowUnsafe)
             {
-                compilationOptions = compilationOptions.WithAllowUnsafe(true);
+                compilationOptions = compilationOptions.WithAllowUnsafe(projectFileInfo.AllowUnsafeCode);
             }
 
-            if (projectFileInfo.TreatWarningsAsErrors)
-            {
-                compilationOptions = compilationOptions.WithGeneralDiagnosticOption(ReportDiagnostic.Error);
-            }
+            compilationOptions = projectFileInfo.TreatWarningsAsErrors ?
+                        compilationOptions.WithGeneralDiagnosticOption(ReportDiagnostic.Error) : compilationOptions.WithGeneralDiagnosticOption(ReportDiagnostic.Default);
 
             if (projectFileInfo.NullableContextOptions != compilationOptions.NullableContextOptions)
             {

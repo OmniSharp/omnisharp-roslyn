@@ -486,7 +486,7 @@ namespace OmniSharp.MSBuild
                 var newCompilationOptions = projectFileInfo.CreateCompilationOptions(existingCompilationOptions);
                 if (newCompilationOptions != existingCompilationOptions)
                 {
-                    _workspace.UpdateCompilationOptionsForProject(project.Id, existingCompilationOptions);
+                    _workspace.UpdateCompilationOptionsForProject(project.Id, newCompilationOptions);
                     _logger.LogDebug("Updated project compilation options on project {project.Id}.");
                 }
             }
