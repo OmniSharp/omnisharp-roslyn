@@ -204,7 +204,8 @@ namespace OmniSharp.LanguageServerProtocol
 
             var eventEmitter = new LanguageServerEventEmitter(server);
 
-            services.AddSingleton(server);
+            services.AddSingleton(server)
+                .AddSingleton<ILanguageServerFacade>(server);
 
             var serviceProvider =
                 CompositionHostBuilder.CreateDefaultServiceProvider(environment, configurationRoot, eventEmitter,
