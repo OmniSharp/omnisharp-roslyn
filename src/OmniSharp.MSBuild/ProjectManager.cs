@@ -465,15 +465,31 @@ namespace OmniSharp.MSBuild
             UpdateSourceFiles(project, projectFileInfo.SourceFiles);
             UpdateParseOptions(project, projectFileInfo.LanguageVersion, projectFileInfo.PreprocessorSymbolNames, !string.IsNullOrWhiteSpace(projectFileInfo.DocumentationFile));
             UpdateProjectReferences(project, projectFileInfo.ProjectReferences);
+            UpdateAnalyzerConfigFiles(project, projectFileInfo.AnalyzerConfigFiles);
             UpdateReferences(project, projectFileInfo.ProjectReferences, projectFileInfo.References);
             UpdateAnalyzerReferences(project, projectFileInfo);
             UpdateAdditionalFiles(project, projectFileInfo.AdditionalFiles);
-            UpdateAnalyzerConfigFiles(project, projectFileInfo.AnalyzerConfigFiles);
             UpdateProjectProperties(project, projectFileInfo);
 
             _workspace.AddDocumentInclusionRuleForProject(project.Id, (path) => projectFileInfo.IsFileIncluded(path));
             _workspace.TryPromoteMiscellaneousDocumentsToProject(project);
-            _workspace.UpdateCompilationOptionsForProject(project.Id, projectFileInfo.CreateCompilationOptions());
+
+            UpdateCompilationOptions(project, projectFileInfo);
+        }
+
+        private void UpdateCompilationOptions(Project project, ProjectFileInfo projectFileInfo)
+        {
+            // if project already has compilation options, then we shall use that to compute new compilation options based on the project file
+            // and then only set those if it's really necessary
+            if (project.CompilationOptions != null && project.CompilationOptions is CSharpCompilationOptions existingCompilationOptions)
+            {
+                var newCompilationOptions = projectFileInfo.CreateCompilationOptions(existingCompilationOptions);
+                if (newCompilationOptions != existingCompilationOptions)
+                {
+                    _workspace.UpdateCompilationOptionsForProject(project.Id, existingCompilationOptions);
+                    _logger.LogDebug("Updated project compilation options on project {project.Id}.");
+                }
+            }
         }
 
         private void UpdateAnalyzerReferences(Project project, ProjectFileInfo projectFileInfo)
