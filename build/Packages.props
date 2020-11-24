@@ -4,7 +4,7 @@
 
   <PropertyGroup>
     <MSBuildPackageVersion>16.8.0</MSBuildPackageVersion>
-    <NuGetPackageVersion>5.2.0</NuGetPackageVersion>
+    <NuGetPackageVersion>5.8.0</NuGetPackageVersion>
     <RoslynPackageVersion>3.9.0-2.20570.24</RoslynPackageVersion>
     <XunitPackageVersion>2.4.1</XunitPackageVersion>
   </PropertyGroup>
@@ -34,24 +34,25 @@
     <PackageReference Update="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="$(RoslynPackageVersion)" />
     <PackageReference Update="Microsoft.CodeAnalysis.Workspaces.Common" Version="$(RoslynPackageVersion)" />
 
-    <PackageReference Update="Microsoft.Extensions.Caching.Memory" Version="2.1.1" />
-    <PackageReference Update="Microsoft.Extensions.Configuration" Version="2.1.1" />
-    <PackageReference Update="Microsoft.Extensions.Configuration.Binder" Version="2.1.1" />
-    <PackageReference Update="Microsoft.Extensions.Configuration.CommandLine" Version="2.1.1" />
-    <PackageReference Update="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="2.1.1" />
-    <PackageReference Update="Microsoft.Extensions.Configuration.Json" Version="2.1.1" />
-    <PackageReference Update="Microsoft.Extensions.DependencyInjection" Version="2.1.1" />
-    <PackageReference Update="Microsoft.Extensions.DependencyModel" Version="2.1.0" />
-    <PackageReference Update="Microsoft.Extensions.FileProviders.Physical" Version="2.1.1" />
-    <PackageReference Update="Microsoft.Extensions.FileSystemGlobbing" Version="2.1.1" />
-    <PackageReference Update="Microsoft.Extensions.Logging" Version="2.1.1" />
-    <PackageReference Update="Microsoft.Extensions.Logging.Console" Version="2.1.1" />
-    <PackageReference Update="Microsoft.Extensions.Options" Version="2.1.1" />
-    <PackageReference Update="Microsoft.Extensions.Options.ConfigurationExtensions" Version="2.1.1" />
+    <PackageReference Update="Microsoft.Extensions.Caching.Memory" Version="5.0.0" />
+    <PackageReference Update="Microsoft.Extensions.Configuration" Version="5.0.0" />
+    <PackageReference Update="Microsoft.Extensions.Configuration.Binder" Version="5.0.0" />
+    <PackageReference Update="Microsoft.Extensions.Configuration.CommandLine" Version="5.0.0" />
+    <PackageReference Update="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="5.0.0" />
+    <PackageReference Update="Microsoft.Extensions.Configuration.Json" Version="5.0.0" />
+    <PackageReference Update="Microsoft.Extensions.DependencyInjection" Version="5.0.0" />
+    <PackageReference Update="Microsoft.Extensions.DependencyModel" Version="5.0.0" />
+    <PackageReference Update="Microsoft.Extensions.FileProviders.Physical" Version="5.0.0" />
+    <PackageReference Update="Microsoft.Extensions.FileSystemGlobbing" Version="5.0.0" />
+    <PackageReference Update="Microsoft.Extensions.Logging" Version="5.0.0" />
+    <PackageReference Update="Microsoft.Extensions.Logging.Console" Version="5.0.0" />
+    <PackageReference Update="Microsoft.Extensions.Options" Version="5.0.0" />
+    <PackageReference Update="Microsoft.Extensions.Options.ConfigurationExtensions" Version="5.0.0" />
 
     <PackageReference Update="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.0" />
     <PackageReference Update="Microsoft.NET.Test.Sdk" Version="16.6.1" />
     <PackageReference Update="Microsoft.TestPlatform.TranslationLayer" Version="16.6.1" />
+    <PackageReference Update="Microsoft.TestPlatform.ObjectModel " Version="16.6.1" />
     <PackageReference Update="Microsoft.VisualStudio.Setup.Configuration.Interop" Version="1.14.114" />
     <PackageReference Update="Microsoft.VisualStudio.SDK.EmbedInteropTypes" Version="15.0.12" />
 
@@ -65,12 +66,13 @@
     <PackageReference Update="OmniSharp.Extensions.LanguageServer" Version="0.18.3" />
     <PackageReference Update="OmniSharp.Extensions.LanguageProtocol.Testing" Version="0.18.3" />
 
-    <PackageReference Update="SQLitePCLRaw.bundle_green" Version="1.1.2" />
+    <PackageReference Update="SQLitePCLRaw.bundle_green" Version="2.0.4" />
     <PackageReference Update="System.Collections.Immutable" Version="1.4.0" />
     <PackageReference Update="System.ComponentModel.Composition" Version="4.5.0" />
     <PackageReference Update="System.Composition" Version="1.0.31" />
     <PackageReference Update="System.Reflection.DispatchProxy" Version="4.5.1" />
-    <PackageReference Update="System.Reflection.Metadata" Version="1.4.2" />
+    <PackageReference Update="System.Reflection.Metadata" Version="1.6.0" />
+	<PackageReference Update="System.Runtime.InteropServices.RuntimeInformation" Version="4.3.0" />
     <PackageReference Update="System.Threading.Tasks.Dataflow" Version="4.9.0" />
     <PackageReference Update="System.ValueTuple" Version="4.5.0" />
 

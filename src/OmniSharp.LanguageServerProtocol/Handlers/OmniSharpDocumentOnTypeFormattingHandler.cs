@@ -8,6 +8,7 @@ using OmniSharp.Extensions.LanguageServer.Protocol.Document;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OmniSharp.Extensions.LanguageServer.Protocol.Server;
 using OmniSharp.Models.Format;
+using Range = OmniSharp.Extensions.LanguageServer.Protocol.Models.Range;
 
 namespace OmniSharp.LanguageServerProtocol.Handlers
 {

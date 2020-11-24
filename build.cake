@@ -313,11 +313,23 @@ Task("CreateMSBuildFolder")
     foreach (var library in msbuildLibraries)
     {
         var libraryFileName = library + ".dll";
-        var librarySourcePath = CombinePaths(env.Folders.Tools, library, "lib", "net472", libraryFileName);
-        var libraryTargetPath = CombinePaths(msbuildCurrentBinTargetFolder, libraryFileName);
-        if (FileHelper.Exists(librarySourcePath))
+
+        if (!TryCopyFromFramework("netcoreapp2.1"))
         {
-            FileHelper.Copy(librarySourcePath, libraryTargetPath);
+            _ = TryCopyFromFramework("netstandard2.0");
+        }
+
+        bool TryCopyFromFramework(string frameworkVersion)
+        {
+            var librarySourcePath = CombinePaths(env.Folders.Tools, library, "lib", frameworkVersion, libraryFileName);
+            var libraryTargetPath = CombinePaths(msbuildCurrentBinTargetFolder, libraryFileName);
+            if (FileHelper.Exists(librarySourcePath))
+            {
+                FileHelper.Copy(librarySourcePath, libraryTargetPath);
+                return true;
+            }
+
+            return false;
         }
     }
 
@@ -336,7 +348,7 @@ Task("CreateMSBuildFolder")
 
     // Copy MSBuild SDK Resolver and DotNetHostResolver
     Information("Copying MSBuild SDK resolver...");
-    var msbuildSdkResolverSourceFolder = CombinePaths(env.Folders.Tools, "Microsoft.DotNet.MSBuildSdkResolver", "lib", "net472");
+    var msbuildSdkResolverSourceFolder = CombinePaths(env.Folders.Tools, "Microsoft.DotNet.MSBuildSdkResolver", "lib", "net5.0");
     var msbuildSdkResolverTargetFolder = CombinePaths(msbuildCurrentBinTargetFolder, "SdkResolvers", "Microsoft.DotNet.MSBuildSdkResolver");
     DirectoryHelper.ForceCreate(msbuildSdkResolverTargetFolder);
     FileHelper.Copy(
@@ -359,7 +371,7 @@ Task("CreateMSBuildFolder")
     }
 
     Information("Copying NuGet SDK resolver...");
-    var nugetSdkResolverSourceFolder = CombinePaths(env.Folders.Tools, "Microsoft.Build.NuGetSdkResolver", "lib", "net472");
+    var nugetSdkResolverSourceFolder = CombinePaths(env.Folders.Tools, "Microsoft.Build.NuGetSdkResolver", "lib", "netstandard2.0");
     var nugetSdkResolverTargetFolder = CombinePaths(msbuildCurrentBinTargetFolder, "SdkResolvers", "Microsoft.Build.NuGetSdkResolver");
     DirectoryHelper.ForceCreate(nugetSdkResolverTargetFolder);
     FileHelper.Copy(
@@ -376,7 +388,7 @@ Task("CreateMSBuildFolder")
 
     // Copy content of NuGet.Build.Tasks
     var nugetBuildTasksFolder = CombinePaths(env.Folders.Tools, "NuGet.Build.Tasks");
-    var nugetBuildTasksBinariesFolder = CombinePaths(nugetBuildTasksFolder, "lib", "net472");
+    var nugetBuildTasksBinariesFolder = CombinePaths(nugetBuildTasksFolder, "lib", "netstandard2.0");
     var nugetBuildTasksTargetsFolder = CombinePaths(nugetBuildTasksFolder, "runtimes", "any", "native");
 
     FileHelper.Copy(
@@ -408,18 +420,18 @@ Task("CreateMSBuildFolder")
         var binaryName = nugetPackage + ".dll";
 
         FileHelper.Copy(
-            source: CombinePaths(env.Folders.Tools, nugetPackage, "lib", "net472", binaryName),
+            source: CombinePaths(env.Folders.Tools, nugetPackage, "lib", "netstandard2.0", binaryName),
             destination: CombinePaths(msbuildCurrentBinTargetFolder, binaryName));
     }
 
     // Copy additional dependency of Microsoft.Build.NuGetSdkResolver
     FileHelper.Copy(
-        source: CombinePaths(env.Folders.Tools, "Newtonsoft.Json", "lib", "net45", "Newtonsoft.Json.dll"),
+        source: CombinePaths(env.Folders.Tools, "Newtonsoft.Json", "lib", "netstandard2.0", "Newtonsoft.Json.dll"),
         destination: CombinePaths(msbuildCurrentBinTargetFolder, "Newtonsoft.Json.dll"));
 
     // Copy content of Microsoft.Net.Compilers.Toolset
     Information("Copying Microsoft.Net.Compilers.Toolset...");
-    var compilersSourceFolder = CombinePaths(env.Folders.Tools, "Microsoft.Net.Compilers.Toolset", "tasks", "net472");
+    var compilersSourceFolder = CombinePaths(env.Folders.Tools, "Microsoft.Net.Compilers.Toolset", "tasks", "netcoreapp3.1");
     var compilersTargetFolder = CombinePaths(msbuildCurrentBinTargetFolder, "Roslyn");
 
     DirectoryHelper.Copy(compilersSourceFolder, compilersTargetFolder);
@@ -433,23 +445,33 @@ Task("CreateMSBuildFolder")
     FileHelper.Delete(CombinePaths(compilersTargetFolder, "vbc.exe.config"));
     FileHelper.Delete(CombinePaths(compilersTargetFolder, "vbc.rsp"));
 
+    FileHelper.Copy(
+        source: CombinePaths(env.Folders.Tools, "System.CodeDom", "lib", "netstandard2.0", "System.CodeDom.dll"),
+        destination: CombinePaths(msbuildCurrentBinTargetFolder, "System.CodeDom.dll"),
+        overwrite: true);
+
      FileHelper.Copy(
-        source: CombinePaths(env.Folders.Tools, "SQLitePCLRaw.core", "lib", "net45", "SQLitePCLRaw.core.dll"),
+        source: CombinePaths(env.Folders.Tools, "Microsoft.Net.HostModel", "lib", "netstandard2.0", "Microsoft.Net.HostModel.dll"),
+        destination: CombinePaths(msbuildCurrentBinTargetFolder, "Microsoft.Net.HostModel.dll"),
+        overwrite: true);
+
+     FileHelper.Copy(
+        source: CombinePaths(env.Folders.Tools, "SQLitePCLRaw.core", "lib", "netstandard2.0", "SQLitePCLRaw.core.dll"),
         destination: CombinePaths(msbuildCurrentBinTargetFolder, "SQLitePCLRaw.core.dll"),
         overwrite: true);
 
     FileHelper.Copy(
-        source: CombinePaths(env.Folders.Tools, "SQLitePCLRaw.provider.e_sqlite3.net45", "lib", "net45", "SQLitePCLRaw.provider.e_sqlite3.dll"),
+        source: CombinePaths(env.Folders.Tools, "SQLitePCLRaw.provider.e_sqlite3.netstandard11", "lib", "netstandard1.1", "SQLitePCLRaw.provider.e_sqlite3.dll"),
         destination: CombinePaths(msbuildCurrentBinTargetFolder, "SQLitePCLRaw.provider.e_sqlite3.dll"),
         overwrite: true);
 
     FileHelper.Copy(
-        source: CombinePaths(env.Folders.Tools, "SQLitePCLRaw.bundle_green", "lib", "net45", "SQLitePCLRaw.batteries_v2.dll"),
+        source: CombinePaths(env.Folders.Tools, "SQLitePCLRaw.bundle_green", "lib", "netcoreapp3.1", "SQLitePCLRaw.batteries_v2.dll"),
         destination: CombinePaths(msbuildCurrentBinTargetFolder, "SQLitePCLRaw.batteries_v2.dll"),
         overwrite: true);
 
     FileHelper.Copy(
-        source: CombinePaths(env.Folders.Tools, "SQLitePCLRaw.bundle_green", "lib", "net45", "SQLitePCLRaw.batteries_green.dll"),
+        source: CombinePaths(env.Folders.Tools, "SQLitePCLRaw.bundle_green", "lib", "netcoreapp3.1", "SQLitePCLRaw.nativelibrary.dll"),
         destination: CombinePaths(msbuildCurrentBinTargetFolder, "SQLitePCLRaw.batteries_green.dll"),
         overwrite: true);
 
@@ -765,7 +787,8 @@ string PublishWindowsBuild(string project, BuildEnvironment env, BuildPlan plan,
     {
         DotNetCorePublish(projectFileName, new DotNetCorePublishSettings()
         {
-            // Runtime = rid, // TODO: With everything today do we need to publish this with a rid?  This appears to be legacy bit when we used to push for all supported dotnet core rids.
+            Framework = "net5.0",
+            Runtime = rid, // TODO: With everything today do we need to publish this with a rid?  This appears to be legacy bit when we used to push for all supported dotnet core rids.
             Configuration = configuration,
             OutputDirectory = outputFolder,
             MSBuildSettings = new DotNetCoreMSBuildSettings()

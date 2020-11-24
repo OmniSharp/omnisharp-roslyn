@@ -36,7 +36,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
         protected readonly ILogger Logger;
         private readonly ICsDiagnosticWorker _diagnostics;
         private readonly CachingCodeFixProviderForProjects _codeFixesForProject;
-        private readonly MethodInfo _getNestedCodeActions;
+        private readonly MethodInfo? _getNestedCodeActions;
 
         protected Lazy<List<CodeRefactoringProvider>> OrderedCodeRefactoringProviders;
 
@@ -376,7 +376,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
         private static string GetNewFilePath(string newFileName, string currentFilePath)
         {
             var directory = Path.GetDirectoryName(currentFilePath);
-            return Path.Combine(directory, newFileName);
+            return Path.Combine(directory ?? string.Empty, newFileName);
         }
     }
 }
