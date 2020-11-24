@@ -556,6 +556,12 @@ namespace OmniSharp
             OnAnalyzerConfigDocumentAdded(documentInfo);
         }
 
+        public void ReloadAnalyzerConfigDocument(DocumentId documentId, string filePath)
+        {
+            var loader = new OmniSharpTextLoader(filePath);
+            OnAnalyzerConfigDocumentTextLoaderChanged(documentId, loader);
+        }
+
         public void RemoveAdditionalDocument(DocumentId documentId)
         {
             OnAdditionalDocumentRemoved(documentId);

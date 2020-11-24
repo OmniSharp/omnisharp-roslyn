@@ -173,15 +173,15 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                         _logger.LogDebug($"Tried to remove non existent document from analysis, document: {changeEvent.DocumentId}");
                     }
                     break;
+                case WorkspaceChangeKind.AnalyzerConfigDocumentChanged:
+                    _logger.LogDebug($"Analyzer config document {changeEvent.DocumentId} changed, which triggered re-analysis of project {changeEvent.ProjectId}.");
+                    QueueForAnalysis(_workspace.CurrentSolution.GetProject(changeEvent.ProjectId).Documents.Select(x => x.Id).ToImmutableArray(), AnalyzerWorkType.Background);
+                    break;
                 case WorkspaceChangeKind.ProjectAdded:
                 case WorkspaceChangeKind.ProjectChanged:
                 case WorkspaceChangeKind.ProjectReloaded:
-                // at the moment we remove and re-add analyzer documents when project update is requested
-                // therefore it is enough to just listen to "AnalyzerConfigDocumentAdded" event to trigger re-analysis
-                case WorkspaceChangeKind.AnalyzerConfigDocumentAdded:
                     _logger.LogDebug($"Project {changeEvent.ProjectId} updated, reanalyzing its diagnostics.");
-                    var projectDocumentIds = _workspace.CurrentSolution.GetProject(changeEvent.ProjectId).Documents.Select(x => x.Id).ToImmutableArray();
-                    QueueForAnalysis(projectDocumentIds, AnalyzerWorkType.Background);
+                    QueueForAnalysis(_workspace.CurrentSolution.GetProject(changeEvent.ProjectId).Documents.Select(x => x.Id).ToImmutableArray(), AnalyzerWorkType.Background);
                     break;
                 case WorkspaceChangeKind.SolutionAdded:
                 case WorkspaceChangeKind.SolutionChanged:
