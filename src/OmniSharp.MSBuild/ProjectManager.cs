@@ -578,7 +578,7 @@ namespace OmniSharp.MSBuild
             }
 
             _workspace.ReloadAnalyzerConfigDocument(currentAnalyzerConfigDocument.Id, analyzerConfigFile);
-            _logger.LogDebug($"Reloaded {analyzerConfigFile} in project {project.Name}.");
+            _logger.LogDebug($"Reloaded {currentAnalyzerConfigDocument.Id} from {analyzerConfigFile} in project {project.Name}.");
         }
 
         private void UpdateAnalyzerConfigFiles(Project project, IList<string> analyzerConfigFiles)
