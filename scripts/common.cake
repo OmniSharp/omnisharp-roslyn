@@ -293,7 +293,22 @@ public class BuildEnvironment
         }
         else
         {
-            return context.GitVersion();
+            try
+            {
+                return context.GitVersion();
+            }
+            catch
+            {
+                context.Warning("GitVersion failed. Setting default version 0.0.1-local");
+
+                return new GitVersion
+                {
+                    NuGetVersion = "0.0.1-local",
+                    AssemblySemVer = "0.0.1.0",
+                    InformationalVersion = "0.0.1-local",
+                    SemVer = "0.0.1-local"
+                };
+            }
         }
     }
 
