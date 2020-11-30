@@ -6,6 +6,8 @@ namespace OmniSharp.FileWatching
 
     public interface IFileSystemWatcher
     {
+        void Unwatch(string pathOrExtension);
+
         /// <summary>
         /// Call to watch a file or directory path for changes.
         /// </summary>
