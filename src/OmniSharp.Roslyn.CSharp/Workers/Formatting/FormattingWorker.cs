@@ -1,13 +1,19 @@
+#nullable enable
+
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.Extensions.Logging;
+using OmniSharp.Extensions;
 using OmniSharp.Models;
 using OmniSharp.Options;
+using OmniSharp.Roslyn.DocumentationComments;
 using OmniSharp.Roslyn.Utilities;
 
 namespace OmniSharp.Roslyn.CSharp.Workers.Formatting
@@ -16,13 +22,19 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Formatting
     {
         public static async Task<IEnumerable<LinePositionSpanTextChange>> GetFormattingChangesAfterKeystroke(Document document, int position, char character, OmniSharpOptions omnisharpOptions, ILoggerFactory loggerFactory)
         {
+            if (await GetDocumentationCommentChanges(document, position, character, omnisharpOptions) is LinePositionSpanTextChange change)
+            {
+                return new[] { change };
+            }
+
             if (character == '\n')
             {
                 // format previous line on new line
                 var text = await document.GetTextAsync();
                 var lines = text.Lines;
                 var targetLine = lines[lines.GetLineFromPosition(position).LineNumber - 1];
-                if (!string.IsNullOrWhiteSpace(targetLine.Text.ToString(targetLine.Span)))
+                Debug.Assert(targetLine.Text != null);
+                if (!string.IsNullOrWhiteSpace(targetLine.Text!.ToString(targetLine.Span)))
                 {
                     return await GetFormattingChanges(document, targetLine.Start, targetLine.End, omnisharpOptions, loggerFactory);
                 }
@@ -31,7 +43,8 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Formatting
             {
                 // format after ; and }
                 var root = await document.GetSyntaxRootAsync();
-                var node = FindFormatTarget(root, position);
+                Debug.Assert(root != null);
+                var node = FindFormatTarget(root!, position);
                 if (node != null)
                 {
                     return await GetFormattingChanges(document, node.FullSpan.Start, node.FullSpan.End, omnisharpOptions, loggerFactory);
@@ -41,7 +54,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Formatting
             return Enumerable.Empty<LinePositionSpanTextChange>();
         }
 
-        public static SyntaxNode FindFormatTarget(SyntaxNode root, int position)
+        public static SyntaxNode? FindFormatTarget(SyntaxNode root, int position)
         {
             // todo@jo - refine this
             var token = root.FindToken(position);
@@ -111,6 +124,41 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Formatting
             }
 
             return newDocument;
+        }
+
+        private static async Task<LinePositionSpanTextChange?> GetDocumentationCommentChanges(Document document, int position, char character, OmniSharpOptions omnisharpOptions)
+        {
+            if (character != '\n' && character != '/')
+            {
+                return null;
+            }
+
+            var text = await document.GetTextAsync();
+            var syntaxTree = await document.GetSyntaxTreeAsync();
+
+            var optionSet = await document.GetOptionsAsync();
+
+            var documentationService = document.GetDocumentationCommentSnippetService();
+            var snippet = character == '\n' ?
+                documentationService.GetDocumentationCommentSnippetOnEnterTyped(syntaxTree!, text, position, optionSet, CancellationToken.None) :
+                documentationService.GetDocumentationCommentSnippetOnCharacterTyped(syntaxTree!, text, position, optionSet, CancellationToken.None);
+
+            if (snippet == null)
+            {
+                return null;
+            }
+            else
+            {
+                var range = text.GetRangeFromSpan(snippet.Value.SpanToReplace);
+                return new LinePositionSpanTextChange
+                {
+                    NewText = snippet.Value.SnippetText,
+                    StartLine = range.Start.Line,
+                    StartColumn = range.Start.Column,
+                    EndLine = range.End.Line,
+                    EndColumn = range.End.Column
+                };
+            }
         }
     }
 }
