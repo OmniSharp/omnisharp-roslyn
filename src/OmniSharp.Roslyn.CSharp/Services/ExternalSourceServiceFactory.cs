@@ -32,7 +32,7 @@ namespace OmniSharp.Roslyn.CSharp.Services
         public CancellationToken CreateCancellationToken(OmniSharpOptions omniSharpOptions, int timeout)
         {
             var enableDecompilationSupport = omniSharpOptions.RoslynExtensionsOptions.EnableDecompilationSupport;
-            // since decompilation is slower, use a larger cancellation time (default is 2s per request)
+            // since decompilation is slower, use a larger cancellation time
             var cancellationTimeout = enableDecompilationSupport
                 ? timeout <= 10000 ? 10000 : timeout // minimum 10s for decompilation
                 : timeout; // request defined for metadata
