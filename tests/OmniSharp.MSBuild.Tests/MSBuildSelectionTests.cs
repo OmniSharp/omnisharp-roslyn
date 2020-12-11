@@ -260,19 +260,6 @@ namespace OmniSharp.MSBuild.Tests
         }
 
         [Fact]
-        public void CreateDefault_UseBundledOnly_False_LocatesAllInstances()
-        {
-            var configBuilder = new Microsoft.Extensions.Configuration.ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>()
-            {
-                ["useBundledOnly"] = "false"
-            });
-            var loggerFactory = new LoggerFactory();
-            var locator = MSBuildLocator.CreateDefault(loggerFactory, new AssemblyLoader(loggerFactory), configBuilder.Build());
-            var instances = locator.GetInstances();
-            Assert.True(instances.Length > 1, "When bundled only is set to false, there should be at least 2 discovered instances (e.g. VS / Mono) + bundled.");
-        }
-
-        [Fact]
         public void CreateDefault_UseBundledOnly_True_LocatesOnlyStandAloneInstance()
         {
             var configBuilder = new Microsoft.Extensions.Configuration.ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>()
