@@ -259,25 +259,31 @@ namespace OmniSharp.MSBuild.Tests
             msbuildLocator.DeleteFakeInstancesFolders();
         }
 
-        [Theory]
-        [InlineData(true, 1)]
-        [InlineData(false, 4)]
-        public void CreateDefault_Respects_UseBundledOnlySetting(bool useBundledOnly, int expectedLocatorCount)
+        [Fact]
+        public void CreateDefault_UseBundledOnly_False_LocatesAllInstances()
         {
             var configBuilder = new Microsoft.Extensions.Configuration.ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>()
             {
-                ["useBundledOnly"] = useBundledOnly.ToString()
+                ["useBundledOnly"] = "false"
             });
             var loggerFactory = new LoggerFactory();
             var locator = MSBuildLocator.CreateDefault(loggerFactory, new AssemblyLoader(loggerFactory), configBuilder.Build());
             var instances = locator.GetInstances();
-            Assert.Equal(expectedLocatorCount, instances.Length);
+            Assert.True(instances.Length > 1, "When bundled only is set to false, there should be at least 2 discovered instances (e.g. VS / Mono) + bundled.");
+        }
 
-            // if only a single one was found, it must be stand alone
-            if (expectedLocatorCount == 1)
+        [Fact]
+        public void CreateDefault_UseBundledOnly_True_LocatesOnlyStandAloneInstance()
+        {
+            var configBuilder = new Microsoft.Extensions.Configuration.ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>()
             {
-                Assert.Equal(DiscoveryType.StandAlone, instances[0].DiscoveryType);
-            }
+                ["useBundledOnly"] = "true"
+            });
+            var loggerFactory = new LoggerFactory();
+            var locator = MSBuildLocator.CreateDefault(loggerFactory, new AssemblyLoader(loggerFactory), configBuilder.Build());
+            var instances = locator.GetInstances();
+            Assert.Single(instances);
+            Assert.Equal(DiscoveryType.StandAlone, instances[0].DiscoveryType);
         }
 
         private static MSBuildInstance GetStandAloneMSBuildInstance()
