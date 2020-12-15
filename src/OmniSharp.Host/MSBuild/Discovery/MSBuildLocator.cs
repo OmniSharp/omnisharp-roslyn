@@ -46,13 +46,23 @@ namespace OmniSharp.MSBuild.Discovery
         }
 
         public static MSBuildLocator CreateDefault(ILoggerFactory loggerFactory, IAssemblyLoader assemblyLoader, IConfiguration msbuildConfiguration)
-            => new MSBuildLocator(loggerFactory, assemblyLoader,
+        {
+            var useBundledOnly = msbuildConfiguration.GetValue<bool>("UseBundledOnly");
+            if (useBundledOnly)
+            {
+                var logger = loggerFactory.CreateLogger<MSBuildLocator>();
+                logger.LogInformation("Because 'UseBundledOnly' is enabled in the configuration, OmniSharp will only use the bundled MSBuild.");
+                return CreateStandAlone(loggerFactory, assemblyLoader);
+            }
+
+            return new MSBuildLocator(loggerFactory, assemblyLoader,
                 ImmutableArray.Create<MSBuildInstanceProvider>(
                     new DevConsoleInstanceProvider(loggerFactory),
                     new VisualStudioInstanceProvider(loggerFactory),
                     new MonoInstanceProvider(loggerFactory),
                     new StandAloneInstanceProvider(loggerFactory),
                     new UserOverrideInstanceProvider(loggerFactory, msbuildConfiguration)));
+        }
 
         public static MSBuildLocator CreateStandAlone(ILoggerFactory loggerFactory, IAssemblyLoader assemblyLoader)
             => new MSBuildLocator(loggerFactory, assemblyLoader,
