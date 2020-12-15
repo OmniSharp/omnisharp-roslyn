@@ -69,8 +69,7 @@ namespace OmniSharp.MSBuild
                 return projectFile.PackageReferences;
             }
 
-            var lockFileFormat = new LockFileFormat();
-            var lockFile = lockFileFormat.Read(projectFile.ProjectAssetsFile);
+            var lockFile = LockFileUtilities.GetLockFile(projectFile.ProjectAssetsFile, NuGet.Common.NullLogger.Instance);
 
             return FindUnresolvedPackageReferencesInLockFile(projectFile, lockFile);
         }
