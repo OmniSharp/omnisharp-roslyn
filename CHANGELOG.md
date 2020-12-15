@@ -3,6 +3,14 @@ All changes to the project will be documented in this file.
 
 ## [1.37.5] - not yet released
 * Update Roslyn version to 3.9.0-2.20570.24 (PR: [#2022](https://github.com/OmniSharp/omnisharp-roslyn/pull/2022))
+* Gracefully handle GitVersion failure, and set a default version. (PR: [#2030](https://github.com/OmniSharp/omnisharp-roslyn/pull/2030))
+* Editorconfig improvements - do not lose state, trigger re-analysis on change ([#1955](https://github.com/OmniSharp/omnisharp-roslyn/issues/1955), [omnisharp-vscode#4165](https://github.com/OmniSharp/omnisharp-vscode/issues/4165), [omnisharp-vscode#4184](https://github.com/OmniSharp/omnisharp-vscode/issues/4184), PR: [#2028](https://github.com/OmniSharp/omnisharp-roslyn/pull/2028))
+* Add documentation comment creation to the FormatAfterKeystrokeService (PR: [#2023](https://github.com/OmniSharp/omnisharp-roslyn/pull/2023))
+* Raise default GotoDefinitionRequest timeout from 2s to 10s ([omnisharp-vscode#4260](https://github.com/OmniSharp/omnisharp-vscode/issues/4260), PR: [#2032](https://github.com/OmniSharp/omnisharp-roslyn/pull/2032))
+* Register languageServer as ILanguageServerFacade (PR: [#2025](https://github.com/OmniSharp/omnisharp-roslyn/pull/2025))
+* Workspace create file workaround (PR: [#2019](https://github.com/OmniSharp/omnisharp-roslyn/pull/2019))
+* Added `msbuild:UseBundledOnly` option to force the usage of bundled MSBuild (PR: [#2038](https://github.com/OmniSharp/omnisharp-roslyn/pull/2038))
+* Build NetCoreApp2.1 test project with .NET Core SDK 2.1 (PR: [#2040](https://github.com/OmniSharp/omnisharp-roslyn/pull/2040))
 
 ## [1.37.4] - 2020-11-20
 * Fixed global Mono MSBuild version reporting (PR: [#1988](https://github.com/OmniSharp/omnisharp-roslyn/pull/1988))
