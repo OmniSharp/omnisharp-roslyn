@@ -19,6 +19,13 @@ namespace OmniSharp.MSBuild.Discovery
             "Microsoft.Build.Tasks.Core",
             "Microsoft.Build.Utilities.Core");
 
+        private static readonly ImmutableHashSet<string> s_nuGetAssemblyNames = ImmutableHashSet.Create(StringComparer.OrdinalIgnoreCase,
+            "NuGet.Common",
+            "NuGet.Frameworks",
+            "NuGet.Packaging",
+            "NuGet.ProjectModel",
+            "NuGet.Versioning");
+
         private readonly ILogger _logger;
         private readonly IAssemblyLoader _assemblyLoader;
         private readonly ImmutableArray<MSBuildInstanceProvider> _providers;
@@ -40,7 +47,7 @@ namespace OmniSharp.MSBuild.Discovery
                 {
                     AppDomain.CurrentDomain.AssemblyResolve -= Resolve;
                 }
-                catch (AppDomainUnloadedException){ } // Ignore if the AppDomain is going away (like during a test in xunit)
+                catch (AppDomainUnloadedException) { } // Ignore if the AppDomain is going away (like during a test in xunit)
                 RegisteredInstance = null;
             }
         }
@@ -79,6 +86,12 @@ namespace OmniSharp.MSBuild.Discovery
             RegisteredInstance = instance ?? throw new ArgumentNullException(nameof(instance));
 
             foreach (var assemblyName in s_msbuildAssemblies)
+            {
+                LoadAssemblyByNameOnly(assemblyName);
+            }
+
+            // Load common NuGet assemblies if they are in the same folder as MSBuild
+            foreach (var assemblyName in s_nuGetAssemblyNames)
             {
                 LoadAssemblyByNameOnly(assemblyName);
             }
