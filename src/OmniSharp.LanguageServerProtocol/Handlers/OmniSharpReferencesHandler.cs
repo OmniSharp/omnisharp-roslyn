@@ -13,7 +13,7 @@ using OmniSharp.Models.FindUsages;
 
 namespace OmniSharp.LanguageServerProtocol.Handlers
 {
-    internal sealed class OmniSharpReferencesHandler : ReferencesHandler
+    internal sealed class OmniSharpReferencesHandler : ReferencesHandlerBase
     {
         public static IEnumerable<IJsonRpcHandler> Enumerate(RequestHandlers handlers)
         {
@@ -24,14 +24,12 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
         }
 
         private readonly Mef.IRequestHandler<FindUsagesRequest, QuickFixResponse> _findUsagesHandler;
+        private readonly DocumentSelector _documentSelector;
 
         public OmniSharpReferencesHandler(Mef.IRequestHandler<FindUsagesRequest, QuickFixResponse> findUsagesHandler, DocumentSelector documentSelector)
-            : base(new ReferenceRegistrationOptions()
-            {
-                DocumentSelector = documentSelector
-            })
         {
             _findUsagesHandler = findUsagesHandler;
+            _documentSelector = documentSelector;
         }
 
         public override async Task<LocationContainer> Handle(ReferenceParams request, CancellationToken token)
@@ -52,6 +50,14 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                 Uri = Helpers.ToUri(x.FileName),
                 Range = x.ToRange()
             }).ToArray() ?? new LocationContainer();
+        }
+
+        protected override ReferenceRegistrationOptions CreateRegistrationOptions(ReferenceCapability capability, ClientCapabilities clientCapabilities)
+        {
+            return new ReferenceRegistrationOptions()
+            {
+                DocumentSelector = _documentSelector
+            };
         }
     }
 }

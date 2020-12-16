@@ -426,7 +426,7 @@ namespace OmniSharp.Lsp.Tests
                 {
                     Text = file.Content.Code
                 }),
-                TextDocument = new VersionedTextDocumentIdentifier()
+                TextDocument = new OptionalVersionedTextDocumentIdentifier()
                 {
                     Uri = DocumentUri.From(file.FileName),
                     Version = 1
@@ -436,12 +436,7 @@ namespace OmniSharp.Lsp.Tests
             {
                 Position = new Position(point.Line, point.Offset),
                 TextDocument = new TextDocumentIdentifier(DocumentUri.From(file.FileName)),
-                Context = excludeDefinition
-                    ? new ReferenceContext()
-                    {
-                        IncludeDeclaration = false
-                    }
-                    : null
+                Context = new ReferenceContext { IncludeDeclaration = !excludeDefinition }
             }, CancellationToken);
         }
     }

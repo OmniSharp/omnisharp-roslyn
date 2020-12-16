@@ -20,7 +20,7 @@ using OmniSharp.Models.UpdateBuffer;
 
 namespace OmniSharp.LanguageServerProtocol.Handlers
 {
-    class OmniSharpTextDocumentSyncHandler : TextDocumentSyncHandler
+    class OmniSharpTextDocumentSyncHandler : TextDocumentSyncHandlerBase
     {
         public static IEnumerable<IJsonRpcHandler> Enumerate(
             RequestHandlers handlers,
@@ -44,6 +44,8 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
         private readonly Mef.IRequestHandler<FileOpenRequest, FileOpenResponse> _openHandler;
         private readonly Mef.IRequestHandler<FileCloseRequest, FileCloseResponse> _closeHandler;
         private readonly Mef.IRequestHandler<UpdateBufferRequest, object> _bufferHandler;
+        private readonly DocumentSelector _documentSelector;
+        private readonly TextDocumentSyncKind _documentSyncKind;
         private readonly OmniSharpWorkspace _workspace;
         private readonly DocumentVersions _documentVersions;
 
@@ -55,15 +57,12 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             TextDocumentSyncKind documentSyncKind,
             OmniSharpWorkspace workspace,
             DocumentVersions documentVersions)
-            : base(documentSyncKind, new TextDocumentSaveRegistrationOptions()
-            {
-                DocumentSelector = documentSelector,
-                IncludeText = true,
-            })
         {
             _openHandler = openHandler;
             _closeHandler = closeHandler;
             _bufferHandler = bufferHandler;
+            _documentSelector = documentSelector;
+            _documentSyncKind = documentSyncKind;
             _workspace = workspace;
             _documentVersions = documentVersions;
         }
@@ -117,7 +116,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             return Unit.Value;
         }
 
-        public async override Task<Unit> Handle(DidOpenTextDocumentParams notification, CancellationToken cancellationToken)
+        public override async Task<Unit> Handle(DidOpenTextDocumentParams notification, CancellationToken cancellationToken)
         {
             if (_openHandler != null)
             {
@@ -133,7 +132,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             return Unit.Value;
         }
 
-        public async override Task<Unit> Handle(DidCloseTextDocumentParams notification, CancellationToken cancellationToken)
+        public override async Task<Unit> Handle(DidCloseTextDocumentParams notification, CancellationToken cancellationToken)
         {
             if (_closeHandler != null)
             {
@@ -148,7 +147,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             return Unit.Value;
         }
 
-        public async override Task<Unit> Handle(DidSaveTextDocumentParams notification, CancellationToken cancellationToken)
+        public override async Task<Unit> Handle(DidSaveTextDocumentParams notification, CancellationToken cancellationToken)
         {
             if (Capability?.DidSave == true)
             {
@@ -161,6 +160,19 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                 _documentVersions.Reset(notification.TextDocument);
             }
             return Unit.Value;
+        }
+
+        protected override TextDocumentSyncRegistrationOptions CreateRegistrationOptions(SynchronizationCapability capability, ClientCapabilities clientCapabilities)
+        {
+            return new TextDocumentSyncRegistrationOptions()
+            {
+                DocumentSelector = _documentSelector,
+                Change = _documentSyncKind,
+                Save = new SaveOptions()
+                {
+                    IncludeText = true
+                }
+            };
         }
     }
 }
