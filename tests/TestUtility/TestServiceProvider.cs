@@ -82,7 +82,7 @@ namespace TestUtility
 
             var assemblyLoader = CreateAssemblyLoader(loggerFactory);
             var dotNetCliService = CreateDotNetCliService(dotNetCliVersion, loggerFactory, eventEmitter);
-            var configuration = CreateConfiguration(configurationData, dotNetCliService);
+            var configuration = CreateConfiguration(configurationData);
             var msbuildLocator = CreateMSBuildLocator(loggerFactory, assemblyLoader);
             var sharedTextWriter = CreateSharedTextWriter(testOutput);
             var analyzerAssemblyLoader = new AnalyzerAssemblyLoader();
@@ -106,7 +106,7 @@ namespace TestUtility
             eventEmitter = eventEmitter ?? NullEventEmitter.Instance;
 
             var dotNetCliService = CreateDotNetCliService(dotNetCliVersion, loggerFactory, eventEmitter);
-            var configuration = CreateConfiguration(configurationData, dotNetCliService);
+            var configuration = CreateConfiguration(configurationData);
             var sharedTextWriter = CreateSharedTextWriter(testOutput);
 
             return new TestServiceProvider(
@@ -117,13 +117,9 @@ namespace TestUtility
         private static IAssemblyLoader CreateAssemblyLoader(ILoggerFactory loggerFactory)
             => new AssemblyLoader(loggerFactory);
 
-        private static IConfigurationRoot CreateConfiguration(IConfiguration configurationData,
-            IDotNetCliService dotNetCliService)
+        private static IConfigurationRoot CreateConfiguration(IConfiguration configurationData)
         {
-            var info = dotNetCliService.GetInfo();
-            var msbuildSdksPath = Path.Combine(info.BasePath, "Sdks");
-
-            var builder = new Microsoft.Extensions.Configuration.ConfigurationBuilder();
+            var builder = new ConfigurationBuilder();
 
             if (configurationData != null)
             {
@@ -138,8 +134,7 @@ namespace TestUtility
             // within the appropriate .NET Core SDK.
             var msbuildProperties = new Dictionary<string, string>()
             {
-                [$"MSBuild:{nameof(MSBuildOptions.UseLegacySdkResolver)}"] = "true",
-                [$"MSBuild:{nameof(MSBuildOptions.MSBuildSDKsPath)}"] = msbuildSdksPath
+                [$"MSBuild:{nameof(MSBuildOptions.UseLegacySdkResolver)}"] = "true"
             };
 
             builder.AddInMemoryCollection(msbuildProperties);
