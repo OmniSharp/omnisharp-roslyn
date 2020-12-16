@@ -75,12 +75,8 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             return new TextDocumentAttributes(uri, uri.Scheme, langaugeId);
         }
 
-        public async override Task<Unit> Handle(DidChangeTextDocumentParams notification, CancellationToken cancellationToken)
+        public override async Task<Unit> Handle(DidChangeTextDocumentParams notification, CancellationToken cancellationToken)
         {
-            if (notification.ContentChanges == null)
-            {
-                return Unit.Value;
-            }
             var contentChanges = notification.ContentChanges.ToArray();
             if (contentChanges.Length == 1 && contentChanges[0].Range == null)
             {
@@ -90,6 +86,8 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                     FileName = Helpers.FromUri(notification.TextDocument.Uri),
                     Buffer = change.Text
                 });
+
+                _documentVersions.Update(notification.TextDocument);
 
                 return Unit.Value;
             }
