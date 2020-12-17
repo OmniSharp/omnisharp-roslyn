@@ -28,7 +28,7 @@ resources:
 
 variables:
   Verbosity: Diagnostic
-  DotNetVersion: "5.0.100"
+  DotNetVersion: "5.0.101"
   DotNetVersion2: "3.1.403"
   CakeVersion: "0.32.1"
   NuGetVersion: "4.9.2"
