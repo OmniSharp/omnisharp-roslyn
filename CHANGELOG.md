@@ -1,7 +1,7 @@
 # Changelog
 All changes to the project will be documented in this file.
 
-## [1.37.5] - not yet released
+## [1.37.5] - 2020-12-16
 * Update Roslyn version to 3.9.0-2.20570.24 (PR: [#2022](https://github.com/OmniSharp/omnisharp-roslyn/pull/2022))
 * Gracefully handle GitVersion failure, and set a default version. (PR: [#2030](https://github.com/OmniSharp/omnisharp-roslyn/pull/2030))
 * Editorconfig improvements - do not lose state, trigger re-analysis on change ([#1955](https://github.com/OmniSharp/omnisharp-roslyn/issues/1955), [omnisharp-vscode#4165](https://github.com/OmniSharp/omnisharp-vscode/issues/4165), [omnisharp-vscode#4184](https://github.com/OmniSharp/omnisharp-vscode/issues/4184), PR: [#2028](https://github.com/OmniSharp/omnisharp-roslyn/pull/2028))
