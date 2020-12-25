@@ -780,19 +780,63 @@ Task("PublishMonoBuilds")
     }
 });
 
-string PublishWindowsBuild(string project, BuildEnvironment env, BuildPlan plan, string configuration, string rid)
+Task("PublishNet5Builds")
+    .IsDependentOn("Setup")
+    .Does(() =>
+{
+    foreach (var project in buildPlan.HostProjects)
+    {
+        if (publishAll)
+        {
+            PublishBuild(project, env, buildPlan, configuration, "linux-x64", "net5.0");
+            PublishBuild(project, env, buildPlan, configuration, "osx-x64", "net5.0");
+            PublishBuild(project, env, buildPlan, configuration, "win7-x86", "net5.0");
+            PublishBuild(project, env, buildPlan, configuration, "win7-x64", "net5.0");
+            PublishBuild(project, env, buildPlan, configuration, "win10-arm64", "net5.0");
+        }
+        else if (Platform.Current.IsWindows)
+        {
+            if (Platform.Current.IsX86)
+            {
+                PublishBuild(project, env, buildPlan, configuration, "win7-x86", "net5.0");
+            }
+            else if (Platform.Current.IsX64)
+            {
+                PublishBuild(project, env, buildPlan, configuration, "win7-x64", "net5.0");
+            }
+            else
+            {
+                PublishBuild(project, env, buildPlan, configuration, "win10-arm64", "net5.0");
+            }
+        } 
+        else 
+        {
+            if (Platform.Current.IsMacOS)
+            {
+                PublishBuild(project, env, buildPlan, configuration, "osx-x64", "net5.0");
+            }
+            else
+            {
+                PublishBuild(project, env, buildPlan, configuration, "linux-x64", "net5.0");
+            }
+        }
+
+    }
+});
+
+string PublishBuild(string project, BuildEnvironment env, BuildPlan plan, string configuration, string rid, string framework)
 {
     var projectName = project + ".csproj";
     var projectFileName = CombinePaths(env.Folders.Source, project, projectName);
-    var outputFolder = CombinePaths(env.Folders.ArtifactsPublish, project, rid);
+    var outputFolder = CombinePaths(env.Folders.ArtifactsPublish, project, rid, framework);
 
     Information("Publishing {0} for {1}...", projectName, rid);
 
     try
     {
-        DotNetCorePublish(projectFileName, new DotNetCorePublishSettings()
+        var publishSettings = new DotNetCorePublishSettings()
         {
-            Framework = "net5.0",
+            Framework = framework,
             Runtime = rid, // TODO: With everything today do we need to publish this with a rid?  This appears to be legacy bit when we used to push for all supported dotnet core rids.
             Configuration = configuration,
             OutputDirectory = outputFolder,
@@ -804,7 +848,8 @@ string PublishWindowsBuild(string project, BuildEnvironment env, BuildPlan plan,
             ToolPath = env.DotNetCommand,
             WorkingDirectory = env.WorkingDirectory,
             Verbosity = DotNetCoreVerbosity.Minimal,
-        });
+        };
+        DotNetCorePublish(projectFileName, publishSettings);
     }
     catch
     {
@@ -817,7 +862,8 @@ string PublishWindowsBuild(string project, BuildEnvironment env, BuildPlan plan,
 
     CopyExtraDependencies(env, outputFolder);
 
-    Package(project, rid, outputFolder, env.Folders.ArtifactsPackage, env.Folders.DeploymentPackage);
+    var platformFolder = framework != "net472" ? $"{rid}-{framework}" : rid;
+    Package(project, platformFolder, outputFolder, env.Folders.ArtifactsPackage, env.Folders.DeploymentPackage);
 
     return outputFolder;
 }
@@ -833,9 +879,9 @@ Task("PublishWindowsBuilds")
 
         if (publishAll)
         {
-            var outputFolderX86 = PublishWindowsBuild(project, env, buildPlan, configuration, "win7-x86");
-            var outputFolderX64 = PublishWindowsBuild(project, env, buildPlan, configuration, "win7-x64");
-            var outputFolderArm64 = PublishWindowsBuild(project, env, buildPlan, configuration, "win10-arm64");
+            var outputFolderX86 = PublishBuild(project, env, buildPlan, configuration, "win7-x86", "net472");
+            var outputFolderX64 = PublishBuild(project, env, buildPlan, configuration, "win7-x64", "net472");
+            var outputFolderArm64 = PublishBuild(project, env, buildPlan, configuration, "win10-arm64", "net472");
 
             outputFolder = Platform.Current.IsX86
                 ? outputFolderX86
@@ -845,15 +891,15 @@ Task("PublishWindowsBuilds")
         }
         else if (Platform.Current.IsX86)
         {
-            outputFolder = PublishWindowsBuild(project, env, buildPlan, configuration, "win7-x86");
+            outputFolder = PublishBuild(project, env, buildPlan, configuration, "win7-x86", "net472");
         }
         else if (Platform.Current.IsX64)
         {
-            outputFolder = PublishWindowsBuild(project, env, buildPlan, configuration, "win7-x64");
+            outputFolder = PublishBuild(project, env, buildPlan, configuration, "win7-x64", "net472");
         }
         else
         {
-            outputFolder = PublishWindowsBuild(project, env, buildPlan, configuration, "win10-arm64");
+            outputFolder = PublishBuild(project, env, buildPlan, configuration, "win10-arm64", "net472");
         }
 
         CreateRunScript(project, outputFolder, env.Folders.ArtifactsScripts);
@@ -878,6 +924,7 @@ Task("PublishNuGet")
 Task("Publish")
     .IsDependentOn("Build")
     .IsDependentOn("PublishMonoBuilds")
+    .IsDependentOn("PublishNet5Builds")
     .IsDependentOn("PublishWindowsBuilds")
     .IsDependentOn("PublishNuGet");
 
