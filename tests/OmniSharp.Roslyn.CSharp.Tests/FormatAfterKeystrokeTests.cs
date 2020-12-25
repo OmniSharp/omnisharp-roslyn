@@ -440,6 +440,30 @@ $$
 }");
         }
 
+        [Theory(Skip = "https://github.com/dotnet/roslyn/issues/50130")]
+        [InlineData("file.cs")]
+        [InlineData("file.csx")]
+        public async Task LeadingSpacesNotRemovedOnNewline_IncompleteDeclaration(string fileName)
+        {
+            await VerifyChange(fileName, "\n",
+@"class C
+{
+    public void M()
+    {
+        var i 
+        $$
+    }
+}",
+@"class C
+{
+    public void M()
+    {
+        var i
+        
+    }
+}");
+        }
+
         private async Task VerifyNoChange(string fileName, string typedCharacter, string originalMarkup)
         {
             var (response, _) = await GetResponse(originalMarkup, typedCharacter, fileName);

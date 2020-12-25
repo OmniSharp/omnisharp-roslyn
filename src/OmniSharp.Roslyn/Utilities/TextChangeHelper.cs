@@ -48,13 +48,16 @@ namespace OmniSharp.Roslyn.Utilities
                             // becoming an extra blank line, we extend the span an addition 2 or 1 characters to replace
                             // that point.
                             int newLength = span.Length - (span.End - oEnd);
-                            if (newText.EndsWith("\r\n"))
+                            if (newText[newText.Length - 1] == '\n')
                             {
-                                newLength += 2;                                
-                            }
-                            else if (newText.EndsWith("\n"))
-                            {
-                                newLength += 1;
+                                // The new text ends with a newline. Check the original text to see what type of newline
+                                // it used at the end location and increase by that amount
+                                newLength += oldText[oEnd] switch
+                                {
+                                    '\r' => 2,
+                                    '\n' => 1,
+                                    _ => 0
+                                };
                             }
 
                             span = new TextSpan(span.Start, newLength);
@@ -93,7 +96,7 @@ namespace OmniSharp.Roslyn.Utilities
                         EndLine = linePositionSpan.End.Line,
                         EndColumn = linePositionSpan.End.Character
                     };
-                });
+                }).ToList();
         }
     }
 }
