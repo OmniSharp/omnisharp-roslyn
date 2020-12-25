@@ -9,12 +9,12 @@ namespace OmniSharp.Roslyn.Utilities
 {
     internal static class TextChanges
     {
-        public static async Task<IEnumerable<LinePositionSpanTextChange>> GetAsync(Document document, Document oldDocument)
+        public static async Task<IEnumerable<LinePositionSpanTextChange>> GetAsync(Document document, Document oldDocument, int? originalEnd = null)
         {
             var changes = await document.GetTextChangesAsync(oldDocument);
             var oldText = await oldDocument.GetTextAsync();
 
-            return Convert(oldText, changes);
+            return Convert(oldText, changes, originalEnd);
         }
 
         public static IEnumerable<LinePositionSpanTextChange> Convert(SourceText oldText, params TextChange[] changes)
@@ -22,7 +22,7 @@ namespace OmniSharp.Roslyn.Utilities
             return Convert(oldText, (IEnumerable<TextChange>)changes);
         }
 
-        public static IEnumerable<LinePositionSpanTextChange> Convert(SourceText oldText, IEnumerable<TextChange> changes)
+        public static IEnumerable<LinePositionSpanTextChange> Convert(SourceText oldText, IEnumerable<TextChange> changes, int? originalEnd = null)
         {
             return changes
                 .OrderByDescending(change => change.Span)
@@ -35,6 +35,32 @@ namespace OmniSharp.Roslyn.Utilities
 
                     if (newText.Length > 0)
                     {
+                        // Due to https://github.com/dotnet/roslyn/issues/50129, we might get a text change
+                        // that extends further than the requested end bound. This doesn't matter for every
+                        // scenario, but is annoying when hitting enter and having a trailing space on the previous
+                        // line, as that will end up removing the newly-added indentation on the current line.
+                        // For the cases that matters, originalEnd will be not null, and we reduce the end of the span
+                        // to be that location.
+                        if (originalEnd is int oEnd && span.Start < oEnd && span.End > oEnd)
+                        {
+                            // Since the new change is beyond the requested line, it's also going to end in either a
+                            // \r\n or \n, which replaces the newline on the current line. To avoid that newline
+                            // becoming an extra blank line, we extend the span an addition 2 or 1 characters to replace
+                            // that point.
+                            int newLength = span.Length - (span.End - oEnd);
+                            if (newText.EndsWith("\r\n"))
+                            {
+                                newLength += 2;                                
+                            }
+                            else if (newText.EndsWith("\n"))
+                            {
+                                newLength += 1;
+                            }
+
+                            span = new TextSpan(span.Start, newLength);
+                        }
+
+
                         // Roslyn computes text changes on character arrays. So it might happen that a
                         // change starts inbetween \r\n which is OK when you are offset-based but a problem
                         // when you are line,column-based. This code extends text edits which just overlap

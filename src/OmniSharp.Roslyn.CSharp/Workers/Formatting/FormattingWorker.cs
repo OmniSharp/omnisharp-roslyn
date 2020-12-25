@@ -36,7 +36,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Formatting
                 Debug.Assert(targetLine.Text != null);
                 if (!string.IsNullOrWhiteSpace(targetLine.Text!.ToString(targetLine.Span)))
                 {
-                    return await GetFormattingChanges(document, targetLine.Start, targetLine.End, omnisharpOptions, loggerFactory);
+                    return await GetFormattingChanges(document, targetLine.Start, targetLine.End, omnisharpOptions, loggerFactory, trimExtendingChanges: true);
                 }
             }
             else if (character == '}' || character == ';')
@@ -47,7 +47,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Formatting
                 var node = FindFormatTarget(root!, position);
                 if (node != null)
                 {
-                    return await GetFormattingChanges(document, node.FullSpan.Start, node.FullSpan.End, omnisharpOptions, loggerFactory);
+                    return await GetFormattingChanges(document, node.FullSpan.Start, node.FullSpan.End, omnisharpOptions, loggerFactory, trimExtendingChanges: false);
                 }
             }
 
@@ -91,10 +91,10 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Formatting
             return null;
         }
 
-        public static async Task<IEnumerable<LinePositionSpanTextChange>> GetFormattingChanges(Document document, int start, int end, OmniSharpOptions omnisharpOptions, ILoggerFactory loggerFactory)
+        public static async Task<IEnumerable<LinePositionSpanTextChange>> GetFormattingChanges(Document document, int start, int end, OmniSharpOptions omnisharpOptions, ILoggerFactory loggerFactory, bool trimExtendingChanges = false)
         {
             var newDocument = await FormatDocument(document, omnisharpOptions, loggerFactory, TextSpan.FromBounds(start, end));
-            return await TextChanges.GetAsync(newDocument, document);
+            return await TextChanges.GetAsync(newDocument, document, trimExtendingChanges ? end : (int?)null);
         }
 
         public static async Task<string> GetFormattedText(Document document, OmniSharpOptions omnisharpOptions, ILoggerFactory loggerFactory)

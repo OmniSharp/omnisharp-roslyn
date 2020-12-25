@@ -364,6 +364,82 @@ $$
 }");
         }
 
+        [Theory]
+        [InlineData("file.cs")]
+        [InlineData("file.csx")]
+        public async Task LeadingSpacesNotRemovedOnNewline_ExtraWhitespaceOnPreviousLine(string fileName)
+        {
+            await VerifyChange(fileName, "\n",
+@"class C
+{
+    public void M()
+    {
+        // There is a space after the ; here
+        var i = 1; 
+        $$
+    }
+}",
+@"class C
+{
+    public void M()
+    {
+        // There is a space after the ; here
+        var i = 1;
+        
+    }
+}");
+        }
+
+        [Theory]
+        [InlineData("file.cs")]
+        [InlineData("file.csx")]
+        public async Task LeadingSpacesNotRemovedOnNewline_FormattingChangesOnPreviousLine(string fileName)
+        {
+            await VerifyChange(fileName, "\n",
+@"class C
+{
+    public void M()
+    {
+        var i =1;
+        $$
+    }
+}",
+@"class C
+{
+    public void M()
+    {
+        var i = 1;
+        
+    }
+}");
+        }
+
+        [Theory]
+        [InlineData("file.cs")]
+        [InlineData("file.csx")]
+        public async Task LeadingSpacesNotRemovedOnNewline_NewlinesWithSpaceAfter(string fileName)
+        {
+            await VerifyChange(fileName, "\n",
+@"class C
+{
+    public void M()
+    {
+        var i =1;
+        $$
+        
+    }
+}",
+@"class C
+{
+    public void M()
+    {
+        var i = 1;
+        
+        
+    }
+}");
+        }
+
         private async Task VerifyNoChange(string fileName, string typedCharacter, string originalMarkup)
         {
             var (response, _) = await GetResponse(originalMarkup, typedCharacter, fileName);
