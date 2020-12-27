@@ -27,19 +27,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Formatting
                 return new[] { change };
             }
 
-            if (character == '\n')
-            {
-                // format previous line on new line
-                var text = await document.GetTextAsync();
-                var lines = text.Lines;
-                var targetLine = lines[lines.GetLineFromPosition(position).LineNumber - 1];
-                Debug.Assert(targetLine.Text != null);
-                if (!string.IsNullOrWhiteSpace(targetLine.Text!.ToString(targetLine.Span)))
-                {
-                    return await GetFormattingChanges(document, targetLine.Start, targetLine.End, omnisharpOptions, loggerFactory);
-                }
-            }
-            else if (character == '}' || character == ';')
+            if (character == '}' || character == ';')
             {
                 // format after ; and }
                 var root = await document.GetSyntaxRootAsync();
