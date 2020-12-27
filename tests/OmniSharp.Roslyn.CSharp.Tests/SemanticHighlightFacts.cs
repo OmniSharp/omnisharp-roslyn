@@ -1,6 +1,5 @@
 using System;
 using System.Threading.Tasks;
-using System.Windows.Input;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models.SemanticHighlight;
 using OmniSharp.Models.V2;
@@ -222,6 +221,44 @@ static class C1
             );
         }
 
+        [Fact]
+        public async Task SemanticHighlightRecordName()
+        {
+            var testFile = new TestFile("a.cs", @"
+R1 r1 = new R1(string.Empty, 1);
+record R1(string S, int I);
+");
+
+            var highlights = await GetSemanticHighlightsForFileAsync(testFile);
+
+            AssertSyntax(highlights, testFile.Content.Code, 0,
+                ClassName("R1"),
+                Local("r1"),
+                Operator("="),
+                Keyword("new"),
+                ClassName("R1"),
+                Punctuation("("),
+                Keyword("string"),
+                Operator("."),
+                Field("Empty", SemanticHighlightModifier.Static),
+                Punctuation(","),
+                Number("1"),
+                Punctuation(")"),
+                Punctuation(";"),
+
+                Keyword("record"),
+                ClassName("R1"),
+                Punctuation("("),
+                Keyword("string"),
+                Parameter("S"),
+                Punctuation(","),
+                Keyword("int"),
+                Parameter("I"),
+                Punctuation(")"),
+                Punctuation(";")
+            );
+        }
+
         private Task<SemanticHighlightSpan[]> GetSemanticHighlightsForFileAsync(TestFile testFile)
         {
             return GetSemanticHighlightsAsync(testFile, range: null);
@@ -301,6 +338,7 @@ static class C1
         private static (SemanticHighlightClassification type, string text, SemanticHighlightModifier[] modifiers) ClassName(string text, params SemanticHighlightModifier[] modifiers) => (SemanticHighlightClassification.ClassName, text, modifiers);
         private static (SemanticHighlightClassification type, string text, SemanticHighlightModifier[] modifiers) Field(string text, params SemanticHighlightModifier[] modifiers) => (SemanticHighlightClassification.FieldName, text, modifiers);
         private static (SemanticHighlightClassification type, string text, SemanticHighlightModifier[] modifiers) Identifier(string text, params SemanticHighlightModifier[] modifiers) => (SemanticHighlightClassification.Identifier, text, modifiers);
+        private static (SemanticHighlightClassification type, string text, SemanticHighlightModifier[] modifiers) Parameter(string text, params SemanticHighlightModifier[] modifiers) => (SemanticHighlightClassification.ParameterName, text, modifiers);
         private static (SemanticHighlightClassification type, string text, SemanticHighlightModifier[] modifiers) NamespaceName(string text, params SemanticHighlightModifier[] modifiers) => (SemanticHighlightClassification.NamespaceName, text, modifiers);
         private static (SemanticHighlightClassification type, string text, SemanticHighlightModifier[] modifiers) Keyword(string text, params SemanticHighlightModifier[] modifiers) => (SemanticHighlightClassification.Keyword, text, modifiers);
         private static (SemanticHighlightClassification type, string text, SemanticHighlightModifier[] modifiers) ControlKeyword(string text, params SemanticHighlightModifier[] modifiers) => (SemanticHighlightClassification.ControlKeyword, text, modifiers);
