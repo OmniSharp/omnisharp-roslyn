@@ -12,7 +12,7 @@ using Microsoft.CodeAnalysis.Text;
 namespace OmniSharp.Roslyn.DocumentationComments
 {
     /// <summary>
-    /// Proxy service for Microsoft.CodeAnalysis.DocumentationComments.IDocumentationCommentSnippetService.
+    /// Proxy service for Microsoft.CodeAnalysis.DocumentationComments.IDocumentationCommentSnippetService. 
     /// Implementation was based on the service as of this commit: 2834b74995bb66a7cb19cb09069c17812819afdc
     /// See: https://github.com/dotnet/roslyn/blob/2834b74995bb66a7cb19cb09069c17812819afdc/src/Features/Core/Portable/DocumentationComments/IDocumentationCommentSnippetService.cs
     /// </summary>
