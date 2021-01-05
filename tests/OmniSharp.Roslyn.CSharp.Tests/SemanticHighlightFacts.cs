@@ -20,6 +20,22 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         protected override string EndpointName => OmniSharpEndpoints.V2.Highlight;
 
         [Fact]
+        public async Task InvalidPositionDoesNotThrow()
+        {
+            var testFile = new TestFile("a.cs", @"
+namespace N1
+{
+    class C1 { int n = true; }
+}
+");
+
+            var line = -1;
+            var highlights = await GetSemanticHighlightsForLineAsync(testFile, line);
+
+            Assert.Empty(highlights);
+        }
+
+        [Fact]
         public async Task SemanticHighlightSingleLine()
         {
             var testFile = new TestFile("a.cs", @"
