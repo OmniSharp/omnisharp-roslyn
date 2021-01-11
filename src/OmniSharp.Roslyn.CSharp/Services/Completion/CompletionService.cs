@@ -63,7 +63,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
             { WellKnownTags.Method, CompletionItemKind.Method },
             { WellKnownTags.Module, CompletionItemKind.Module },
             { WellKnownTags.Operator, CompletionItemKind.Operator },
-            { WellKnownTags.Parameter, CompletionItemKind.Value },
+            { WellKnownTags.Parameter, CompletionItemKind.Variable },
             { WellKnownTags.Property, CompletionItemKind.Property },
             { WellKnownTags.RangeVariable, CompletionItemKind.Variable },
             { WellKnownTags.Reference, CompletionItemKind.Reference },
