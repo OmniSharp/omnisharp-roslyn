@@ -1,7 +1,7 @@
 # Changelog
 All changes to the project will be documented in this file.
 
-## [1.37.6] - 2021-01-18
+## [1.37.6] - 2021-01-19
 * Handle records in syntax highlighting ([#2048](https://github.com/OmniSharp/omnisharp-roslyn/issues/2048), PR: [#2049](https://github.com/OmniSharp/omnisharp-roslyn/pull/2049))
 * Remove formatting on new line (PR: [#2053](https://github.com/OmniSharp/omnisharp-roslyn/pull/2053))
 * Validate highlighting ranges in semantic highlighting requests (PR: [#2055](https://github.com/OmniSharp/omnisharp-roslyn/pull/2055))
