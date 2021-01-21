@@ -26,8 +26,9 @@ namespace OmniSharp.MSBuild.Logging
 
         private void OnError(object sender, Microsoft.Build.Framework.BuildErrorEventArgs args)
         {
-            _logger.LogError(args.Message);
-            _diagnostics.Add(MSBuildDiagnostic.CreateFrom(args));
+            var msBuildDiagnostic = MSBuildDiagnostic.CreateFrom(args);
+            _logger.LogError(msBuildDiagnostic.Message);
+            _diagnostics.Add(msBuildDiagnostic);
         }
 
         private void OnWarning(object sender, Microsoft.Build.Framework.BuildWarningEventArgs args)
