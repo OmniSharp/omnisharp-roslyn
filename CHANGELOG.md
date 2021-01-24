@@ -1,6 +1,14 @@
 # Changelog
 All changes to the project will be documented in this file.
 
+## [1.37.6] - 2021-01-19
+* Handle records in syntax highlighting ([#2048](https://github.com/OmniSharp/omnisharp-roslyn/issues/2048), PR: [#2049](https://github.com/OmniSharp/omnisharp-roslyn/pull/2049))
+* Remove formatting on new line (PR: [#2053](https://github.com/OmniSharp/omnisharp-roslyn/pull/2053))
+* Validate highlighting ranges in semantic highlighting requests (PR: [#2055](https://github.com/OmniSharp/omnisharp-roslyn/pull/2055))
+* Delay project system init to avoid solution update race (PR: [#2057](https://github.com/OmniSharp/omnisharp-roslyn/pull/2057))
+* Use "variable" kind for parameter completion ([#2060](https://github.com/OmniSharp/omnisharp-roslyn/issues/2060), PR: [#2061](https://github.com/OmniSharp/omnisharp-roslyn/pull/2061))
+* Log request when response fails ([#2064](https://github.com/OmniSharp/omnisharp-roslyn/pull/2064))
+
 ## [1.37.5] - 2020-12-16
 * Update Roslyn version to 3.9.0-2.20570.24 (PR: [#2022](https://github.com/OmniSharp/omnisharp-roslyn/pull/2022))
 * Gracefully handle GitVersion failure, and set a default version. (PR: [#2030](https://github.com/OmniSharp/omnisharp-roslyn/pull/2030))
