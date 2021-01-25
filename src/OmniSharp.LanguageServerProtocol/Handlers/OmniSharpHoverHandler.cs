@@ -3,13 +3,14 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using OmniSharp.Extensions.JsonRpc;
+using OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities;
 using OmniSharp.Extensions.LanguageServer.Protocol.Document;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OmniSharp.Models;
 
 namespace OmniSharp.LanguageServerProtocol.Handlers
 {
-    class OmniSharpHoverHandler : HoverHandler
+    class OmniSharpHoverHandler : HoverHandlerBase
     {
         public static IEnumerable<IJsonRpcHandler> Enumerate(RequestHandlers handlers)
         {
@@ -20,17 +21,15 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
         }
 
         private readonly Mef.IRequestHandler<QuickInfoRequest, QuickInfoResponse> _definitionHandler;
+        private readonly DocumentSelector _documentSelector;
 
         public OmniSharpHoverHandler(Mef.IRequestHandler<QuickInfoRequest, QuickInfoResponse> definitionHandler, DocumentSelector documentSelector)
-            : base(new HoverRegistrationOptions()
-            {
-                DocumentSelector = documentSelector
-            })
         {
             _definitionHandler = definitionHandler;
+            _documentSelector = documentSelector;
         }
 
-        public async override Task<Hover> Handle(HoverParams request, CancellationToken token)
+        public override async Task<Hover> Handle(HoverParams request, CancellationToken token)
         {
             var omnisharpRequest = new QuickInfoRequest()
             {
@@ -46,6 +45,14 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                 // TODO: Range?  We don't currently have that!
                 // Range =
                 Contents = new MarkedStringsOrMarkupContent(new MarkupContent() { Value = omnisharpResponse.Markdown, Kind = MarkupKind.Markdown })
+            };
+        }
+
+        protected override HoverRegistrationOptions CreateRegistrationOptions(HoverCapability capability, ClientCapabilities clientCapabilities)
+        {
+            return new HoverRegistrationOptions()
+            {
+                DocumentSelector = _documentSelector
             };
         }
     }

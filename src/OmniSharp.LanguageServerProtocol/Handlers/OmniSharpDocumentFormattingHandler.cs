@@ -13,7 +13,7 @@ using OmniSharp.Models.V2.CodeStructure;
 
 namespace OmniSharp.LanguageServerProtocol.Handlers
 {
-    internal sealed class OmniSharpDocumentFormattingHandler : DocumentFormattingHandler
+    internal sealed class OmniSharpDocumentFormattingHandler : DocumentFormattingHandlerBase
     {
         public static IEnumerable<IJsonRpcHandler> Enumerate(RequestHandlers handlers)
         {
@@ -24,17 +24,15 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
         }
 
         private readonly Mef.IRequestHandler<CodeFormatRequest, CodeFormatResponse> _codeFormatHandler;
+        private readonly DocumentSelector _documentSelector;
 
-        public OmniSharpDocumentFormattingHandler(Mef.IRequestHandler<CodeFormatRequest, CodeFormatResponse> codeFormatHandler, DocumentSelector documentSelector) : base(
-            new DocumentFormattingRegistrationOptions()
-            {
-                DocumentSelector = documentSelector,
-            })
+        public OmniSharpDocumentFormattingHandler(Mef.IRequestHandler<CodeFormatRequest, CodeFormatResponse> codeFormatHandler, DocumentSelector documentSelector)
         {
             _codeFormatHandler = codeFormatHandler;
+            _documentSelector = documentSelector;
         }
 
-        public async override Task<TextEditContainer> Handle(DocumentFormattingParams request, CancellationToken cancellationToken)
+        public override async Task<TextEditContainer> Handle(DocumentFormattingParams request, CancellationToken cancellationToken)
         {
             var omnisharpRequest = new CodeFormatRequest()
             {
@@ -48,6 +46,14 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                 NewText = change.NewText,
                 Range = new Range(new Position(change.StartLine, change.StartColumn), new Position(change.EndLine, change.EndColumn))
             }).ToArray();
+        }
+
+        protected override DocumentFormattingRegistrationOptions CreateRegistrationOptions(DocumentFormattingCapability capability, ClientCapabilities clientCapabilities)
+        {
+            return new DocumentFormattingRegistrationOptions()
+            {
+                DocumentSelector = _documentSelector,
+            };
         }
     }
 }

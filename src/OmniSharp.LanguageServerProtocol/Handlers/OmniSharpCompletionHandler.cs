@@ -11,7 +11,7 @@ using OmniSharp.Models.AutoComplete;
 
 namespace OmniSharp.LanguageServerProtocol.Handlers
 {
-    class OmniSharpCompletionHandler : CompletionHandler
+    class OmniSharpCompletionHandler : CompletionHandlerBase
     {
         public static IEnumerable<IJsonRpcHandler> Enumerate(RequestHandlers handlers)
         {
@@ -23,6 +23,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
         }
 
         private readonly Mef.IRequestHandler<AutoCompleteRequest, IEnumerable<AutoCompleteResponse>> _autoCompleteHandler;
+        private readonly DocumentSelector _documentSelector;
 
         private static readonly IDictionary<string, CompletionItemKind> _kind = new Dictionary<string, CompletionItemKind>{
             // types
@@ -40,7 +41,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             // members
             { "Const", CompletionItemKind.Constant },
             { "EnumMember", CompletionItemKind.Enum },
-            { "Event", CompletionItemKind.Event }, 
+            { "Event", CompletionItemKind.Event },
             { "Field", CompletionItemKind.Field },
             { "Method", CompletionItemKind.Method },
             { "Property", CompletionItemKind.Property },
@@ -65,15 +66,9 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
         }
 
         public OmniSharpCompletionHandler(Mef.IRequestHandler<AutoCompleteRequest, IEnumerable<AutoCompleteResponse>> autoCompleteHandler, DocumentSelector documentSelector)
-            : base(new CompletionRegistrationOptions()
-            {
-                DocumentSelector = documentSelector,
-                // TODO: Come along and add a service for getting autocompletion details after the fact.
-                ResolveProvider = false,
-                TriggerCharacters = new[] { ".", },
-            })
         {
             _autoCompleteHandler = autoCompleteHandler;
+            _documentSelector = documentSelector;
         }
 
         public async override Task<CompletionList> Handle(CompletionParams request, CancellationToken token)
@@ -126,7 +121,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                 if (overloadCount > 0)
                 {
                     // indicate that there is more
-                    suggestion.Detail = $"{suggestion.Detail} (+ {overloadCount} overload(s))";
+                    suggestion = suggestion with { Detail = $"{suggestion.Detail} (+ {overloadCount} overload(s))" };
                 }
 
                 result.Add(suggestion);
@@ -138,6 +133,17 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
         public override Task<CompletionItem> Handle(CompletionItem request, CancellationToken cancellationToken)
         {
             return Task.FromResult(request);
+        }
+
+        protected override CompletionRegistrationOptions CreateRegistrationOptions(CompletionCapability capability, ClientCapabilities clientCapabilities)
+        {
+            return new CompletionRegistrationOptions()
+            {
+                DocumentSelector = _documentSelector,
+                // TODO: Come along and add a service for getting autocompletion details after the fact.
+                ResolveProvider = false,
+                TriggerCharacters = new[] {".",},
+            };
         }
     }
 }
