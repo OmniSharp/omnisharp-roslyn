@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using OmniSharp.Extensions.LanguageServer.Protocol;
 using OmniSharp.Extensions.LanguageServer.Protocol.Document;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
@@ -228,14 +229,19 @@ namespace OmniSharp.Lsp.Tests
             var project = await AddProjectToWorkspace(testProject);
             var document = project.Documents.First();
 
-            await Client.ExecuteCommand(Command.Create("omnisharp/executeCodeAction")
-                .WithArguments(new
-                {
+            var resolved = await Client.ResolveCodeAction(new CodeAction
+            {
+                Title = "N/A",
+                Data = JObject.FromObject(new {
                     Uri = DocumentUri.FromFileSystemPath(document.FilePath),
                     Identifier = "Generate class 'Z' in new file",
                     Name = "N/A",
                     Range = new Range((8, 12), (8, 12)),
-                }), CancellationToken);
+                })
+            });
+
+            await Server.Workspace.ApplyWorkspaceEdit(
+                new ApplyWorkspaceEditParams { Edit = resolved.Edit });
 
             var updatedDocument = OmniSharpTestHost.Workspace.GetDocument(Path.Combine(Path.GetDirectoryName(document.FilePath), "Z.cs"));
             var updateDocumentText = await updatedDocument.GetTextAsync(CancellationToken);
@@ -258,14 +264,19 @@ namespace OmniSharp.Lsp.Tests
             var project = await AddProjectToWorkspace(testProject);
             var document = project.Documents.First();
 
-            await Client.ExecuteCommand(Command.Create("omnisharp/executeCodeAction")
-                .WithArguments(new
-                {
+            var resolved = await Client.ResolveCodeAction(new CodeAction
+            {
+                Title = "N/A",
+                Data = JObject.FromObject(new {
                     Uri = DocumentUri.FromFileSystemPath(document.FilePath),
                     Identifier = "Rename file to Class1.cs",
                     Name = "N/A",
                     Range = new Range((4, 10), (4, 10)),
-                }), CancellationToken);
+                })
+            });
+
+            await Server.Workspace.ApplyWorkspaceEdit(
+                new ApplyWorkspaceEditParams { Edit = resolved.Edit });
 
             Assert.Empty(OmniSharpTestHost.Workspace.GetDocuments(document.FilePath));
 
@@ -281,9 +292,18 @@ namespace OmniSharp.Lsp.Tests
                 configurationData: TestHelpers.GetConfigurationDataWithAnalyzerConfig(isAnalyzersEnabled));
             Assert.Contains(refactoringName, refactorings.Select(x => x.Title), StringComparer.OrdinalIgnoreCase);
 
-            var command = refactorings
-                .First(action => action.Title.Equals(refactoringName, StringComparison.OrdinalIgnoreCase)).Command;
-            return await RunRefactoringsAsync(code, command);
+            var codeAction = refactorings.First(action => action.Title.Equals(refactoringName, StringComparison.OrdinalIgnoreCase));
+
+            var bufferPath =
+                $"{Directory.GetCurrentDirectory()}{Path.DirectorySeparatorChar}somepath{Path.DirectorySeparatorChar}buffer.cs";
+            var testFile = new TestFile(bufferPath, code);
+
+            OmniSharpTestHost.AddFilesToWorkspace(testFile);
+
+            await Server.Workspace.ApplyWorkspaceEdit(
+                new ApplyWorkspaceEditParams { Edit = codeAction.Edit });
+
+            return new[] {testFile};
         }
 
         private async Task<IEnumerable<string>> FindRefactoringNamesAsync(string code, bool isAnalyzersEnabled = true)
@@ -313,19 +333,6 @@ namespace OmniSharp.Lsp.Tests
             }, CancellationToken);
 
             return response.Where(z => z.IsCodeAction).Select(z => z.CodeAction);
-        }
-
-        private async Task<IEnumerable<TestFile>> RunRefactoringsAsync(string code, Command command)
-        {
-            var bufferPath =
-                $"{Directory.GetCurrentDirectory()}{Path.DirectorySeparatorChar}somepath{Path.DirectorySeparatorChar}buffer.cs";
-            var testFile = new TestFile(bufferPath, code);
-
-            OmniSharpTestHost.AddFilesToWorkspace(testFile);
-
-            await Client.Workspace.ExecuteCommand(command, CancellationToken);
-
-            return new[] {testFile};
         }
 
         private static Models.V2.Range GetSelection(TextRange range)
