@@ -81,7 +81,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             foreach (var ca in omnisharpResponse.CodeActions)
             {
                 CodeActionKind kind;
-                if (ca.Identifier.StartsWith("using ")) { kind = CodeActionKind.SourceOrganizeImports; }
+                if (ca.Identifier.StartsWith("using ")) { kind = CodeActionKind.QuickFix; }
                 else if (ca.Identifier.StartsWith("Inline ")) { kind = CodeActionKind.RefactorInline; }
                 else if (ca.Identifier.StartsWith("Extract ")) { kind = CodeActionKind.RefactorExtract; }
                 else if (ca.Identifier.StartsWith("Change ")) { kind = CodeActionKind.QuickFix; }
