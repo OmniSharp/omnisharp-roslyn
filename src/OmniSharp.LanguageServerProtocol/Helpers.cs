@@ -252,6 +252,16 @@ namespace OmniSharp.LanguageServerProtocol
                 )
             };
         }
+
+        public static LinePositionSpanTextChange FromTextEdit(TextEdit textEdit)
+            => new LinePositionSpanTextChange
+            {
+                NewText = textEdit.NewText,
+                StartLine = textEdit.Range.Start.Line,
+                EndLine = textEdit.Range.End.Line,
+                StartColumn = textEdit.Range.Start.Character,
+                EndColumn = textEdit.Range.End.Character
+            };
     }
 
     public static class CommandExtensions
@@ -353,7 +363,7 @@ namespace OmniSharp.LanguageServerProtocol
             T2 arg2 = default;
             if (args.Count > 1) arg2 = args[1].ToObject<T2>(serializer.JsonSerializer);
 
-            return ( arg1!, arg2! );
+            return (arg1!, arg2!);
         }
 
         private static (T arg1, T2 arg2, T3 arg3) ExtractArguments<T, T2, T3>(JArray args, ISerializer serializer)
@@ -369,7 +379,7 @@ namespace OmniSharp.LanguageServerProtocol
             T3 arg3 = default;
             if (args.Count > 2) arg3 = args[2].ToObject<T3>(serializer.JsonSerializer);
 
-            return ( arg1!, arg2!, arg3! );
+            return (arg1!, arg2!, arg3!);
         }
 
         private static (T arg1, T2 arg2, T3 arg3, T4 arg4) ExtractArguments<T, T2, T3, T4>(JArray args, ISerializer serializer)
@@ -388,7 +398,7 @@ namespace OmniSharp.LanguageServerProtocol
             T4 arg4 = default;
             if (args.Count > 3) arg4 = args[3].ToObject<T4>(serializer.JsonSerializer);
 
-            return ( arg1!, arg2!, arg3!, arg4! );
+            return (arg1!, arg2!, arg3!, arg4!);
         }
 
         private static (T arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5) ExtractArguments<T, T2, T3, T4, T5>(JArray args, ISerializer serializer)
@@ -410,7 +420,7 @@ namespace OmniSharp.LanguageServerProtocol
             T5 arg5 = default;
             if (args.Count > 4) arg5 = args[4].ToObject<T5>(serializer.JsonSerializer);
 
-            return ( arg1!, arg2!, arg3!, arg4!, arg5! );
+            return (arg1!, arg2!, arg3!, arg4!, arg5!);
         }
 
         private static (T arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6) ExtractArguments<T, T2, T3, T4, T5, T6>(JArray args, ISerializer serializer)
@@ -435,7 +445,7 @@ namespace OmniSharp.LanguageServerProtocol
             T6 arg6 = default;
             if (args.Count > 5) arg6 = args[5].ToObject<T6>(serializer.JsonSerializer);
 
-            return ( arg1!, arg2!, arg3!, arg4!, arg5!, arg6! );
+            return (arg1!, arg2!, arg3!, arg4!, arg5!, arg6!);
         }
     }
 }
