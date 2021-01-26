@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Newtonsoft.Json.Linq;
 using OmniSharp.Extensions.JsonRpc;
 using OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities;
 using OmniSharp.Extensions.LanguageServer.Protocol.Document;
@@ -20,7 +21,6 @@ using CompletionItemTag = OmniSharp.Extensions.LanguageServer.Protocol.Models.Co
 using OmnisharpCompletionItemTag = OmniSharp.Models.v1.Completion.CompletionItemTag;
 using InsertTextFormat = OmniSharp.Extensions.LanguageServer.Protocol.Models.InsertTextFormat;
 using OmnisharpInsertTextFormat = OmniSharp.Models.v1.Completion.InsertTextFormat;
-using Newtonsoft.Json.Linq;
 
 #nullable enable
 
