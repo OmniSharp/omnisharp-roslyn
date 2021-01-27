@@ -20,7 +20,7 @@ namespace OmniSharp.Lsp.Tests
         {
         }
 
-        private const int ImportCompletionTimeout = 1000;
+        private const int ImportCompletionTimeout = 5000;
 
         [Theory]
         [InlineData("dummy.cs")]
