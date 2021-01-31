@@ -12,6 +12,7 @@ using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OmniSharp.LanguageServerProtocol.Handlers;
 using OmniSharp.Models;
 using OmniSharp.Models.Diagnostics;
+using OmniSharp.Models.Metadata;
 
 namespace OmniSharp.LanguageServerProtocol
 {
@@ -96,7 +97,41 @@ namespace OmniSharp.LanguageServerProtocol
         }
 
         public static DocumentUri ToUri(string fileName) => DocumentUri.File(fileName);
-        public static string FromUri(DocumentUri uri) => uri.GetFileSystemPath().Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
+
+        public static DocumentUri ToUri(MetadataSource mds) =>
+            new Uri($"omnisharp:/metadata/Project/{mds.ProjectName}/Assembly/{mds.AssemblyName}/Symbol/{mds.TypeName}.cs");
+
+        public static string FromUri(DocumentUri uri) => uri.Scheme switch {
+            "file" => uri.GetFileSystemPath().Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar),
+            "omnisharp" => FromOmnisharpUriPath(uri.Path),
+            _ => uri.Path
+        };
+
+        private static readonly Regex OmnisharpMetadataUriPathRegex = new Regex(@"/metadata/Project/(.+)/Assembly/(.+)/Symbol/(.+)\.cs");
+
+        private static string FromOmnisharpUriPath(string path)
+        {
+            Match m = OmnisharpMetadataUriPathRegex.Match(path);
+
+            if (!m.Success)
+            {
+                return "";
+            }
+            else
+            {
+                string projectName = m.Groups[1].ToString();
+                string assemblyName = m.Groups[2].ToString();
+                string symbolName = m.Groups[3].ToString();
+
+                string folderize(string path) => string.Join("/", path.Split('.'));
+
+                // please note that path here is formed in accordance to the the schema
+                // used in OmniSharp.Roslyn.Extensions.SymbolExtensions.GetFilePathForExternalSymbol()
+                return
+                    $"$metadata$/Project/{folderize(projectName)}/Assembly/{folderize(assemblyName)}/Symbol/{folderize(symbolName)}.cs"
+                    .Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
+            }
+        }
 
         public static Range ToRange((int column, int line) location)
         {
