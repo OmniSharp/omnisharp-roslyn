@@ -50,6 +50,11 @@ namespace OmniSharp
         public const string Completion = "/completion";
         public const string CompletionResolve = "/completion/resolve";
 
+        public const string SyntaxTree = "/syntaxtree";
+        public const string SyntaxNodeAtRange = "/syntaxtree/nodeatpoint";
+        public const string SyntaxTreeParentNode = "/syntaxtree/parentnode";
+        public const string SyntaxTreeNodeInfo = "/syntaxtree/info";
+
         public static class V2
         {
             public const string GetCodeActions = "/v2/getcodeactions";
