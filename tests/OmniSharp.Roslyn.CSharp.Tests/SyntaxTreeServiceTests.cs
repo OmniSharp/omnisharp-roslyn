@@ -142,7 +142,6 @@ namespace N
                     Class("Microsoft.CodeAnalysis.CSharp.Syntax.CompilationUnitSyntax"),
                     nodeSyntaxKind: "CompilationUnit",
                     semanticClassification: "keyword"),
-                expectedNumProperties: 21,
                 result);
         }
 
@@ -157,7 +156,6 @@ namespace N
                     "NamespaceDeclaration",
                     semanticClassification: "keyword",
                     nodeDeclaredSymbol: new() { Symbol = "N", SymbolKind = "namespace" }),
-                expectedNumProperties: 26,
                 result);
         }
 
@@ -172,7 +170,6 @@ namespace N
                     "InterfaceDeclaration",
                     semanticClassification: "keyword",
                     nodeDeclaredSymbol: new() { Symbol = "I", SymbolKind = "interface" }),
-                expectedNumProperties: 28,
                 result);
         }
 
@@ -192,7 +189,6 @@ namespace N
                         ConvertedType = new() { Symbol = "T", SymbolKind = "typeparameter" },
                         Conversion = "DefaultLiteral"
                     }),
-                expectedNumProperties: 17,
                 result);
         }
 
@@ -218,7 +214,6 @@ namespace N
                         ConvertedType = new() { Symbol = "T[]", SymbolKind = "array" },
                         Conversion = "Identity"
                     }),
-                expectedNumProperties: 23,
                 result);
         }
 
@@ -244,7 +239,6 @@ namespace N
                         ConvertedType = new() { Symbol = "void", SymbolKind = "struct" },
                         Conversion = "Identity"
                     }),
-                expectedNumProperties: 18,
                 result);
         }
 
@@ -262,7 +256,7 @@ namespace N
                     {
                         Symbol = SymbolAndKind.Null,
                         CandidateReason = "OverloadResolutionFailure",
-                        CandidateSymbols = new SymbolAndKind[] {new() { Symbol = "void C.M<T>(C c)", SymbolKind = "method" } }
+                        CandidateSymbols = new SymbolAndKind[] { new() { Symbol = "void C.M<T>(C c)", SymbolKind = "method" } }
                     },
                     typeInfo: new()
                     {
@@ -270,7 +264,6 @@ namespace N
                         ConvertedType = new() { Symbol = "void", SymbolKind = "struct" },
                         Conversion = "Identity"
                     }),
-                expectedNumProperties: 18,
                 result);
         }
 
@@ -284,7 +277,6 @@ namespace N
                     Struct("Microsoft.CodeAnalysis.SyntaxToken"),
                     "PublicKeyword",
                     semanticClassification: "keyword"),
-                expectedNumProperties: 19,
                 result);
         }
 
@@ -300,7 +292,6 @@ namespace N
                 NodeInfo(
                     Struct("Microsoft.CodeAnalysis.SyntaxTrivia"),
                     "Trailing: WhitespaceTrivia"),
-                expectedNumProperties: 10,
                 result);
         }
 
@@ -352,7 +343,7 @@ namespace N
                 NodeDeclaredSymbol = nodeDeclaredSymbol ?? SymbolAndKind.Null
             };
 
-        private void AssertNodeInfoEqual(SyntaxNodeInfoResponse expected, int expectedNumProperties, SyntaxNodeInfoResponse? actual)
+        private void AssertNodeInfoEqual(SyntaxNodeInfoResponse expected, SyntaxNodeInfoResponse? actual)
         {
             Assert.NotNull(actual);
             Assert.Equal(expected.NodeType, actual!.NodeType);
@@ -361,7 +352,9 @@ namespace N
             Assert.Equal(expected.NodeSymbolInfo, actual.NodeSymbolInfo);
             Assert.Equal(expected.NodeTypeInfo, actual.NodeTypeInfo);
             Assert.Equal(expected.NodeDeclaredSymbol, actual.NodeDeclaredSymbol);
-            Assert.Equal(expectedNumProperties, actual.Properties.Count);
+            // Don't take a dependency on the number of properties in nodes, as that's an implementation detail of the nodes.
+            // Just assert that some are present.
+            Assert.True(actual.Properties.Count > 0);
         }
 
         private async Task<SyntaxTreeResponse> SyntaxTreeRequest(SyntaxTreeNode? node)
