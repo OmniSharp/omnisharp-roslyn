@@ -3,6 +3,7 @@ using OmniSharp.Extensions;
 using OmniSharp.Models.v1.SyntaxTree;
 using OmniSharp.Models.V2;
 using OmniSharp.Roslyn.CSharp.Services.SyntaxTree;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using TestUtility;
@@ -13,7 +14,7 @@ using Xunit.Abstractions;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
-    public class SyntaxTreeServiceTests
+    public class SyntaxTreeServiceTests : IDisposable
     {
         private const string TestFile =
 @"{|compilationUnit:{|usingDirective:using{|usingWhitespace: |}System;
@@ -393,6 +394,11 @@ namespace N
             var span = _testContent.GetSpan(name);
             _sourceText ??= await _testHost.Workspace.GetDocument(TestFileName).GetTextAsync();
             return _sourceText.GetRangeFromSpan(span);
+        }
+
+        public void Dispose()
+        {
+            _testHost.Dispose();
         }
     }
 }
