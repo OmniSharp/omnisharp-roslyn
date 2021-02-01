@@ -4,8 +4,7 @@ using OmniSharp.Models.V2;
 
 namespace OmniSharp.Models.v1.SyntaxTree
 {
-    public class SyntaxTreeNode
-
+    public record SyntaxTreeNode
     {
         public SymbolAndKind NodeType { get; set; }
         public Range Range { get; set; }

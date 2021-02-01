@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis.Text;
+using Xunit;
 
 namespace TestUtility
 {
@@ -72,6 +74,18 @@ namespace TestUtility
             }
 
             return ImmutableList<TextSpan>.Empty;
+        }
+
+        public TextSpan GetSpan(string name = null)
+        {
+            if (spans.TryGetValue(name ?? string.Empty, out var result))
+            {
+                Assert.Single(result);
+                return result.Single();
+            }
+
+            Assert.False(true, "Could not find the given span");
+            throw new InvalidOperationException();
         }
 
         public static TestContent Parse(string input)

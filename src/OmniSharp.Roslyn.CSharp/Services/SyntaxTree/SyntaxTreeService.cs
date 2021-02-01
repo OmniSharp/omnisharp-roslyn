@@ -217,8 +217,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.SyntaxTree
 
             await populateNodeInformation(item.Node);
 
-            response.NodeDeclaredSymbol ??= SymbolAndKind.Null;
-
             return response;
 
             async Task populateNodeInformation(SyntaxNode? node)
