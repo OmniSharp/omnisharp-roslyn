@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+minimum_mono_version_major=6
+minimum_mono_version_minor=4
+
 base_dir="$(cd "$(dirname "$0")" && pwd -P)"
 bin_dir=${base_dir}/bin
 etc_dir=${base_dir}/etc
@@ -9,7 +12,28 @@ mono_cmd=${bin_dir}/mono
 omnisharp_cmd=${omnisharp_dir}/OmniSharp.exe
 config_file=${etc_dir}/config
 
-chmod 755 "${mono_cmd}"
+system_mono=$(which mono)
+use_system_mono=false
+
+for i in 1 ; do
+    [ "$system_mono" ] || break
+    system_mono_version=$($system_mono --version=number)
+    [ "$system_mono_version" ] || break
+    system_mono_version_all=(${system_mono_version//./ })
+    system_mono_version_major=${system_mono_version_all[0]}
+    system_mono_version_minor=${system_mono_version_all[1]}
+    [ $system_mono_version_major -lt $minimum_mono_version_major ] && break
+    [ $system_mono_version_major -eq $minimum_mono_version_major ] && [ $system_mono_version_minor -lt $minimum_mono_version_minor ] && break
+    use_system_mono=true
+done
+
+if [ $use_system_mono ] ; then
+    mono_cmd=$system_mono
+else
+    chmod 755 "${mono_cmd}"
+    export MONO_CFG_DIR=${etc_dir}
+    export MONO_ENV_OPTIONS="--assembly-loader=strict --config ${config_file}"
+fi
 
 no_omnisharp=false
 
@@ -17,9 +41,6 @@ if [ "$1" = "--no-omnisharp" ]; then
     shift
     no_omnisharp=true
 fi
-
-export MONO_CFG_DIR=${etc_dir}
-export MONO_ENV_OPTIONS="--assembly-loader=strict --config \"${config_file}\""
 
 if [ "$no_omnisharp" = true ]; then
     "${mono_cmd}" "$@"
