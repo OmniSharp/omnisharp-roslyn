@@ -19,6 +19,12 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
         protected override string EndpointName => OmniSharpEndpoints.FindUsages;
 
+        // [Fact]
+        // public void Foo(string event) 
+        // {
+
+        // }
+
         [Fact]
         public async Task CanFindReferencesOfLocalVariable()
         {
@@ -51,6 +57,28 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             var usages = await FindUsagesAsync(code);
             Assert.Equal(2, usages.QuickFixes.Count());
+        }
+
+        [Fact]
+        public async Task DoesNotCrashOnInvalidReference()
+        {
+            const string code = @"
+                public class Foo
+                {
+                    public Foo(string $$event)
+                    {
+                        var prop = event + 'abc';
+                    }
+                }";
+
+            
+            var exception = await Record.ExceptionAsync(async () => 
+            {
+                var usages = await FindUsagesAsync(code);
+                Assert.Empty(usages.QuickFixes);
+            });
+            
+            Assert.Null(exception);
         }
 
         [Fact]
