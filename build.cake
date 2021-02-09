@@ -136,7 +136,10 @@ Task("CleanUpMonoAssets")
     .WithCriteria(() => !Platform.Current.IsWindows)
     .Does(() =>
 {
-    DirectoryHelper.Delete(env.Folders.Mono, recursive: true);
+    if (DirectoryHelper.Exists(env.Folders.Mono)) 
+    {
+        DirectoryHelper.Delete(env.Folders.Mono, recursive: true);
+    }
 });
 
 Task("InstallMonoAssets")
