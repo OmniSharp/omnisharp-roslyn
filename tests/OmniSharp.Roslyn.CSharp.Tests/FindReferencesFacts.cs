@@ -60,28 +60,6 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         }
 
         [Fact]
-        public async Task DoesNotCrashOnInvalidReference()
-        {
-            const string code = @"
-                public class Foo
-                {
-                    public Foo(string $$event)
-                    {
-                        var prop = event + 'abc';
-                    }
-                }";
-
-            
-            var exception = await Record.ExceptionAsync(async () => 
-            {
-                var usages = await FindUsagesAsync(code);
-                Assert.Empty(usages.QuickFixes);
-            });
-            
-            Assert.Null(exception);
-        }
-
-        [Fact]
         public async Task CanFindReferencesOfField()
         {
             const string code = @"
@@ -463,6 +441,28 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var usages = await FindUsagesAsync(testFiles, onlyThisFile: true);
             Assert.Single(usages.QuickFixes);
             Assert.Equal("a.cs", usages.QuickFixes.ElementAt(0).FileName);
+        }
+
+        [Theory]
+        [InlineData("public Foo(string $$event)")]
+        [InlineData("pu$$blic Foo(string s)")]
+        public async Task DoesNotCrashOnInvalidReference(string methodDefinition)
+        {
+            var code = @$"
+                public class Foo
+                {{
+                    {methodDefinition}
+                    {{
+                    }}
+                }}";
+            
+            var exception = await Record.ExceptionAsync(async () => 
+            {
+                var usages = await FindUsagesAsync(code);
+                Assert.NotNull(usages);
+            });
+            
+            Assert.Null(exception);
         }
 
         private Task<QuickFixResponse> FindUsagesAsync(string code, bool excludeDefinition = false)
