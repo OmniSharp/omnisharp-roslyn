@@ -132,10 +132,23 @@ Task("ValidateMono")
     ValidateMonoVersion(buildPlan);
 });
 
+Task("CleanUpMonoAssets")
+    .WithCriteria(() => !Platform.Current.IsWindows)
+    .Does(() =>
+{
+    DirectoryHelper.Delete(env.Folders.Mono, recursive: true);
+});
+
 Task("InstallMonoAssets")
     .WithCriteria(() => !Platform.Current.IsWindows)
     .Does(() =>
 {
+    if (DirectoryHelper.Exists(env.Folders.Mono)) 
+    {
+        Information("Skipping Mono assets installation, because they already exist.");
+        return;
+    }
+
     Information("Acquiring Mono runtimes and framework...");
 
     DownloadFileAndUnzip($"{buildPlan.DownloadURL}/{buildPlan.MonoRuntimeMacOS}", env.Folders.MonoRuntimeMacOS);
@@ -934,6 +947,7 @@ Task("Install")
 /// </summary>
 Task("All")
     .IsDependentOn("Cleanup")
+    .IsDependentOn("CleanUpMonoAssets")
     .IsDependentOn("Build")
     .IsDependentOn("Test")
     .IsDependentOn("Publish")
@@ -950,6 +964,7 @@ Task("Default")
 /// </summary>
 Task("CI")
     .IsDependentOn("Cleanup")
+    .IsDependentOn("CleanUpMonoAssets")
     .IsDependentOn("Build")
     .IsDependentOn("Publish")
     .IsDependentOn("ExecuteRunScript");
