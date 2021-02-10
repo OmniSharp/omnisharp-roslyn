@@ -35,6 +35,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
             var document = await _workspace.GetDocumentFromFullProjectModelAsync(request.FileName);
             if (document == null)
             {
+                _logger.LogWarning($"No document found. File: {request.FileName}.");
                 return new QuickFixResponse();
             }
 
