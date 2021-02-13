@@ -11,6 +11,7 @@
         <ProjectReference Include="..\OmniSharp.MSBuild\OmniSharp.MSBuild.csproj" />
         <ProjectReference Include="..\OmniSharp.Script\OmniSharp.Script.csproj" />
         <ProjectReference Include="..\OmniSharp.Roslyn.CSharp\OmniSharp.Roslyn.CSharp.csproj" />
+        <ProjectReference Include="..\OmniSharp.Roslyn.VisualBasic\OmniSharp.Roslyn.VisualBasic.csproj" />
         <ProjectReference Include="..\OmniSharp.Cake\OmniSharp.Cake.csproj" />
     </ItemGroup>
 

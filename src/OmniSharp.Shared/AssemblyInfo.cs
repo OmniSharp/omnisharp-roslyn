@@ -5,5 +5,6 @@
 [assembly: InternalsVisibleTo("OmniSharp.MSBuild")]
 [assembly: InternalsVisibleTo("OmniSharp.Roslyn")]
 [assembly: InternalsVisibleTo("OmniSharp.Roslyn.CSharp")]
+[assembly: InternalsVisibleTo("OmniSharp.Roslyn.VisualBasic")]
 [assembly: InternalsVisibleTo("OmniSharp.DotNetTest.Tests")]
 [assembly: InternalsVisibleTo("OmniSharp.Tests")]
