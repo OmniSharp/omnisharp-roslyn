@@ -38,6 +38,7 @@ namespace TestUtility
             typeof(ScriptProjectSystem).GetTypeInfo().Assembly, // OmniSharp.Script
             typeof(OmniSharpWorkspace).GetTypeInfo().Assembly, // OmniSharp.Roslyn
             typeof(RoslynFeaturesHostServicesProvider).GetTypeInfo().Assembly, // OmniSharp.Roslyn.CSharp
+            typeof(OmniSharp.Roslyn.VisualBasic.Services.Structure.BlockStructureService).Assembly, // OmniSharp.Roslyn.VisualBasic
             typeof(CakeProjectSystem).GetTypeInfo().Assembly, // OmniSharp.Cake
             typeof(LanguageServerHost).Assembly, // OmniSharp.LanguageServerProtocol
         });
