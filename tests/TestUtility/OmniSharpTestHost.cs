@@ -141,25 +141,34 @@ namespace TestUtility
         public IEnumerable<ProjectId> AddFilesToWorkspace(string folderPath, params TestFile[] testFiles)
         {
             folderPath = folderPath ?? Directory.GetCurrentDirectory();
-            var csProjects = TestHelpers.AddProjectToWorkspace(
-                Workspace,
-                Path.Combine(folderPath, "project.csproj"),
-                new[] { "net472" },
-                testFiles.Where(f => f.FileName.EndsWith(".cs", StringComparison.OrdinalIgnoreCase)).ToArray());
 
-            var vbProjects = TestHelpers.AddProjectToWorkspace(
-                Workspace,
-                Path.Combine(folderPath, "project.vbproj"),
-                new[] { "net472" },
-                testFiles.Where(f => f.FileName.EndsWith(".vb", StringComparison.OrdinalIgnoreCase)).ToArray(),
-                languageName: LanguageNames.VisualBasic);
+            var csFiles = testFiles.Where(f => f.FileName.EndsWith(".cs", StringComparison.OrdinalIgnoreCase)).ToArray();
+            var vbFiles = testFiles.Where(f => f.FileName.EndsWith(".vb", StringComparison.OrdinalIgnoreCase)).ToArray();
+
+            var projects = TestHelpers.AddProjectToWorkspace(
+                    Workspace,
+                    Path.Combine(folderPath, "project.csproj"),
+                    new[] { "net472" },
+                    csFiles);
+
+            if (vbFiles.Length > 0)
+            {
+                projects = projects.Concat(
+                    TestHelpers.AddProjectToWorkspace(
+                    Workspace,
+                    Path.Combine(folderPath, "project.vbproj"),
+                    new[] { "net472" },
+                    vbFiles,
+                    languageName: LanguageNames.VisualBasic)
+                );
+            }
 
             foreach (var csxFile in testFiles.Where(f => f.FileName.EndsWith(".csx", StringComparison.OrdinalIgnoreCase)))
             {
                 TestHelpers.AddCsxProjectToWorkspace(Workspace, csxFile);
             }
 
-            return csProjects.Concat(vbProjects);
+            return projects;
         }
 
         public void ClearWorkspace()
