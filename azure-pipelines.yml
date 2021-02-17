@@ -23,7 +23,7 @@ resources:
     - repository: rsg
       type: github
       name: RocketSurgeonsGuild/AzureDevopsTemplates
-      ref: refs/tags/v0.4.5
+      ref: refs/tags/v0.12.0
       endpoint: github
 
 variables:
@@ -45,10 +45,7 @@ jobs:
     pool:
       vmImage: "windows-2019"
     steps:
-      - template: gitversion/store.yml@rsg
-        parameters:
-          NuGetVersion: $(NuGetVersion)
-          version: $(GitVersionVersion)
+      - template: support/gitversion-store.yml@rsg
 
   - job: macOS
     pool:
