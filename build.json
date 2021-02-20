@@ -4,7 +4,8 @@
     "DotNetVersions": [
         "2.1.812",
         "3.1.405",
-        "5.0.102"
+        "5.0.102",
+        "6.0.0-preview.1.21102.12"
     ],
     "RequiredMonoVersion": "6.6.0",
     "DownloadURL": "https://roslynomnisharp.blob.core.windows.net/ext",
