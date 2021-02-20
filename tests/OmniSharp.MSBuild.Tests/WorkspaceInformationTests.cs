@@ -103,7 +103,7 @@ namespace OmniSharp.MSBuild.Tests
             var project = Assert.Single(workspaceInfo.Projects);
             Assert.Equal("Net60Project", project.AssemblyName);
             Assert.Equal(".NETCoreApp,Version=v6.0", project.TargetFramework);
-            Assert.Equal("net6.0", project.TargetFrameworks[0].ShortName);
+            Assert.Equal("net60", project.TargetFrameworks[0].ShortName);
         }
 
         [Fact]
