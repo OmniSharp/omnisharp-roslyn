@@ -93,15 +93,15 @@ namespace OmniSharp.MSBuild.Tests
         }
 
         [Fact]
-        public async Task NetCore60Project()
+        public async Task Net60Project()
         {
-            using var testProject = await TestAssets.Instance.GetTestProjectAsync("NetCore60Project");
+            using var testProject = await TestAssets.Instance.GetTestProjectAsync("Net60Project");
             using var host = CreateMSBuildTestHost(testProject.Directory);
             var workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
 
             Assert.NotNull(workspaceInfo.Projects);
             var project = Assert.Single(workspaceInfo.Projects);
-            Assert.Equal("NetCore60Project", project.AssemblyName);
+            Assert.Equal("Net60Project", project.AssemblyName);
             Assert.Equal(".NETCoreApp,Version=v6.0", project.TargetFramework);
             Assert.Equal("net6.0", project.TargetFrameworks[0].ShortName);
         }
