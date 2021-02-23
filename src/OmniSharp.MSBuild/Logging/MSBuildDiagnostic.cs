@@ -47,13 +47,13 @@ namespace OmniSharp.MSBuild.Logging
                 // this creates a confusing error message which we convert into a more helpful one
                 if (args.Message.Contains(".NETFramework,Version=v5.0"))
                 {
-                    diagnosticText = Platform.Current.OperatingSystem != Utilities.OperatingSystem.Windows
-                    ? string.Format(ErrorMessages.ReferenceAssembliesNotFoundNet50OrHigherUnix, "NET 5.0") : string.Format(ErrorMessages.ReferenceAssembliesNotFoundNet50OrHigherWindows, "NET 5.0");
+                    diagnosticText = Platform.Current.OperatingSystem == Utilities.OperatingSystem.Windows
+                    ? ErrorMessages.ReferenceAssembliesNotFoundNet50Windows : ErrorMessages.ReferenceAssembliesNotFoundNet50Unix;
                 }
                 else if (args.Message.Contains(".NETFramework,Version=v6.0"))
                 {
-                    diagnosticText = Platform.Current.OperatingSystem != Utilities.OperatingSystem.Windows
-                    ? string.Format(ErrorMessages.ReferenceAssembliesNotFoundNet50OrHigherUnix, "NET 6.0") : string.Format(ErrorMessages.ReferenceAssembliesNotFoundNet50OrHigherWindows, "NET 6.0");
+                    diagnosticText = Platform.Current.OperatingSystem == Utilities.OperatingSystem.Windows
+                    ? ErrorMessages.ReferenceAssembliesNotFoundNet60Windows : ErrorMessages.ReferenceAssembliesNotFoundNet60Unix;
                 }
                 else
                 {
