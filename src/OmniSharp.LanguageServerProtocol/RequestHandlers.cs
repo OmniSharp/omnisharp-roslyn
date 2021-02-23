@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OmniSharp.Mef;
@@ -38,7 +39,7 @@ namespace OmniSharp.LanguageServerProtocol
             {
                 yield return (
                     group.DocumentSelector,
-                    group.OfType<T>().SingleOrDefault()
+                    SingleOrDefault(group.OfType<T>())
                 );
             }
         }
@@ -51,8 +52,8 @@ namespace OmniSharp.LanguageServerProtocol
             {
                 yield return (
                     group.DocumentSelector,
-                    group.OfType<T>().SingleOrDefault(),
-                    group.OfType<T2>().SingleOrDefault()
+                    SingleOrDefault(group.OfType<T>()),
+                    SingleOrDefault(group.OfType<T2>())
                 );
             }
         }
@@ -66,9 +67,9 @@ namespace OmniSharp.LanguageServerProtocol
             {
                 yield return (
                     group.DocumentSelector,
-                    group.OfType<T>().SingleOrDefault(),
-                    group.OfType<T2>().SingleOrDefault(),
-                    group.OfType<T3>().SingleOrDefault()
+                    SingleOrDefault(group.OfType<T>()),
+                    SingleOrDefault(group.OfType<T2>()),
+                    SingleOrDefault(group.OfType<T3>())
                 );
             }
         }
@@ -83,12 +84,32 @@ namespace OmniSharp.LanguageServerProtocol
             {
                 yield return (
                     group.DocumentSelector,
-                    group.OfType<T>().SingleOrDefault(),
-                    group.OfType<T2>().SingleOrDefault(),
-                    group.OfType<T3>().SingleOrDefault(),
-                    group.OfType<T4>().SingleOrDefault()
+                    SingleOrDefault(group.OfType<T>()),
+                    SingleOrDefault(group.OfType<T2>()),
+                    SingleOrDefault(group.OfType<T3>()),
+                    SingleOrDefault(group.OfType<T4>())
                 );
             }
+        }
+
+        private T SingleOrDefault<T>(IEnumerable<T> handlers)
+        {
+            // There are cases when the same handler is exported multiple times, such as completion, under both completion and
+            // completion resolve. For these, a naive SingleOrDefault will fail, because it technically appears in the list twice.
+            // If that is the case, ensure that all instances are the same instance.
+            T result = default;
+            foreach (var handler in handlers)
+            {
+                if (result is not null)
+                {
+                    Debug.Assert(ReferenceEquals(result, handler));
+                    continue;
+                }
+
+                result = handler;
+            }
+
+            return result;
         }
 
         public IEnumerable<IRequestHandler> GetAll()
