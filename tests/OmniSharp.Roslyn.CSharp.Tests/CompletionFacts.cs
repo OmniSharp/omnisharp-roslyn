@@ -69,6 +69,25 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Theory]
         [InlineData("dummy.cs")]
         [InlineData("dummy.csx")]
+        public async Task ParameterCompletion(string filename)
+        {
+            const string input =
+                @"public class Class1 {
+                    public Class1(string foo)
+                        {
+                            foo$$
+                        }
+                    }";
+
+            var completions = await FindCompletionsAsync(filename, input, SharedOmniSharpTestHost);
+            Assert.Contains("foo", completions.Items.Select(c => c.Label));
+            Assert.Contains("foo", completions.Items.Select(c => c.TextEdit.NewText));
+            Assert.Equal(CompletionItemKind.Variable, completions.Items.First(c => c.TextEdit.NewText == "foo").Kind);
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
         public async Task DocumentationIsResolved(string filename)
         {
             const string input =

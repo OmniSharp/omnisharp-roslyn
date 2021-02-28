@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Classification;
 using Microsoft.CodeAnalysis.Text;
+using Microsoft.Extensions.Logging;
 using OmniSharp.Mef;
 using OmniSharp.Models.SemanticHighlight;
 
@@ -13,10 +14,14 @@ namespace OmniSharp.Roslyn.CSharp.Services.SemanticHighlight
     [OmniSharpHandler(OmniSharpEndpoints.V2.Highlight, LanguageNames.CSharp)]
     public class SemanticHighlightService : IRequestHandler<SemanticHighlightRequest, SemanticHighlightResponse>
     {
+        private readonly OmniSharpWorkspace _workspace;
+        private readonly ILogger<SemanticHighlightService> _logger;
+
         [ImportingConstructor]
-        public SemanticHighlightService(OmniSharpWorkspace workspace)
+        public SemanticHighlightService(OmniSharpWorkspace workspace, ILoggerFactory loggerFactory)
         {
             _workspace = workspace;
+            _logger = loggerFactory.CreateLogger<SemanticHighlightService>();
         }
 
         public async Task<SemanticHighlightResponse> Handle(SemanticHighlightRequest request)
@@ -33,9 +38,17 @@ namespace OmniSharp.Roslyn.CSharp.Services.SemanticHighlight
                 TextSpan textSpan;
                 if (request.Range is object)
                 {
-                    var start = text.Lines.GetPosition(new LinePosition(request.Range.Start.Line, request.Range.Start.Column));
-                    var end = text.Lines.GetPosition(new LinePosition(request.Range.End.Line, request.Range.End.Column));
-                    textSpan = new TextSpan(start, end - start);
+                    if (request.Range.IsValid())
+                    {
+                        var start = text.Lines.GetPosition(new LinePosition(request.Range.Start.Line, request.Range.Start.Column));
+                        var end = text.Lines.GetPosition(new LinePosition(request.Range.End.Line, request.Range.End.Column));
+                        textSpan = new TextSpan(start, end - start);
+                    }
+                    else
+                    {
+                        _logger.LogWarning($"Supplied highlight range {request.Range} in document {document.FilePath} is not valid.");
+                        continue;
+                    }
                 }
                 else
                 {
@@ -107,6 +120,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.SemanticHighlight
                 [ClassificationTypeNames.VerbatimStringLiteral] = SemanticHighlightClassification.VerbatimStringLiteral,
                 [ClassificationTypeNames.StringEscapeCharacter] = SemanticHighlightClassification.StringEscapeCharacter,
                 [ClassificationTypeNames.ClassName] = SemanticHighlightClassification.ClassName,
+                [ClassificationTypeNames.RecordName] = SemanticHighlightClassification.ClassName,
                 [ClassificationTypeNames.DelegateName] = SemanticHighlightClassification.DelegateName,
                 [ClassificationTypeNames.EnumName] = SemanticHighlightClassification.EnumName,
                 [ClassificationTypeNames.InterfaceName] = SemanticHighlightClassification.InterfaceName,
@@ -161,7 +175,5 @@ namespace OmniSharp.Roslyn.CSharp.Services.SemanticHighlight
             {
                 [ClassificationTypeNames.StaticSymbol] = SemanticHighlightModifier.Static,
             };
-
-        private readonly OmniSharpWorkspace _workspace;
     }
 }

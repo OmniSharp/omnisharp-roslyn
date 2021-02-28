@@ -52,7 +52,7 @@ namespace OmniSharp
         public OmniSharpWorkspace(HostServicesAggregator aggregator, ILoggerFactory loggerFactory, IFileSystemWatcher fileSystemWatcher)
             : base(aggregator.CreateHostServices(), "Custom")
         {
-            BufferManager = new BufferManager(this, fileSystemWatcher);
+            BufferManager = new BufferManager(this, loggerFactory, fileSystemWatcher);
             _logger = loggerFactory.CreateLogger<OmniSharpWorkspace>();
             fileSystemWatcher.WatchDirectories(OnDirectoryRemoved);
         }
@@ -149,6 +149,7 @@ namespace OmniSharp
             var newAnalyzerConfigFiles = EditorConfigFinder
                 .GetEditorConfigPaths(filePath)
                 .Except(analyzerConfigFiles);
+
             foreach (var analyzerConfigFile in newAnalyzerConfigFiles)
             {
                 AddAnalyzerConfigDocument(projectInfo.Id, analyzerConfigFile);
@@ -553,6 +554,12 @@ namespace OmniSharp
             var loader = new OmniSharpTextLoader(filePath);
             var documentInfo = DocumentInfo.Create(documentId, Path.GetFileName(filePath), filePath: filePath, loader: loader);
             OnAnalyzerConfigDocumentAdded(documentInfo);
+        }
+
+        public void ReloadAnalyzerConfigDocument(DocumentId documentId, string filePath)
+        {
+            var loader = new OmniSharpTextLoader(filePath);
+            OnAnalyzerConfigDocumentTextLoaderChanged(documentId, loader);
         }
 
         public void RemoveAdditionalDocument(DocumentId documentId)

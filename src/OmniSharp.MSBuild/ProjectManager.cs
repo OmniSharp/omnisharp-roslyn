@@ -37,12 +37,14 @@ namespace OmniSharp.MSBuild
             public ProjectIdInfo ProjectIdInfo;
             public string FilePath { get; }
             public bool AllowAutoRestore { get; set; }
+            public string ChangeTriggerPath { get; }
             public ProjectLoadedEventArgs LoadedEventArgs { get; set; }
 
-            public ProjectToUpdate(string filePath, bool allowAutoRestore, ProjectIdInfo projectIdInfo)
+            public ProjectToUpdate(string filePath, bool allowAutoRestore, ProjectIdInfo projectIdInfo, string changeTriggerPath)
             {
                 ProjectIdInfo = projectIdInfo ?? throw new ArgumentNullException(nameof(projectIdInfo));
                 FilePath = filePath ?? throw new ArgumentNullException(nameof(filePath));
+                ChangeTriggerPath = changeTriggerPath;
                 AllowAutoRestore = allowAutoRestore;
             }
         }
@@ -158,10 +160,10 @@ namespace OmniSharp.MSBuild
         public IEnumerable<ProjectFileInfo> GetAllProjects() => _projectFiles.GetItems();
         public bool TryGetProject(string projectFilePath, out ProjectFileInfo projectFileInfo) => _projectFiles.TryGetValue(projectFilePath, out projectFileInfo);
 
-        public void QueueProjectUpdate(string projectFilePath, bool allowAutoRestore, ProjectIdInfo projectId)
+        public void QueueProjectUpdate(string projectFilePath, bool allowAutoRestore, ProjectIdInfo projectId, string changeTriggerFilePath = null)
         {
             _logger.LogInformation($"Queue project update for '{projectFilePath}'");
-            _queue.Post(new ProjectToUpdate(projectFilePath, allowAutoRestore, projectId));
+            _queue.Post(new ProjectToUpdate(projectFilePath, allowAutoRestore, projectId, changeTriggerFilePath));
         }
 
         public async Task WaitForQueueEmptyAsync()
@@ -262,7 +264,7 @@ namespace OmniSharp.MSBuild
                 {
                     foreach (var project in projectList)
                     {
-                        UpdateProject(project.FilePath);
+                        UpdateProject(project.FilePath, project.ChangeTriggerPath);
 
                         // Fire loaded events
                         if (project.LoadedEventArgs != null)
@@ -382,7 +384,7 @@ namespace OmniSharp.MSBuild
             // as "updates". We should properly remove projects that are deleted.
             _fileSystemWatcher.Watch(projectFileInfo.FilePath, (file, changeType) =>
             {
-                QueueProjectUpdate(projectFileInfo.FilePath, allowAutoRestore: true, projectFileInfo.ProjectIdInfo);
+                QueueProjectUpdate(projectFileInfo.FilePath, allowAutoRestore: true, projectFileInfo.ProjectIdInfo, file);
             });
 
             if (_workspace.EditorConfigEnabled)
@@ -390,7 +392,7 @@ namespace OmniSharp.MSBuild
                 // Watch beneath the Project folder for changes to .editorconfig files.
                 _fileSystemWatcher.Watch(".editorconfig", (file, changeType) =>
                 {
-                    QueueProjectUpdate(projectFileInfo.FilePath, allowAutoRestore: false, projectFileInfo.ProjectIdInfo);
+                    QueueProjectUpdate(projectFileInfo.FilePath, allowAutoRestore: false, projectFileInfo.ProjectIdInfo, file);
                 });
 
                 // Watch in folders above the Project folder for changes to .editorconfig files.
@@ -404,7 +406,7 @@ namespace OmniSharp.MSBuild
 
                     _fileSystemWatcher.Watch(Path.Combine(parentPath, ".editorconfig"), (file, changeType) =>
                     {
-                        QueueProjectUpdate(projectFileInfo.FilePath, allowAutoRestore: false, projectFileInfo.ProjectIdInfo);
+                        QueueProjectUpdate(projectFileInfo.FilePath, allowAutoRestore: false, projectFileInfo.ProjectIdInfo, file);
                     });
                 }
             }
@@ -413,7 +415,7 @@ namespace OmniSharp.MSBuild
             {
                 _fileSystemWatcher.Watch(projectFileInfo.RuleSet.FilePath, (file, changeType) =>
                 {
-                    QueueProjectUpdate(projectFileInfo.FilePath, allowAutoRestore: false, projectFileInfo.ProjectIdInfo);
+                    QueueProjectUpdate(projectFileInfo.FilePath, allowAutoRestore: false, projectFileInfo.ProjectIdInfo, file);
                 });
             }
 
@@ -421,7 +423,7 @@ namespace OmniSharp.MSBuild
             {
                 _fileSystemWatcher.Watch(projectFileInfo.ProjectAssetsFile, (file, changeType) =>
                 {
-                    QueueProjectUpdate(projectFileInfo.FilePath, allowAutoRestore: false, projectFileInfo.ProjectIdInfo);
+                    QueueProjectUpdate(projectFileInfo.FilePath, allowAutoRestore: false, projectFileInfo.ProjectIdInfo, file);
                 });
 
                 var restoreDirectory = Path.GetDirectoryName(projectFileInfo.ProjectAssetsFile);
@@ -432,22 +434,22 @@ namespace OmniSharp.MSBuild
 
                 _fileSystemWatcher.Watch(nugetCacheFile, (file, changeType) =>
                 {
-                    QueueProjectUpdate(projectFileInfo.FilePath, allowAutoRestore: false, projectFileInfo.ProjectIdInfo);
+                    QueueProjectUpdate(projectFileInfo.FilePath, allowAutoRestore: false, projectFileInfo.ProjectIdInfo, file);
                 });
 
                 _fileSystemWatcher.Watch(nugetPropsFile, (file, changeType) =>
                 {
-                    QueueProjectUpdate(projectFileInfo.FilePath, allowAutoRestore: false, projectFileInfo.ProjectIdInfo);
+                    QueueProjectUpdate(projectFileInfo.FilePath, allowAutoRestore: false, projectFileInfo.ProjectIdInfo, file);
                 });
 
                 _fileSystemWatcher.Watch(nugetTargetsFile, (file, changeType) =>
                 {
-                    QueueProjectUpdate(projectFileInfo.FilePath, allowAutoRestore: false, projectFileInfo.ProjectIdInfo);
+                    QueueProjectUpdate(projectFileInfo.FilePath, allowAutoRestore: false, projectFileInfo.ProjectIdInfo, file);
                 });
             }
         }
 
-        private void UpdateProject(string projectFilePath)
+        private void UpdateProject(string projectFilePath, string changeTriggerFilePath)
         {
             if (!_projectFiles.TryGetValue(projectFilePath, out var projectFileInfo))
             {
@@ -462,18 +464,43 @@ namespace OmniSharp.MSBuild
                 return;
             }
 
+            // if the update was triggered by a change to an editorconfig file, only reload that analyzer config file
+            // this will propagata a reanalysis of the project
+            if (changeTriggerFilePath != null && changeTriggerFilePath.ToLowerInvariant().EndsWith(".editorconfig"))
+            {
+                UpdateAnalyzerConfigFile(project, changeTriggerFilePath);
+                return;
+            }
+
+            // for other update triggers, perform a full check of all options
             UpdateSourceFiles(project, projectFileInfo.SourceFiles);
             UpdateParseOptions(project, projectFileInfo.LanguageVersion, projectFileInfo.PreprocessorSymbolNames, !string.IsNullOrWhiteSpace(projectFileInfo.DocumentationFile));
             UpdateProjectReferences(project, projectFileInfo.ProjectReferences);
+            UpdateAnalyzerConfigFiles(project, projectFileInfo.AnalyzerConfigFiles);
             UpdateReferences(project, projectFileInfo.ProjectReferences, projectFileInfo.References);
             UpdateAnalyzerReferences(project, projectFileInfo);
             UpdateAdditionalFiles(project, projectFileInfo.AdditionalFiles);
-            UpdateAnalyzerConfigFiles(project, projectFileInfo.AnalyzerConfigFiles);
             UpdateProjectProperties(project, projectFileInfo);
 
             _workspace.AddDocumentInclusionRuleForProject(project.Id, (path) => projectFileInfo.IsFileIncluded(path));
             _workspace.TryPromoteMiscellaneousDocumentsToProject(project);
-            _workspace.UpdateCompilationOptionsForProject(project.Id, projectFileInfo.CreateCompilationOptions());
+
+            UpdateCompilationOptions(project, projectFileInfo);
+        }
+
+        private void UpdateCompilationOptions(Project project, ProjectFileInfo projectFileInfo)
+        {
+            // if project already has compilation options, then we shall use that to compute new compilation options based on the project file
+            // and then only set those if it's really necessary
+            if (project.CompilationOptions != null && project.CompilationOptions is CSharpCompilationOptions existingCompilationOptions)
+            {
+                var newCompilationOptions = projectFileInfo.CreateCompilationOptions(existingCompilationOptions);
+                if (newCompilationOptions != existingCompilationOptions)
+                {
+                    _workspace.UpdateCompilationOptionsForProject(project.Id, newCompilationOptions);
+                    _logger.LogDebug($"Updated project compilation options on project {project.Name}.");
+                }
+            }
         }
 
         private void UpdateAnalyzerReferences(Project project, ProjectFileInfo projectFileInfo)
@@ -529,16 +556,43 @@ namespace OmniSharp.MSBuild
             }
         }
 
+        private void UpdateAnalyzerConfigFile(Project project, string analyzerConfigFile)
+        {
+            if (!_workspace.EditorConfigEnabled)
+            {
+                _logger.LogDebug($".editorconfig files were configured by the project {project.Name} but will not be respected because the feature is switched off in OmniSharp. Enable .editorconfig support in OmniSharp to take advantage of them.");
+                return;
+            }
+
+            var currentAnalyzerConfigDocument = project.AnalyzerConfigDocuments.FirstOrDefault(x => x.FilePath.Equals(analyzerConfigFile));
+            if (currentAnalyzerConfigDocument == null)
+            {
+                _logger.LogDebug($"The change was reported in {analyzerConfigFile} but it doesn't belong to any project.");
+                return;
+            }
+
+            if (!File.Exists(analyzerConfigFile))
+            {
+                _logger.LogWarning($"The change was reported in {analyzerConfigFile} but it doesn't exist on disk.");
+                return;
+            }
+
+            _workspace.ReloadAnalyzerConfigDocument(currentAnalyzerConfigDocument.Id, analyzerConfigFile);
+            _logger.LogDebug($"Reloaded {currentAnalyzerConfigDocument.Id} from {analyzerConfigFile} in project {project.Name}.");
+        }
+
         private void UpdateAnalyzerConfigFiles(Project project, IList<string> analyzerConfigFiles)
         {
             if (!_workspace.EditorConfigEnabled)
             {
+                _logger.LogDebug($".editorconfig files were configured by the project {project.Name} but will not be respected because the feature is switched off in OmniSharp. Enable .editorconfig support in OmniSharp to take advantage of them.");
                 return;
             }
 
             var currentAnalyzerConfigDocuments = project.AnalyzerConfigDocuments;
             foreach (var document in currentAnalyzerConfigDocuments)
             {
+                _logger.LogDebug($".editorconfig file '{document.Name}' removed from project {project.Name}");
                 _workspace.RemoveAnalyzerConfigDocument(document.Id);
             }
 
@@ -547,6 +601,11 @@ namespace OmniSharp.MSBuild
                 if (File.Exists(file))
                 {
                     _workspace.AddAnalyzerConfigDocument(project.Id, file);
+                    _logger.LogDebug($".editorconfig file '{file}' added for project {project.Name}");
+                }
+                else
+                {
+                    _logger.LogWarning($".editorconfig file '{file}' for project {project.Name} was expected but not found on disk.");
                 }
             }
         }
@@ -602,7 +661,7 @@ namespace OmniSharp.MSBuild
                 {
                     // Use the buffer manager to add the new file to the appropriate projects
                     // Hosts that don't pass the FileChangeType may wind up updating the buffer twice
-                    _workspace.BufferManager.UpdateBufferAsync(new UpdateBufferRequest() { FileName = path, FromDisk = true }).Wait();
+                    _workspace.BufferManager.UpdateBufferAsync(new UpdateBufferRequest() { FileName = path, FromDisk = true }, isCreate: changeType == FileChangeType.Create).Wait();
                 }
             }
         }

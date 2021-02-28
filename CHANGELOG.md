@@ -1,6 +1,39 @@
 # Changelog
 All changes to the project will be documented in this file.
 
+## [1.37.6] - 2021-01-19
+* Handle records in syntax highlighting ([#2048](https://github.com/OmniSharp/omnisharp-roslyn/issues/2048), PR: [#2049](https://github.com/OmniSharp/omnisharp-roslyn/pull/2049))
+* Remove formatting on new line (PR: [#2053](https://github.com/OmniSharp/omnisharp-roslyn/pull/2053))
+* Validate highlighting ranges in semantic highlighting requests (PR: [#2055](https://github.com/OmniSharp/omnisharp-roslyn/pull/2055))
+* Delay project system init to avoid solution update race (PR: [#2057](https://github.com/OmniSharp/omnisharp-roslyn/pull/2057))
+* Use "variable" kind for parameter completion ([#2060](https://github.com/OmniSharp/omnisharp-roslyn/issues/2060), PR: [#2061](https://github.com/OmniSharp/omnisharp-roslyn/pull/2061))
+* Log request when response fails ([#2064](https://github.com/OmniSharp/omnisharp-roslyn/pull/2064))
+
+## [1.37.5] - 2020-12-16
+* Update Roslyn version to 3.9.0-2.20570.24 (PR: [#2022](https://github.com/OmniSharp/omnisharp-roslyn/pull/2022))
+* Gracefully handle GitVersion failure, and set a default version. (PR: [#2030](https://github.com/OmniSharp/omnisharp-roslyn/pull/2030))
+* Editorconfig improvements - do not lose state, trigger re-analysis on change ([#1955](https://github.com/OmniSharp/omnisharp-roslyn/issues/1955), [omnisharp-vscode#4165](https://github.com/OmniSharp/omnisharp-vscode/issues/4165), [omnisharp-vscode#4184](https://github.com/OmniSharp/omnisharp-vscode/issues/4184), PR: [#2028](https://github.com/OmniSharp/omnisharp-roslyn/pull/2028))
+* Add documentation comment creation to the FormatAfterKeystrokeService (PR: [#2023](https://github.com/OmniSharp/omnisharp-roslyn/pull/2023))
+* Raise default GotoDefinitionRequest timeout from 2s to 10s ([omnisharp-vscode#4260](https://github.com/OmniSharp/omnisharp-vscode/issues/4260), PR: [#2032](https://github.com/OmniSharp/omnisharp-roslyn/pull/2032))
+* Register languageServer as ILanguageServerFacade (PR: [#2025](https://github.com/OmniSharp/omnisharp-roslyn/pull/2025))
+* Workspace create file workaround (PR: [#2019](https://github.com/OmniSharp/omnisharp-roslyn/pull/2019))
+* Added `msbuild:UseBundledOnly` option to force the usage of bundled MSBuild (PR: [#2038](https://github.com/OmniSharp/omnisharp-roslyn/pull/2038))
+* Build NetCoreApp2.1 test project with .NET Core SDK 2.1 (PR: [#2040](https://github.com/OmniSharp/omnisharp-roslyn/pull/2040))
+
+## [1.37.4] - 2020-11-20
+* Fixed global Mono MSBuild version reporting (PR: [#1988](https://github.com/OmniSharp/omnisharp-roslyn/pull/1988))
+* Fixed incremental changes and completion in Cake (PR: [#1997](https://github.com/OmniSharp/omnisharp-roslyn/pull/1997))
+* Omnisharp now uses libPaths and sourcePaths defined in custom .rsp file for scripting (PR: [#2000](https://github.com/OmniSharp/omnisharp-roslyn/pull/2000))
+* C# scripting should use language version "latest" by default (PR: [#2001](https://github.com/OmniSharp/omnisharp-roslyn/pull/2001))
+* Fixed null references in LSP mode when requests are handled before the server fully initializes ([#1742](https://github.com/OmniSharp/omnisharp-roslyn/issues/1742https://github.com/OmniSharp/omnisharp-roslyn/issues/1742), [#1515](https://github.com/OmniSharp/omnisharp-roslyn/issues/1515), [#1083](https://github.com/OmniSharp/omnisharp-roslyn/issues/1083), PR: [#2005](https://github.com/OmniSharp/omnisharp-roslyn/pull/2005))
+* Fixed logging in LSP mode (PR: [#2002](https://github.com/OmniSharp/omnisharp-roslyn/pull/2002))
+* Upgraded LSP mode to `OmniSharp.Extensions.LanguageServer 0.18.3` (PR: [#1998](https://github.com/OmniSharp/omnisharp-roslyn/pull/1998))
+* Improve handling with Cake Script Service (PR: [#2013](https://github.com/OmniSharp/omnisharp-roslyn/pull/2013))
+* Updated to latest Dotnet.Script scripting packages for .NET 5.0 ([#2020](https://github.com/OmniSharp/omnisharp-roslyn/issues/2020), PR: [#2012](https://github.com/OmniSharp/omnisharp-roslyn/pull/2012))
+* Updated Roslyn to `3.8.0`, MSBuild to `16.8.0`, DotNetHostResolver to `5.0.0`, Nuget packages to `5.8.0-rc.6930` and MSBuildSDKResolver to `5.0.101-servicing.20564.2` to match .NET 5.0.100 SDK (PR: [#2015](https://github.com/OmniSharp/omnisharp-roslyn/pull/2015), [#2016](https://github.com/OmniSharp/omnisharp-roslyn/pull/2016))
+* Workspace create file workaround for VS Code (to avoid race condtion on newly created files) ([omnisharp-vscode#4181](https://github.com/OmniSharp/omnisharp-vscode/issues/4181), PR: [#2019](https://github.com/OmniSharp/omnisharp-roslyn/pull/2019))
+* Response file can now used enviroment variables in the path + more error handling (PR: [#2008](https://github.com/OmniSharp/omnisharp-roslyn/pull/2008))
+
 ## [1.37.3] - 2020-10-14
 * Fixed a bug when the server wouldn't start on MacOS/Linux when a username contained a space (PR: [#1979](https://github.com/OmniSharp/omnisharp-roslyn/pull/1979))
 * Update to Mono 6.12.0 (PR: [#1981](https://github.com/OmniSharp/omnisharp-roslyn/pull/1981))

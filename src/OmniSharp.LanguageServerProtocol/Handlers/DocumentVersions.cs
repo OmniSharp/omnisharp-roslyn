@@ -20,6 +20,11 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
 
         public void Update(VersionedTextDocumentIdentifier identifier)
         {
+            _documentVersions.AddOrUpdate(identifier.Uri, identifier.Version, (uri, i) => identifier.Version);
+        }
+
+        public void Update(OptionalVersionedTextDocumentIdentifier identifier)
+        {
             _documentVersions.AddOrUpdate(identifier.Uri, identifier.Version ?? 0, (uri, i) => identifier.Version ?? 0);
         }
 

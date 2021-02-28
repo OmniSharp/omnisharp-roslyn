@@ -41,9 +41,12 @@ namespace OmniSharp.Script
         public string GetNormalizedRspFilePath(IOmniSharpEnvironment env)
         {
             if (string.IsNullOrWhiteSpace(RspFilePath)) return null;
-            return Path.IsPathRooted(RspFilePath)
-                ? RspFilePath
-                : Path.Combine(env.TargetDirectory, RspFilePath);
+
+            var expandedPath = Environment.ExpandEnvironmentVariables(RspFilePath);
+
+            return Path.IsPathRooted(expandedPath)
+                ? expandedPath
+                : Path.Combine(env.TargetDirectory, expandedPath);
         }
 
         public Dictionary<string, ReportDiagnostic> NullableDiagnostics => _nullableDiagnostics.Value;

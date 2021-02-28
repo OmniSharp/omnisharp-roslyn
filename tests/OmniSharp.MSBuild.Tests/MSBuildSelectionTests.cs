@@ -1,5 +1,9 @@
 using System;
+using System.Collections.Generic;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using OmniSharp.MSBuild.Discovery;
+using OmniSharp.Services;
 using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
@@ -253,6 +257,20 @@ namespace OmniSharp.MSBuild.Tests
 
             // clean up
             msbuildLocator.DeleteFakeInstancesFolders();
+        }
+
+        [Fact]
+        public void CreateDefault_UseBundledOnly_True_LocatesOnlyStandAloneInstance()
+        {
+            var configBuilder = new Microsoft.Extensions.Configuration.ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>()
+            {
+                ["useBundledOnly"] = "true"
+            });
+            var loggerFactory = new LoggerFactory();
+            var locator = MSBuildLocator.CreateDefault(loggerFactory, new AssemblyLoader(loggerFactory), configBuilder.Build());
+            var instances = locator.GetInstances();
+            Assert.Single(instances);
+            Assert.Equal(DiscoveryType.StandAlone, instances[0].DiscoveryType);
         }
 
         private static MSBuildInstance GetStandAloneMSBuildInstance()

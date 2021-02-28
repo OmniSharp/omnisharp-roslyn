@@ -15,20 +15,22 @@ namespace OmniSharp.MSBuild.ProjectFile
         public static CSharpCompilationOptions CreateCompilationOptions(this ProjectFileInfo projectFileInfo)
         {
             var compilationOptions = new CSharpCompilationOptions(projectFileInfo.OutputKind);
+            return projectFileInfo.CreateCompilationOptions(compilationOptions);
+        }
 
-            compilationOptions = compilationOptions.WithAssemblyIdentityComparer(DesktopAssemblyIdentityComparer.Default)
-                                    .WithSpecificDiagnosticOptions(projectFileInfo.GetDiagnosticOptions())
-                                    .WithOverflowChecks(projectFileInfo.CheckForOverflowUnderflow);
+        public static CSharpCompilationOptions CreateCompilationOptions(this ProjectFileInfo projectFileInfo, CSharpCompilationOptions existingCompilationOptions)
+        {
+            var compilationOptions = existingCompilationOptions.WithAssemblyIdentityComparer(DesktopAssemblyIdentityComparer.Default)
+                        .WithSpecificDiagnosticOptions(projectFileInfo.GetDiagnosticOptions())
+                        .WithOverflowChecks(projectFileInfo.CheckForOverflowUnderflow);
 
-            if (projectFileInfo.AllowUnsafeCode)
+            if (projectFileInfo.AllowUnsafeCode != compilationOptions.AllowUnsafe)
             {
-                compilationOptions = compilationOptions.WithAllowUnsafe(true);
+                compilationOptions = compilationOptions.WithAllowUnsafe(projectFileInfo.AllowUnsafeCode);
             }
 
-            if (projectFileInfo.TreatWarningsAsErrors)
-            {
-                compilationOptions = compilationOptions.WithGeneralDiagnosticOption(ReportDiagnostic.Error);
-            }
+            compilationOptions = projectFileInfo.TreatWarningsAsErrors ?
+                        compilationOptions.WithGeneralDiagnosticOption(ReportDiagnostic.Error) : compilationOptions.WithGeneralDiagnosticOption(ReportDiagnostic.Default);
 
             if (projectFileInfo.NullableContextOptions != compilationOptions.NullableContextOptions)
             {

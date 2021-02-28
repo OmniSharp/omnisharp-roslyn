@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
@@ -72,6 +72,12 @@ namespace OmniSharp.Script
                 var rspFilePath = _scriptOptions.GetNormalizedRspFilePath(_env);
                 if (rspFilePath != null)
                 {
+                    if(!File.Exists(rspFilePath))
+                    {
+                        _logger.LogError($"Unable to find RSP file at '{rspFilePath}` at path. Falling back on default values.");
+                        return null;
+                    }
+
                     _logger.LogInformation($"Discovered an RSP file at '{rspFilePath}' - will use this file to discover CSX namespaces and references.");
                     return CSharpCommandLineParser.Script.Parse(new string[] { $"@{rspFilePath}" },
                         _env.TargetDirectory,
@@ -96,6 +102,14 @@ namespace OmniSharp.Script
             foreach (var ns in compilationOptions.Usings)
             {
                 _logger.LogDebug($"CSX global using statement: {ns}");
+            }
+
+            if(csharpCommandLineArguments != null)
+            {
+                foreach(var error in csharpCommandLineArguments.Errors)
+                {
+                    _logger.LogError($"CSX RSP parse error. {error.GetMessage()}");
+                }
             }
 
             var metadataReferenceResolver = CreateMetadataReferenceResolver(csharpCommandLineArguments?.ReferencePaths);

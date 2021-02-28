@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using OmniSharp.Extensions.JsonRpc;
+using OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OmniSharp.Extensions.LanguageServer.Protocol.Server;
 using OmniSharp.Extensions.LanguageServer.Protocol.Workspace;
@@ -14,7 +15,7 @@ using OmniSharp.Models.FindSymbols;
 
 namespace OmniSharp.LanguageServerProtocol.Handlers
 {
-    internal sealed class OmniSharpWorkspaceSymbolsHandler : WorkspaceSymbolsHandler
+    internal sealed class OmniSharpWorkspaceSymbolsHandler : WorkspaceSymbolsHandlerBase
     {
         private readonly IEnumerable<IRequestHandler<FindSymbolsRequest, QuickFixResponse>> _findSymbolsHandlers;
 
@@ -33,8 +34,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
         }
 
         public OmniSharpWorkspaceSymbolsHandler(
-            IEnumerable<IRequestHandler<FindSymbolsRequest, QuickFixResponse>> findSymbolsHandlers) : base(
-            new WorkspaceSymbolRegistrationOptions() { })
+            IEnumerable<IRequestHandler<FindSymbolsRequest, QuickFixResponse>> findSymbolsHandlers)
         {
             _findSymbolsHandlers = findSymbolsHandlers.ToArray();
         }
@@ -67,6 +67,11 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                         }
                     })
                 .ToArray();
+        }
+
+        protected override WorkspaceSymbolRegistrationOptions CreateRegistrationOptions(WorkspaceSymbolCapability capability, ClientCapabilities clientCapabilities)
+        {
+            return new WorkspaceSymbolRegistrationOptions() { };
         }
     }
 }
