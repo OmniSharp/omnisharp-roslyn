@@ -1,7 +1,8 @@
 
 name: 'Build'
 env:
-  DotNetVersion: "3.1.402"
+  DotNetVersion: "5.0.102"
+  DotNetVersion2: "3.1.405"
   NuGetVersion: "5.7.0"
   MonoVersion: "6.12.0"
   Artifacts: ${{ github.workspace }}/artifacts/
@@ -49,7 +50,12 @@ jobs:
         with:
           dotnet-version: '2.1.x'
 
-      - name: 🔨 Use .NET Core 3.1.402 SDK
+      - name: 🔨 Use .NET Core ${{ env.DotNetVersion2 }} SDK
+        uses: actions/setup-dotnet@v1.7.2
+        with:
+          dotnet-version: ${{ env.DotNetVersion2 }}
+
+      - name: 🔨 Use .NET Core ${{ env.DotNetVersion }} SDK
         uses: actions/setup-dotnet@v1.7.2
         with:
           dotnet-version: ${{ env.DotNetVersion }}
