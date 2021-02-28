@@ -136,7 +136,7 @@ Task("CleanUpMonoAssets")
     .WithCriteria(() => !Platform.Current.IsWindows)
     .Does(() =>
 {
-    if (DirectoryHelper.Exists(env.Folders.Mono)) 
+    if (DirectoryHelper.Exists(env.Folders.Mono))
     {
         DirectoryHelper.Delete(env.Folders.Mono, recursive: true);
     }
@@ -146,7 +146,7 @@ Task("InstallMonoAssets")
     .WithCriteria(() => !Platform.Current.IsWindows)
     .Does(() =>
 {
-    if (DirectoryHelper.Exists(env.Folders.Mono)) 
+    if (DirectoryHelper.Exists(env.Folders.Mono))
     {
         Information("Skipping Mono assets installation, because they already exist.");
         return;
@@ -935,11 +935,11 @@ Task("Install")
         }
 
         var outputFolder = PathHelper.GetFullPath(CombinePaths(env.Folders.ArtifactsPublish, project, platform));
-        var targetFolder = PathHelper.GetFullPath(CombinePaths(installFolder));
+        var targetFolder = PathHelper.GetFullPath(CombinePaths(installFolder, project));
 
         DirectoryHelper.Copy(outputFolder, targetFolder);
 
-        CreateRunScript(project, installFolder, env.Folders.ArtifactsScripts);
+        CreateRunScript(project, CombinePaths(installFolder, project), env.Folders.ArtifactsScripts);
 
         Information($"OmniSharp is installed locally at {installFolder}");
     }
