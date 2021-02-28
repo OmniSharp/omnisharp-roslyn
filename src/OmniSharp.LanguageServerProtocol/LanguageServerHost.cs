@@ -194,9 +194,10 @@ namespace OmniSharp.LanguageServerProtocol
             Action<ILoggingBuilder> configureLogging)
         {
             var logLevel = GetLogLevel(initializeParams.Trace);
-            var root = Helpers.FromUri(initializeParams.RootUri);
             var environment = new OmniSharpEnvironment(
-                string.IsNullOrEmpty(root) ? application.ApplicationRoot : root,
+                // TODO: Support solution selection from the server side in the future
+                // For now selection can be done by passing -s to the server
+                !string.IsNullOrEmpty(application.ApplicationRoot) ? application.ApplicationRoot : Helpers.FromUri(initializeParams.RootUri),
                 Convert.ToInt32(initializeParams.ProcessId ?? application.HostPid),
                 application.LogLevel < logLevel ? application.LogLevel : logLevel,
                 application.OtherArgs.ToArray());
