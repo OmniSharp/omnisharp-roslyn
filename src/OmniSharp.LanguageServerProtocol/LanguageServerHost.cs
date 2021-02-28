@@ -15,7 +15,9 @@ using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Console;
 using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using OmniSharp.Endpoint;
 using OmniSharp.Extensions.JsonRpc;
@@ -105,6 +107,9 @@ namespace OmniSharp.LanguageServerProtocol
                 Section = "omnisharp"
             });
             services.AddSingleton(new DocumentVersions());
+            // This allows us to log normal messages over std error
+            // which then ensures that all communication over std out are LSP messages
+            services.Configure<ConsoleLoggerOptions>(z => z.LogToStandardErrorThreshold = LogLevel.Trace);
         }
 
         public void Dispose()
@@ -118,7 +123,8 @@ namespace OmniSharp.LanguageServerProtocol
             try
             {
                 _cancellationTokenSource.Cancel();
-            } catch (ObjectDisposedException){}
+            }
+            catch (ObjectDisposedException) { }
         }
 
         public async Task Start()
@@ -291,7 +297,7 @@ namespace OmniSharp.LanguageServerProtocol
             // and not loose any functionality.
             server.Register(r =>
             {
-                var defaultOptions = new JsonRpcHandlerOptions() {RequestProcessType = RequestProcessType.Parallel};
+                var defaultOptions = new JsonRpcHandlerOptions() { RequestProcessType = RequestProcessType.Parallel };
                 var interop = InitializeInterop(compositionHost);
                 foreach (var osHandler in interop)
                 {
