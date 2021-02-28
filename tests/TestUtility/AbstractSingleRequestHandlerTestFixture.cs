@@ -1,4 +1,5 @@
-﻿using OmniSharp.Mef;
+﻿using Microsoft.CodeAnalysis;
+using OmniSharp.Mef;
 using Xunit.Abstractions;
 
 namespace TestUtility
@@ -18,9 +19,9 @@ namespace TestUtility
 
         protected abstract string EndpointName { get; }
 
-        protected TRequestHandler GetRequestHandler(OmniSharpTestHost host)
+        protected TRequestHandler GetRequestHandler(OmniSharpTestHost host, string languageName = LanguageNames.CSharp)
         {
-            return host.GetRequestHandler<TRequestHandler>(EndpointName);
+            return host.GetRequestHandler<TRequestHandler>(EndpointName, languageName);
         }
     }
 }

@@ -38,6 +38,7 @@ namespace TestUtility
             typeof(ScriptProjectSystem).GetTypeInfo().Assembly, // OmniSharp.Script
             typeof(OmniSharpWorkspace).GetTypeInfo().Assembly, // OmniSharp.Roslyn
             typeof(RoslynFeaturesHostServicesProvider).GetTypeInfo().Assembly, // OmniSharp.Roslyn.CSharp
+            typeof(OmniSharp.Roslyn.VisualBasic.Services.Structure.BlockStructureService).Assembly, // OmniSharp.Roslyn.VisualBasic
             typeof(CakeProjectSystem).GetTypeInfo().Assembly, // OmniSharp.Cake
             typeof(LanguageServerHost).Assembly, // OmniSharp.LanguageServerProtocol
         });
@@ -140,11 +141,27 @@ namespace TestUtility
         public IEnumerable<ProjectId> AddFilesToWorkspace(string folderPath, params TestFile[] testFiles)
         {
             folderPath = folderPath ?? Directory.GetCurrentDirectory();
+
+            var csFiles = testFiles.Where(f => f.FileName.EndsWith(".cs", StringComparison.OrdinalIgnoreCase)).ToArray();
+            var vbFiles = testFiles.Where(f => f.FileName.EndsWith(".vb", StringComparison.OrdinalIgnoreCase)).ToArray();
+
             var projects = TestHelpers.AddProjectToWorkspace(
-                Workspace,
-                Path.Combine(folderPath, "project.csproj"),
-                new[] { "net472" },
-                testFiles.Where(f => f.FileName.EndsWith(".cs", StringComparison.OrdinalIgnoreCase)).ToArray());
+                    Workspace,
+                    Path.Combine(folderPath, "project.csproj"),
+                    new[] { "net472" },
+                    csFiles);
+
+            if (vbFiles.Length > 0)
+            {
+                projects = projects.Concat(
+                    TestHelpers.AddProjectToWorkspace(
+                    Workspace,
+                    Path.Combine(folderPath, "project.vbproj"),
+                    new[] { "net472" },
+                    vbFiles,
+                    languageName: LanguageNames.VisualBasic)
+                );
+            }
 
             foreach (var csxFile in testFiles.Where(f => f.FileName.EndsWith(".csx", StringComparison.OrdinalIgnoreCase)))
             {
