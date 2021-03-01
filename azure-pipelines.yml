@@ -6,14 +6,14 @@ parameters:
       - OmniSharp.MSBuild.Tests,OmniSharp.Roslyn.CSharp.Tests,OmniSharp.Cake.Tests,OmniSharp.Script.Tests,OmniSharp.Stdio.Tests,OmniSharp.Http.Tests,OmniSharp.Tests,OmniSharp.Lsp.Tests
 
 trigger:
-  batch: 'true'
+  batch: "true"
   branches:
     include:
       - master
       - refs/tags/*
 
 pr:
-  autoCancel: 'true'
+  autoCancel: "true"
   branches:
     include:
       - master
@@ -66,34 +66,8 @@ jobs:
           echo $PATH
           chmod 755 ./build.sh
           ./build.sh --configuration Release --verbosity Verbose --target CI --publish-all --archive
-        displayName: 'Build'
+        displayName: "Build"
       - template: ./.pipelines/artifacts.yml
-        parameters:
-          Artifacts: $(Artifacts)
-
-  - job: macOS_tests
-    pool:
-      vmImage: "macOS-10.15"
-    dependsOn: GitVersion
-    strategy:
-      matrix:
-        ${{ each project in parameters.testProjects }}:
-          ${{ project }}:
-            TEST_PROJECT: ${{ project }}
-    steps:
-      - template: ./.pipelines/init.yml
-        parameters:
-          Verbosity: $(Verbosity)
-          CakeVersion: $(CakeVersion)
-          DotNetVersion: $(DotNetVersion)
-          NuGetVersion: $(NuGetVersion)
-          MonoVersion: $(MonoVersion)
-      - script: |
-          echo $PATH
-          chmod 755 ./build.sh
-          ./build.sh --configuration Debug --verbosity Verbose --target Test --test-project="$TEST_PROJECT"
-        displayName: 'Build'
-      - template: ./.pipelines/logs.yml
         parameters:
           Artifacts: $(Artifacts)
 
@@ -112,33 +86,8 @@ jobs:
       - script: |
           chmod 755 ./build.sh
           ./build.sh --configuration Release --verbosity Verbose --target CI --publish-all --archive
-        displayName: 'Build'
+        displayName: "Build"
       - template: ./.pipelines/artifacts.yml
-        parameters:
-          Artifacts: $(Artifacts)
-
-  - job: Linux_tests
-    pool:
-      vmImage: "ubuntu-18.04"
-    dependsOn: GitVersion
-    strategy:
-      matrix:
-        ${{ each project in parameters.testProjects }}:
-          ${{ project }}:
-            TEST_PROJECT: ${{ project }}
-    steps:
-      - template: ./.pipelines/init.yml
-        parameters:
-          Verbosity: $(Verbosity)
-          CakeVersion: $(CakeVersion)
-          DotNetVersion: $(DotNetVersion)
-          NuGetVersion: $(NuGetVersion)
-          MonoVersion: $(MonoVersion)
-      - script: |
-          chmod 755 ./build.sh
-          ./build.sh --configuration Debug --verbosity Verbose --target Test --test-project="$TEST_PROJECT"
-        displayName: 'Build'
-      - template: ./.pipelines/logs.yml
         parameters:
           Artifacts: $(Artifacts)
 
@@ -154,30 +103,8 @@ jobs:
           DotNetVersion: $(DotNetVersion)
           NuGetVersion: $(NuGetVersion)
       - powershell: .\build.ps1 -configuration Release -verbosity Verbose -target CI --publish-all --archive
-        displayName: 'Build'
+        displayName: "Build"
       - template: ./.pipelines/artifacts.yml
-        parameters:
-          Artifacts: $(Artifacts)
-
-  - job: Windows_tests
-    pool:
-      vmImage: "windows-2019"
-    dependsOn: GitVersion
-    strategy:
-      matrix:
-        ${{ each project in parameters.testProjects }}:
-          ${{ project }}:
-            TEST_PROJECT: ${{ project }}
-    steps:
-      - template: ./.pipelines/init.yml
-        parameters:
-          Verbosity: $(Verbosity)
-          CakeVersion: $(CakeVersion)
-          DotNetVersion: $(DotNetVersion)
-          NuGetVersion: $(NuGetVersion)
-      - powershell: .\build.ps1 -configuration Debug -verbosity Verbose --test-project="$ENV:TEST_PROJECT" -target Test
-        displayName: 'Build'
-      - template: ./.pipelines/logs.yml
         parameters:
           Artifacts: $(Artifacts)
 
@@ -186,51 +113,48 @@ jobs:
       vmImage: "Ubuntu-16.04"
     dependsOn:
       - macOS
-      - macOS_tests
       - Linux
-      - Linux_tests
       - Windows
-      - Windows_tests
     steps:
       - task: NuGetToolInstaller@1
-        displayName: 'Install NuGet'
+        displayName: "Install NuGet"
         inputs:
           versionSpec: $(NuGetVersion)
       - task: DownloadBuildArtifacts@0
         displayName: Download Packages
         inputs:
-          downloadType: 'single'
-          artifactName: 'packages'
-          buildType: 'current'
-          downloadPath: '$(System.ArtifactsDirectory)'
+          downloadType: "single"
+          artifactName: "packages"
+          buildType: "current"
+          downloadPath: "$(System.ArtifactsDirectory)"
       - task: DownloadBuildArtifacts@0
         displayName: Download Deployment
         inputs:
-          downloadType: 'single'
-          artifactName: 'deployment'
-          buildType: 'current'
-          downloadPath: '$(System.ArtifactsDirectory)'
+          downloadType: "single"
+          artifactName: "deployment"
+          buildType: "current"
+          downloadPath: "$(System.ArtifactsDirectory)"
       - task: DownloadBuildArtifacts@0
         displayName: Download NuGet
         inputs:
-          downloadType: 'single'
-          artifactName: 'nuget'
-          buildType: 'current'
-          downloadPath: '$(System.ArtifactsDirectory)'
+          downloadType: "single"
+          artifactName: "nuget"
+          buildType: "current"
+          downloadPath: "$(System.ArtifactsDirectory)"
       - task: NuGetCommand@2
-        displayName: 'Push NuGet packages to myget.org'
+        displayName: "Push NuGet packages to myget.org"
         inputs:
           command: push
           nuGetFeedType: external
-          packagesToPush: '$(System.ArtifactsDirectory)/nuget/**/*.nupkg'
+          packagesToPush: "$(System.ArtifactsDirectory)/nuget/**/*.nupkg"
           publishFeedCredentials: myget.org
         condition: and(succeeded(), or(startsWith(variables['Build.SourceBranch'], 'refs/tags/v'), eq(variables['Build.SourceBranch'], 'refs/heads/master')))
       - task: NuGetCommand@2
-        displayName: 'Push NuGet packages to nuget.org'
+        displayName: "Push NuGet packages to nuget.org"
         inputs:
           command: push
           nuGetFeedType: external
-          packagesToPush: '$(System.ArtifactsDirectory)/nuget/**/*.nupkg'
+          packagesToPush: "$(System.ArtifactsDirectory)/nuget/**/*.nupkg"
           publishFeedCredentials: nuget.org
         condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/tags/v'))
       - script: |
@@ -246,15 +170,15 @@ jobs:
         env:
           BLOB_KEY: $(BLOB_KEY)
       - task: GitHubRelease@0
-        displayName: 'GitHub release (edit)'
+        displayName: "GitHub release (edit)"
         condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/tags/v'))
         inputs:
           gitHubConnection: github
           repositoryName: OmniSharp/omnisharp-roslyn
           action: edit
-          tag: '$(Build.SourceBranchName)'
-          title: '$(Build.SourceBranchName)'
-          assets: '$(System.ArtifactsDirectory)/packages/**/*'
+          tag: "$(Build.SourceBranchName)"
+          title: "$(Build.SourceBranchName)"
+          assets: "$(System.ArtifactsDirectory)/packages/**/*"
           assetUploadMode: replace
           # releaseNotesSource: input
           # releaseNotes: asdfasdf12
