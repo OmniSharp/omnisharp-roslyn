@@ -30,8 +30,8 @@ variables:
   Verbosity: Diagnostic
   DotNetVersion: "5.0.102"
   DotNetVersion2: "3.1.405"
-  CakeVersion: "0.32.1"
-  NuGetVersion: "4.9.2"
+  CakeVersion: "1.0.0-rc0001"
+  NuGetVersion: "5.7.0"
   GitVersionVersion: "5.0.1"
   MonoVersion: "6.12.0"
   Coverage: "$(Agent.BuildDirectory)/c"
@@ -153,7 +153,7 @@ jobs:
           CakeVersion: $(CakeVersion)
           DotNetVersion: $(DotNetVersion)
           NuGetVersion: $(NuGetVersion)
-      - powershell: .\build.ps1 -configuration Release -verbosity Verbose -target CI -publish-all -archive
+      - powershell: .\build.ps1 -configuration Release -verbosity Verbose -target CI --publish-all --archive
         displayName: 'Build'
       - template: ./.pipelines/artifacts.yml
         parameters:

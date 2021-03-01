@@ -3,8 +3,8 @@ parameters:
   Verbosity: Normal
   DotNetVersion: "5.0.102"
   DotNetVersion2: "3.1.405"
-  CakeVersion: "0.32.1"
-  NuGetVersion: "4.9.2"
+  CakeVersion: "1.0.0-rc0001"
+  NuGetVersion: "5.7.0"
   MonoVersion: ''
 steps:
   - task: DownloadBuildArtifacts@0
