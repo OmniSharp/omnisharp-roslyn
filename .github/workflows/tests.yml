@@ -78,19 +78,29 @@ jobs:
 
       - name: 🍰 Run Cake
         if: ${{ runner.os == 'Linux' || runner.os == 'macOS' }}
-        shell: bash
-        run: |
-          echo $PATH
-          chmod 755 ./build.sh
-          ./build.sh --configuration Release --verbosity Verbose --target Test --test-project="$TEST_PROJECT"
+        uses: nick-invision/retry@v2
+        with:
+          shell: bash
+          timeout_minutes: 40
+          max_attempts: 3
+          retry_on: error
+          command: |
+            echo $PATH
+            chmod 755 ./build.sh
+            ./build.sh --configuration Release --verbosity Verbose --target Test --test-project="$TEST_PROJECT"
         env:
           TEST_PROJECT: ${{ matrix.testProjects }}
 
       - name: 🍰 Run Cake
         if: ${{ runner.os == 'Windows' }}
-        shell: powershell
-        run: |
-          .\build.ps1 -configuration Release -verbosity Verbose -target Test --test-project="$ENV:TEST_PROJECT"
+        uses: nick-invision/retry@v2
+        with:
+          shell: powershell
+          timeout_minutes: 40
+          max_attempts: 3
+          retry_on: error
+          command: |
+            .\build.ps1 -configuration Release -verbosity Verbose -target Test --test-project="$ENV:TEST_PROJECT"
         env:
           TEST_PROJECT: ${{ matrix.testProjects }}
 
