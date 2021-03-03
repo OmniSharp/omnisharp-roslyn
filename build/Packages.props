@@ -6,7 +6,7 @@
         <MicrosoftExtensionPackageVersion>3.1.12</MicrosoftExtensionPackageVersion>
         <MSBuildPackageVersion>16.9.0</MSBuildPackageVersion>
         <NuGetPackageVersion>5.2.0</NuGetPackageVersion>
-        <RoslynPackageVersion>3.9.0-6.21124.20</RoslynPackageVersion>
+        <RoslynPackageVersion>3.10.0-1.21125.6</RoslynPackageVersion>
         <XunitPackageVersion>2.4.1</XunitPackageVersion>
     </PropertyGroup>
 
@@ -66,7 +66,7 @@
         <PackageReference Update="OmniSharp.Extensions.LanguageServer" Version="0.19.0" />
         <PackageReference Update="OmniSharp.Extensions.LanguageProtocol.Testing" Version="0.19.0" />
 
-        <PackageReference Update="SQLitePCLRaw.bundle_green" Version="1.1.2" />
+        <PackageReference Update="SQLitePCLRaw.bundle_green" Version="2.0.4" />
         <PackageReference Update="System.Collections.Immutable" Version="5.0.0" />
         <PackageReference Update="System.ComponentModel.Composition" Version="4.5.0" />
         <PackageReference Update="System.Composition" Version="1.0.31" />
