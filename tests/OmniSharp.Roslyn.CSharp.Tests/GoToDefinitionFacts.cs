@@ -483,7 +483,7 @@ class Bar {
             // second comment should indicate we have decompiled
             var comments = compilationUnit.DescendantTrivia().Where(t => t.Kind() == SyntaxKind.SingleLineCommentTrivia).ToArray();
             Assert.NotNull(comments);
-            Assert.Equal("// Decompiled with ICSharpCode.Decompiler 6.1.0.5902", comments[1].ToString());
+            Assert.Equal("// Decompiled with ICSharpCode.Decompiler 7.0.0.6372", comments[1].ToString());
 
             // contrary to regular metadata, we should have methods with full bodies
             // this condition would fail if decompilation wouldn't work
