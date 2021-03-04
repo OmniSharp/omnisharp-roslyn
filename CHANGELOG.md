@@ -1,7 +1,7 @@
 # Changelog
 All changes to the project will be documented in this file.
 
-## [1.37.7] - 2021-03-03
+## [1.37.7] - 2021-03-04
 * Update Roslyn version to `3.10.0-1.21125.6` (PR: [#2105](https://github.com/OmniSharp/omnisharp-roslyn/pull/2105))
 * Update included build tools to closely match NET 6 Preview 1 SDK (PR: [#2103](https://github.com/OmniSharp/omnisharp-roslyn/pull/2103))
 * Updated to latest lsp version (PR: [#2099](https://github.com/OmniSharp/omnisharp-roslyn/pull/2099))
