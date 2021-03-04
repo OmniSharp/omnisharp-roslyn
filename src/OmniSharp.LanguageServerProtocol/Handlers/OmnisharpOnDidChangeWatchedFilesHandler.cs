@@ -2,6 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using MediatR;
+using OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OmniSharp.Extensions.LanguageServer.Protocol.Workspace;
 using OmniSharp.FileWatching;
@@ -9,21 +10,11 @@ using FileChangeType = OmniSharp.Extensions.LanguageServer.Protocol.Models.FileC
 
 namespace OmniSharp.LanguageServerProtocol.Handlers
 {
-    internal sealed class OmnisharpOnDidChangeWatchedFilesHandler : DidChangeWatchedFilesHandler
+    internal sealed class OmnisharpOnDidChangeWatchedFilesHandler : DidChangeWatchedFilesHandlerBase
     {
         private readonly IFileSystemNotifier _fileSystemNotifier;
 
-        public OmnisharpOnDidChangeWatchedFilesHandler(IFileSystemNotifier fileSystemNotifier) : base(
-            new DidChangeWatchedFilesRegistrationOptions()
-            {
-                Watchers = new Container<FileSystemWatcher>(
-                    new FileSystemWatcher()
-                    {
-                        Kind = WatchKind.Create | WatchKind.Change | WatchKind.Delete,
-                        GlobPattern = "**/*.*"
-                    }
-                )
-            })
+        public OmnisharpOnDidChangeWatchedFilesHandler(IFileSystemNotifier fileSystemNotifier)
         {
             _fileSystemNotifier = fileSystemNotifier;
         }
@@ -53,6 +44,20 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             }
 
             return Unit.Task;
+        }
+
+        protected override DidChangeWatchedFilesRegistrationOptions CreateRegistrationOptions(DidChangeWatchedFilesCapability capability, ClientCapabilities clientCapabilities)
+        {
+            return new DidChangeWatchedFilesRegistrationOptions()
+                {
+                    Watchers = new Container<FileSystemWatcher>(
+                        new FileSystemWatcher()
+                        {
+                            Kind = WatchKind.Create | WatchKind.Change | WatchKind.Delete,
+                            GlobPattern = "**/*.*"
+                        }
+                    )
+                };
         }
     }
 }

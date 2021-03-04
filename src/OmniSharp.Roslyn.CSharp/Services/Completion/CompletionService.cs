@@ -132,7 +132,13 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                 return new CompletionResponse { Items = ImmutableArray<CompletionItem>.Empty };
             }
 
-            if (request.TriggerCharacter == ' ' && !completions.Items.Any(c => c.IsObjectCreationCompletionItem()))
+            if (request.TriggerCharacter == ' ' && !completions.Items.Any(c =>
+            {
+                var providerName = c.GetProviderName();
+                return providerName == CompletionItemExtensions.OverrideCompletionProvider ||
+                       providerName == CompletionItemExtensions.PartialMethodCompletionProvider ||
+                       providerName == CompletionItemExtensions.ObjectCreationCompletionProvider;
+            }))
             {
                 // Only trigger on space if there is an object creation completion
                 return new CompletionResponse { Items = ImmutableArray<CompletionItem>.Empty };

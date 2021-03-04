@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using OmniSharp.Extensions.JsonRpc;
+using OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities;
 using OmniSharp.Extensions.LanguageServer.Protocol.Document;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OmniSharp.Extensions.LanguageServer.Protocol.Server;
@@ -12,7 +13,7 @@ using Range = OmniSharp.Extensions.LanguageServer.Protocol.Models.Range;
 
 namespace OmniSharp.LanguageServerProtocol.Handlers
 {
-    internal sealed class OmniSharpDocumentFormatRangeHandler : DocumentRangeFormattingHandler
+    internal sealed class OmniSharpDocumentFormatRangeHandler : DocumentRangeFormattingHandlerBase
     {
         public static IEnumerable<IJsonRpcHandler> Enumerate(RequestHandlers handlers)
         {
@@ -23,17 +24,15 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
         }
 
         private readonly Mef.IRequestHandler<FormatRangeRequest, FormatRangeResponse> _formatRangeHandler;
+        private readonly DocumentSelector _documentSelector;
 
-        public OmniSharpDocumentFormatRangeHandler(Mef.IRequestHandler<FormatRangeRequest, FormatRangeResponse> formatRangeHandler, DocumentSelector documentSelector) : base(
-            new DocumentRangeFormattingRegistrationOptions()
-            {
-                DocumentSelector = documentSelector,
-            })
+        public OmniSharpDocumentFormatRangeHandler(Mef.IRequestHandler<FormatRangeRequest, FormatRangeResponse> formatRangeHandler, DocumentSelector documentSelector)
         {
             _formatRangeHandler = formatRangeHandler;
+            _documentSelector = documentSelector;
         }
 
-        public async override Task<TextEditContainer> Handle(DocumentRangeFormattingParams request, CancellationToken cancellationToken)
+        public override async Task<TextEditContainer> Handle(DocumentRangeFormattingParams request, CancellationToken cancellationToken)
         {
             var omnisharpRequest = new FormatRangeRequest()
             {
@@ -50,6 +49,14 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                 NewText = change.NewText,
                 Range = new Range(new Position(change.StartLine, change.StartColumn), new Position(change.EndLine, change.EndColumn))
             }).ToArray();
+        }
+
+        protected override DocumentRangeFormattingRegistrationOptions CreateRegistrationOptions(DocumentRangeFormattingCapability capability, ClientCapabilities clientCapabilities)
+        {
+            return new DocumentRangeFormattingRegistrationOptions()
+            {
+                DocumentSelector = _documentSelector,
+            };
         }
     }
 }

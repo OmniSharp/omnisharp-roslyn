@@ -18,7 +18,7 @@ using OmniSharp.Models.MembersTree;
 
 namespace OmniSharp.LanguageServerProtocol.Handlers
 {
-    internal sealed class OmniSharpCodeLensHandler : CodeLensHandler
+    internal sealed class OmniSharpCodeLensHandler : CodeLensHandlerBase
     {
         public static IEnumerable<IJsonRpcHandler> Enumerate(RequestHandlers handlers)
         {
@@ -33,22 +33,19 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
 
         private readonly Mef.IRequestHandler<MembersTreeRequest, FileMemberTree> _membersAsTreeHandler;
         private readonly Mef.IRequestHandler<FindUsagesRequest, QuickFixResponse> _findUsagesHandler;
+        private readonly DocumentSelector _documentSelector;
 
         public OmniSharpCodeLensHandler(
             Mef.IRequestHandler<MembersTreeRequest, FileMemberTree> membersAsTreeHandler,
             Mef.IRequestHandler<FindUsagesRequest, QuickFixResponse> findUsagesHandler,
             DocumentSelector documentSelector)
-            : base(new CodeLensRegistrationOptions()
-            {
-                DocumentSelector = documentSelector,
-                ResolveProvider = true
-            })
         {
             _membersAsTreeHandler = membersAsTreeHandler;
             _findUsagesHandler = findUsagesHandler;
+            _documentSelector = documentSelector;
         }
 
-        public async override Task<CodeLensContainer> Handle(CodeLensParams request, CancellationToken token)
+        public override async Task<CodeLensContainer> Handle(CodeLensParams request, CancellationToken token)
         {
             var omnisharpRequest = new MembersTreeRequest()
             {
@@ -66,7 +63,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             return codeLenseContainer;
         }
 
-        public async override Task<CodeLens> Handle(CodeLens request, CancellationToken token)
+        public override async Task<CodeLens> Handle(CodeLens request, CancellationToken token)
         {
             var omnisharpRequest = new FindUsagesRequest
             {
@@ -86,7 +83,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                 ContractResolver = new CamelCasePropertyNamesContractResolver()
             };
 
-            request.Command = new Command
+            request = request with { Command = new Command
             {
                 Title = length == 1 ? "1 reference" : $"{length} references",
                 Name = "omnisharp/client/findReferences",
@@ -96,12 +93,12 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                         JObject.FromObject(
                             new Location
                             {
-                                Uri = request.Data.ToObject<Uri>(),
+                                Uri = request.Data.ToObject<Uri>()!,
                                 Range = request.Range,
                             },
                             jsonCamelCaseContract)
                     }),
-            };
+            } };
 
             return request;
         }
@@ -126,6 +123,15 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                     ToCodeLens(textDocument, childNode, codeLensContainer);
                 }
             }
+        }
+
+        protected override CodeLensRegistrationOptions CreateRegistrationOptions(CodeLensCapability capability, ClientCapabilities clientCapabilities)
+        {
+            return new CodeLensRegistrationOptions()
+            {
+                DocumentSelector = _documentSelector,
+                ResolveProvider = true
+            };
         }
     }
 }

@@ -13,7 +13,7 @@ using OmniSharp.Models.V2.CodeStructure;
 
 namespace OmniSharp.LanguageServerProtocol.Handlers
 {
-    internal sealed class OmniSharpDocumentSymbolHandler : DocumentSymbolHandler
+    internal sealed class OmniSharpDocumentSymbolHandler : DocumentSymbolHandlerBase
     {
         public static IEnumerable<IJsonRpcHandler> Enumerate(RequestHandlers handlers)
         {
@@ -24,17 +24,15 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
         }
 
         private readonly Mef.IRequestHandler<CodeStructureRequest, CodeStructureResponse> _codeStructureHandler;
+        private readonly DocumentSelector _documentSelector;
 
         public OmniSharpDocumentSymbolHandler(Mef.IRequestHandler<CodeStructureRequest, CodeStructureResponse> codeStructureHandler, DocumentSelector documentSelector)
-            : base(new DocumentSymbolRegistrationOptions()
-            {
-                DocumentSelector = documentSelector
-            })
         {
             _codeStructureHandler = codeStructureHandler;
+            _documentSelector = documentSelector;
         }
 
-        public async override Task<SymbolInformationOrDocumentSymbolContainer> Handle(DocumentSymbolParams request, CancellationToken token)
+        public override async Task<SymbolInformationOrDocumentSymbolContainer> Handle(DocumentSymbolParams request, CancellationToken token)
         {
             var omnisharpRequest = new CodeStructureRequest()
             {
@@ -61,6 +59,14 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                 Range = Helpers.ToRange(node.Ranges[OmniSharp.Models.V2.SymbolRangeNames.Full]),
                 SelectionRange = Helpers.ToRange(node.Ranges[OmniSharp.Models.V2.SymbolRangeNames.Name]),
                 Children = new Container<DocumentSymbol>(node.Children?.Select(ToDocumentSymbol) ?? Enumerable.Empty<DocumentSymbol>())
+            };
+        }
+
+        protected override DocumentSymbolRegistrationOptions CreateRegistrationOptions(DocumentSymbolCapability capability, ClientCapabilities clientCapabilities)
+        {
+            return new DocumentSymbolRegistrationOptions()
+            {
+                DocumentSelector = _documentSelector
             };
         }
     }

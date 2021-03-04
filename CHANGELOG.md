@@ -1,6 +1,16 @@
 # Changelog
 All changes to the project will be documented in this file.
 
+## [1.37.7] - 2021-03-04
+* Update Roslyn version to `3.10.0-1.21125.6` (PR: [#2105](https://github.com/OmniSharp/omnisharp-roslyn/pull/2105))
+* Update included build tools to closely match NET 6 Preview 1 SDK (PR: [#2103](https://github.com/OmniSharp/omnisharp-roslyn/pull/2103))
+* Updated to latest lsp version (PR: [#2099](https://github.com/OmniSharp/omnisharp-roslyn/pull/2099))
+* Improve custom error messages for MSB3644 (PR: [#2097](https://github.com/OmniSharp/omnisharp-roslyn/pull/2097))
+* Do not call FindReferencesAsync for null symbol ([#2054](https://github.com/OmniSharp/omnisharp-roslyn/issues/2054), PR: [#2089](https://github.com/OmniSharp/omnisharp-roslyn/pull/2089))
+* Move LSP Completion to the new CompletionService (PR: [#2074](https://github.com/OmniSharp/omnisharp-roslyn/pull/2074))
+* use an OmniSharp specific message for MSB3644 ([#2029](https://github.com/OmniSharp/omnisharp-roslyn/issues/2029), PR: [#2069](https://github.com/OmniSharp/omnisharp-roslyn/pull/2069))
+* changed the default RunFixAllRequest timeout to 10 seconds (PR: [#2066](https://github.com/OmniSharp/omnisharp-roslyn/pull/2066))
+
 ## [1.37.6] - 2021-01-19
 * Handle records in syntax highlighting ([#2048](https://github.com/OmniSharp/omnisharp-roslyn/issues/2048), PR: [#2049](https://github.com/OmniSharp/omnisharp-roslyn/pull/2049))
 * Remove formatting on new line (PR: [#2053](https://github.com/OmniSharp/omnisharp-roslyn/pull/2053))

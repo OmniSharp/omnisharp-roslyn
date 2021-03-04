@@ -197,7 +197,7 @@ namespace OmniSharp.MSBuild.Tests
             using var testProject = await TestAssets.Instance.GetTestProjectAsync("NetCore21Project");
             using var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory));
             Assert.Single(emitter.ReceivedMessages);
-            Assert.Equal(GetHashedFileExtension("2.1.811"), emitter.ReceivedMessages[0].SdkVersion);
+            Assert.Equal(GetHashedFileExtension("2.1.812"), emitter.ReceivedMessages[0].SdkVersion);
         }
 
         [Fact]
@@ -209,7 +209,7 @@ namespace OmniSharp.MSBuild.Tests
             using var testProject = await TestAssets.Instance.GetTestProjectAsync("NetCore31Project");
             using var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory));
             Assert.Single(emitter.ReceivedMessages);
-            Assert.Equal(GetHashedFileExtension("3.1.403"), emitter.ReceivedMessages[0].SdkVersion);
+            Assert.Equal(GetHashedFileExtension("3.1.405"), emitter.ReceivedMessages[0].SdkVersion);
         }
 
         [Fact]
@@ -221,7 +221,19 @@ namespace OmniSharp.MSBuild.Tests
             using var testProject = await TestAssets.Instance.GetTestProjectAsync("Net50Project");
             using var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory));
             Assert.Equal(2, emitter.ReceivedMessages.Length);
-            Assert.Equal(GetHashedFileExtension("5.0.101"), emitter.ReceivedMessages[0].SdkVersion);
+            Assert.Equal(GetHashedFileExtension("5.0.103"), emitter.ReceivedMessages[0].SdkVersion);
+        }
+
+        [Fact]
+        public async Task The_correct_sdk_version_is_emitted_NET6()
+        {
+            // Arrange
+            var emitter = new ProjectLoadTestEventEmitter();
+
+            using var testProject = await TestAssets.Instance.GetTestProjectAsync("Net60Project");
+            using var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory));
+            Assert.Single(emitter.ReceivedMessages);
+            Assert.Equal(GetHashedFileExtension("6.0.100-preview.1.21103.13"), emitter.ReceivedMessages[0].SdkVersion);
         }
 
         private string GetHashedFileExtension(string fileExtension)

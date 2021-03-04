@@ -120,7 +120,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.SemanticHighlight
                 [ClassificationTypeNames.VerbatimStringLiteral] = SemanticHighlightClassification.VerbatimStringLiteral,
                 [ClassificationTypeNames.StringEscapeCharacter] = SemanticHighlightClassification.StringEscapeCharacter,
                 [ClassificationTypeNames.ClassName] = SemanticHighlightClassification.ClassName,
-                [ClassificationTypeNames.RecordName] = SemanticHighlightClassification.ClassName,
+                [ClassificationTypeNames.RecordClassName] = SemanticHighlightClassification.ClassName,
                 [ClassificationTypeNames.DelegateName] = SemanticHighlightClassification.DelegateName,
                 [ClassificationTypeNames.EnumName] = SemanticHighlightClassification.EnumName,
                 [ClassificationTypeNames.InterfaceName] = SemanticHighlightClassification.InterfaceName,

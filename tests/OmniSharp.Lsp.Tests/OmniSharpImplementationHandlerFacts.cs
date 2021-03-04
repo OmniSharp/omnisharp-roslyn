@@ -210,7 +210,7 @@ namespace OmniSharp.Lsp.Tests
                 {
                     Text = file.Content.Code
                 }),
-                TextDocument = new VersionedTextDocumentIdentifier
+                TextDocument = new OptionalVersionedTextDocumentIdentifier
                 {
                     Uri = DocumentUri.From(file.FileName),
                     Version = 1

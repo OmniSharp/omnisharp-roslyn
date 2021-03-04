@@ -39,6 +39,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
         private readonly ExecuteCommandRegistrationOptions _executeCommandRegistrationOptions;
         private ExecuteCommandCapability _executeCommandCapability;
         private Mef.IRequestHandler<RunCodeActionRequest, RunCodeActionResponse> _runActionHandler;
+        private readonly DocumentSelector _documentSelector;
         private readonly ISerializer _serializer;
         private readonly ILanguageServer _server;
         private readonly DocumentVersions _documentVersions;
@@ -50,17 +51,10 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             ISerializer serializer,
             ILanguageServer server,
             DocumentVersions documentVersions)
-            : base(new CodeActionRegistrationOptions()
-            {
-                DocumentSelector = documentSelector,
-                CodeActionKinds = new Container<CodeActionKind>(
-                    CodeActionKind.SourceOrganizeImports,
-                    CodeActionKind.Refactor,
-                    CodeActionKind.RefactorExtract),
-            })
         {
             _getActionsHandler = getActionsHandler;
             _runActionHandler = runActionHandler;
+            _documentSelector = documentSelector;
             _serializer = serializer;
             _server = server;
             _documentVersions = documentVersions;
@@ -87,7 +81,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             foreach (var ca in omnisharpResponse.CodeActions)
             {
                 CodeActionKind kind;
-                if (ca.Identifier.StartsWith("using ")) { kind = CodeActionKind.SourceOrganizeImports; }
+                if (ca.Identifier.StartsWith("using ")) { kind = CodeActionKind.QuickFix; }
                 else if (ca.Identifier.StartsWith("Inline ")) { kind = CodeActionKind.RefactorInline; }
                 else if (ca.Identifier.StartsWith("Extract ")) { kind = CodeActionKind.RefactorExtract; }
                 else if (ca.Identifier.StartsWith("Change ")) { kind = CodeActionKind.QuickFix; }
@@ -101,7 +95,6 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                         Diagnostics = new Container<Diagnostic>(),
                         Edit = new WorkspaceEdit(),
                         Command = Command.Create("omnisharp/executeCodeAction")
-                            .WithTitle(ca.Name)
                             .WithArguments(new CommandData()
                             {
                                 Uri = request.TextDocument.Uri,
@@ -109,6 +102,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                                 Name = ca.Name,
                                 Range = request.Range,
                             })
+                            with { Title = ca.Name }
                     });
             }
 
@@ -124,7 +118,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
         public async Task<Unit> Handle(ExecuteCommandParams request, CancellationToken cancellationToken)
         {
             Debug.Assert(request.Command == "omnisharp/executeCodeAction");
-            var data = request.Arguments[0].ToObject<CommandData>(_serializer.JsonSerializer);
+            var data = request.ExtractArguments<CommandData>(_serializer);
 
             var omnisharpCaRequest = new RunCodeActionRequest {
                 Identifier = data.Identifier,
@@ -142,7 +136,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             {
                 var edit = Helpers.ToWorkspaceEdit(
                     omnisharpCaResponse.Changes,
-                    _server.ClientSettings.Capabilities.Workspace.WorkspaceEdit.Value,
+                    _server.ClientSettings.Capabilities.Workspace!.WorkspaceEdit.Value,
                     _documentVersions
                 );
                 ;
@@ -168,7 +162,22 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             public Range Range { get; set;}
         }
 
-        ExecuteCommandRegistrationOptions IRegistration<ExecuteCommandRegistrationOptions> .GetRegistrationOptions() => _executeCommandRegistrationOptions;
-        void ICapability<ExecuteCommandCapability>.SetCapability(ExecuteCommandCapability capability) => _executeCommandCapability = capability;
+        ExecuteCommandRegistrationOptions IRegistration<ExecuteCommandRegistrationOptions, ExecuteCommandCapability>.GetRegistrationOptions(ExecuteCommandCapability capability, ClientCapabilities clientCapabilities)
+        {
+            _executeCommandCapability = capability;
+            return _executeCommandRegistrationOptions;
+        }
+
+        protected override CodeActionRegistrationOptions CreateRegistrationOptions(CodeActionCapability capability, ClientCapabilities clientCapabilities)
+        {
+            return new CodeActionRegistrationOptions()
+            {
+                DocumentSelector = _documentSelector,
+                CodeActionKinds = new Container<CodeActionKind>(
+                    CodeActionKind.SourceOrganizeImports,
+                    CodeActionKind.Refactor,
+                    CodeActionKind.RefactorExtract),
+            };
+        }
     }
 }

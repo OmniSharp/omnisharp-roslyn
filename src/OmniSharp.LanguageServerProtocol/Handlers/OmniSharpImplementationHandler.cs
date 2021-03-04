@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using OmniSharp.Extensions.JsonRpc;
+using OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities;
 using OmniSharp.Extensions.LanguageServer.Protocol.Document;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OmniSharp.Models;
@@ -12,7 +13,7 @@ using static OmniSharp.LanguageServerProtocol.Helpers;
 
 namespace OmniSharp.LanguageServerProtocol.Handlers
 {
-    internal sealed class OmniSharpImplementationHandler : ImplementationHandler
+    internal sealed class OmniSharpImplementationHandler : ImplementationHandlerBase
     {
         public static IEnumerable<IJsonRpcHandler> Enumerate(RequestHandlers handlers)
         {
@@ -23,17 +24,15 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
         }
 
         private readonly Mef.IRequestHandler<FindImplementationsRequest, QuickFixResponse> _findImplementationsHandler;
+        private readonly DocumentSelector _documentSelector;
 
         public OmniSharpImplementationHandler(Mef.IRequestHandler<FindImplementationsRequest, QuickFixResponse> findImplementationsHandler, DocumentSelector documentSelector)
-            : base(new ImplementationRegistrationOptions()
-            {
-                DocumentSelector = documentSelector
-            })
         {
             _findImplementationsHandler = findImplementationsHandler;
+            _documentSelector = documentSelector;
         }
 
-        public async override Task<LocationOrLocationLinks> Handle(ImplementationParams request, CancellationToken token)
+        public override async Task<LocationOrLocationLinks> Handle(ImplementationParams request, CancellationToken token)
         {
             var omnisharpRequest = new FindImplementationsRequest()
             {
@@ -49,6 +48,14 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                 Uri = ToUri(x.FileName),
                 Range = ToRange((x.Column, x.Line))
             })).ToArray() ?? Array.Empty<LocationOrLocationLink>();
+        }
+
+        protected override ImplementationRegistrationOptions CreateRegistrationOptions(ImplementationCapability capability, ClientCapabilities clientCapabilities)
+        {
+            return new ImplementationRegistrationOptions()
+            {
+                DocumentSelector = _documentSelector
+            };
         }
     }
 }
