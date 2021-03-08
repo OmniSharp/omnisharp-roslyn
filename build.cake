@@ -371,6 +371,12 @@ Task("CreateMSBuildFolder")
         source: CombinePaths(msbuildSdkResolverSourceFolder, "Microsoft.DotNet.MSBuildSdkResolver.dll"),
         destination: CombinePaths(msbuildSdkResolverTargetFolder, "Microsoft.DotNet.MSBuildSdkResolver.dll"));
 
+    // Add sentinel file to enable workload resolver
+    FileHelper.WriteAllLines(
+        path: CombinePaths(msbuildSdkResolverTargetFolder, "EnableWorkloadResolver.sentinel"),
+        contents: new string[0]
+    );
+
     if (Platform.Current.IsWindows)
     {
         CopyDotNetHostResolver(env, "win", "x86", "hostfxr.dll", msbuildSdkResolverTargetFolder, copyToArchSpecificFolder: true);
