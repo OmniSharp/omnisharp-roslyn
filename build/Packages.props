@@ -15,7 +15,7 @@
 
         <PackageReference Update="Dotnet.Script.DependencyModel" Version="1.0.2" />
         <PackageReference Update="Dotnet.Script.DependencyModel.NuGet" Version="1.0.1" />
-        <PackageReference Update="ICSharpCode.Decompiler" Version="6.1.0.5902" />
+        <PackageReference Update="ICSharpCode.Decompiler" Version="7.0.0.6372-preview3" />
         <PackageReference Update="McMaster.Extensions.CommandLineUtils" Version="2.2.4" />
 
         <PackageReference Update="Microsoft.AspNetCore.Diagnostics" Version="$(AspNetCorePackageVersion)" />

@@ -9,6 +9,7 @@ using Microsoft.CodeAnalysis.Shared.Extensions;
 using System.IO;
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
+using System.Threading.Tasks;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Decompilation
 {
@@ -124,6 +125,16 @@ namespace OmniSharp.Roslyn.CSharp.Services.Decompilation
 
             Log("Loading from {0}", moduleFileName);
             return new PEFile(moduleFileName, PEStreamOptions.PrefetchMetadata);
+        }
+
+        public Task<PEFile> ResolveAsync(IAssemblyReference name)
+        {
+            return Task.Run(() => Resolve(name));
+        }
+
+        public Task<PEFile> ResolveModuleAsync(PEFile mainModule, string moduleName)
+        {
+            return Task.Run(() => ResolveModule(mainModule, moduleName));
         }
 
         private void Log(string format, params object[] args)
