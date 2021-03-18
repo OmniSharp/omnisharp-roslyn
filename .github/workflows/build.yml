@@ -18,10 +18,6 @@ on:
     tags:
       - '*'
   workflow_dispatch:
-    branches:
-      - master
-    tags:
-      - '*'
 jobs:
   build:
     runs-on: ${{ matrix.os }}
