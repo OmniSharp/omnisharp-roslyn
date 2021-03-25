@@ -98,13 +98,5 @@ namespace OmniSharp.MSBuild.SolutionParsing
 
             return new ProjectBlock(projectTypeGuid, projectName, relativePath, projectGuid, sections.ToImmutable());
         }
-
-        public ProjectBlock WithRelativePath(string relativePath)
-        {
-            if (relativePath == RelativePath)
-                return this;
-
-            return new ProjectBlock(ProjectTypeGuid, ProjectName, relativePath, ProjectGuid, Sections);
-        }
     }
 }

@@ -128,23 +128,21 @@ namespace OmniSharp.MSBuild
             }
         }
 
-        public Task WaitForIdleAsync() { return _manager.WaitForQueueEmptyAsync();  }
+        public Task WaitForIdleAsync() { return _manager.WaitForQueueEmptyAsync(); }
 
         private IEnumerable<(string, ProjectIdInfo)> GetInitialProjectPathsAndIds()
         {
             // If a solution was provided, use it.
             if (!string.IsNullOrEmpty(_environment.SolutionFilePath))
             {
-                _solutionFileOrRootPath = _environment.SolutionFilePath;
-                return GetProjectPathsAndIdsFromSolution(_environment.SolutionFilePath);
+                return GetProjectPathsAndIdsFromSolutionOrFilter(_environment.SolutionFilePath, out _solutionFileOrRootPath);
             }
 
             // Otherwise, assume that the path provided is a directory and look for a solution there.
             var solutionFilePath = FindSolutionFilePath(_environment.TargetDirectory, _logger);
             if (!string.IsNullOrEmpty(solutionFilePath))
             {
-                _solutionFileOrRootPath = solutionFilePath;
-                return GetProjectPathsAndIdsFromSolution(solutionFilePath);
+                return GetProjectPathsAndIdsFromSolutionOrFilter(solutionFilePath, out _solutionFileOrRootPath);
             }
 
             // Finally, if there isn't a single solution immediately available,
@@ -158,10 +156,20 @@ namespace OmniSharp.MSBuild
             });
         }
 
-        private IEnumerable<(string, ProjectIdInfo)> GetProjectPathsAndIdsFromSolution(string solutionFilePath)
+        private IEnumerable<(string, ProjectIdInfo)> GetProjectPathsAndIdsFromSolutionOrFilter(string solutionOrFilterFilePath, out string solutionFilePath)
         {
-            _logger.LogInformation($"Detecting projects in '{solutionFilePath}'.");
+            _logger.LogInformation($"Detecting projects in '{solutionOrFilterFilePath}'.");
 
+            solutionFilePath = solutionOrFilterFilePath;
+
+            var projectFilter = ImmutableHashSet<string>.Empty;
+            if (SolutionFilterReader.IsSolutionFilterFilename(solutionOrFilterFilePath) &&
+                !SolutionFilterReader.TryRead(solutionOrFilterFilePath, out solutionFilePath, out projectFilter))
+            {
+                throw new InvalidSolutionFileException($"Solution filter file was invalid.");
+            }
+
+            var solutionFolder = Path.GetDirectoryName(solutionFilePath);
             var solutionFile = SolutionFile.ParseFile(solutionFilePath);
             var processedProjects = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             var result = new List<(string, ProjectIdInfo)>();
@@ -196,10 +204,14 @@ namespace OmniSharp.MSBuild
                     continue;
                 }
 
-                // Solution files are assumed to contain relative paths to project files with Windows-style slashes.
-                var projectFilePath = project.RelativePath.Replace('\\', Path.DirectorySeparatorChar);
-                projectFilePath = Path.Combine(_environment.TargetDirectory, projectFilePath);
-                projectFilePath = Path.GetFullPath(projectFilePath);
+                // Solution files contain relative paths to project files with Windows-style slashes.
+                var relativeProjectfilePath = project.RelativePath.Replace('\\', Path.DirectorySeparatorChar);
+                var projectFilePath = Path.GetFullPath(Path.Combine(solutionFolder, relativeProjectfilePath));
+                if (!projectFilter.IsEmpty &&
+                    !projectFilter.Contains(projectFilePath))
+                {
+                    continue;
+                }
 
                 // Have we seen this project? If so, move on.
                 if (processedProjects.Contains(projectFilePath))

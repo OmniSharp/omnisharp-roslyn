@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Immutable;
 using System.IO;
-using System.Linq;
-using Newtonsoft.Json.Linq;
 
 namespace OmniSharp.MSBuild.SolutionParsing
 {
@@ -70,49 +68,10 @@ namespace OmniSharp.MSBuild.SolutionParsing
             }
         }
 
-        public static SolutionFile ParseSolutionFilter(string basePath, string text)
-        {
-            var root = JObject.Parse(text);
-            var solutionPath = ((string)root["solution"]?["path"])?.Replace('\\', Path.DirectorySeparatorChar);
-            var includedProjects = (JArray)root["solution"]?["projects"] ?? new JArray();
-            var includedProjectPaths = includedProjects.Select(t => ((string)t)?.Replace('\\', Path.DirectorySeparatorChar)).ToArray();
-
-            var fullSolutionDirectory = Path.GetDirectoryName(Path.Combine(basePath, solutionPath));
-            var fullSolutionFile = Parse(File.ReadAllText(Path.Combine(basePath, solutionPath)));
-
-            var formatVersion = fullSolutionFile.FormatVersion;
-            var visualStudioVersion = fullSolutionFile.VisualStudioVersion;
-            var globalSections = fullSolutionFile.GlobalSections;
-
-            var projects = ImmutableArray.CreateBuilder<ProjectBlock>();
-            foreach (var fullProject in fullSolutionFile.Projects)
-            {
-                var fullProjectPath = Path.GetFullPath(Path.Combine(fullSolutionDirectory, fullProject.RelativePath));
-                var includedPath = includedProjectPaths.FirstOrDefault(included => string.Equals(Path.GetFullPath(Path.Combine(fullSolutionDirectory, included)), fullProjectPath, StringComparison.OrdinalIgnoreCase));
-                if (includedPath is null)
-                    continue;
-
-                string relativeProjectPath;
-#if NETCOREAPP
-                relativeProjectPath = Path.GetRelativePath(basePath, fullProjectPath);
-#else
-                var projectUri = new Uri(fullProjectPath, UriKind.Absolute);
-                var solutionFilterDirectoryUri = new Uri(Path.GetFullPath(basePath) + Path.DirectorySeparatorChar, UriKind.Absolute);
-                relativeProjectPath = solutionFilterDirectoryUri.MakeRelativeUri(projectUri).OriginalString.Replace('/', Path.DirectorySeparatorChar);
-#endif
-                projects.Add(fullProject.WithRelativePath(relativeProjectPath));
-            }
-
-            return new SolutionFile(formatVersion, visualStudioVersion, projects.ToImmutable(), globalSections);
-        }
-
         public static SolutionFile ParseFile(string path)
         {
             var text = File.ReadAllText(path);
-            if (string.Equals(".slnf", Path.GetExtension(path), StringComparison.OrdinalIgnoreCase))
-                return ParseSolutionFilter(basePath: Path.GetDirectoryName(path), text);
-            else
-                return Parse(text);
+            return Parse(text);
         }
 
         private static Version ParseHeaderAndVersion(Scanner scanner)
