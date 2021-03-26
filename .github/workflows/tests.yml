@@ -17,6 +17,7 @@ on:
       - master
     tags:
       - '*'
+  workflow_dispatch:
 jobs:
   build:
     runs-on: ${{ matrix.os }}
