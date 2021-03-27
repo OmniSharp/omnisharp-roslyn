@@ -1,7 +1,7 @@
 # Changelog
 All changes to the project will be documented in this file.
 
-## [1.37.8] - 2021-??-??
+## [1.37.8] - 2021-03-27
 * Support Solution filter (.slnf) (PR: [#2121](https://github.com/OmniSharp/omnisharp-roslyn/pull/2121))
 * updated to IL Spy 7.0.0.6372 (PR: [#2113](https://github.com/OmniSharp/omnisharp-roslyn/pull/2113))
 * Add sentinel file to MSBuild to enable workload resolver ([omnisharp-vscode#4417](https://github.com/OmniSharp/omnisharp-vscode/issues/4417), PR: [#2111](https://github.com/OmniSharp/omnisharp-roslyn/pull/2111))
