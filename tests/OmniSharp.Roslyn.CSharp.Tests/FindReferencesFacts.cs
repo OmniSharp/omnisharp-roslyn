@@ -437,6 +437,28 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             Assert.Equal("a.cs", usages.QuickFixes.ElementAt(0).FileName);
         }
 
+        [Theory]
+        [InlineData("public Foo(string $$event)")]
+        [InlineData("pu$$blic Foo(string s)")]
+        public async Task DoesNotCrashOnInvalidReference(string methodDefinition)
+        {
+            var code = @$"
+                public class Foo
+                {{
+                    {methodDefinition}
+                    {{
+                    }}
+                }}";
+            
+            var exception = await Record.ExceptionAsync(async () => 
+            {
+                var usages = await FindUsagesAsync(code);
+                Assert.NotNull(usages);
+            });
+            
+            Assert.Null(exception);
+        }
+
         private Task<QuickFixResponse> FindUsagesAsync(string code, bool excludeDefinition = false)
         {
             return FindUsagesAsync(new[] { new TestFile("dummy.cs", code) }, false, excludeDefinition);

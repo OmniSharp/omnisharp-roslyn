@@ -22,352 +22,360 @@ namespace OmniSharp.MSBuild.Tests
         [Fact]
         public async Task TestProjectAndSolution()
         {
-            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectAndSolution"))
+            using var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectAndSolution");
+            using var host = CreateMSBuildTestHost(testProject.Directory);
+            var workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
+
+            Assert.Equal("ProjectAndSolution.sln", Path.GetFileName(workspaceInfo.SolutionPath));
+            Assert.NotNull(workspaceInfo.Projects);
+            var project = Assert.Single(workspaceInfo.Projects);
+
+            Assert.Equal("ProjectAndSolution", project.AssemblyName);
+            Assert.Equal("bin/Debug/netcoreapp3.1/", project.OutputPath.EnsureForwardSlashes());
+            Assert.Equal("obj/Debug/netcoreapp3.1/", project.IntermediateOutputPath.EnsureForwardSlashes());
+            var expectedTargetPath = $"{testProject.Directory}/{project.OutputPath}ProjectAndSolution.dll".EnsureForwardSlashes();
+            Assert.Equal(expectedTargetPath, project.TargetPath.EnsureForwardSlashes());
+            Assert.Equal("Debug", project.Configuration);
+            Assert.Equal("AnyCPU", project.Platform);
+            Assert.True(project.IsExe);
+            Assert.False(project.IsUnityProject);
+
+            Assert.Equal(".NETCoreApp,Version=v3.1", project.TargetFramework);
+            var targetFramework = Assert.Single(project.TargetFrameworks);
+            Assert.Equal("netcoreapp3.1", targetFramework.ShortName);
+        }
+
+        [Fact]
+        public async Task TestProjectAndSolutionFilter()
+        {
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectAndSolutionFilter"))
             using (var host = CreateMSBuildTestHost(testProject.Directory))
             {
                 var workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
 
-                Assert.Equal("ProjectAndSolution.sln", Path.GetFileName(workspaceInfo.SolutionPath));
+                Assert.Equal("ProjectAndSolutionFilter.sln", Path.GetFileName(workspaceInfo.SolutionPath));
                 Assert.NotNull(workspaceInfo.Projects);
                 var project = Assert.Single(workspaceInfo.Projects);
 
-                Assert.Equal("ProjectAndSolution", project.AssemblyName);
-                Assert.Equal("bin/Debug/netcoreapp3.1/", project.OutputPath.EnsureForwardSlashes());
-                Assert.Equal("obj/Debug/netcoreapp3.1/", project.IntermediateOutputPath.EnsureForwardSlashes());
-                var expectedTargetPath = $"{testProject.Directory}/{project.OutputPath}ProjectAndSolution.dll".EnsureForwardSlashes();
+                Assert.Equal("ProjectAndSolutionFilter", project.AssemblyName);
+                Assert.Equal("bin/Debug/netcoreapp2.1/", project.OutputPath.EnsureForwardSlashes());
+                Assert.Equal("obj/Debug/netcoreapp2.1/", project.IntermediateOutputPath.EnsureForwardSlashes());
+                var expectedTargetPath = $"{testProject.Directory}/Project/{project.OutputPath}ProjectAndSolutionFilter.dll".EnsureForwardSlashes();
                 Assert.Equal(expectedTargetPath, project.TargetPath.EnsureForwardSlashes());
                 Assert.Equal("Debug", project.Configuration);
                 Assert.Equal("AnyCPU", project.Platform);
                 Assert.True(project.IsExe);
                 Assert.False(project.IsUnityProject);
 
-                Assert.Equal(".NETCoreApp,Version=v3.1", project.TargetFramework);
+                Assert.Equal(".NETCoreApp,Version=v2.1", project.TargetFramework);
                 var targetFramework = Assert.Single(project.TargetFrameworks);
-                Assert.Equal("netcoreapp3.1", targetFramework.ShortName);
+                Assert.Equal("netcoreapp2.1", targetFramework.ShortName);
             }
         }
 
         [Fact]
         public async Task ProjectAndSolutionWithProjectSection()
         {
-            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectAndSolutionWithProjectSection"))
-            using (var host = CreateMSBuildTestHost(testProject.Directory))
-            {
-                var workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
+            using var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectAndSolutionWithProjectSection");
+            using var host = CreateMSBuildTestHost(testProject.Directory);
+            var workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
 
-                Assert.Equal("ProjectAndSolutionWithProjectSection.sln", Path.GetFileName(workspaceInfo.SolutionPath));
-                Assert.NotNull(workspaceInfo.Projects);
-                var project = Assert.Single(workspaceInfo.Projects);
-                Assert.Equal(".NETCoreApp,Version=v3.1", project.TargetFramework);
-                Assert.Equal("netcoreapp3.1", project.TargetFrameworks[0].ShortName);
-            }
+            Assert.Equal("ProjectAndSolutionWithProjectSection.sln", Path.GetFileName(workspaceInfo.SolutionPath));
+            Assert.NotNull(workspaceInfo.Projects);
+            var project = Assert.Single(workspaceInfo.Projects);
+            Assert.Equal(".NETCoreApp,Version=v3.1", project.TargetFramework);
+            Assert.Equal("netcoreapp3.1", project.TargetFrameworks[0].ShortName);
         }
 
         [Fact]
         public async Task NetCore21Project()
         {
-            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("NetCore21Project"))
-            using (var host = CreateMSBuildTestHost(testProject.Directory))
-            {
-                var workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
+            using var testProject = await TestAssets.Instance.GetTestProjectAsync("NetCore21Project");
+            using var host = CreateMSBuildTestHost(testProject.Directory);
+            var workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
 
-                Assert.NotNull(workspaceInfo.Projects);
-                var project = Assert.Single(workspaceInfo.Projects);
-                Assert.Equal("NetCore21Project", project.AssemblyName);
-                Assert.Equal(".NETCoreApp,Version=v2.1", project.TargetFramework);
-                Assert.Equal("netcoreapp2.1", project.TargetFrameworks[0].ShortName);
-            }
+            Assert.NotNull(workspaceInfo.Projects);
+            var project = Assert.Single(workspaceInfo.Projects);
+            Assert.Equal("NetCore21Project", project.AssemblyName);
+            Assert.Equal(".NETCoreApp,Version=v2.1", project.TargetFramework);
+            Assert.Equal("netcoreapp2.1", project.TargetFrameworks[0].ShortName);
         }
 
         [Fact]
         public async Task Net50Solution()
         {
-            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("Net50Project"))
-            using (var host = CreateMSBuildTestHost(testProject.Directory))
-            {
-                var workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
+            using var testProject = await TestAssets.Instance.GetTestProjectAsync("Net50Project");
+            using var host = CreateMSBuildTestHost(testProject.Directory);
+            var workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
 
-                Assert.NotNull(workspaceInfo.Projects);
-                Assert.Equal(2, workspaceInfo.Projects.Count);
-                var appProject = workspaceInfo.Projects.Single(proj => proj.IsExe);
-                Assert.Equal("console-app", appProject.AssemblyName);
-                Assert.Equal(".NETCoreApp,Version=v5.0", appProject.TargetFramework);
-                Assert.Contains(appProject.TargetFrameworks[0].ShortName, new[] { "net5.0", "netcoreapp5.0" });
-                var libProject = workspaceInfo.Projects.Single(proj => !proj.IsExe);
-                Assert.Equal("net50-lib", libProject.AssemblyName);
-                Assert.Equal(".NETCoreApp,Version=v5.0", libProject.TargetFramework);
-                Assert.Contains(libProject.TargetFrameworks[0].ShortName, new[] { "net50", "net5.0" });
-            }
+            Assert.NotNull(workspaceInfo.Projects);
+            Assert.Equal(2, workspaceInfo.Projects.Count);
+            var appProject = workspaceInfo.Projects.Single(proj => proj.IsExe);
+            Assert.Equal("console-app", appProject.AssemblyName);
+            Assert.Equal(".NETCoreApp,Version=v5.0", appProject.TargetFramework);
+            Assert.Contains(appProject.TargetFrameworks[0].ShortName, new[] { "net5.0", "netcoreapp5.0" });
+            var libProject = workspaceInfo.Projects.Single(proj => !proj.IsExe);
+            Assert.Equal("net50-lib", libProject.AssemblyName);
+            Assert.Equal(".NETCoreApp,Version=v5.0", libProject.TargetFramework);
+            Assert.Contains(libProject.TargetFrameworks[0].ShortName, new[] { "net50", "net5.0" });
+        }
+
+        [Fact]
+        public async Task Net60Project()
+        {
+            using var testProject = await TestAssets.Instance.GetTestProjectAsync("Net60Project");
+            using var host = CreateMSBuildTestHost(testProject.Directory);
+            var workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
+
+            Assert.NotNull(workspaceInfo.Projects);
+            var project = Assert.Single(workspaceInfo.Projects);
+            Assert.Equal("Net60Project", project.AssemblyName);
+            Assert.Equal(".NETCoreApp,Version=v6.0", project.TargetFramework);
+            Assert.Contains(project.TargetFrameworks[0].ShortName, new[] { "net60", "net6.0" });
         }
 
         [Fact]
         public async Task TwoProjectsWithSolution()
         {
-            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("TwoProjectsWithSolution"))
-            using (var host = CreateMSBuildTestHost(testProject.Directory))
-            {
-                var workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
+            using var testProject = await TestAssets.Instance.GetTestProjectAsync("TwoProjectsWithSolution");
+            using var host = CreateMSBuildTestHost(testProject.Directory);
+            var workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
 
-                Assert.Equal("TwoProjectsWithSolution.sln", Path.GetFileName(workspaceInfo.SolutionPath));
-                Assert.NotNull(workspaceInfo.Projects);
-                Assert.Equal(2, workspaceInfo.Projects.Count);
+            Assert.Equal("TwoProjectsWithSolution.sln", Path.GetFileName(workspaceInfo.SolutionPath));
+            Assert.NotNull(workspaceInfo.Projects);
+            Assert.Equal(2, workspaceInfo.Projects.Count);
 
-                var firstProject = workspaceInfo.Projects[0];
-                Assert.Equal("App.csproj", Path.GetFileName(firstProject.Path));
-                Assert.Equal(".NETCoreApp,Version=v3.1", firstProject.TargetFramework);
-                Assert.Equal("netcoreapp3.1", firstProject.TargetFrameworks[0].ShortName);
+            var firstProject = workspaceInfo.Projects[0];
+            Assert.Equal("App.csproj", Path.GetFileName(firstProject.Path));
+            Assert.Equal(".NETCoreApp,Version=v3.1", firstProject.TargetFramework);
+            Assert.Equal("netcoreapp3.1", firstProject.TargetFrameworks[0].ShortName);
 
-                var secondProject = workspaceInfo.Projects[1];
-                Assert.Equal("Lib.csproj", Path.GetFileName(secondProject.Path));
-                Assert.Equal(".NETStandard,Version=v1.3", secondProject.TargetFramework);
-                Assert.Equal("netstandard1.3", secondProject.TargetFrameworks[0].ShortName);
-            }
+            var secondProject = workspaceInfo.Projects[1];
+            Assert.Equal("Lib.csproj", Path.GetFileName(secondProject.Path));
+            Assert.Equal(".NETStandard,Version=v1.3", secondProject.TargetFramework);
+            Assert.Equal("netstandard1.3", secondProject.TargetFrameworks[0].ShortName);
         }
 
         [Fact]
         public async Task TwoProjectsWithSolutionAndCustomConfigurations()
         {
             var configData = new Dictionary<string, string> { [$"MsBuild:{nameof(Options.MSBuildOptions.Configuration)}"] = "ReleaseSln" };
-            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("TwoProjectsWithSolutionAndCustomConfigurations"))
-            using (var host = CreateMSBuildTestHost(testProject.Directory, configurationData: configData.ToConfiguration()))
-            {
-                var workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
+            using var testProject = await TestAssets.Instance.GetTestProjectAsync("TwoProjectsWithSolutionAndCustomConfigurations");
+            using var host = CreateMSBuildTestHost(testProject.Directory, configurationData: configData.ToConfiguration());
+            var workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
 
-                Assert.Equal("TwoProjectsWithSolutionAndCustomConfigurations.sln", Path.GetFileName(workspaceInfo.SolutionPath));
-                Assert.NotNull(workspaceInfo.Projects);
-                Assert.Equal(2, workspaceInfo.Projects.Count);
+            Assert.Equal("TwoProjectsWithSolutionAndCustomConfigurations.sln", Path.GetFileName(workspaceInfo.SolutionPath));
+            Assert.NotNull(workspaceInfo.Projects);
+            Assert.Equal(2, workspaceInfo.Projects.Count);
 
-                var firstProject = workspaceInfo.Projects[0];
-                Assert.Equal("App.csproj", Path.GetFileName(firstProject.Path));
-                Assert.Equal(".NETCoreApp,Version=v3.1", firstProject.TargetFramework);
-                Assert.Equal("netcoreapp3.1", firstProject.TargetFrameworks[0].ShortName);
+            var firstProject = workspaceInfo.Projects[0];
+            Assert.Equal("App.csproj", Path.GetFileName(firstProject.Path));
+            Assert.Equal(".NETCoreApp,Version=v3.1", firstProject.TargetFramework);
+            Assert.Equal("netcoreapp3.1", firstProject.TargetFrameworks[0].ShortName);
 
-                var secondProject = workspaceInfo.Projects[1];
-                Assert.Equal("Lib.csproj", Path.GetFileName(secondProject.Path));
-                Assert.Equal(".NETStandard,Version=v1.3", secondProject.TargetFramework);
-                Assert.Equal("netstandard1.3", secondProject.TargetFrameworks[0].ShortName);
-            }
+            var secondProject = workspaceInfo.Projects[1];
+            Assert.Equal("Lib.csproj", Path.GetFileName(secondProject.Path));
+            Assert.Equal(".NETStandard,Version=v1.3", secondProject.TargetFramework);
+            Assert.Equal("netstandard1.3", secondProject.TargetFrameworks[0].ShortName);
         }
 
         [Fact]
         public async Task TwoProjectWithGeneratedFile()
         {
-            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithGeneratedFile"))
-            using (var host = CreateMSBuildTestHost(testProject.Directory))
-            {
-                var workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
+            using var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithGeneratedFile");
+            using var host = CreateMSBuildTestHost(testProject.Directory);
+            var workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
 
-                Assert.NotNull(workspaceInfo.Projects);
-                var project = Assert.Single(workspaceInfo.Projects);
+            Assert.NotNull(workspaceInfo.Projects);
+            var project = Assert.Single(workspaceInfo.Projects);
 
-                Assert.Equal("ProjectWithGeneratedFile.csproj", Path.GetFileName(project.Path));
-                Assert.Equal(4, project.SourceFiles.Count);
-            }
+            Assert.Equal("ProjectWithGeneratedFile.csproj", Path.GetFileName(project.Path));
+            Assert.Equal(4, project.SourceFiles.Count);
         }
 
         [Fact]
         public async Task ProjectWithSdkProperty()
         {
-            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithSdkProperty"))
-            using (var host = CreateMSBuildTestHost(testProject.Directory))
-            {
-                var workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
+            using var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithSdkProperty");
+            using var host = CreateMSBuildTestHost(testProject.Directory);
+            var workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
 
-                Assert.NotNull(workspaceInfo.Projects);
-                var project = Assert.Single(workspaceInfo.Projects);
+            Assert.NotNull(workspaceInfo.Projects);
+            var project = Assert.Single(workspaceInfo.Projects);
 
-                Assert.Equal("ProjectWithSdkProperty.csproj", Path.GetFileName(project.Path));
-                Assert.Equal(3, project.SourceFiles.Count);
-            }
+            Assert.Equal("ProjectWithSdkProperty.csproj", Path.GetFileName(project.Path));
+            Assert.Equal(3, project.SourceFiles.Count);
         }
 
         [Fact]
         public async Task CSharpAndFSharp()
         {
-            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("CSharpAndFSharp"))
-            using (var host = CreateMSBuildTestHost(testProject.Directory))
-            {
-                var workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
+            using var testProject = await TestAssets.Instance.GetTestProjectAsync("CSharpAndFSharp");
+            using var host = CreateMSBuildTestHost(testProject.Directory);
+            var workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
 
-                Assert.NotNull(workspaceInfo.Projects);
-                var project = Assert.Single(workspaceInfo.Projects);
+            Assert.NotNull(workspaceInfo.Projects);
+            var project = Assert.Single(workspaceInfo.Projects);
 
-                Assert.Equal("csharp-console.csproj", Path.GetFileName(project.Path));
-                Assert.Equal(3, project.SourceFiles.Count);
-            }
+            Assert.Equal("csharp-console.csproj", Path.GetFileName(project.Path));
+            Assert.Equal(3, project.SourceFiles.Count);
         }
 
         [Fact]
         public async Task TestProjectWithReferencedProjectOutsideOfOmniSharp()
         {
-            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("TwoProjectsWithSolution"))
-            using (var host = CreateMSBuildTestHost(Path.Combine(testProject.Directory, "App")))
-            {
-                var workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
+            using var testProject = await TestAssets.Instance.GetTestProjectAsync("TwoProjectsWithSolution");
+            using var host = CreateMSBuildTestHost(Path.Combine(testProject.Directory, "App"));
+            var workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
 
-                Assert.NotNull(workspaceInfo.Projects);
-                Assert.Equal(2, workspaceInfo.Projects.Count);
+            Assert.NotNull(workspaceInfo.Projects);
+            Assert.Equal(2, workspaceInfo.Projects.Count);
 
-                var project1 = workspaceInfo.Projects[0];
-                Assert.Equal("App.csproj", Path.GetFileName(project1.Path));
+            var project1 = workspaceInfo.Projects[0];
+            Assert.Equal("App.csproj", Path.GetFileName(project1.Path));
 
-                var project2 = workspaceInfo.Projects[1];
-                Assert.Equal("Lib.csproj", Path.GetFileName(project2.Path));
-            }
+            var project2 = workspaceInfo.Projects[1];
+            Assert.Equal("Lib.csproj", Path.GetFileName(project2.Path));
         }
 
         [Fact]
         public async Task TestProjectWithSignedReferencedProject()
         {
-            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("SolutionWithSignedProject"))
-            using (var host = CreateMSBuildTestHost(testProject.Directory))
+            using var testProject = await TestAssets.Instance.GetTestProjectAsync("SolutionWithSignedProject");
+            using var host = CreateMSBuildTestHost(testProject.Directory);
+            var workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
+            Assert.NotNull(workspaceInfo.Projects);
+            Assert.Equal(2, workspaceInfo.Projects.Count);
+
+            // For the test to validate that assemblies representing targets of loaded projects are being skipped,
+            // the assemblies must be present on disk.
+            foreach (var loadedProject in workspaceInfo.Projects)
             {
-                var workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
-                Assert.NotNull(workspaceInfo.Projects);
-                Assert.Equal(2, workspaceInfo.Projects.Count);
-
-                // For the test to validate that assemblies representing targets of loaded projects are being skipped,
-                // the assemblies must be present on disk.
-                foreach (var loadedProject in workspaceInfo.Projects)
-                {
-                    Assert.True(File.Exists(loadedProject.TargetPath),
-                        $"Project target assembly is not found {loadedProject.TargetPath}. " +
-                        $"Make sure to build the whole repo using the build script before running the test.");
-                }
-
-                // The callee assembly must be signed to ensure that in case of a bug the assembly is loaded
-                // "The type 'Callee' exists in both ..." is present as a code check (which is validated below).
-                var signedProject = workspaceInfo.Projects.SingleOrDefault(p => p.AssemblyName.Equals("CalleeLib", StringComparison.OrdinalIgnoreCase));
-                Assert.NotNull(signedProject);
-                var token = BitConverter.ToString(AssemblyName.GetAssemblyName(signedProject.TargetPath).GetPublicKeyToken());
-                Assert.Equal("A5-D8-5A-5B-AA-39-A6-A6", token, ignoreCase: true);
-
-                var response = await host.RequestCodeCheckAsync(Path.Combine(testProject.Directory, "CallerLib", "Caller.cs"));
-                // Log result to easier debugging of the test should it fail during automated valdiation
-                foreach (var fix in response.QuickFixes)
-                {
-                    host.Logger.LogInformation($"Unexpected QuickFix returned for {fix.FileName}: {fix.Text}");
-                }
-
-                Assert.Empty(response.QuickFixes);
+                Assert.True(File.Exists(loadedProject.TargetPath),
+                    $"Project target assembly is not found {loadedProject.TargetPath}. " +
+                    $"Make sure to build the whole repo using the build script before running the test.");
             }
+
+            // The callee assembly must be signed to ensure that in case of a bug the assembly is loaded
+            // "The type 'Callee' exists in both ..." is present as a code check (which is validated below).
+            var signedProject = workspaceInfo.Projects.SingleOrDefault(p => p.AssemblyName.Equals("CalleeLib", StringComparison.OrdinalIgnoreCase));
+            Assert.NotNull(signedProject);
+            var token = BitConverter.ToString(AssemblyName.GetAssemblyName(signedProject.TargetPath).GetPublicKeyToken());
+            Assert.Equal("A5-D8-5A-5B-AA-39-A6-A6", token, ignoreCase: true);
+
+            var response = await host.RequestCodeCheckAsync(Path.Combine(testProject.Directory, "CallerLib", "Caller.cs"));
+            // Log result to easier debugging of the test should it fail during automated valdiation
+            foreach (var fix in response.QuickFixes)
+            {
+                host.Logger.LogInformation($"Unexpected QuickFix returned for {fix.FileName}: {fix.Text}");
+            }
+
+            Assert.Empty(response.QuickFixes);
         }
 
         [Fact]
         public async Task TestProjectWithMultiTFMReferencedProjectOutsideOfOmniSharp()
         {
-            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithMultiTFMLib"))
-            using (var host = CreateMSBuildTestHost(Path.Combine(testProject.Directory, "App")))
-            {
-                var workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
+            using var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithMultiTFMLib");
+            using var host = CreateMSBuildTestHost(Path.Combine(testProject.Directory, "App"));
+            var workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
 
-                Assert.NotNull(workspaceInfo.Projects);
-                Assert.Equal(2, workspaceInfo.Projects.Count);
+            Assert.NotNull(workspaceInfo.Projects);
+            Assert.Equal(2, workspaceInfo.Projects.Count);
 
-                var project1 = workspaceInfo.Projects[0];
-                Assert.Equal("App.csproj", Path.GetFileName(project1.Path));
+            var project1 = workspaceInfo.Projects[0];
+            Assert.Equal("App.csproj", Path.GetFileName(project1.Path));
 
-                var project2 = workspaceInfo.Projects[1];
-                Assert.Equal("Lib.csproj", Path.GetFileName(project2.Path));
-                Assert.Equal(".NETStandard,Version=v1.3", project2.TargetFramework);
-                Assert.Equal(2, project2.TargetFrameworks.Count);
-            }
+            var project2 = workspaceInfo.Projects[1];
+            Assert.Equal("Lib.csproj", Path.GetFileName(project2.Path));
+            Assert.Equal(".NETStandard,Version=v1.3", project2.TargetFramework);
+            Assert.Equal(2, project2.TargetFrameworks.Count);
         }
 
         [ConditionalFact(typeof(WindowsOnly))]
         public async Task AntlrGeneratedFiles()
         {
-            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("AntlrGeneratedFiles"))
-            using (var host = CreateMSBuildTestHost(testProject.Directory))
-            {
-                var workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
+            using var testProject = await TestAssets.Instance.GetTestProjectAsync("AntlrGeneratedFiles");
+            using var host = CreateMSBuildTestHost(testProject.Directory);
+            var workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
 
-                Assert.NotNull(workspaceInfo.Projects);
-                var project = Assert.Single(workspaceInfo.Projects);
+            Assert.NotNull(workspaceInfo.Projects);
+            var project = Assert.Single(workspaceInfo.Projects);
 
-                Assert.Equal(6, project.SourceFiles.Count);
-                Assert.Contains(project.SourceFiles, fileName => fileName.EndsWith("GrammarParser.cs"));
-            }
+            Assert.Equal(6, project.SourceFiles.Count);
+            Assert.Contains(project.SourceFiles, fileName => fileName.EndsWith("GrammarParser.cs"));
         }
 
         [Fact]
         public async Task ProjectWithWildcardPackageReference()
         {
-            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithWildcardPackageReference"))
-            using (var host = CreateMSBuildTestHost(testProject.Directory))
-            {
-                var workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
+            using var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithWildcardPackageReference");
+            using var host = CreateMSBuildTestHost(testProject.Directory);
+            var workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
 
-                Assert.NotNull(workspaceInfo.Projects);
-                var project = Assert.Single(workspaceInfo.Projects);
+            Assert.NotNull(workspaceInfo.Projects);
+            var project = Assert.Single(workspaceInfo.Projects);
 
-                Assert.Equal("ProjectWithWildcardPackageReference.csproj", Path.GetFileName(project.Path));
-                Assert.Equal(3, project.SourceFiles.Count);
-            }
+            Assert.Equal("ProjectWithWildcardPackageReference.csproj", Path.GetFileName(project.Path));
+            Assert.Equal(3, project.SourceFiles.Count);
         }
 
         [Fact]
         public async Task DoesntParticipateInWorkspaceInfoResponseWhenDisabled()
         {
-            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectAndSolution"))
-            using (var host = CreateOmniSharpHost(testProject.Directory, configurationData: new Dictionary<string, string>
+            using var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectAndSolution");
+            using var host = CreateOmniSharpHost(testProject.Directory, configurationData: new Dictionary<string, string>
             {
                 ["msbuild:enabled"] = "false"
-            }))
-            {
-                var workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
-                Assert.Null(workspaceInfo);
-            }
+            });
+            var workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
+            Assert.Null(workspaceInfo);
         }
 
         [Fact]
         public async Task TestProjectWithAliasOnProjectReference()
         {
-            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ExternAlias"))
-            using (var host = CreateMSBuildTestHost(testProject.Directory))
-            {
-                var project = host
-                    .Workspace
-                    .CurrentSolution
-                    .Projects
-                    .Single(x => x.AssemblyName == "ExternAlias.App2");
+            using var testProject = await TestAssets.Instance.GetTestProjectAsync("ExternAlias");
+            using var host = CreateMSBuildTestHost(testProject.Directory);
+            var project = host
+                .Workspace
+                .CurrentSolution
+                .Projects
+                .Single(x => x.AssemblyName == "ExternAlias.App2");
 
-                var lib = host
-                    .Workspace
-                    .CurrentSolution
-                    .Projects
-                    .Single(x => x.AssemblyName == "ExternAlias.Lib");
+            var lib = host
+                .Workspace
+                .CurrentSolution
+                .Projects
+                .Single(x => x.AssemblyName == "ExternAlias.Lib");
 
-                var projectReference = project
-                    .ProjectReferences
-                    .Single(x => x.ProjectId == lib.Id);
+            var projectReference = project
+                .ProjectReferences
+                .Single(x => x.ProjectId == lib.Id);
 
-                Assert.Collection(projectReference.Aliases,
-                    referenceA => Assert.Equal("abc",referenceA),
-                    referenceB => Assert.Equal("def",referenceB));
-            }
+            Assert.Collection(projectReference.Aliases,
+                referenceA => Assert.Equal("abc", referenceA),
+                referenceB => Assert.Equal("def", referenceB));
         }
 
         [Fact]
         public async Task TestProjectWithAliasOnReference()
         {
-            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ExternAlias"))
-            using (var host = CreateMSBuildTestHost(testProject.Directory))
-            {
-                var project = host
-                    .Workspace
-                    .CurrentSolution
-                    .Projects
-                    .Single(x => x.AssemblyName == "ExternAlias.App");
+            using var testProject = await TestAssets.Instance.GetTestProjectAsync("ExternAlias");
+            using var host = CreateMSBuildTestHost(testProject.Directory);
+            var project = host
+                .Workspace
+                .CurrentSolution
+                .Projects
+                .Single(x => x.AssemblyName == "ExternAlias.App");
 
-                var reference = project
-                    .MetadataReferences
-                    .Single(x => x.Display == "ExternAlias.Lib.dll");
+            var reference = project
+                .MetadataReferences
+                .Single(x => x.Display == "ExternAlias.Lib.dll");
 
-                Assert.Collection(reference.Properties.Aliases,
-                    referenceA => Assert.Equal("abc",referenceA),
-                    referenceB => Assert.Equal("def",referenceB));
-            }
+            Assert.Collection(reference.Properties.Aliases,
+                referenceA => Assert.Equal("abc", referenceA),
+                referenceB => Assert.Equal("def", referenceB));
         }
     }
 }

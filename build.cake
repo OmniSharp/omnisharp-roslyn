@@ -15,15 +15,18 @@ var installFolder = Argument("install-path",
     CombinePaths(Environment.GetEnvironmentVariable(Platform.Current.IsWindows ? "USERPROFILE" : "HOME"), ".omnisharp"));
 var publishAll = HasArgument("publish-all");
 var useGlobalDotNetSdk = HasArgument("use-global-dotnet-sdk");
-var testProjectArgument = Argument("test-project", "");
 
 Log.Context = Context;
 
 var env = new BuildEnvironment(useGlobalDotNetSdk, Context);
 var buildPlan = BuildPlan.Load(env);
+var testProjectArgument = Argument("test-project", "");
+var testProjects = string.IsNullOrEmpty(testProjectArgument) ? buildPlan.TestProjects : testProjectArgument.Split(',');
+var nonCakeTestProjects = buildPlan.TestProjects.Except(new [] { "OmniSharp.Cake.Tests" });
 
 Information("");
 Information("Current platform: {0}", Platform.Current);
+Information("Test Projects: {0}", string.Join(", ", testProjects));
 Information("");
 
 /// <summary>
@@ -42,6 +45,15 @@ Task("Cleanup")
     DirectoryHelper.Create(env.Folders.ArtifactsPackage);
     DirectoryHelper.Create(env.Folders.ArtifactsScripts);
 });
+
+Task("GitVersion")
+    .WithCriteria(!BuildSystem.IsLocalBuild)
+    .WithCriteria(!AzurePipelines.IsRunningOnAzurePipelines)
+    .Does(() => {
+        GitVersion(new GitVersionSettings{
+            OutputType = GitVersionOutput.BuildServer
+        });
+    });
 
 /// <summary>
 ///  Pre-build setup tasks.
@@ -132,10 +144,26 @@ Task("ValidateMono")
     ValidateMonoVersion(buildPlan);
 });
 
+Task("CleanUpMonoAssets")
+    .WithCriteria(() => !Platform.Current.IsWindows)
+    .Does(() =>
+{
+    if (DirectoryHelper.Exists(env.Folders.Mono))
+    {
+        DirectoryHelper.Delete(env.Folders.Mono, recursive: true);
+    }
+});
+
 Task("InstallMonoAssets")
     .WithCriteria(() => !Platform.Current.IsWindows)
     .Does(() =>
 {
+    if (DirectoryHelper.Exists(env.Folders.Mono))
+    {
+        Information("Skipping Mono assets installation, because they already exist.");
+        return;
+    }
+
     Information("Acquiring Mono runtimes and framework...");
 
     DownloadFileAndUnzip($"{buildPlan.DownloadURL}/{buildPlan.MonoRuntimeMacOS}", env.Folders.MonoRuntimeMacOS);
@@ -343,6 +371,12 @@ Task("CreateMSBuildFolder")
         source: CombinePaths(msbuildSdkResolverSourceFolder, "Microsoft.DotNet.MSBuildSdkResolver.dll"),
         destination: CombinePaths(msbuildSdkResolverTargetFolder, "Microsoft.DotNet.MSBuildSdkResolver.dll"));
 
+    // Add sentinel file to enable workload resolver
+    FileHelper.WriteAllLines(
+        path: CombinePaths(msbuildSdkResolverTargetFolder, "EnableWorkloadResolver.sentinel"),
+        contents: new string[0]
+    );
+
     if (Platform.Current.IsWindows)
     {
         CopyDotNetHostResolver(env, "win", "x86", "hostfxr.dll", msbuildSdkResolverTargetFolder, copyToArchSpecificFolder: true);
@@ -433,31 +467,20 @@ Task("CreateMSBuildFolder")
     FileHelper.Delete(CombinePaths(compilersTargetFolder, "vbc.exe.config"));
     FileHelper.Delete(CombinePaths(compilersTargetFolder, "vbc.rsp"));
 
-     FileHelper.Copy(
-        source: CombinePaths(env.Folders.Tools, "SQLitePCLRaw.core", "lib", "net45", "SQLitePCLRaw.core.dll"),
+    FileHelper.Copy(
+        source: CombinePaths(env.Folders.Tools, "SQLitePCLRaw.core", "lib", "netstandard2.0", "SQLitePCLRaw.core.dll"),
         destination: CombinePaths(msbuildCurrentBinTargetFolder, "SQLitePCLRaw.core.dll"),
         overwrite: true);
 
     FileHelper.Copy(
-        source: CombinePaths(env.Folders.Tools, "SQLitePCLRaw.provider.e_sqlite3.net45", "lib", "net45", "SQLitePCLRaw.provider.e_sqlite3.dll"),
+        source: CombinePaths(env.Folders.Tools, "SQLitePCLRaw.provider.e_sqlite3", "lib", "netstandard2.0", "SQLitePCLRaw.provider.e_sqlite3.dll"),
         destination: CombinePaths(msbuildCurrentBinTargetFolder, "SQLitePCLRaw.provider.e_sqlite3.dll"),
         overwrite: true);
 
     FileHelper.Copy(
-        source: CombinePaths(env.Folders.Tools, "SQLitePCLRaw.bundle_green", "lib", "net45", "SQLitePCLRaw.batteries_v2.dll"),
+        source: CombinePaths(env.Folders.Tools, "SQLitePCLRaw.bundle_green", "lib", "netstandard2.0", "SQLitePCLRaw.batteries_v2.dll"),
         destination: CombinePaths(msbuildCurrentBinTargetFolder, "SQLitePCLRaw.batteries_v2.dll"),
         overwrite: true);
-
-    FileHelper.Copy(
-        source: CombinePaths(env.Folders.Tools, "SQLitePCLRaw.bundle_green", "lib", "net45", "SQLitePCLRaw.batteries_green.dll"),
-        destination: CombinePaths(msbuildCurrentBinTargetFolder, "SQLitePCLRaw.batteries_green.dll"),
-        overwrite: true);
-
-    var msbuild15TargetFolder = CombinePaths(env.Folders.MSBuild, "15.0");
-    if (!Platform.Current.IsWindows)
-    {
-        DirectoryHelper.Copy(msbuildCurrentTargetFolder, msbuild15TargetFolder);
-    }
 });
 
 /// <summary>
@@ -468,22 +491,37 @@ Task("PrepareTestAssets")
 
 Task("PrepareTestAssets:CommonTestAssets")
     .IsDependeeOf("PrepareTestAssets")
+    .WithCriteria(testProjects.Any(z => nonCakeTestProjects.Any(x => x == z)))
     .DoesForEach(buildPlan.TestAssets, (project) =>
     {
         Information("Restoring and building: {0}...", project);
 
         var folder = CombinePaths(env.Folders.TestAssets, "test-projects", project);
 
-        DotNetCoreBuild(folder, new DotNetCoreBuildSettings()
-        {
-            ToolPath = env.DotNetCommand,
-            WorkingDirectory = folder,
-            Verbosity = DotNetCoreVerbosity.Minimal
-        });
+        try {
+            DotNetCoreBuild(folder, new DotNetCoreBuildSettings()
+            {
+                ToolPath = env.DotNetCommand,
+                WorkingDirectory = folder,
+                Verbosity = DotNetCoreVerbosity.Minimal
+            });
+        } catch {
+            // ExternalAlias has issues once in a while, try building again to get it working.
+            if (project == "ExternAlias") {
+
+                DotNetCoreBuild(folder, new DotNetCoreBuildSettings()
+                {
+                    ToolPath = env.DotNetCommand,
+                    WorkingDirectory = folder,
+                    Verbosity = DotNetCoreVerbosity.Minimal
+                });
+            }
+        }
     });
 
 Task("PrepareTestAssets:RestoreOnlyTestAssets")
     .IsDependeeOf("PrepareTestAssets")
+    .WithCriteria(testProjects.Any(z => nonCakeTestProjects.Any(x => x == z)))
     .DoesForEach(buildPlan.RestoreOnlyTestAssets, (project) =>
     {
         Information("Restoring: {0}...", project);
@@ -501,6 +539,7 @@ Task("PrepareTestAssets:RestoreOnlyTestAssets")
 Task("PrepareTestAssets:WindowsOnlyTestAssets")
     .WithCriteria(Platform.Current.IsWindows)
     .IsDependeeOf("PrepareTestAssets")
+    .WithCriteria(testProjects.Any(z => nonCakeTestProjects.Any(x => x == z)))
     .DoesForEach(buildPlan.WindowsOnlyTestAssets, (project) =>
     {
         Information("Restoring and building: {0}...", project);
@@ -517,12 +556,20 @@ Task("PrepareTestAssets:WindowsOnlyTestAssets")
 
 Task("PrepareTestAssets:CakeTestAssets")
     .IsDependeeOf("PrepareTestAssets")
+    .WithCriteria(testProjects.Contains("OmniSharp.Cake.Tests"))
     .DoesForEach(buildPlan.CakeTestAssets, (project) =>
     {
         Information("Restoring: {0}...", project);
 
         var toolsFolder = CombinePaths(env.Folders.TestAssets, "test-projects", project, "tools");
         var packagesConfig = CombinePaths(toolsFolder, "packages.config");
+
+        if (!Platform.Current.IsWindows)
+        {
+            Warning($"TestAssets: {toolsFolder}");
+            Run("chmod", $"777 {toolsFolder}/");
+            Information($"TestAssets: {toolsFolder}");
+        }
 
         NuGetInstallFromConfig(packagesConfig, new NuGetInstallSettings {
             OutputDirectory = toolsFolder,
@@ -598,7 +645,6 @@ Task("Test")
     .IsDependentOn("PrepareTestAssets")
     .Does(() =>
 {
-        var testProjects = string.IsNullOrEmpty(testProjectArgument) ? buildPlan.TestProjects : testProjectArgument.Split(',');
         foreach (var testProject in testProjects)
         {
             PrintBlankLine();
@@ -645,27 +691,6 @@ void CopyMonoBuild(BuildEnvironment env, string sourceFolder, string outputFolde
 
     var msbuildBinFolder = CombinePaths(msbuildFolder, "bin", "Current");
     EnsureDirectoryExists(msbuildBinFolder);
-
-    // Copy dependencies of Mono build
-    FileHelper.Copy(
-        source: CombinePaths(env.Folders.Tools, "SQLitePCLRaw.core", "lib", "net45", "SQLitePCLRaw.core.dll"),
-        destination: CombinePaths(msbuildBinFolder, "SQLitePCLRaw.core.dll"),
-        overwrite: true);
-
-    FileHelper.Copy(
-        source: CombinePaths(env.Folders.Tools, "SQLitePCLRaw.provider.e_sqlite3.net45", "lib", "net45", "SQLitePCLRaw.provider.e_sqlite3.dll"),
-        destination: CombinePaths(msbuildBinFolder, "SQLitePCLRaw.provider.e_sqlite3.dll"),
-        overwrite: true);
-
-    FileHelper.Copy(
-        source: CombinePaths(env.Folders.Tools, "SQLitePCLRaw.bundle_green", "lib", "net45", "SQLitePCLRaw.batteries_v2.dll"),
-        destination: CombinePaths(msbuildBinFolder, "SQLitePCLRaw.batteries_v2.dll"),
-        overwrite: true);
-
-    FileHelper.Copy(
-        source: CombinePaths(env.Folders.Tools, "SQLitePCLRaw.bundle_green", "lib", "net45", "SQLitePCLRaw.batteries_green.dll"),
-        destination: CombinePaths(msbuildBinFolder, "SQLitePCLRaw.batteries_green.dll"),
-        overwrite: true);
 }
 
 void CopyExtraDependencies(BuildEnvironment env, string outputFolder)
@@ -686,23 +711,19 @@ string PublishMonoBuild(string project, BuildEnvironment env, BuildPlan plan, st
 
     CopyExtraDependencies(env, outputFolder);
 
-     // Copy dependencies of Mono build
-     FileHelper.Copy(
-         source: CombinePaths(env.Folders.Tools, "SQLitePCLRaw.core", "lib", "net45", "SQLitePCLRaw.core.dll"),
-         destination: CombinePaths(outputFolder, "SQLitePCLRaw.core.dll"),
-         overwrite: true);
-     FileHelper.Copy(
-         source: CombinePaths(env.Folders.Tools, "SQLitePCLRaw.provider.e_sqlite3.net45", "lib", "net45", "SQLitePCLRaw.provider.e_sqlite3.dll"),
-         destination: CombinePaths(outputFolder, "SQLitePCLRaw.provider.e_sqlite3.dll"),
-         overwrite: true);
-     FileHelper.Copy(
-         source: CombinePaths(env.Folders.Tools, "SQLitePCLRaw.bundle_green", "lib", "net45", "SQLitePCLRaw.batteries_v2.dll"),
-         destination: CombinePaths(outputFolder, "SQLitePCLRaw.batteries_v2.dll"),
-         overwrite: true);
-     FileHelper.Copy(
-         source: CombinePaths(env.Folders.Tools, "SQLitePCLRaw.bundle_green", "lib", "net45", "SQLitePCLRaw.batteries_green.dll"),
-         destination: CombinePaths(outputFolder, "SQLitePCLRaw.batteries_green.dll"),
-         overwrite: true);
+    // Copy dependencies of Mono build
+    FileHelper.Copy(
+        source: CombinePaths(env.Folders.Tools, "SQLitePCLRaw.core", "lib", "netstandard2.0", "SQLitePCLRaw.core.dll"),
+        destination: CombinePaths(outputFolder, "SQLitePCLRaw.core.dll"),
+        overwrite: true);
+    FileHelper.Copy(
+        source: CombinePaths(env.Folders.Tools, "SQLitePCLRaw.provider.e_sqlite3", "lib", "netstandard2.0", "SQLitePCLRaw.provider.e_sqlite3.dll"),
+        destination: CombinePaths(outputFolder, "SQLitePCLRaw.provider.e_sqlite3.dll"),
+        overwrite: true);
+    FileHelper.Copy(
+        source: CombinePaths(env.Folders.Tools, "SQLitePCLRaw.bundle_green", "lib", "netstandard2.0", "SQLitePCLRaw.batteries_v2.dll"),
+        destination: CombinePaths(outputFolder, "SQLitePCLRaw.batteries_v2.dll"),
+        overwrite: true);
 
     Package(project, "mono", outputFolder, env.Folders.ArtifactsPackage, env.Folders.DeploymentPackage);
 
@@ -919,11 +940,11 @@ Task("Install")
         }
 
         var outputFolder = PathHelper.GetFullPath(CombinePaths(env.Folders.ArtifactsPublish, project, platform));
-        var targetFolder = PathHelper.GetFullPath(CombinePaths(installFolder));
+        var targetFolder = PathHelper.GetFullPath(CombinePaths(installFolder, project));
 
         DirectoryHelper.Copy(outputFolder, targetFolder);
 
-        CreateRunScript(project, installFolder, env.Folders.ArtifactsScripts);
+        CreateRunScript(project, CombinePaths(installFolder, project), env.Folders.ArtifactsScripts);
 
         Information($"OmniSharp is installed locally at {installFolder}");
     }
@@ -934,6 +955,7 @@ Task("Install")
 /// </summary>
 Task("All")
     .IsDependentOn("Cleanup")
+    .IsDependentOn("CleanUpMonoAssets")
     .IsDependentOn("Build")
     .IsDependentOn("Test")
     .IsDependentOn("Publish")
@@ -950,6 +972,7 @@ Task("Default")
 /// </summary>
 Task("CI")
     .IsDependentOn("Cleanup")
+    .IsDependentOn("CleanUpMonoAssets")
     .IsDependentOn("Build")
     .IsDependentOn("Publish")
     .IsDependentOn("ExecuteRunScript");

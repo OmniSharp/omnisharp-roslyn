@@ -59,7 +59,7 @@ namespace OmniSharp.Models.v1.Completion
         /// The format of <see cref="InsertText"/>. This applies to both <see cref="InsertText"/> and
         /// <see cref="TextEdit"/>.<see cref="LinePositionSpanTextChange.NewText"/>.
         /// </summary>
-        public InsertTextFormat? InsertTextFormat { get; set; }
+        public InsertTextFormat InsertTextFormat { get; set; }
 
         /// <summary>
         /// An edit which is applied to a document when selecting this completion. When an edit is provided the value of
