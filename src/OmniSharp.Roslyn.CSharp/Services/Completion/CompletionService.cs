@@ -371,7 +371,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                 if (characterRules.IsEmpty)
                 {
                     // Use defaults
-                    return isSuggestionMode ? DefaultRulesWithoutSpace : null;
+                    return isSuggestionMode ? DefaultRulesWithoutSpace : CompletionRules.Default.DefaultCommitCharacters;
                 }
 
                 if (commitCharacterRulesCache.TryGetValue(characterRules, out var cachedRules))
