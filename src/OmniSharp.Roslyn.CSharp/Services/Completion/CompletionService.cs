@@ -161,7 +161,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
             }
 
             var commitCharacterRuleBuilder = new HashSet<char>();
-            var commitCharacterRuleCache = new Dictionary<(ImmutableArray<CharacterSetModificationRule>, bool), IReadOnlyList<char>>();
+            var commitCharacterRuleCache = new Dictionary<ImmutableArray<CharacterSetModificationRule>, IReadOnlyList<char>>();
             var completionsBuilder = ImmutableArray.CreateBuilder<CompletionItem>(completions.Items.Length);
 
             // If we don't encounter any unimported types, and the completion context thinks that some would be available, then
@@ -174,6 +174,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
 
             var replacingSpanStartPosition = sourceText.Lines.GetLinePosition(typedSpan.Start);
             var replacingSpanEndPosition = sourceText.Lines.GetLinePosition(typedSpan.End);
+            var isSuggestionMode = completions.SuggestionModeItem is not null;
 
             var completionTasksAndProviderNames = completions.Items.SelectAsArray((document, completionService), (completion, arg) =>
             {
@@ -307,7 +308,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                         }
                 }
 
-                var commitCharacters = buildCommitCharacters(completions, completion.Rules.CommitCharacterRules, commitCharacterRuleCache, commitCharacterRuleBuilder);
+                var commitCharacters = buildCommitCharacters(completion.Rules.CommitCharacterRules, isSuggestionMode, commitCharacterRuleCache, commitCharacterRuleBuilder);
 
                 completionsBuilder.Add(new CompletionItem
                 {
@@ -362,19 +363,18 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
             }
 
             static IReadOnlyList<char>? buildCommitCharacters(
-                CSharpCompletionList completions,
                 ImmutableArray<CharacterSetModificationRule> characterRules,
-                Dictionary<(ImmutableArray<CharacterSetModificationRule> Rules, bool WasSuggestionMode), IReadOnlyList<char>> commitCharacterRulesCache,
+                bool isSuggestionMode,
+                Dictionary<ImmutableArray<CharacterSetModificationRule>, IReadOnlyList<char>> commitCharacterRulesCache,
                 HashSet<char> commitCharactersBuilder)
             {
-                bool isSuggestionMode = completions.SuggestionModeItem is not null;
                 if (characterRules.IsEmpty)
                 {
                     // Use defaults
                     return isSuggestionMode ? DefaultRulesWithoutSpace : null;
                 }
 
-                if (commitCharacterRulesCache.TryGetValue((characterRules, isSuggestionMode), out var cachedRules))
+                if (commitCharacterRulesCache.TryGetValue(characterRules, out var cachedRules))
                 {
                     return cachedRules;
                 }
@@ -411,7 +411,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                 var finalCharacters = commitCharactersBuilder.ToList();
                 commitCharactersBuilder.Clear();
 
-                commitCharacterRulesCache.Add((characterRules, isSuggestionMode), finalCharacters);
+                commitCharacterRulesCache.Add(characterRules, finalCharacters);
 
                 return finalCharacters;
 
