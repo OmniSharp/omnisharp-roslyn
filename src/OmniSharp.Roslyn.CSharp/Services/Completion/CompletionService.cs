@@ -72,6 +72,11 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
             { WellKnownTags.Warning, CompletionItemKind.Text },
         };
 
+        // VS has a more complex concept of a commit mode vs suggestion mode for intellisense.
+        // LSP doesn't have this, so mock it as best we can by removing space ` ` from the list
+        // of commit characters if we're in suggestion mode.
+        private static readonly IReadOnlyList<char> DefaultRulesWithoutSpace = CompletionRules.Default.DefaultCommitCharacters.Where(c => c != ' ').ToList();
+
         private readonly OmniSharpWorkspace _workspace;
         private readonly FormattingOptions _formattingOptions;
         private readonly ILogger _logger;
@@ -155,7 +160,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                 _lastCompletion = (completions, request.FileName, position);
             }
 
-            var triggerCharactersBuilder = ImmutableArray.CreateBuilder<char>(completions.Rules.DefaultCommitCharacters.Length);
+            var commitCharacterRuleBuilder = new HashSet<char>();
+            var commitCharacterRuleCache = new Dictionary<(ImmutableArray<CharacterSetModificationRule>, bool), IReadOnlyList<char>>();
             var completionsBuilder = ImmutableArray.CreateBuilder<CompletionItem>(completions.Items.Length);
 
             // If we don't encounter any unimported types, and the completion context thinks that some would be available, then
@@ -169,17 +175,19 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
             var replacingSpanStartPosition = sourceText.Lines.GetLinePosition(typedSpan.Start);
             var replacingSpanEndPosition = sourceText.Lines.GetLinePosition(typedSpan.End);
 
-            var resolvedCompletions = await Task.WhenAll(completions.Items.SelectAsArray((document, completionService), async (completion, arg) =>
+            var completionTasksAndProviderNames = completions.Items.SelectAsArray((document, completionService), (completion, arg) =>
             {
-                if (completion.GetProviderName() is CompletionItemExtensions.TypeImportCompletionProvider or CompletionItemExtensions.ExtensionMethodImportCompletionProvider)
+                var providerName = completion.GetProviderName();
+                if (providerName is CompletionItemExtensions.TypeImportCompletionProvider or
+                                    CompletionItemExtensions.ExtensionMethodImportCompletionProvider)
                 {
-                    return null;
+                    return (null, providerName);
                 }
                 else
                 {
-                    return await arg.completionService.GetChangeAsync(arg.document, completion);
+                    return ((Task<CompletionChange>?)arg.completionService.GetChangeAsync(arg.document, completion), providerName);
                 }
-            }));
+            });
 
             for (int i = 0; i < completions.Items.Length; i++)
             {
@@ -191,7 +199,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                 string? insertText = null;
                 string? filterText = null;
                 string? sortText = null;
-                switch (completion.GetProviderName())
+                var (changeTask, providerName) = completionTasksAndProviderNames[i];
+                switch (providerName)
                 {
                     case CompletionItemExtensions.TypeImportCompletionProvider or CompletionItemExtensions.ExtensionMethodImportCompletionProvider:
                         changeSpan = typedSpan;
@@ -210,8 +219,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                         {
                             // Except for import completion, we just resolve the change up front in the sync version. It's only expensive
                             // for override completion, but there's not a heck of a lot we can do about that for the sync scenario
-                            var change = resolvedCompletions[i];
-                            Debug.Assert(change is not null);
+                            Debug.Assert(changeTask is not null);
+                            var change = await changeTask!;
 
                             // Roslyn will give us the position to move the cursor after the completion is entered.
                             // However, this is in the _new_ document, after changes have been applied. In order to
@@ -298,7 +307,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                         }
                 }
 
-                var commitCharacters = buildCommitCharacters(completions, completion.Rules.CommitCharacterRules, triggerCharactersBuilder);
+                var commitCharacters = buildCommitCharacters(completions, completion.Rules.CommitCharacterRules, commitCharacterRuleCache, commitCharacterRuleBuilder);
 
                 completionsBuilder.Add(new CompletionItem
                 {
@@ -352,33 +361,41 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                 return CompletionItemKind.Text;
             }
 
-            static ImmutableArray<char> buildCommitCharacters(CSharpCompletionList completions, ImmutableArray<CharacterSetModificationRule> characterRules, ImmutableArray<char>.Builder triggerCharactersBuilder)
+            static IReadOnlyList<char>? buildCommitCharacters(
+                CSharpCompletionList completions,
+                ImmutableArray<CharacterSetModificationRule> characterRules,
+                Dictionary<(ImmutableArray<CharacterSetModificationRule> Rules, bool WasSuggestionMode), IReadOnlyList<char>> commitCharacterRulesCache,
+                HashSet<char> commitCharactersBuilder)
             {
-                triggerCharactersBuilder.AddRange(completions.Rules.DefaultCommitCharacters);
+                bool isSuggestionMode = completions.SuggestionModeItem is not null;
+                if (characterRules.IsEmpty)
+                {
+                    // Use defaults
+                    return isSuggestionMode ? DefaultRulesWithoutSpace : null;
+                }
+
+                if (commitCharacterRulesCache.TryGetValue((characterRules, isSuggestionMode), out var cachedRules))
+                {
+                    return cachedRules;
+                }
+
+                addAllCharacters(CompletionRules.Default.DefaultCommitCharacters);
 
                 foreach (var modifiedRule in characterRules)
                 {
                     switch (modifiedRule.Kind)
                     {
                         case CharacterSetModificationKind.Add:
-                            triggerCharactersBuilder.AddRange(modifiedRule.Characters);
+                            commitCharactersBuilder.UnionWith(modifiedRule.Characters);
                             break;
 
                         case CharacterSetModificationKind.Remove:
-                            for (int i = 0; i < triggerCharactersBuilder.Count; i++)
-                            {
-                                if (modifiedRule.Characters.Contains(triggerCharactersBuilder[i]))
-                                {
-                                    triggerCharactersBuilder.RemoveAt(i);
-                                    i--;
-                                }
-                            }
-
+                            commitCharactersBuilder.ExceptWith(modifiedRule.Characters);
                             break;
 
                         case CharacterSetModificationKind.Replace:
-                            triggerCharactersBuilder.Clear();
-                            triggerCharactersBuilder.AddRange(modifiedRule.Characters);
+                            commitCharactersBuilder.Clear();
+                            addAllCharacters(modifiedRule.Characters);
                             break;
                     }
                 }
@@ -386,12 +403,25 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                 // VS has a more complex concept of a commit mode vs suggestion mode for intellisense.
                 // LSP doesn't have this, so mock it as best we can by removing space ` ` from the list
                 // of commit characters if we're in suggestion mode.
-                if (completions.SuggestionModeItem is object)
+                if (isSuggestionMode)
                 {
-                    triggerCharactersBuilder.Remove(' ');
+                    commitCharactersBuilder.Remove(' ');
                 }
 
-                return triggerCharactersBuilder.ToImmutableAndClear();
+                var finalCharacters = commitCharactersBuilder.ToList();
+                commitCharactersBuilder.Clear();
+
+                commitCharacterRulesCache.Add((characterRules, isSuggestionMode), finalCharacters);
+
+                return finalCharacters;
+
+                void addAllCharacters(ImmutableArray<char> characters)
+                {
+                    foreach (var @char in characters)
+                    {
+                        commitCharactersBuilder.Add(@char);
+                    }
+                }
             }
         }
 
@@ -416,7 +446,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
             var lastCompletionItem = completions.Items[request.Item.Data];
             if (lastCompletionItem.DisplayTextPrefix + lastCompletionItem.DisplayText + lastCompletionItem.DisplayTextSuffix != request.Item.Label)
             {
-                _logger.LogError($"Inconsistent completion data. Requested data on {request.Item.Label}, but found completion item {lastCompletionItem.DisplayText}");
+                _logger.LogError("Inconsistent completion data. Requested data on {0}, but found completion item {1}", request.Item.Label, lastCompletionItem.DisplayText);
                 return new CompletionResolveResponse { Item = request.Item };
             }
 
