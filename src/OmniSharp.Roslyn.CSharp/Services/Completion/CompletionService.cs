@@ -169,6 +169,18 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
             var replacingSpanStartPosition = sourceText.Lines.GetLinePosition(typedSpan.Start);
             var replacingSpanEndPosition = sourceText.Lines.GetLinePosition(typedSpan.End);
 
+            var resolvedCompletions = await Task.WhenAll(completions.Items.SelectAsArray((document, completionService), async (completion, arg) =>
+            {
+                if (completion.GetProviderName() is CompletionItemExtensions.TypeImportCompletionProvider or CompletionItemExtensions.ExtensionMethodImportCompletionProvider)
+                {
+                    return null;
+                }
+                else
+                {
+                    return await arg.completionService.GetChangeAsync(arg.document, completion);
+                }
+            }));
+
             for (int i = 0; i < completions.Items.Length; i++)
             {
                 TextSpan changeSpan = typedSpan;
@@ -198,14 +210,15 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                         {
                             // Except for import completion, we just resolve the change up front in the sync version. It's only expensive
                             // for override completion, but there's not a heck of a lot we can do about that for the sync scenario
-                            var change = await completionService.GetChangeAsync(document, completion);
+                            var change = resolvedCompletions[i];
+                            Debug.Assert(change is not null);
 
                             // Roslyn will give us the position to move the cursor after the completion is entered.
                             // However, this is in the _new_ document, after changes have been applied. In order to
                             // snippetize the insertion text, we need to calculate the offset as we move along the
                             // edits, subtracting or adding the difference for edits that do not insersect the current
                             // span.
-                            var adjustedNewPosition = change.NewPosition;
+                            var adjustedNewPosition = change!.NewPosition;
 
                             // There must be at least one change that affects the current location, or something is seriously wrong
                             Debug.Assert(change.TextChanges.Any(change => change.Span.IntersectsWith(position)));
