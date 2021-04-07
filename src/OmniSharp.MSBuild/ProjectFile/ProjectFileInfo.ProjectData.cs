@@ -30,6 +30,7 @@ namespace OmniSharp.MSBuild.ProjectFile
 
             public string Configuration { get; }
             public string Platform { get; }
+            public string PlatformTarget { get; }
             public FrameworkName TargetFramework { get; }
             public ImmutableArray<string> TargetFrameworks { get; }
 
@@ -88,7 +89,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 Guid guid, string name,
                 string assemblyName, string targetPath, string outputPath, string intermediateOutputPath,
                 string projectAssetsFile,
-                string configuration, string platform,
+                string configuration, string platform, string platformTarget,
                 FrameworkName targetFramework,
                 ImmutableArray<string> targetFrameworks,
                 OutputKind outputKind,
@@ -121,6 +122,7 @@ namespace OmniSharp.MSBuild.ProjectFile
 
                 Configuration = configuration;
                 Platform = platform;
+                PlatformTarget = platformTarget;
                 TargetFramework = targetFramework;
                 TargetFrameworks = targetFrameworks.EmptyIfDefault();
 
@@ -253,6 +255,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 var projectAssetsFile = projectInstance.GetPropertyValue(PropertyNames.ProjectAssetsFile);
                 var configuration = projectInstance.GetPropertyValue(PropertyNames.Configuration);
                 var platform = projectInstance.GetPropertyValue(PropertyNames.Platform);
+                var platformTarget = projectInstance.GetPropertyValue(PropertyNames.PlatformTarget);
                 var defaultNamespace = projectInstance.GetPropertyValue(PropertyNames.RootNamespace);
 
                 var targetFramework = new FrameworkName(projectInstance.GetPropertyValue(PropertyNames.TargetFrameworkMoniker));
@@ -346,6 +349,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                     projectAssetsFile,
                     configuration,
                     platform,
+                    platformTarget,
                     targetFramework,
                     targetFrameworks,
                     outputKind,
