@@ -53,7 +53,7 @@ namespace OmniSharp.MSBuild.Tests
             {
                 var workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
 
-                Assert.Equal("ProjectAndSolutionFilter.sln", Path.GetFileName(workspaceInfo.SolutionPath));
+                Assert.Equal("ProjectAndSolutionFilter.slnf", Path.GetFileName(workspaceInfo.SolutionPath));
                 Assert.NotNull(workspaceInfo.Projects);
                 var project = Assert.Single(workspaceInfo.Projects);
 
