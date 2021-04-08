@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27004.2005
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31129.286
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{2C348365-A9D8-459E-9276-56FC46AAEE31}"
 EndProject
@@ -67,9 +67,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OmniSharp.Stdio.Driver", "s
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OmniSharp.Script.Tests", "tests\OmniSharp.Script.Tests\OmniSharp.Script.Tests.csproj", "{9E4BA68C-7F4B-429A-A0C7-8CE7D41D610F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OmniSharp.Shared", "src\OmniSharp.Shared\OmniSharp.Shared.csproj", "{9571E3FE-E742-44AC-9E1F-64156815B8E1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OmniSharp.Shared", "src\OmniSharp.Shared\OmniSharp.Shared.csproj", "{9571E3FE-E742-44AC-9E1F-64156815B8E1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OmniSharp.Lsp.Tests", "tests\OmniSharp.Lsp.Tests\OmniSharp.Lsp.Tests.csproj", "{D67AA10B-8DB6-408D-A4C5-0B1DDCF5B3CC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OmniSharp.Lsp.Tests", "tests\OmniSharp.Lsp.Tests\OmniSharp.Lsp.Tests.csproj", "{D67AA10B-8DB6-408D-A4C5-0B1DDCF5B3CC}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OmniSharp.Benchmarks", "src\OmniSharp.Benchmarks\OmniSharp.Benchmarks.csproj", "{6F5B209E-8DD3-4E90-A1F3-D85E7AF56588}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -369,6 +371,18 @@ Global
 		{D67AA10B-8DB6-408D-A4C5-0B1DDCF5B3CC}.Release|x64.Build.0 = Release|Any CPU
 		{D67AA10B-8DB6-408D-A4C5-0B1DDCF5B3CC}.Release|x86.ActiveCfg = Release|Any CPU
 		{D67AA10B-8DB6-408D-A4C5-0B1DDCF5B3CC}.Release|x86.Build.0 = Release|Any CPU
+		{6F5B209E-8DD3-4E90-A1F3-D85E7AF56588}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6F5B209E-8DD3-4E90-A1F3-D85E7AF56588}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6F5B209E-8DD3-4E90-A1F3-D85E7AF56588}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{6F5B209E-8DD3-4E90-A1F3-D85E7AF56588}.Debug|x64.Build.0 = Debug|Any CPU
+		{6F5B209E-8DD3-4E90-A1F3-D85E7AF56588}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{6F5B209E-8DD3-4E90-A1F3-D85E7AF56588}.Debug|x86.Build.0 = Debug|Any CPU
+		{6F5B209E-8DD3-4E90-A1F3-D85E7AF56588}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6F5B209E-8DD3-4E90-A1F3-D85E7AF56588}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6F5B209E-8DD3-4E90-A1F3-D85E7AF56588}.Release|x64.ActiveCfg = Release|Any CPU
+		{6F5B209E-8DD3-4E90-A1F3-D85E7AF56588}.Release|x64.Build.0 = Release|Any CPU
+		{6F5B209E-8DD3-4E90-A1F3-D85E7AF56588}.Release|x86.ActiveCfg = Release|Any CPU
+		{6F5B209E-8DD3-4E90-A1F3-D85E7AF56588}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -398,6 +412,7 @@ Global
 		{9E4BA68C-7F4B-429A-A0C7-8CE7D41D610F} = {35E025BF-BBB2-4FAC-9F4B-37CBA083EE47}
 		{9571E3FE-E742-44AC-9E1F-64156815B8E1} = {2C348365-A9D8-459E-9276-56FC46AAEE31}
 		{D67AA10B-8DB6-408D-A4C5-0B1DDCF5B3CC} = {35E025BF-BBB2-4FAC-9F4B-37CBA083EE47}
+		{6F5B209E-8DD3-4E90-A1F3-D85E7AF56588} = {2C348365-A9D8-459E-9276-56FC46AAEE31}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4DD725CE-B49A-4151-8B77-BB33FE88E46E}
