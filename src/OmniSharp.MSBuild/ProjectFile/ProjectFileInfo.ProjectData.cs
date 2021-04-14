@@ -151,7 +151,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 Guid guid, string name,
                 string assemblyName, string targetPath, string outputPath, string intermediateOutputPath,
                 string projectAssetsFile,
-                string configuration, string platform,
+                string configuration, string platform, string platformTarget,
                 FrameworkName targetFramework,
                 ImmutableArray<string> targetFrameworks,
                 OutputKind outputKind,
@@ -182,7 +182,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 ImmutableDictionary<string, string> projectReferenceAliases,
                 ImmutableArray<IMSBuildGlob> fileInclusionGlobs)
                 : this(guid, name, assemblyName, targetPath, outputPath, intermediateOutputPath, projectAssetsFile,
-                      configuration, platform, targetFramework, targetFrameworks, outputKind, languageVersion, nullableContextOptions, allowUnsafeCode, checkForOverflowUnderflow,
+                      configuration, platform, platformTarget, targetFramework, targetFrameworks, outputKind, languageVersion, nullableContextOptions, allowUnsafeCode, checkForOverflowUnderflow,
                       documentationFile, preprocessorSymbolNames, suppressedDiagnosticIds, warningsAsErrors, warningsNotAsErrors, signAssembly, assemblyOriginatorKeyFile, treatWarningsAsErrors, defaultNamespace, runAnalyzers, runAnalyzersDuringLiveAnalysis, ruleset)
             {
                 SourceFiles = sourceFiles.EmptyIfDefault();
@@ -208,6 +208,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 var projectAssetsFile = project.GetPropertyValue(PropertyNames.ProjectAssetsFile);
                 var configuration = project.GetPropertyValue(PropertyNames.Configuration);
                 var platform = project.GetPropertyValue(PropertyNames.Platform);
+                var platformTarget = project.GetPropertyValue(PropertyNames.PlatformTarget);
                 var defaultNamespace = project.GetPropertyValue(PropertyNames.RootNamespace);
 
                 var targetFramework = new FrameworkName(project.GetPropertyValue(PropertyNames.TargetFrameworkMoniker));
@@ -238,7 +239,7 @@ namespace OmniSharp.MSBuild.ProjectFile
 
                 return new ProjectData(
                     guid, name, assemblyName, targetPath, outputPath, intermediateOutputPath, projectAssetsFile,
-                    configuration, platform, targetFramework, targetFrameworks, outputKind, languageVersion, nullableContextOptions, allowUnsafeCode, checkForOverflowUnderflow,
+                    configuration, platform, platformTarget, targetFramework, targetFrameworks, outputKind, languageVersion, nullableContextOptions, allowUnsafeCode, checkForOverflowUnderflow,
                     documentationFile, preprocessorSymbolNames, suppressedDiagnosticIds, warningsAsErrors, warningsNotAsErrors, signAssembly, assemblyOriginatorKeyFile, treatWarningsAsErrors, defaultNamespace, runAnalyzers, runAnalyzersDuringLiveAnalysis, ruleset: null);
             }
 
