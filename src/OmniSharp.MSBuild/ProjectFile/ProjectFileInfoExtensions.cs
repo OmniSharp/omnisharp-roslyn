@@ -118,7 +118,7 @@ namespace OmniSharp.MSBuild.ProjectFile
             return projectFileInfo.Analyzers.Select(analyzerCandicatePath => new AnalyzerFileReference(analyzerCandicatePath, analyzerAssemblyLoader)).ToImmutableArray();
         }
 
-        private static Platform ParsePlatform(string value) => (value.ToLowerInvariant()) switch
+        private static Platform ParsePlatform(string value) => (value?.ToLowerInvariant()) switch
         {
             "x86" => Platform.X86,
             "x64" => Platform.X64,
