@@ -29,7 +29,7 @@ When using OmniSharp with an editor extension (e.g. VIM, Emacs, VS Code), the ex
 
 #### Stable releases
 
-Stable releases are published using [Github releases](https://github.com/OmniSharp/omnisharp-roslyn/releases). Each release contains a set of binaries for various operating systems and processing architectures.
+Stable releases are published using [GitHub releases](https://github.com/OmniSharp/omnisharp-roslyn/releases). Each release contains a set of binaries for various operating systems and processing architectures.
 
 #### Pre-releases
 

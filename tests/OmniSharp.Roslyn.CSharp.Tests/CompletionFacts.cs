@@ -270,12 +270,34 @@ namespace N2
 
             Assert.Single(resolved.Item.AdditionalTextEdits);
             var additionalEdit = resolved.Item.AdditionalTextEdits[0];
-            Assert.Equal(NormalizeNewlines("using N2;\n\nnamespace N1\r\n{\r\n    public class C1\r\n    {\r\n        public void M(object o)\r\n        {\r\n            o"),
+            Assert.Equal(NormalizeNewlines("using N2;\n\n"),
                          additionalEdit.NewText);
             Assert.Equal(0, additionalEdit.StartLine);
             Assert.Equal(0, additionalEdit.StartColumn);
-            Assert.Equal(6, additionalEdit.EndLine);
-            Assert.Equal(13, additionalEdit.EndColumn);
+            Assert.Equal(0, additionalEdit.EndLine);
+            Assert.Equal(0, additionalEdit.EndColumn);
+            VerifySortOrders(completions.Items);
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task ImportCompletion_OnLine0(string filename)
+        {
+            const string input = @"$$";
+
+            using var host = GetImportCompletionHost();
+            var completions = await FindCompletionsWithImportedAsync(filename, input, host);
+            var resolved = await ResolveCompletionAsync(completions.Items.First(c => c.TextEdit.NewText == "Console"), host);
+
+            Assert.Single(resolved.Item.AdditionalTextEdits);
+            var additionalEdit = resolved.Item.AdditionalTextEdits[0];
+            Assert.Equal(NormalizeNewlines("using System;\n\n"),
+                         additionalEdit.NewText);
+            Assert.Equal(0, additionalEdit.StartLine);
+            Assert.Equal(0, additionalEdit.StartColumn);
+            Assert.Equal(0, additionalEdit.EndLine);
+            Assert.Equal(0, additionalEdit.EndColumn);
             VerifySortOrders(completions.Items);
         }
 
@@ -311,12 +333,12 @@ namespace N2
 
             Assert.Single(resolved.Item.AdditionalTextEdits);
             var additionalEdit = resolved.Item.AdditionalTextEdits[0];
-            Assert.Equal(NormalizeNewlines("using System;\n\nnamespace N1\r\n{\r\n    public class C1\r\n    {\r\n        public void M(object o)\r\n        {\r\n            /*Guid*"),
+            Assert.Equal(NormalizeNewlines("using System;\n\n"),
                          additionalEdit.NewText);
             Assert.Equal(0, additionalEdit.StartLine);
             Assert.Equal(0, additionalEdit.StartColumn);
-            Assert.Equal(6, additionalEdit.EndLine);
-            Assert.Equal(19, additionalEdit.EndColumn);
+            Assert.Equal(0, additionalEdit.EndLine);
+            Assert.Equal(0, additionalEdit.EndColumn);
             VerifySortOrders(completions.Items);
         }
 
@@ -358,12 +380,12 @@ namespace N3
 
             Assert.Single(resolved.Item.AdditionalTextEdits);
             var additionalEdit = resolved.Item.AdditionalTextEdits[0];
-            Assert.Equal(NormalizeNewlines("N2;\nusing N3;\r\nnamespace N1\r\n{\r\n    public class C1\r\n    {\r\n        public void M(object o)\r\n        {\r\n           "),
+            Assert.Equal(NormalizeNewlines("N2;\nusing "),
                          additionalEdit.NewText);
             Assert.Equal(1, additionalEdit.StartLine);
             Assert.Equal(6, additionalEdit.StartColumn);
-            Assert.Equal(8, additionalEdit.EndLine);
-            Assert.Equal(11, additionalEdit.EndColumn);
+            Assert.Equal(1, additionalEdit.EndLine);
+            Assert.Equal(6, additionalEdit.EndColumn);
             VerifySortOrders(completions.Items);
         }
 
@@ -440,18 +462,7 @@ namespace N3
             var completions = await FindCompletionsAsync(filename, input, SharedOmniSharpTestHost);
             Assert.Contains(completions.Items, c => c.Label == "myvar");
             Assert.Contains(completions.Items, c => c.Label == "MyClass1");
-            Assert.All(completions.Items, c =>
-            {
-                switch (c.Label)
-                {
-                    case "myvar":
-                        Assert.True(c.Preselect);
-                        break;
-                    default:
-                        Assert.False(c.Preselect);
-                        break;
-                }
-            });
+            Assert.All(completions.Items, c => Assert.False(c.Preselect));
         }
 
         [Theory]
@@ -472,18 +483,7 @@ namespace N3
             var completions = await FindCompletionsAsync(filename, input, SharedOmniSharpTestHost);
             Assert.Contains(completions.Items, c => c.Label == "myvar");
             Assert.Contains(completions.Items, c => c.Label == "MyClass1");
-            Assert.All(completions.Items, c =>
-            {
-                switch (c.Label)
-                {
-                    case "MyClass1":
-                        Assert.True(c.Preselect);
-                        break;
-                    default:
-                        Assert.False(c.Preselect);
-                        break;
-                }
-            });
+            Assert.All(completions.Items, c => Assert.False(c.Preselect));
         }
 
         [Theory]
@@ -520,18 +520,7 @@ namespace N3
             var completions = await FindCompletionsAsync(filename, source, SharedOmniSharpTestHost);
             Assert.Contains(completions.Items, c => c.Label == "Bar");
             Assert.Contains(completions.Items, c => c.TextEdit.NewText == "Bar");
-            Assert.All(completions.Items, c =>
-            {
-                switch (c.Label)
-                {
-                    case "Bar":
-                        Assert.True(c.Preselect);
-                        break;
-                    default:
-                        Assert.False(c.Preselect);
-                        break;
-                }
-            });
+            Assert.All(completions.Items, c => Assert.False(c.Preselect));
         }
 
         [Theory]
@@ -586,15 +575,10 @@ namespace N3
             Assert.Equal("text", item.TextEdit.NewText);
             Assert.All(completions.Items, c =>
             {
-                switch (c.Label)
-                {
-                    case "text:":
-                        Assert.True(c.Preselect);
-                        break;
-                    default:
-                        Assert.False(c.Preselect);
-                        break;
-                }
+                if (c.Label == "ToString")
+                    Assert.True(c.Preselect);
+                else
+                    Assert.False(c.Preselect);
             });
         }
 
@@ -637,28 +621,32 @@ class FooChild : Foo
             var completions = await FindCompletionsAsync(filename, source, SharedOmniSharpTestHost);
             Assert.Equal(new[] { "Equals(object obj)", "GetHashCode()", "Test(string text)", "Test(string text, string moreText)", "ToString()" },
                          completions.Items.Select(c => c.Label));
-            Assert.Equal(new[] { "Equals(object obj)\n    {\n        return base.Equals(obj);$0\n    \\}",
-                                 "GetHashCode()\n    {\n        return base.GetHashCode();$0\n    \\}",
-                                 "Test(string text)\n    {\n        base.Test(text);$0\n    \\}",
-                                 "Test(string text, string moreText)\n    {\n        base.Test(text, moreText);$0\n    \\}",
-                                 "ToString()\n    {\n        return base.ToString();$0\n    \\}"
+
+            Assert.Equal(new[] { "public override bool Equals(object obj)\n    {\n        return base.Equals(obj);$0\n    \\}",
+                                 "public override int GetHashCode()\n    {\n        return base.GetHashCode();$0\n    \\}",
+                                 "public override void Test(string text)\n    {\n        base.Test(text);$0\n    \\}",
+                                 "public override void Test(string text, string moreText)\n    {\n        base.Test(text, moreText);$0\n    \\}",
+                                 "public override string ToString()\n    {\n        return base.ToString();$0\n    \\}"
                                 },
-                         completions.Items.Select<CompletionItem, string>(c => c.TextEdit.NewText));
+                         completions.Items.Select(c => c.TextEdit.NewText));
 
-            Assert.Equal(new[] { "public override bool",
-                                 "public override int",
-                                 "public override void",
-                                 "public override void",
-                                 "public override string"},
-                        completions.Items.Select(c => c.AdditionalTextEdits.Single().NewText));
+            Assert.Equal(new[] { "override Equals",
+                                 "override GetHashCode",
+                                 "override Test",
+                                 "override Test",
+                                 "override ToString"
+                                },
+                         completions.Items.Select(c => c.FilterText));
 
-            Assert.All(completions.Items.Select(c => c.AdditionalTextEdits.Single()),
-                       r =>
+            Assert.All(completions.Items, c => Assert.Null(c.AdditionalTextEdits));
+
+            Assert.All(completions.Items,
+                       c =>
                        {
-                           Assert.Equal(9, r.StartLine);
-                           Assert.Equal(4, r.StartColumn);
-                           Assert.Equal(9, r.EndLine);
-                           Assert.Equal(12, r.EndColumn);
+                           Assert.Equal(9, c.TextEdit.StartLine);
+                           Assert.Equal(4, c.TextEdit.StartColumn);
+                           Assert.Equal(9, c.TextEdit.EndLine);
+                           Assert.Equal(13, c.TextEdit.EndColumn);
                        });
 
             Assert.All(completions.Items, c => Assert.Equal(InsertTextFormat.Snippet, c.InsertTextFormat));
@@ -692,27 +680,30 @@ namespace N3
             Assert.Equal(new[] { "Equals(object obj)", "GetHashCode()", "GetN1()", "ToString()" },
                          completions.Items.Select(c => c.Label));
 
-            Assert.Equal(new[] { "Equals(object obj)\n        {\n            return base.Equals(obj);$0\n        \\}",
-                                 "GetHashCode()\n        {\n            return base.GetHashCode();$0\n        \\}",
-                                 "GetN1()\n        {\n            throw new System.NotImplementedException();$0\n        \\}",
-                                 "ToString()\n        {\n            return base.ToString();$0\n        \\}"
+            Assert.Equal(new[] { "public override bool Equals(object obj)\n        {\n            return base.Equals(obj);$0\n        \\}",
+                                 "public override int GetHashCode()\n        {\n            return base.GetHashCode();$0\n        \\}",
+                                 "protected override N1.CN1 GetN1()\n        {\n            throw new System.NotImplementedException();$0\n        \\}",
+                                 "public override string ToString()\n        {\n            return base.ToString();$0\n        \\}"
                                },
                          completions.Items.Select(c => c.TextEdit.NewText));
 
-            Assert.Equal(new[] { "public override bool",
-                                 "public override int",
-                                 "protected override N1.CN1",
-                                 "public override string"},
-                        completions.Items.Select(c => c.AdditionalTextEdits.Single().NewText));
+            Assert.Equal(new[] { "override Equals",
+                                 "override GetHashCode",
+                                 "override GetN1",
+                                 "override ToString"
+                               },
+                         completions.Items.Select(c => c.FilterText));
 
-            Assert.All(completions.Items.Select(c => c.AdditionalTextEdits.Single()),
-                       r =>
+            Assert.All(completions.Items,
+                       c =>
                        {
-                           Assert.Equal(15, r.StartLine);
-                           Assert.Equal(8, r.StartColumn);
-                           Assert.Equal(15, r.EndLine);
-                           Assert.Equal(16, r.EndColumn);
+                           Assert.Equal(15, c.TextEdit.StartLine);
+                           Assert.Equal(8, c.TextEdit.StartColumn);
+                           Assert.Equal(15, c.TextEdit.EndLine);
+                           Assert.Equal(17, c.TextEdit.EndColumn);
                        });
+
+            Assert.All(completions.Items, c => Assert.Null(c.AdditionalTextEdits));
 
             Assert.All(completions.Items, c => Assert.Equal(InsertTextFormat.Snippet, c.InsertTextFormat));
         }
@@ -738,6 +729,12 @@ class C
                                },
                          completions.Items.Select(c => c.TextEdit.NewText));
 
+            Assert.Equal(new[] { "Equals",
+                                 "GetHashCode",
+                                 "ToString"
+                               },
+                         completions.Items.Select(c => c.FilterText));
+
             Assert.All(completions.Items.Select(c => c.AdditionalTextEdits), a => Assert.Null(a));
             Assert.All(completions.Items, c => Assert.Equal(InsertTextFormat.Snippet, c.InsertTextFormat));
         }
@@ -759,6 +756,9 @@ class C
 
             Assert.Equal(new[] { "Equals(object obj)\n    {\n        return base.Equals(obj);$0\n    \\}" },
                          completions.Items.Select(c => c.TextEdit.NewText));
+
+            Assert.Equal(new[] { "Equals" },
+                         completions.Items.Select(c => c.FilterText));
 
             Assert.All(completions.Items.Select(c => c.AdditionalTextEdits), a => Assert.Null(a));
             Assert.All(completions.Items, c => Assert.Equal(InsertTextFormat.Snippet, c.InsertTextFormat));
@@ -784,29 +784,31 @@ class Derived : Base
             Assert.Equal(new[] { "Equals(object obj)", "GetHashCode()", "Test()", "ToString()" },
                          completions.Items.Select(c => c.Label));
 
-            Assert.Equal(new[] { "Equals(object obj)\n    {\n        return base.Equals(obj);$0\n    \\}",
-                                 "GetHashCode()\n    {\n        return base.GetHashCode();$0\n    \\}",
-                                 "Test()\n    {\n        throw new System.NotImplementedException();$0\n    \\}",
-                                 "ToString()\n    {\n        return base.ToString();$0\n    \\}"
+            Assert.Equal(new[] { "public override bool Equals(object obj)\n    {\n        return base.Equals(obj);$0\n    \\}",
+                                 "public override int GetHashCode()\n    {\n        return base.GetHashCode();$0\n    \\}",
+                                 "protected override Test Test()\n    {\n        throw new System.NotImplementedException();$0\n    \\}",
+                                 "public override string ToString()\n    {\n        return base.ToString();$0\n    \\}"
                                },
                          completions.Items.Select(c => c.TextEdit.NewText));
 
-            Assert.Equal(new[] { "public override bool",
-                                 "public override int",
-                                 "protected override Test",
-                                 "public override string"},
-                        completions.Items.Select(c => c.AdditionalTextEdits.Single().NewText));
+            Assert.Equal(new[] { "override Equals",
+                                 "override GetHashCode",
+                                 "override Test",
+                                 "override ToString"
+                               },
+                         completions.Items.Select(c => c.FilterText));
 
-            Assert.All(completions.Items.Select(c => c.AdditionalTextEdits.Single()),
-                       r =>
+            Assert.All(completions.Items,
+                       c =>
                        {
-                           Assert.Equal(8, r.StartLine);
-                           Assert.Equal(4, r.StartColumn);
-                           Assert.Equal(8, r.EndLine);
-                           Assert.Equal(12, r.EndColumn);
+                           Assert.Equal(8, c.TextEdit.StartLine);
+                           Assert.Equal(4, c.TextEdit.StartColumn);
+                           Assert.Equal(8, c.TextEdit.EndLine);
+                           Assert.Equal(13, c.TextEdit.EndColumn);
                        });
 
             Assert.All(completions.Items, c => Assert.Equal(InsertTextFormat.Snippet, c.InsertTextFormat));
+            Assert.All(completions.Items, c => Assert.Null(c.AdditionalTextEdits));
         }
 
         [Fact]
@@ -831,12 +833,17 @@ public class Derived : Base
             Assert.Equal("GetAction(System.Action a)", item.Label);
 
             Assert.Single(item.AdditionalTextEdits);
-            Assert.Equal(NormalizeNewlines("using System;\n\npublic class Derived : Base\r\n{\r\n    public override Action"), item.AdditionalTextEdits[0].NewText);
+            Assert.Equal(NormalizeNewlines("using System;\n\n"), item.AdditionalTextEdits[0].NewText);
             Assert.Equal(1, item.AdditionalTextEdits[0].StartLine);
             Assert.Equal(0, item.AdditionalTextEdits[0].StartColumn);
-            Assert.Equal(3, item.AdditionalTextEdits[0].EndLine);
-            Assert.Equal(12, item.AdditionalTextEdits[0].EndColumn);
-            Assert.Equal("GetAction(Action a)\n    {\n        return base.GetAction(a);$0\n    \\}", item.TextEdit.NewText);
+            Assert.Equal(1, item.AdditionalTextEdits[0].EndLine);
+            Assert.Equal(0, item.AdditionalTextEdits[0].EndColumn);
+            Assert.Equal("public override Action GetAction(Action a)\n    {\n        return base.GetAction(a);$0\n    \\}", item.TextEdit.NewText);
+            Assert.Equal(3, item.TextEdit.StartLine);
+            Assert.Equal(4, item.TextEdit.StartColumn);
+            Assert.Equal(3, item.TextEdit.EndLine);
+            Assert.Equal(13, item.TextEdit.EndColumn);
+            Assert.Equal("override GetAction", item.FilterText);
         }
 
         [Fact]
@@ -858,13 +865,13 @@ public class Derived : Base
             var item = completions.Items.Single(c => c.Label.StartsWith("M1"));
             Assert.Equal("M1(object? param)", item.Label);
 
-            Assert.Single(item.AdditionalTextEdits);
-            Assert.Equal("public override object", item.AdditionalTextEdits[0].NewText);
-            Assert.Equal(9, item.AdditionalTextEdits[0].StartLine);
-            Assert.Equal(4, item.AdditionalTextEdits[0].StartColumn);
-            Assert.Equal(9, item.AdditionalTextEdits[0].EndLine);
-            Assert.Equal(12, item.AdditionalTextEdits[0].EndColumn);
-            Assert.Equal("M1(object param)\n    {\n        return base.M1(param);$0\n    \\}", item.TextEdit.NewText);
+            Assert.Null(item.AdditionalTextEdits);
+            Assert.Equal(9, item.TextEdit.StartLine);
+            Assert.Equal(4, item.TextEdit.StartColumn);
+            Assert.Equal(9, item.TextEdit.EndLine);
+            Assert.Equal(13, item.TextEdit.EndColumn);
+            Assert.Equal("public override object M1(object param)\n    {\n        return base.M1(param);$0\n    \\}", item.TextEdit.NewText);
+            Assert.Equal("override M1", item.FilterText);
         }
 
         [Theory]
@@ -888,13 +895,13 @@ public class Derived : Base
             var item = completions.Items.Single(c => c.Label.StartsWith("Prop"));
             Assert.Equal("Prop", item.Label);
 
-            Assert.Single(item.AdditionalTextEdits);
-            Assert.Equal("public override string", item.AdditionalTextEdits[0].NewText);
-            Assert.Equal(8, item.AdditionalTextEdits[0].StartLine);
-            Assert.Equal(4, item.AdditionalTextEdits[0].StartColumn);
-            Assert.Equal(8, item.AdditionalTextEdits[0].EndLine);
-            Assert.Equal(12, item.AdditionalTextEdits[0].EndColumn);
-            Assert.Equal("Prop { get => throw new NotImplementedException()$0; set => throw new NotImplementedException(); \\}", item.TextEdit.NewText);
+            Assert.Null(item.AdditionalTextEdits);
+            Assert.Equal(8, item.TextEdit.StartLine);
+            Assert.Equal(4, item.TextEdit.StartColumn);
+            Assert.Equal(8, item.TextEdit.EndLine);
+            Assert.Equal(13, item.TextEdit.EndColumn);
+            Assert.Equal("public override string Prop { get => throw new NotImplementedException()$0; set => throw new NotImplementedException(); \\}", item.TextEdit.NewText);
+            Assert.Equal("override Prop", item.FilterText);
         }
 
         [Theory]
@@ -918,14 +925,14 @@ public class Derived : Base
             var item = completions.Items.Single(c => c.Label.StartsWith("Prop"));
             Assert.Equal("Prop", item.Label);
 
-            Assert.Single(item.AdditionalTextEdits);
-            Assert.Equal("public override string", item.AdditionalTextEdits[0].NewText);
-            Assert.Equal(8, item.AdditionalTextEdits[0].StartLine);
-            Assert.Equal(4, item.AdditionalTextEdits[0].StartColumn);
-            Assert.Equal(8, item.AdditionalTextEdits[0].EndLine);
-            Assert.Equal(12, item.AdditionalTextEdits[0].EndColumn);
-            Assert.Equal("Prop => throw new NotImplementedException();", item.TextEdit.NewText);
+            Assert.Null(item.AdditionalTextEdits);
+            Assert.Equal(8, item.TextEdit.StartLine);
+            Assert.Equal(4, item.TextEdit.StartColumn);
+            Assert.Equal(8, item.TextEdit.EndLine);
+            Assert.Equal(13, item.TextEdit.EndColumn);
+            Assert.Equal("public override string Prop => throw new NotImplementedException();", item.TextEdit.NewText);
             Assert.Equal(InsertTextFormat.PlainText, item.InsertTextFormat);
+            Assert.Equal("override Prop", item.FilterText);
         }
 
         [Theory]
@@ -976,12 +983,18 @@ public partial class C
             var item = completions.Items.Single(c => c.Label.StartsWith("M"));
 
             Assert.Single(item.AdditionalTextEdits);
-            Assert.Equal(NormalizeNewlines("using System;\n\npublic partial class C\r\n{\r\n    partial void"), item.AdditionalTextEdits[0].NewText);
+            Assert.Equal(NormalizeNewlines("using System;\n\n"), item.AdditionalTextEdits[0].NewText);
             Assert.Equal(1, item.AdditionalTextEdits[0].StartLine);
             Assert.Equal(0, item.AdditionalTextEdits[0].StartColumn);
-            Assert.Equal(3, item.AdditionalTextEdits[0].EndLine);
-            Assert.Equal(11, item.AdditionalTextEdits[0].EndColumn);
-            Assert.Equal("M(Action a)\n    {\n        throw new NotImplementedException();$0\n    \\}", item.TextEdit.NewText);
+            Assert.Equal(1, item.AdditionalTextEdits[0].EndLine);
+            Assert.Equal(0, item.AdditionalTextEdits[0].EndColumn);
+
+            Assert.Equal("void M(Action a)\n    {\n        throw new NotImplementedException();$0\n    \\}", item.TextEdit.NewText);
+            Assert.Equal("M", item.FilterText);
+            Assert.Equal(3, item.TextEdit.StartLine);
+            Assert.Equal(12, item.TextEdit.StartColumn);
+            Assert.Equal(3, item.TextEdit.EndLine);
+            Assert.Equal(12, item.TextEdit.EndColumn);
         }
 
         [Fact]
@@ -1021,38 +1034,30 @@ class C
             Assert.Equal(new[] { "Equals(object obj)", "GetHashCode()", "ToString()" },
                          completions.Items.Select(c => c.Label));
 
-            Assert.Equal(new[] { "Equals(object obj)\n    {\n        return base.Equals(obj);$0\n    \\}",
-                                 "GetHashCode()\n    {\n        return base.GetHashCode();$0\n    \\}",
-                                 "ToString()\n    {\n        return base.ToString();$0\n    \\}"
+            Assert.Equal(new[] { "public override bool Equals(object obj)\n    {\n        return base.Equals(obj);$0\n    \\}",
+                                 "public override int GetHashCode()\n    {\n        return base.GetHashCode();$0\n    \\}",
+                                 "public override string ToString()\n    {\n        return base.ToString();$0\n    \\}"
                                },
                          completions.Items.Select(c => c.TextEdit.NewText));
 
-            Assert.Equal(new[] { "public override bool",
-                                 "public override int",
-                                 "public override string"},
-                        completions.Items.Select(c => c.AdditionalTextEdits.Single().NewText));
+            Assert.Equal(new[] { "override Equals",
+                                 "override GetHashCode",
+                                 "override ToString"
+                               },
+                         completions.Items.Select(c => c.FilterText));
 
-            Assert.All(completions.Items.Select(c => c.AdditionalTextEdits.Single()),
+            Assert.All(completions.Items, c => Assert.Null(c.AdditionalTextEdits));
+
+            Assert.All(completions.Items.Select(c => c.TextEdit),
                        r =>
                        {
                            Assert.Equal(3, r.StartLine);
                            Assert.Equal(4, r.StartColumn);
                            Assert.Equal(3, r.EndLine);
-                           Assert.Equal(12, r.EndColumn);
+                           Assert.Equal(15, r.EndColumn);
                        });
 
-            Assert.All(completions.Items, c =>
-            {
-                switch (c.Label)
-                {
-                    case "GetHashCode()":
-                        Assert.True(c.Preselect);
-                        break;
-                    default:
-                        Assert.False(c.Preselect);
-                        break;
-                }
-            });
+            Assert.All(completions.Items, c => Assert.False(c.Preselect));
 
             Assert.All(completions.Items, c => Assert.Equal(InsertTextFormat.Snippet, c.InsertTextFormat));
         }
@@ -1076,9 +1081,6 @@ class C
             {
                 switch (c.Label)
                 {
-                    case "MyClass1":
-                        Assert.True(c.Preselect);
-                        break;
                     default:
                         Assert.False(c.Preselect);
                         break;
@@ -1100,18 +1102,32 @@ class C
                 ";
 
             var completions = await FindCompletionsAsync(filename, source, SharedOmniSharpTestHost);
-            Assert.Equal(new[] { "!--$0-->",
-                                 "![CDATA[$0]]>",
+            Assert.Equal(new[] { "<!--$0-->",
+                                 "<![CDATA[$0]]>",
                                  "c",
                                  "code",
-                                 "inheritdoc$0/>",
-                                 "list type=\"$0\"",
+                                 "<inheritdoc$0/>",
+                                 "<list type=\"$0\"",
                                  "para",
-                                 "see cref=\"$0\"/>",
-                                 "seealso cref=\"$0\"/>"
+                                 "<see cref=\"$0\"/>",
+                                 "<seealso cref=\"$0\"/>"
                          },
                          completions.Items.Select(c => c.TextEdit.NewText));
-            Assert.All(completions.Items, c => Assert.Equal(c.TextEdit.NewText.Contains("$0"), c.InsertTextFormat == InsertTextFormat.Snippet));
+            Assert.All(completions.Items, c =>
+            {
+                if (c.InsertTextFormat == InsertTextFormat.Snippet)
+                {
+                    Assert.Equal(35, c.TextEdit.StartColumn);
+                    Assert.Contains("0", c.TextEdit.NewText);
+                    Assert.StartsWith("<", c.FilterText);
+                }
+                else
+                {
+                    Assert.Equal(36, c.TextEdit.StartColumn);
+                    Assert.DoesNotContain("0", c.TextEdit.NewText);
+                    Assert.Null(c.FilterText);
+                }
+            });
         }
 
         [Fact]
@@ -1236,19 +1252,7 @@ class C
             var completions = await FindCompletionsAsync("dummy.csx", source, SharedOmniSharpTestHost);
             Assert.Contains(completions.Items, c => c.Label == "number1");
             Assert.Contains(completions.Items, c => c.Label == "number2");
-            Assert.All(completions.Items, c =>
-            {
-                switch (c.Label)
-                {
-                    case "number1":
-                    case "number2":
-                        Assert.True(c.Preselect);
-                        break;
-                    default:
-                        Assert.False(c.Preselect);
-                        break;
-                }
-            });
+            Assert.All(completions.Items, c => Assert.False(c.Preselect));
         }
 
         [Fact]
@@ -1269,17 +1273,7 @@ class C
             var completions = await FindCompletionsAsync("dummy.csx", source, SharedOmniSharpTestHost);
             Assert.Contains(completions.Items, c => c.Label == "myValue");
             Assert.All(completions.Items, c =>
-            {
-                switch (c.Label)
-                {
-                    case "myValue":
-                        Assert.True(c.Preselect);
-                        break;
-                    default:
-                        Assert.False(c.Preselect);
-                        break;
-                }
-            });
+            Assert.False(c.Preselect));
         }
 
         [Fact]
@@ -1302,19 +1296,7 @@ class C
             var completions = await FindCompletionsAsync("dummy.csx", source, SharedOmniSharpTestHost);
             Assert.Contains(completions.Items, c => c.Label == "PositionX");
             Assert.Contains(completions.Items, c => c.Label == "PositionY");
-            Assert.All(completions.Items, c =>
-            {
-                switch (c.Label)
-                {
-                    case "PositionX":
-                    case "PositionY":
-                        Assert.True(c.Preselect);
-                        break;
-                    default:
-                        Assert.False(c.Preselect);
-                        break;
-                }
-            });
+            Assert.All(completions.Items, c => Assert.False(c.Preselect));
         }
 
         [Theory]
@@ -1434,8 +1416,8 @@ public class Derived : Base
             var completions = await FindCompletionsAsync(filename, input, SharedOmniSharpTestHost);
             var onEnable = completions.Items.Single(c => c.TextEdit.NewText.Contains("OnEnable"));
             Assert.Equal(onEnable.TextEdit.StartLine, onEnable.TextEdit.EndLine);
-            Assert.Equal(2, onEnable.TextEdit.EndColumn - onEnable.TextEdit.StartColumn);
-            Assert.Equal("OnEnable()\n    {\n        base.OnEnable();$0\n    \\}", onEnable.TextEdit.NewText);
+            Assert.Equal(onEnable.TextEdit.EndColumn, onEnable.TextEdit.StartColumn);
+            Assert.Equal("Enable()\n    {\n        base.OnEnable();$0\n    \\}", onEnable.TextEdit.NewText);
         }
 
         [Theory]
@@ -1456,8 +1438,8 @@ public class Derived : Base
             var completions = await FindCompletionsAsync(filename, input, SharedOmniSharpTestHost);
             var onEnable = completions.Items.Single(c => c.TextEdit.NewText.Contains("OnEnable"));
             Assert.Equal(onEnable.TextEdit.StartLine, onEnable.TextEdit.EndLine);
-            Assert.Equal(2, onEnable.TextEdit.EndColumn - onEnable.TextEdit.StartColumn);
-            Assert.Equal("OnEnable()\n    {\n        base.OnEnable();$0\n    \\}", onEnable.TextEdit.NewText);
+            Assert.Equal(1, onEnable.TextEdit.EndColumn - onEnable.TextEdit.StartColumn);
+            Assert.Equal("nEnable()\n    {\n        base.OnEnable();$0\n    \\}", onEnable.TextEdit.NewText);
         }
 
         [Theory]
