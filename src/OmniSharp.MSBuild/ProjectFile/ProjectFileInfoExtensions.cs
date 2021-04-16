@@ -24,6 +24,12 @@ namespace OmniSharp.MSBuild.ProjectFile
                         .WithSpecificDiagnosticOptions(projectFileInfo.GetDiagnosticOptions())
                         .WithOverflowChecks(projectFileInfo.CheckForOverflowUnderflow);
 
+            var platformTarget = ParsePlatform(projectFileInfo.PlatformTarget);
+            if (platformTarget != compilationOptions.Platform)
+            {
+                compilationOptions = compilationOptions.WithPlatform(platformTarget);
+            }
+
             if (projectFileInfo.AllowUnsafeCode != compilationOptions.AllowUnsafe)
             {
                 compilationOptions = compilationOptions.WithAllowUnsafe(projectFileInfo.AllowUnsafeCode);
@@ -111,5 +117,17 @@ namespace OmniSharp.MSBuild.ProjectFile
 
             return projectFileInfo.Analyzers.Select(analyzerCandicatePath => new AnalyzerFileReference(analyzerCandicatePath, analyzerAssemblyLoader)).ToImmutableArray();
         }
+
+        private static Platform ParsePlatform(string value) => (value?.ToLowerInvariant()) switch
+        {
+            "x86" => Platform.X86,
+            "x64" => Platform.X64,
+            "itanium" => Platform.Itanium,
+            "anycpu" => Platform.AnyCpu,
+            "anycpu32bitpreferred" => Platform.AnyCpu32BitPreferred,
+            "arm" => Platform.Arm,
+            "arm64" => Platform.Arm64,
+            _ => Platform.AnyCpu,
+        };
     }
 }
