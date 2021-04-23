@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.FileProviders;
 using OmniSharp.Internal;
@@ -7,25 +8,16 @@ using OmniSharp.Utilities;
 
 namespace OmniSharp
 {
-    public class ConfigurationBuilder : IConfigurationBuilder
+    public class ConfigurationBuilder
     {
         private readonly IOmniSharpEnvironment _environment;
-        private readonly IConfigurationBuilder _builder;
 
         public ConfigurationBuilder(IOmniSharpEnvironment environment)
         {
             _environment = environment;
-            _builder = new Microsoft.Extensions.Configuration.ConfigurationBuilder()
-                .SetBasePath(AppContext.BaseDirectory);
         }
 
-        public IConfigurationBuilder Add(IConfigurationSource source)
-        {
-            _builder.Add(source);
-            return this;
-        }
-
-        public IConfigurationRoot Build()
+        public ConfigurationResult Build(Action<IConfigurationBuilder> additionalSetup = null)
         {
             var configBuilder = new Microsoft.Extensions.Configuration.ConfigurationBuilder()
                 .SetBasePath(AppContext.BaseDirectory)
@@ -46,10 +38,18 @@ namespace OmniSharp
                 optional: true,
                 reloadOnChange: true);
 
-            return configBuilder.Build();
-        }
+            // bootstrap additional host configuration at the end
+            additionalSetup?.Invoke(configBuilder);
 
-        public IDictionary<string, object> Properties => _builder.Properties;
-        public IList<IConfigurationSource> Sources => _builder.Sources;
+            try
+            {
+                var config = configBuilder.Build();
+                return new ConfigurationResult(config);
+            }
+            catch (Exception ex)
+            {
+                return new ConfigurationResult(ex);
+            }
+        }
     }
 }
