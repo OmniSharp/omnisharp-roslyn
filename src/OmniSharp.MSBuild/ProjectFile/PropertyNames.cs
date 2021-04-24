@@ -25,6 +25,7 @@
         public const string Nullable = nameof(Nullable);
         public const string OutputPath = nameof(OutputPath);
         public const string Platform = nameof(Platform);
+        public const string PlatformTarget = nameof(PlatformTarget);
         public const string ProjectAssetsFile = nameof(ProjectAssetsFile);
         public const string ProvideCommandLineArgs = nameof(ProvideCommandLineArgs);
         public const string ProjectGuid = nameof(ProjectGuid);
