@@ -24,12 +24,14 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
         private readonly Lazy<Assembly> _featureAssembly;
         private readonly Lazy<Type> _blockStructureService;
         private readonly Lazy<Type> _blockStructure;
+        private readonly Lazy<Type> _taskOfBlockStructure;
         private readonly Lazy<Type> _blockSpan;
         private readonly Lazy<MethodInfo> _getBlockStructure;
-        private readonly MethodInfo _getSpans;
-        private readonly MethodInfo _getIsCollpasible;
-        private readonly MethodInfo _getTextSpan;
-        private readonly MethodInfo _getType;
+        private readonly Lazy<MethodInfo> _result;
+        private readonly Lazy<MethodInfo> _getSpans;
+        private readonly Lazy<MethodInfo> _getIsCollpasible;
+        private readonly Lazy<MethodInfo> _getTextSpan;
+        private readonly Lazy<MethodInfo> _getType;
         private readonly OmniSharpWorkspace _workspace;
 
         [ImportingConstructor]
@@ -38,16 +40,17 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
             _workspace = workspace;
             _loader = loader;
             _featureAssembly = _loader.LazyLoad(Configuration.RoslynFeatures);
-
             _blockStructureService = _featureAssembly.LazyGetType("Microsoft.CodeAnalysis.Structure.BlockStructureService");
             _blockStructure = _featureAssembly.LazyGetType("Microsoft.CodeAnalysis.Structure.BlockStructure");
+            _taskOfBlockStructure = new(() => typeof(Task<>).MakeGenericType(_blockStructure.Value));
             _blockSpan = _featureAssembly.LazyGetType("Microsoft.CodeAnalysis.Structure.BlockSpan");
 
-            _getBlockStructure = _blockStructureService.LazyGetMethod("GetBlockStructure");
-            _getSpans = _blockStructure.Value.GetProperty("Spans").GetMethod;
-            _getIsCollpasible = _blockSpan.Value.GetProperty("IsCollapsible").GetMethod;
-            _getTextSpan = _blockSpan.Value.GetProperty("TextSpan").GetMethod;
-            _getType = _blockSpan.Value.GetProperty("Type").GetMethod;
+            _getBlockStructure = _blockStructureService.LazyGetMethod("GetBlockStructureAsync");
+            _result = _taskOfBlockStructure.LazyGetProperty("Result", getMethod: true);
+            _getSpans = _blockStructure.LazyGetProperty("Spans", getMethod: true);
+            _getIsCollpasible = _blockSpan.LazyGetProperty("IsCollapsible", getMethod: true);
+            _getTextSpan = _blockSpan.LazyGetProperty("TextSpan", getMethod: true);
+            _getType = _blockSpan.LazyGetProperty("Type", getMethod: true);
         }
 
         public async Task<BlockStructureResponse> Handle(BlockStructureRequest request)
@@ -63,7 +66,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
 
             var service = _blockStructureService.LazyGetMethod("GetService").InvokeStatic(new[] { document });
 
-            var structure = _getBlockStructure.Invoke<object>(service, new object[] { document, CancellationToken.None });
+            var structureTask = _getBlockStructure.Value.Invoke<object>(service, new object[] { document, CancellationToken.None });
+            var structure = _result.Value.Invoke<object>(structureTask, Array.Empty<object>());
             var spans = _getSpans.Invoke<IEnumerable>(structure, Array.Empty<object>());
 
 
