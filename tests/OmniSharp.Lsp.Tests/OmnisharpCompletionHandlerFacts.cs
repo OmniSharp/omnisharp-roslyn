@@ -196,7 +196,7 @@ namespace OmniSharp.Lsp.Tests
             var completions = await FindCompletionsWithImportedAsync(filename, input);
             CompletionItem localCompletion = completions.Items.First(c => c.TextEdit.TextEdit.NewText == "guid");
             CompletionItem typeCompletion = completions.Items.First(c => c.TextEdit.TextEdit.NewText == "Guid");
-            Assert.True(localCompletion.Data.ToObject<int>() < typeCompletion.Data.ToObject<int>()) ;
+            Assert.True(localCompletion.Data.ToObject<(long, int)>().Item2 < typeCompletion.Data.ToObject<(long, int)>().Item2) ;
             Assert.StartsWith("0", localCompletion.SortText);
             Assert.StartsWith("1", typeCompletion.SortText);
             VerifySortOrders(completions.Items);
