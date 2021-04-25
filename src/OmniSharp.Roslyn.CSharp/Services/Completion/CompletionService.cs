@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Completion;
+using Microsoft.CodeAnalysis.Text;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Extensions;
 using OmniSharp.Mef;
@@ -17,9 +18,9 @@ using OmniSharp.Models.v1.Completion;
 using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Helpers;
 using OmniSharp.Roslyn.CSharp.Services.Intellisense;
+using OmniSharp.Utilities;
 using CompletionItem = OmniSharp.Models.v1.Completion.CompletionItem;
 using CompletionTriggerKind = OmniSharp.Models.v1.Completion.CompletionTriggerKind;
-using CSharpCompletionList = Microsoft.CodeAnalysis.Completion.CompletionList;
 using CSharpCompletionService = Microsoft.CodeAnalysis.Completion.CompletionService;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Completion
@@ -27,33 +28,31 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
     [Shared]
     [OmniSharpHandler(OmniSharpEndpoints.Completion, LanguageNames.CSharp)]
     [OmniSharpHandler(OmniSharpEndpoints.CompletionResolve, LanguageNames.CSharp)]
+    [OmniSharpHandler(OmniSharpEndpoints.CompletionAfterInsert, LanguageNames.CSharp)]
     public class CompletionService :
         IRequestHandler<CompletionRequest, CompletionResponse>,
-        IRequestHandler<CompletionResolveRequest, CompletionResolveResponse>
+        IRequestHandler<CompletionResolveRequest, CompletionResolveResponse>,
+        IRequestHandler<CompletionAfterInsertRequest, CompletionAfterInsertResponse>
     {
-
         private readonly OmniSharpWorkspace _workspace;
+        private readonly OmniSharpOptions _omniSharpOptions;
         private readonly FormattingOptions _formattingOptions;
         private readonly ILogger _logger;
 
-        private readonly object _lock = new();
-        private (CSharpCompletionList Completions, string FileName, int position)? _lastCompletion = null;
+        private readonly CompletionListCache _cache = new();
 
         [ImportingConstructor]
-        public CompletionService(OmniSharpWorkspace workspace, FormattingOptions formattingOptions, ILoggerFactory loggerFactory)
+        public CompletionService(OmniSharpWorkspace workspace, FormattingOptions formattingOptions, ILoggerFactory loggerFactory, OmniSharpOptions omniSharpOptions)
         {
             _workspace = workspace;
             _formattingOptions = formattingOptions;
             _logger = loggerFactory.CreateLogger<CompletionService>();
+            _omniSharpOptions = omniSharpOptions;
         }
 
         public async Task<CompletionResponse> Handle(CompletionRequest request)
         {
             _logger.LogTrace("Completions requested");
-            lock (_lock)
-            {
-                _lastCompletion = null;
-            }
 
             var document = _workspace.GetDocument(request.FileName);
             if (document is null)
@@ -70,7 +69,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
 
             CompletionTrigger trigger = request.CompletionTrigger switch
             {
-                CompletionTriggerKind.Invoked => CompletionTrigger.Invoke,
                 CompletionTriggerKind.TriggerCharacter when request.TriggerCharacter is char c => CompletionTrigger.CreateInsertionTrigger(c),
                 _ => CompletionTrigger.Invoke,
             };
@@ -109,11 +107,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
             var typedSpan = completionService.GetDefaultCompletionListSpan(sourceText, position);
             string typedText = sourceText.GetSubText(typedSpan).ToString();
             _logger.LogTrace("Completions filled in");
-
-            lock (_lock)
-            {
-                _lastCompletion = (completions, request.FileName, position);
-            }
+            var cacheId = _cache.UpdateCache(document, position, completions);
 
 
             // If we don't encounter any unimported types, and the completion context thinks that some would be available, then
@@ -128,7 +122,17 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
             var isSuggestionMode = completions.SuggestionModeItem is not null;
 
 
-            var (completionsList, seenUnimportedCompletions) = await CompletionListBuilder.BuildCompletionItems(document, sourceText, position, completionService, completions, typedSpan, expectingImportedItems, isSuggestionMode);
+            var (completionsList, seenUnimportedCompletions) = await CompletionListBuilder.BuildCompletionItems(
+                document,
+                sourceText,
+                cacheId,
+                position,
+                completionService,
+                completions,
+                typedSpan,
+                expectingImportedItems,
+                isSuggestionMode,
+                _omniSharpOptions.RoslynExtensionsOptions.EnableAsyncCompletion);
 
             return new CompletionResponse
             {
@@ -139,42 +143,35 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
 
         public async Task<CompletionResolveResponse> Handle(CompletionResolveRequest request)
         {
-            if (_lastCompletion is null)
+            var cachedList = _cache.GetCachedCompletionList(request.Item.Data.CacheId);
+            if (cachedList is null)
             {
                 _logger.LogError("Cannot call completion/resolve before calling completion!");
                 return new CompletionResolveResponse { Item = request.Item };
             }
 
-            var (completions, fileName, position) = _lastCompletion.Value;
+            var (_, document, position, completions) = cachedList;
+            var index = request.Item.Data.Index;
 
             if (request.Item is null
-                || request.Item.Data >= completions.Items.Length
-                || request.Item.Data < 0)
+                || index >= completions.Items.Length
+                || index < 0)
             {
                 _logger.LogError("Received invalid completion resolve!");
                 return new CompletionResolveResponse { Item = request.Item };
             }
 
-            var lastCompletionItem = completions.Items[request.Item.Data];
+            var lastCompletionItem = completions.Items[index];
             if (lastCompletionItem.DisplayTextPrefix + lastCompletionItem.DisplayText + lastCompletionItem.DisplayTextSuffix != request.Item.Label)
             {
                 _logger.LogError("Inconsistent completion data. Requested data on {0}, but found completion item {1}", request.Item.Label, lastCompletionItem.DisplayText);
                 return new CompletionResolveResponse { Item = request.Item };
             }
 
-
-            var document = _workspace.GetDocument(fileName);
-            if (document is null)
-            {
-                _logger.LogInformation("Could not find document for file {0}", fileName);
-                return new CompletionResolveResponse { Item = request.Item };
-            }
-
             var completionService = CSharpCompletionService.GetService(document);
-
             var description = await completionService.GetDescriptionAsync(document, lastCompletionItem);
 
-            StringBuilder textBuilder = new StringBuilder();
+            var textBuilder = new StringBuilder();
             MarkdownHelpers.TaggedTextToMarkdown(description.TaggedParts, textBuilder, _formattingOptions, MarkdownFormat.FirstLineAsCSharp, out _);
 
             request.Item.Documentation = textBuilder.ToString();
@@ -207,6 +204,63 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
             return new CompletionResolveResponse
             {
                 Item = request.Item
+            };
+        }
+
+        public async Task<CompletionAfterInsertResponse> Handle(CompletionAfterInsertRequest request)
+        {
+            var cachedList = _cache.GetCachedCompletionList(request.Item.Data.CacheId);
+            if (cachedList is null)
+            {
+                _logger.LogError("Cannot call completion/afterInsert before calling completion!");
+                return new CompletionAfterInsertResponse();
+            }
+
+            var (_, document, _, completions) = cachedList;
+            var index = request.Item.Data.Index;
+
+            if (request.Item is null
+                || index >= completions.Items.Length
+                || index < 0
+                || request.Item.TextEdit is null)
+            {
+                _logger.LogError("Received invalid completion afterInsert!");
+                return new CompletionAfterInsertResponse();
+            }
+
+            var lastCompletionItem = completions.Items[index];
+            if (lastCompletionItem.DisplayTextPrefix + lastCompletionItem.DisplayText + lastCompletionItem.DisplayTextSuffix != request.Item.Label)
+            {
+                _logger.LogError("Inconsistent completion data. Requested data on {0}, but found completion item {1}", request.Item.Label, lastCompletionItem.DisplayText);
+                return new CompletionAfterInsertResponse();
+            }
+
+            if (lastCompletionItem.GetProviderName() is not (CompletionItemExtensions.OverrideCompletionProvider or
+                                                             CompletionItemExtensions.PartialMethodCompletionProvider)
+                                                        and var name)
+            {
+                _logger.LogWarning("Received unsupported afterInsert completion request for provider {0}", name);
+                return new CompletionAfterInsertResponse();
+            }
+
+            var completionService = CSharpCompletionService.GetService(document);
+
+            // Get a document with change from the completion inserted, so that we can resolve the completion and get the
+            // final full change.
+            var sourceText = await document.GetTextAsync();
+            var insertedSpan = sourceText.GetSpanFromLinePositionSpanTextChange(request.Item.TextEdit);
+            var changedText = sourceText.WithChanges(new TextChange(insertedSpan, request.Item.TextEdit.NewText));
+            var changedDocument = document.WithText(changedText);
+
+            var finalChange = await completionService.GetChangeAsync(changedDocument, lastCompletionItem, new TextSpan(insertedSpan.Start, request.Item.TextEdit.NewText.Length));
+            var finalText = changedText.WithChanges(finalChange.TextChange);
+            var finalPosition = finalText.GetPointFromPosition(finalChange.NewPosition!.Value);
+
+            return new CompletionAfterInsertResponse
+            {
+                Changes = finalChange.TextChanges.SelectAsArray(changedText, static (c, changedText) => CompletionListBuilder.GetChangeForTextAndSpan(c.NewText, c.Span, changedText)),
+                Line = finalPosition.Line,
+                Column = finalPosition.Column,
             };
         }
     }

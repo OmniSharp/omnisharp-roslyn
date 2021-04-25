@@ -92,9 +92,11 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
                 && properties.TryGetValue(SymbolKind, out string symbolKindValue)
                 && int.Parse(symbolKindValue) is int symbolKindInt)
             {
+#pragma warning disable RS1024 // Compare symbols correctly: service is deprecated, not going to change behavior now.
                 return recommendedSymbols
                     .Where(x => (int)x.Kind == symbolKindInt && x.Name.Equals(symbolNameValue, StringComparison.OrdinalIgnoreCase))
                     .Distinct();
+#pragma warning restore RS1024 // Compare symbols correctly
             }
 
             return Enumerable.Empty<ISymbol>();

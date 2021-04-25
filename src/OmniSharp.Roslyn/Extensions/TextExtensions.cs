@@ -1,4 +1,5 @@
 ﻿using Microsoft.CodeAnalysis.Text;
+using OmniSharp.Models;
 using OmniSharp.Models.V2;
 
 namespace OmniSharp.Extensions
@@ -48,5 +49,13 @@ namespace OmniSharp.Extensions
             => TextSpan.FromBounds(
                 start: text.GetPositionFromPoint(range.Start),
                 end: text.GetPositionFromPoint(range.End));
+
+        /// <summary>
+        /// Converts an OmniSharp <see cref="Range"/> to a <see cref="TextSpan"/> within a <see cref="SourceText"/>.
+        /// </summary>
+        public static TextSpan GetSpanFromLinePositionSpanTextChange(this SourceText text, LinePositionSpanTextChange change)
+            => TextSpan.FromBounds(
+                start: text.GetPositionFromLineAndOffset(change.StartLine, change.StartColumn),
+                end: text.GetPositionFromLineAndOffset(change.EndLine, change.EndColumn));
     }
 }
