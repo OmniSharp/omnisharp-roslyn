@@ -19,30 +19,30 @@ namespace OmniSharp
 
         public ConfigurationResult Build(Action<IConfigurationBuilder> additionalSetup = null)
         {
-            var configBuilder = new Microsoft.Extensions.Configuration.ConfigurationBuilder()
-                .SetBasePath(AppContext.BaseDirectory)
-                .AddEnvironmentVariables("OMNISHARP_");
-
-            if (_environment.AdditionalArguments?.Length > 0)
-            {
-                configBuilder.AddCommandLine(_environment.AdditionalArguments);
-            }
-
-            // Use the global omnisharp config if there's any in the shared path
-            configBuilder.CreateAndAddGlobalOptionsFile(_environment);
-
-            // Use the local omnisharp config if there's any in the root path
-            configBuilder.AddJsonFile(
-                new PhysicalFileProvider(_environment.TargetDirectory).WrapForPolling(),
-                Constants.OptionsFile,
-                optional: true,
-                reloadOnChange: true);
-
-            // bootstrap additional host configuration at the end
-            additionalSetup?.Invoke(configBuilder);
-
             try
             {
+                var configBuilder = new Microsoft.Extensions.Configuration.ConfigurationBuilder()
+                    .SetBasePath(AppContext.BaseDirectory)
+                    .AddEnvironmentVariables("OMNISHARP_");
+
+                if (_environment.AdditionalArguments?.Length > 0)
+                {
+                    configBuilder.AddCommandLine(_environment.AdditionalArguments);
+                }
+
+                // Use the global omnisharp config if there's any in the shared path
+                configBuilder.CreateAndAddGlobalOptionsFile(_environment);
+
+                // Use the local omnisharp config if there's any in the root path
+                configBuilder.AddJsonFile(
+                    new PhysicalFileProvider(_environment.TargetDirectory).WrapForPolling(),
+                    Constants.OptionsFile,
+                    optional: true,
+                    reloadOnChange: true);
+
+                // bootstrap additional host configuration at the end
+                additionalSetup?.Invoke(configBuilder);
+
                 var config = configBuilder.Build();
                 return new ConfigurationResult(config);
             }
