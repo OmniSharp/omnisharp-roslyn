@@ -51,9 +51,9 @@ namespace OmniSharp.Stdio.Driver
 
                     var environment = application.CreateEnvironment();
                     Configuration.ZeroBasedIndices = application.ZeroBasedIndices;
-                    var configuration = new ConfigurationBuilder(environment).Build();
+                    var configurationResult = new ConfigurationBuilder(environment).Build();
                     var writer = new SharedTextWriter(output);
-                    var serviceProvider = CompositionHostBuilder.CreateDefaultServiceProvider(environment, configuration, new StdioEventEmitter(writer),
+                    var serviceProvider = CompositionHostBuilder.CreateDefaultServiceProvider(environment, configurationResult.Configuration, new StdioEventEmitter(writer),
                         configureLogging: builder => builder.AddStdio(writer));
 
                     var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
@@ -63,6 +63,10 @@ namespace OmniSharp.Stdio.Driver
                     var plugins = application.CreatePluginAssemblies(options.CurrentValue, environment);
 
                     var logger = loggerFactory.CreateLogger<Program>();
+                    if (configurationResult.HasError())
+                    {
+                        logger.LogError(configurationResult.Exception, "There was an error when reading the OmniSharp configuration, starting with the default options.");
+                    }
                     var compositionHostBuilder = new CompositionHostBuilder(serviceProvider)
                         .WithOmniSharpAssemblies()
                         .WithAssemblies(assemblyLoader.LoadByAssemblyNameOrPath(logger, plugins.AssemblyNames).ToArray());
