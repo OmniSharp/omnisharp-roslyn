@@ -202,24 +202,23 @@ namespace OmniSharp.LanguageServerProtocol
                 application.LogLevel < logLevel ? application.LogLevel : logLevel,
                 application.OtherArgs.ToArray());
 
-            var configurationRoot = new Microsoft.Extensions.Configuration.ConfigurationBuilder()
-                    .AddConfiguration(new ConfigurationBuilder(environment).Build())
-                    .AddConfiguration(server.Configuration.GetSection("csharp"))
-                    .AddConfiguration(server.Configuration.GetSection("omnisharp"))
-                    .Build()
-                ;
-
+            var configurationResult = new ConfigurationBuilder(environment).Build(b =>
+                b.AddConfiguration(server.Configuration.GetSection("csharp")).AddConfiguration(server.Configuration.GetSection("omnisharp")));
             var eventEmitter = new LanguageServerEventEmitter(server);
 
             services.AddSingleton(server)
                 .AddSingleton<ILanguageServerFacade>(server);
 
             var serviceProvider =
-                CompositionHostBuilder.CreateDefaultServiceProvider(environment, configurationRoot, eventEmitter,
+                CompositionHostBuilder.CreateDefaultServiceProvider(environment, configurationResult.Configuration, eventEmitter,
                     services, GetLogBuilderAction(configureLogging, environment.LogLevel));
 
             var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
             var logger = loggerFactory.CreateLogger<LanguageServerHost>();
+            if (configurationResult.HasError())
+            {
+                logger.LogError(configurationResult.Exception, "There was an error when reading the OmniSharp configuration, starting with the default options.");
+            }
 
             var options = serviceProvider.GetRequiredService<IOptionsMonitor<OmniSharpOptions>>();
             var plugins = application.CreatePluginAssemblies(options.CurrentValue, environment);

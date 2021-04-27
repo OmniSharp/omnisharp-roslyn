@@ -32,8 +32,8 @@ namespace OmniSharp.Http
 
         public IServiceProvider ConfigureServices(IServiceCollection services)
         {
-            var configuration = new ConfigurationBuilder(_environment).Build();
-            var serviceProvider = CompositionHostBuilder.CreateDefaultServiceProvider(_environment, configuration, _eventEmitter, services,
+            var configurationResult = new ConfigurationBuilder(_environment).Build();
+            var serviceProvider = CompositionHostBuilder.CreateDefaultServiceProvider(_environment, configurationResult.Configuration, _eventEmitter, services,
                 configureLogging: builder =>
                 {
                     builder.AddConsole();
@@ -56,6 +56,12 @@ namespace OmniSharp.Http
 
             var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
             var logger = loggerFactory.CreateLogger<Startup>();
+
+            if (configurationResult.HasError())
+            {
+                logger.LogError(configurationResult.Exception, "There was an error when reading the OmniSharp configuration, starting with the default options.");
+            }
+
             var assemblyLoader = serviceProvider.GetRequiredService<IAssemblyLoader>();
             _compositionHost = new CompositionHostBuilder(serviceProvider)
                 .WithOmniSharpAssemblies()
