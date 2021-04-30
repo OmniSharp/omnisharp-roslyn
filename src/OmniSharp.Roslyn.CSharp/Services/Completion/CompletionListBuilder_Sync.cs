@@ -179,7 +179,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                         (adjustedNewPosition.Value >= textChange.Span.Start));
 
                     changeSpan = textChange.Span;
-                    (insertText, insertTextFormat) = getPossiblySnippitizedInsertText(textChange, adjustedNewPosition);
+                    (insertText, insertTextFormat) = getPossiblySnippetizedInsertText(textChange, adjustedNewPosition);
 
                     // If we're expecting there to be unimported types, put in an explicit sort text to put things already in scope first.
                     // Otherwise, omit the sort text if it's the same as the label to save on space.
@@ -220,7 +220,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                 }
             }
 
-            static (string?, InsertTextFormat) getPossiblySnippitizedInsertText(TextChange change, int? adjustedNewPosition)
+            static (string?, InsertTextFormat) getPossiblySnippetizedInsertText(TextChange change, int? adjustedNewPosition)
             {
                 if (adjustedNewPosition is not int newPosition || change.NewText is null || newPosition == change.Span.Start + change.NewText.Length)
                 {
