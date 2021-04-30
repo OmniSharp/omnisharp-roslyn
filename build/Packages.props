@@ -80,6 +80,7 @@
 
         <PackageReference Update="xunit.runner.visualstudio" Version="2.4.3" />
         <PackageReference Update="xunit" Version="$(XunitPackageVersion)" />
+        <PackageReference Update="StrongNamer" Version="0.2.5" />
     </ItemGroup>
     <ItemGroup>
         <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
