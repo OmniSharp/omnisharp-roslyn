@@ -41,7 +41,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
 
             var omnisharpResponse = await _codeStructureHandler.Handle(omnisharpRequest);
 
-            return omnisharpResponse.Elements?.Select(ToDocumentSymbolInformationOrDocumentSymbol).ToArray() ??
+            return omnisharpResponse?.Elements?.Select(ToDocumentSymbolInformationOrDocumentSymbol).ToArray() ??
                 Array.Empty<SymbolInformationOrDocumentSymbol>();
         }
 
