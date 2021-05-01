@@ -16,7 +16,6 @@
     <PackageReference Include="Dotnet.Script.DependencyModel.NuGet" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" />
     <PackageReference Include="System.ValueTuple" />
-    <PackageReference Include="StrongNamer" PrivateAssets="all" />
   </ItemGroup>
 
 </Project>

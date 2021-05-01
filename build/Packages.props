@@ -11,7 +11,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Update="Cake.Scripting.Transport" Version="0.3.0" />
+        <PackageReference Update="Cake.Scripting.Transport" Version="0.6.4" />
 
         <PackageReference Update="Dotnet.Script.DependencyModel" Version="1.0.2" />
         <PackageReference Update="Dotnet.Script.DependencyModel.NuGet" Version="1.0.1" />
