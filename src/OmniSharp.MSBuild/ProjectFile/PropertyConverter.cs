@@ -42,7 +42,7 @@ namespace OmniSharp.MSBuild.ProjectFile
             }
 
             var builder = ImmutableArray.CreateBuilder<string>();
-            var values = propertyValue.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+            var values = propertyValue.Split(new[] { separator }, StringSplitOptions.RemoveEmptyEntries);
 
             foreach (var value in values)
             {
@@ -120,6 +120,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 case "disable": return NullableContextOptions.Disable;
                 case "enable": return NullableContextOptions.Enable;
                 case "warnings": return NullableContextOptions.Warnings;
+                case "annotations": return NullableContextOptions.Annotations;
                 default: return NullableContextOptions.Disable;
             }
         }

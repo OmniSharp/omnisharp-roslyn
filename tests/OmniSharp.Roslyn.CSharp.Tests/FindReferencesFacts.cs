@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using OmniSharp.Models;
 using OmniSharp.Models.FindUsages;
@@ -114,6 +115,155 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             var usages = await FindUsagesAsync(code);
             Assert.Equal(2, usages.QuickFixes.Count());
+        }
+
+        [Theory]
+        [InlineData(9, "public FooConsumer()")]
+        [InlineData(100, "new Foo().bar();")]
+        public async Task CanFindReferencesWithLineMapping(int mappingLine, string expectedMappingText)
+        {
+            var code = @"
+                public class Foo
+                {
+                    public void b$$ar() { }
+                }
+
+                public class FooConsumer
+                {
+                    public FooConsumer()
+                    {
+#line " + mappingLine+ @"
+                        new Foo().bar();
+#line default
+                    }
+                }";
+
+            var usages = await FindUsagesAsync(code);
+            Assert.Equal(2, usages.QuickFixes.Count());
+
+            var quickFixes = usages.QuickFixes.OrderBy(x => x.Line);
+            var regularResult = quickFixes.ElementAt(0);
+            var mappedResult = quickFixes.ElementAt(1);
+
+            Assert.Equal("dummy.cs", regularResult.FileName);
+            Assert.Equal("dummy.cs", mappedResult.FileName);
+
+            Assert.Equal("public void bar() { }", regularResult.Text);
+            Assert.Equal(expectedMappingText, mappedResult.Text);
+
+            Assert.Equal(3, regularResult.Line);
+            Assert.Equal(mappingLine-1, mappedResult.Line);
+
+            // regular result has regular postition
+            Assert.Equal(32, regularResult.Column);
+            Assert.Equal(35, regularResult.EndColumn);
+
+            // mapped result has column 0,0
+            Assert.Equal(34, mappedResult.Column);
+            Assert.Equal(37, mappedResult.EndColumn);
+        }
+
+        [Theory]
+        [InlineData(1, "// hello", true)] // everything correct
+        [InlineData(100, "new Foo().bar();", true)] // file exists in workspace but mapping incorrect
+        [InlineData(1, "new Foo().bar();", false)] // file doesn't exist in workspace but mapping correct
+        public async Task CanFindReferencesWithLineMappingAcrossFiles(int mappingLine, string expectedMappingText, bool mappedFileExistsInWorkspace)
+        {
+            var testFiles = new List<TestFile>()
+            {
+                new TestFile("a.cs", @"
+                public class Foo
+                {
+                    public void b$$ar() { }
+                }
+
+                public class FooConsumer
+                {
+                    public FooConsumer()
+                    {
+#line "+mappingLine+@" ""b.cs""
+                        new Foo().bar();
+#line default
+                    }
+                }"),
+                
+            };
+
+            if (mappedFileExistsInWorkspace)
+            {
+                testFiles.Add(new TestFile("b.cs",
+                    @"// hello"));
+            }
+
+            var usages = await FindUsagesAsync(testFiles.ToArray(), onlyThisFile: false);
+            Assert.Equal(2, usages.QuickFixes.Count());
+
+            var regularResult = usages.QuickFixes.ElementAt(0);
+            var mappedResult = usages.QuickFixes.ElementAt(1);
+
+            Assert.Equal("a.cs", regularResult.FileName);
+            Assert.Equal("b.cs", mappedResult.FileName);
+
+            Assert.Equal(3, regularResult.Line);
+            Assert.Equal(mappingLine-1, mappedResult.Line);
+
+            Assert.Equal("public void bar() { }", regularResult.Text);
+            Assert.Equal(expectedMappingText, mappedResult.Text);
+
+            // regular result has regular postition
+            Assert.Equal(32, regularResult.Column);
+            Assert.Equal(35, regularResult.EndColumn);
+
+            // mapped result has column 0,0
+            Assert.Equal(0, mappedResult.Column);
+            Assert.Equal(0, mappedResult.EndColumn);
+        }
+
+        [Fact]
+        public async Task CanFindReferencesWithNegativeLineMapping()
+        {
+            var testFiles = new List<TestFile>()
+            {
+                new TestFile("a.cs", @"
+                public class Foo
+                {
+                    public void b$$ar() { }
+                }
+
+                public class FooConsumer
+                {
+                    public FooConsumer()
+                    {
+#line -10 ""b.cs""
+                        new Foo().bar();
+#line default
+                    }
+                }"),
+
+            };
+
+            testFiles.Add(new TestFile("b.cs",
+                    @"// hello"));
+
+            var usages = await FindUsagesAsync(testFiles.ToArray(), onlyThisFile: false);
+            Assert.Equal(2, usages.QuickFixes.Count());
+
+            var regularResult = usages.QuickFixes.ElementAt(0);
+            var mappedResult = usages.QuickFixes.ElementAt(1);
+
+            Assert.Equal("a.cs", regularResult.FileName);
+            Assert.Equal("a.cs", mappedResult.FileName);
+
+            Assert.Equal(3, regularResult.Line);
+            Assert.Equal(11, mappedResult.Line);
+
+            Assert.Equal("public void bar() { }", regularResult.Text);
+            Assert.Equal("new Foo().bar();", mappedResult.Text);
+
+            Assert.Equal(32, regularResult.Column);
+            Assert.Equal(35, regularResult.EndColumn);
+            Assert.Equal(34, mappedResult.Column);
+            Assert.Equal(37, mappedResult.EndColumn);
         }
 
         [Fact]
@@ -285,6 +435,28 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var usages = await FindUsagesAsync(testFiles, onlyThisFile: true);
             Assert.Single(usages.QuickFixes);
             Assert.Equal("a.cs", usages.QuickFixes.ElementAt(0).FileName);
+        }
+
+        [Theory]
+        [InlineData("public Foo(string $$event)")]
+        [InlineData("pu$$blic Foo(string s)")]
+        public async Task DoesNotCrashOnInvalidReference(string methodDefinition)
+        {
+            var code = @$"
+                public class Foo
+                {{
+                    {methodDefinition}
+                    {{
+                    }}
+                }}";
+            
+            var exception = await Record.ExceptionAsync(async () => 
+            {
+                var usages = await FindUsagesAsync(code);
+                Assert.NotNull(usages);
+            });
+            
+            Assert.Null(exception);
         }
 
         private Task<QuickFixResponse> FindUsagesAsync(string code, bool excludeDefinition = false)

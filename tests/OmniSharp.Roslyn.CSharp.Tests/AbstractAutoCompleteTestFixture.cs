@@ -7,7 +7,9 @@ using Xunit.Abstractions;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
+#pragma warning disable CS0618 // Type or member is obsolete: Keeping the tests until we remove entirely
     public class AbstractAutoCompleteTestFixture : AbstractSingleRequestHandlerTestFixture<IntellisenseService>
+#pragma warning restore CS0618 // Type or member is obsolete
     {
         protected AbstractAutoCompleteTestFixture(ITestOutputHelper output, SharedOmniSharpHostFixture sharedOmniSharpHostFixture)
             : base(output, sharedOmniSharpHostFixture)

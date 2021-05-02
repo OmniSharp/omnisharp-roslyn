@@ -1,0 +1,114 @@
+
+name: 'Tests'
+env:
+  DotNetVersion: "5.0.104"
+  DotNetVersion2: "3.1.407"
+  NuGetVersion: "5.7.0"
+  MonoVersion: "6.12.0"
+  Artifacts: ${{ github.workspace }}/artifacts/
+  Coverage: ${{ github.workspace }}/coverage/
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: "true"
+defaults:
+  run:
+    shell: pwsh
+on:
+  pull_request:
+    branches:
+      - master
+    tags:
+      - '*'
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-18.04, windows-2019, macos-10.15]
+        testProjects:
+          - OmniSharp.MSBuild.Tests,OmniSharp.Roslyn.CSharp.Tests,OmniSharp.Cake.Tests,OmniSharp.Script.Tests,OmniSharp.Stdio.Tests,OmniSharp.Http.Tests,OmniSharp.Tests,OmniSharp.Lsp.Tests
+          - OmniSharp.DotNetTest.Tests
+    name: 'Test'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          clean: 'false'
+          fetch-depth: '0'
+
+      # TODO: Need to figure out the correct way to install mono on linux / mac
+      # Currently the latest image has mono 6.12
+      # https://github.com/actions/virtual-environments/blob/main/images/linux/Ubuntu1804-README.md
+      # - name: 🔨 Use Mono ${{ env.MonoVersion }} SDK
+      #   uses: maxim-lobanov/setup-xamarin@v1
+      #   with:
+      #     mono-version: ${{ env.MonoVersion }}
+
+      - name: Setup NuGet.exe
+        uses: nuget/setup-nuget@v1
+        with:
+          nuget-version: ${{ env.NuGetVersion }}
+
+      - name: 🔨 Use .NET Core 2.1 SDK
+        uses: actions/setup-dotnet@v1.7.2
+        with:
+          dotnet-version: '2.1.x'
+
+      - name: 🔨 Use .NET Core ${{ env.DotNetVersion2 }} SDK
+        uses: actions/setup-dotnet@v1.7.2
+        with:
+          dotnet-version: ${{ env.DotNetVersion2 }}
+
+      - name: 🔨 Use .NET Core ${{ env.DotNetVersion }} SDK
+        uses: actions/setup-dotnet@v1.7.2
+        with:
+          dotnet-version: ${{ env.DotNetVersion }}
+
+      - name: 🎁 dotnet tool restore
+        run: |
+          dotnet tool restore
+
+      - name: 🎁 nuget install
+        run: |
+          nuget install tools/packages.config -ExcludeVersion -OutputDirectory tools
+
+      # - name: 🍰 Run Cake
+      #   run: |
+      #     dotnet cake --bootstrap
+      #     dotnet cake --configuration=Debug --verbosity=Diagnostic --target=Test --test-project="${{ matrix.testProjects }}"
+
+      - name: 🍰 Run Cake
+        if: ${{ runner.os == 'Linux' || runner.os == 'macOS' }}
+        uses: nick-invision/retry@v2
+        with:
+          shell: bash
+          timeout_minutes: 40
+          max_attempts: 3
+          retry_on: error
+          command: |
+            echo $PATH
+            chmod 755 ./build.sh
+            ./build.sh --configuration Release --verbosity Verbose --target Test --test-project="$TEST_PROJECT"
+        env:
+          TEST_PROJECT: ${{ matrix.testProjects }}
+
+      - name: 🍰 Run Cake
+        if: ${{ runner.os == 'Windows' }}
+        uses: nick-invision/retry@v2
+        with:
+          shell: powershell
+          timeout_minutes: 40
+          max_attempts: 3
+          retry_on: error
+          command: |
+            .\build.ps1 -configuration Release -verbosity Verbose -target Test --test-project="$ENV:TEST_PROJECT"
+        env:
+          TEST_PROJECT: ${{ matrix.testProjects }}
+
+      - name: ⬆ Publish Logs
+        uses: actions/upload-artifact@v2
+        continue-on-error: true
+        if: ${{ always() }}
+        with:
+          name: 'logs - ${{ github.workflow }} ${{ matrix.os }}'
+          path: '${{ env.Artifacts }}/logs/'

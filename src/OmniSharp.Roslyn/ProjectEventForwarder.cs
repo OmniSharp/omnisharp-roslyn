@@ -63,8 +63,6 @@ namespace OmniSharp.Roslyn
                     {
                         Task.Factory.StartNew(async () =>
                         {
-                            await Task.Delay(500);
-
                             object payload = null;
                             if (e.EventType != EventTypes.ProjectRemoved)
                             {

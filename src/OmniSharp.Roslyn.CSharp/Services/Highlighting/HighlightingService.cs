@@ -82,9 +82,26 @@ namespace OmniSharp.Roslyn.CSharp.Services.Highlighting
             {
                 Highlights = results
                     .GroupBy(result => result.Span.TextSpan.ToString())
-                    .Select(grouping => CreateHighlightSpan(grouping.First().Span, grouping.First().Lines, grouping.Select(z => z.Project)))
+                    .Select(CreateHighlightSpan)
+                    .Where(span => span != null)
                     .ToArray()
             };
+        }
+
+        private static HighlightSpan CreateHighlightSpan(IEnumerable<ClassifiedResult> results)
+        {
+            var validResults = results
+                .Where(result => !ClassificationTypeNames.AdditiveTypeNames.Contains(result.Span.ClassificationType))
+                .ToArray();
+
+            if (validResults.Length == 0)
+            {
+                return null;
+            }
+
+            var first = validResults.First();
+
+            return CreateHighlightSpan(first.Span, first.Lines, validResults.Select(x => x.Project));
         }
 
         public static HighlightSpan CreateHighlightSpan(ClassifiedSpan span, TextLineCollection lines, IEnumerable<string> projects)

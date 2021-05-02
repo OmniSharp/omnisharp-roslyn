@@ -15,19 +15,28 @@ namespace OmniSharp.MSBuild.ProjectFile
         public static CSharpCompilationOptions CreateCompilationOptions(this ProjectFileInfo projectFileInfo)
         {
             var compilationOptions = new CSharpCompilationOptions(projectFileInfo.OutputKind);
+            return projectFileInfo.CreateCompilationOptions(compilationOptions);
+        }
 
-            compilationOptions = compilationOptions.WithAssemblyIdentityComparer(DesktopAssemblyIdentityComparer.Default);
-            compilationOptions = compilationOptions.WithSpecificDiagnosticOptions(projectFileInfo.GetDiagnosticOptions());
+        public static CSharpCompilationOptions CreateCompilationOptions(this ProjectFileInfo projectFileInfo, CSharpCompilationOptions existingCompilationOptions)
+        {
+            var compilationOptions = existingCompilationOptions.WithAssemblyIdentityComparer(DesktopAssemblyIdentityComparer.Default)
+                        .WithSpecificDiagnosticOptions(projectFileInfo.GetDiagnosticOptions())
+                        .WithOverflowChecks(projectFileInfo.CheckForOverflowUnderflow);
 
-            if (projectFileInfo.AllowUnsafeCode)
+            var platformTarget = ParsePlatform(projectFileInfo.PlatformTarget);
+            if (platformTarget != compilationOptions.Platform)
             {
-                compilationOptions = compilationOptions.WithAllowUnsafe(true);
+                compilationOptions = compilationOptions.WithPlatform(platformTarget);
             }
 
-            if (projectFileInfo.TreatWarningsAsErrors)
+            if (projectFileInfo.AllowUnsafeCode != compilationOptions.AllowUnsafe)
             {
-                compilationOptions = compilationOptions.WithGeneralDiagnosticOption(ReportDiagnostic.Error);
+                compilationOptions = compilationOptions.WithAllowUnsafe(projectFileInfo.AllowUnsafeCode);
             }
+
+            compilationOptions = projectFileInfo.TreatWarningsAsErrors ?
+                        compilationOptions.WithGeneralDiagnosticOption(ReportDiagnostic.Error) : compilationOptions.WithGeneralDiagnosticOption(ReportDiagnostic.Default);
 
             if (projectFileInfo.NullableContextOptions != compilationOptions.NullableContextOptions)
             {
@@ -51,15 +60,36 @@ namespace OmniSharp.MSBuild.ProjectFile
 
         public static ImmutableDictionary<string, ReportDiagnostic> GetDiagnosticOptions(this ProjectFileInfo projectFileInfo)
         {
-            var defaultSuppressions = CompilationOptionsHelper.GetDefaultSuppressedDiagnosticOptions(projectFileInfo.SuppressedDiagnosticIds);
+            var suppressions = CompilationOptionsHelper.GetDefaultSuppressedDiagnosticOptions(projectFileInfo.SuppressedDiagnosticIds);
             var specificRules = projectFileInfo.RuleSet?.SpecificDiagnosticOptions ?? ImmutableDictionary<string, ReportDiagnostic>.Empty;
 
-            return specificRules.Concat(defaultSuppressions.Where(x => !specificRules.Keys.Contains(x.Key))).ToImmutableDictionary();
+            // suppressions capture NoWarn and they have the highest priority
+            var combinedRules = specificRules.Concat(suppressions.Where(x => !specificRules.Keys.Contains(x.Key))).ToDictionary(x => x.Key, x => x.Value);
+
+            // then handle WarningsAsErrors
+            foreach (var warningAsError in projectFileInfo.WarningsAsErrors)
+            {
+                if (!suppressions.ContainsKey(warningAsError))
+                {
+                    combinedRules[warningAsError] = ReportDiagnostic.Error;
+                }
+            }
+
+            // WarningsNotAsErrors can overwrite WarningsAsErrors
+            foreach (var warningNotAsError in projectFileInfo.WarningsNotAsErrors)
+            {
+                if (!suppressions.ContainsKey(warningNotAsError))
+                {
+                    combinedRules[warningNotAsError] = ReportDiagnostic.Warn;
+                }
+            }
+
+            return combinedRules.ToImmutableDictionary();
         }
 
         public static ProjectInfo CreateProjectInfo(this ProjectFileInfo projectFileInfo, IAnalyzerAssemblyLoader analyzerAssemblyLoader)
         {
-            var analyzerReferences = ResolveAnalyzerReferencesForProject(projectFileInfo, analyzerAssemblyLoader);
+            var analyzerReferences = projectFileInfo.ResolveAnalyzerReferencesForProject(analyzerAssemblyLoader);
 
             return ProjectInfo.Create(
                 id: projectFileInfo.Id,
@@ -73,14 +103,31 @@ namespace OmniSharp.MSBuild.ProjectFile
                 analyzerReferences: analyzerReferences).WithDefaultNamespace(projectFileInfo.DefaultNamespace);
         }
 
-        private static IEnumerable<AnalyzerReference> ResolveAnalyzerReferencesForProject(ProjectFileInfo projectFileInfo, IAnalyzerAssemblyLoader analyzerAssemblyLoader)
+        public static ImmutableArray<AnalyzerFileReference> ResolveAnalyzerReferencesForProject(this ProjectFileInfo projectFileInfo, IAnalyzerAssemblyLoader analyzerAssemblyLoader)
         {
+            if (!projectFileInfo.RunAnalyzers || !projectFileInfo.RunAnalyzersDuringLiveAnalysis)
+            {
+                return ImmutableArray<AnalyzerFileReference>.Empty;
+            }
+
             foreach(var analyzerAssemblyPath in projectFileInfo.Analyzers.Distinct())
             {
                 analyzerAssemblyLoader.AddDependencyLocation(analyzerAssemblyPath);
             }
 
-            return projectFileInfo.Analyzers.Select(analyzerCandicatePath => new AnalyzerFileReference(analyzerCandicatePath, analyzerAssemblyLoader));
+            return projectFileInfo.Analyzers.Select(analyzerCandicatePath => new AnalyzerFileReference(analyzerCandicatePath, analyzerAssemblyLoader)).ToImmutableArray();
         }
+
+        private static Platform ParsePlatform(string value) => (value?.ToLowerInvariant()) switch
+        {
+            "x86" => Platform.X86,
+            "x64" => Platform.X64,
+            "itanium" => Platform.Itanium,
+            "anycpu" => Platform.AnyCpu,
+            "anycpu32bitpreferred" => Platform.AnyCpu32BitPreferred,
+            "arm" => Platform.Arm,
+            "arm64" => Platform.Arm64,
+            _ => Platform.AnyCpu,
+        };
     }
 }

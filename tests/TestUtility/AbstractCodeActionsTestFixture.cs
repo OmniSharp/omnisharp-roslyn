@@ -1,8 +1,11 @@
+using System;
 using System.Collections.Generic;
+using System.Composition.Hosting.Core;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using OmniSharp;
 using OmniSharp.Models.V2;
@@ -39,7 +42,7 @@ namespace TestUtility
             return string.Join("", source.Split('\n').Select(s => s.Trim()));
         }
 
-        protected OmniSharpTestHost CreateOmniSharpHost(TestFile[] testFiles, IEnumerable<KeyValuePair<string, string>> configurationData = null)
+        protected OmniSharpTestHost CreateOmniSharpHost(TestFile[] testFiles, IConfiguration configurationData = null)
         {
             var host = OmniSharpTestHost.Create(path: null, testOutput: this.TestOutput, configurationData: configurationData);
 
@@ -54,9 +57,9 @@ namespace TestUtility
         protected async Task<RunCodeActionResponse> RunRefactoringAsync(string code, string refactoringName, bool wantsChanges = false, bool isAnalyzersEnabled = true)
         {
             var refactorings = await FindRefactoringsAsync(code, configurationData: TestHelpers.GetConfigurationDataWithAnalyzerConfig(isAnalyzersEnabled));
-            Assert.Contains(refactoringName, refactorings.Select(a => a.Name));
+            Assert.Contains(refactoringName, refactorings.Select(x => x.Name), StringComparer.OrdinalIgnoreCase);
 
-            var identifier = refactorings.First(action => action.Name.Equals(refactoringName)).Identifier;
+            var identifier = refactorings.First(action => action.Name.Equals(refactoringName, StringComparison.OrdinalIgnoreCase)).Identifier;
             return await RunRefactoringsAsync(code, identifier, wantsChanges);
         }
 
@@ -67,7 +70,7 @@ namespace TestUtility
             return codeActions.Select(a => a.Name);
         }
 
-        protected async Task<IEnumerable<OmniSharpCodeAction>> FindRefactoringsAsync(string code, IDictionary<string, string> configurationData = null)
+        protected async Task<IEnumerable<OmniSharpCodeAction>> FindRefactoringsAsync(string code, IConfiguration configurationData = null)
         {
             var testFile = new TestFile(BufferPath, code);
 

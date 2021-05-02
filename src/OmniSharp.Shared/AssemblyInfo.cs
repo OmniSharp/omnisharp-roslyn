@@ -1,9 +1,10 @@
-﻿using System.Runtime.CompilerServices;
+﻿using OmniSharp;
+using System.Runtime.CompilerServices;
 
-[assembly: InternalsVisibleTo("OmniSharp")]
-[assembly: InternalsVisibleTo("OmniSharp.Host")]
-[assembly: InternalsVisibleTo("OmniSharp.MSBuild")]
-[assembly: InternalsVisibleTo("OmniSharp.Roslyn")]
-[assembly: InternalsVisibleTo("OmniSharp.Roslyn.CSharp")]
-[assembly: InternalsVisibleTo("OmniSharp.DotNetTest.Tests")]
-[assembly: InternalsVisibleTo("OmniSharp.Tests")]
+[assembly: InternalsVisibleTo("OmniSharp" + OmniSharpPublicKey.Key)]
+[assembly: InternalsVisibleTo("OmniSharp.Host" + OmniSharpPublicKey.Key)]
+[assembly: InternalsVisibleTo("OmniSharp.MSBuild" + OmniSharpPublicKey.Key)]
+[assembly: InternalsVisibleTo("OmniSharp.Roslyn" + OmniSharpPublicKey.Key)]
+[assembly: InternalsVisibleTo("OmniSharp.Roslyn.CSharp" + OmniSharpPublicKey.Key)]
+[assembly: InternalsVisibleTo("OmniSharp.DotNetTest.Tests" + OmniSharpPublicKey.Key)]
+[assembly: InternalsVisibleTo("OmniSharp.Tests" + OmniSharpPublicKey.Key)]

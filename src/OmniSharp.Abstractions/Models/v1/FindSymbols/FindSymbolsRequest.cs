@@ -9,5 +9,6 @@ namespace OmniSharp.Models.FindSymbols
         public string Filter { get; set; }
         public int? MinFilterLength { get; set; }
         public int? MaxItemsToReturn { get; set; }
+        public OmniSharpSymbolFilter? SymbolFilter { get; set; }
     }
 }

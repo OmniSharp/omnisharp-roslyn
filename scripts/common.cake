@@ -1,5 +1,5 @@
 #addin "nuget:?package=Newtonsoft.Json&version=11.0.2"
-#tool "nuget:?package=GitVersion.CommandLine&prerelease&version=5.0.0-beta2-65"
+#tool "nuget:?package=GitVersion.CommandLine&prerelease&version=5.0.1"
 
 #load "platform.cake"
 
@@ -223,7 +223,7 @@ public class BuildEnvironment
         if (Platform.Current.IsWindows) this.DotNetCommand += ".exe";
 
         this.ShellCommand = Platform.Current.IsWindows ? "powershell" : "bash";
-        this.ShellArgument = Platform.Current.IsWindows ? "-NoProfile /Command" : "-C";
+        this.ShellArgument = Platform.Current.IsWindows ? "-NoProfile -ExecutionPolicy Bypass /Command" : "-C";
         this.ShellScriptFileExtension = Platform.Current.IsWindows ? "ps1" : "sh";
         this.MonoRuntimes = new []
         {
@@ -239,11 +239,11 @@ public class BuildEnvironment
         }
         else if (Platform.Current.IsLinux)
         {
-            if (Platform.Current.Is32Bit)
+            if (Platform.Current.IsX86)
             {
                 this.CurrentMonoRuntime = this.MonoRuntimes[1];
             }
-            else if (Platform.Current.Is64Bit)
+            else if (Platform.Current.IsX64)
             {
                 this.CurrentMonoRuntime = this.MonoRuntimes[2];
             }
@@ -293,7 +293,22 @@ public class BuildEnvironment
         }
         else
         {
-            return context.GitVersion();
+            try
+            {
+                return context.GitVersion();
+            }
+            catch
+            {
+                context.Warning("GitVersion failed. Setting default version 0.0.1-local");
+
+                return new GitVersion
+                {
+                    NuGetVersion = "0.0.1-local",
+                    AssemblySemVer = "0.0.1.0",
+                    InformationalVersion = "0.0.1-local",
+                    SemVer = "0.0.1-local"
+                };
+            }
         }
     }
 
@@ -343,7 +358,7 @@ public class BuildPlan
 {
     public string DotNetInstallScriptURL { get; set; }
     public string DotNetChannel { get; set; }
-    public string DotNetVersion { get; set; }
+    public string[] DotNetVersions { get; set; }
     public string RequiredMonoVersion { get; set; }
     public string DownloadURL { get; set; }
     public string MonoRuntimeMacOS { get; set; }

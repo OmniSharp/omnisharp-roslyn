@@ -1,0 +1,5 @@
+﻿root = true
+
+[*.cs]
+# IDE0005: Unnecessary using
+dotnet_diagnostic.IDE0005.severity = error

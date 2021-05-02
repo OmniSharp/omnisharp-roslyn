@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <NoWarn>CS7081</NoWarn>
+    <WarningsAsErrors>CS1998,CS7080,CS7081</WarningsAsErrors>
+    <WarningsNotAsErrors>CS7080,CS7082</WarningsNotAsErrors>
+  </PropertyGroup>
+
+</Project>

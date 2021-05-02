@@ -2,6 +2,7 @@ namespace OmniSharp.Options
 {
     public class MSBuildOptions
     {
+        public bool UseBundledOnly { get; set; } = false;
         public string ToolsVersion { get; set; }
         public string VisualStudioVersion { get; set; }
         public string Configuration { get; set; }

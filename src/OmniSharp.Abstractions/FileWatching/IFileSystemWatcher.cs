@@ -12,5 +12,6 @@ namespace OmniSharp.FileWatching
         /// <param name="pathOrExtension">The file path, directory path or file extension to watch.</param>
         /// <param name="callback">The callback that will be invoked when a change occurs in the watched file or directory.</param>
         void Watch(string pathOrExtension, FileSystemNotificationCallback callback);
+        void WatchDirectories(FileSystemNotificationCallback callback);
     }
 }

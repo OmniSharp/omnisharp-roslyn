@@ -1,14 +1,8 @@
 parameters:
   Artifacts: $(Build.ArtifactStagingDirectory)
 steps:
-  - task: PublishBuildArtifacts@1
-    displayName: Publish Logs
-    condition: always()
-    inputs:
-      PathtoPublish: "$(Artifacts)/logs/"
-      ArtifactName: "logs - $(system.phaseName)"
-      ArtifactType: "Container"
-    env:
+  - template: ./logs.yml
+    parameters:
       Artifacts: ${{ parameters.Artifacts }}
   - task: PublishBuildArtifacts@1
     displayName: Publish Packages

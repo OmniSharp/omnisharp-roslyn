@@ -1,5 +1,9 @@
 using System;
+using System.Collections.Generic;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using OmniSharp.MSBuild.Discovery;
+using OmniSharp.Services;
 using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
@@ -23,7 +27,7 @@ namespace OmniSharp.MSBuild.Tests
                 new MSBuildInstance(
                     "Test Instance",
                     TestIO.GetRandomTempFolderPath(),
-                    Version.Parse("16.1.2.3"),
+                    Version.Parse("16.3.2.3"),
                     DiscoveryType.VisualStudioSetup
                 ).AddDotNetCoreToFakeInstance(),
                 GetStandAloneMSBuildInstance()
@@ -33,7 +37,7 @@ namespace OmniSharp.MSBuild.Tests
             var logger = LoggerFactory.CreateLogger(nameof(RegisterDefaultInstanceFindsTheBestInstanceAvailable));
 
             // test
-            msbuildLocator.RegisterDefaultInstance(logger);
+            msbuildLocator.RegisterDefaultInstance(logger, dotNetInfo: null);
 
             Assert.NotNull(msbuildLocator.RegisteredInstance);
             Assert.Same(msBuildInstances[1], msbuildLocator.RegisteredInstance);
@@ -50,7 +54,7 @@ namespace OmniSharp.MSBuild.Tests
                 new MSBuildInstance(
                     "Valid Test Instance",
                     TestIO.GetRandomTempFolderPath(),
-                    Version.Parse("16.3.2.1"),
+                    Version.Parse("16.3.2.3"),
                     DiscoveryType.VisualStudioSetup
                 ),
                 GetInvalidMsBuildInstance(),
@@ -59,7 +63,7 @@ namespace OmniSharp.MSBuild.Tests
                 new MSBuildInstance(
                     "Another Valid Test Instance",
                     TestIO.GetRandomTempFolderPath(),
-                    Version.Parse("16.1.2.3"),
+                    Version.Parse("16.3.2.1"),
                     DiscoveryType.VisualStudioSetup
                 ).AddDotNetCoreToFakeInstance(),
                 GetStandAloneMSBuildInstance()
@@ -72,7 +76,47 @@ namespace OmniSharp.MSBuild.Tests
             );
 
             // test
-            msbuildLocator.RegisterDefaultInstance(logger);
+            msbuildLocator.RegisterDefaultInstance(logger, dotNetInfo: null);
+
+            Assert.NotNull(msbuildLocator.RegisteredInstance);
+            Assert.Same(msBuildInstances[2], msbuildLocator.RegisteredInstance);
+
+            // clean up
+            msbuildLocator.DeleteFakeInstancesFolders();
+        }
+
+
+        [Fact]
+        public void RegisterDefaultInstanceFindsTheNewestInstanceAvailableEvenWithOtherValidInstances()
+        {
+            var msBuildInstances = new[]
+            {
+                new MSBuildInstance(
+                    "Valid Test Instance",
+                    TestIO.GetRandomTempFolderPath(),
+                    Version.Parse("16.5.1.0"),
+                    DiscoveryType.VisualStudioSetup
+                ).AddDotNetCoreToFakeInstance(),
+                GetInvalidMsBuildInstance(),
+
+                // same but newer minor version
+                new MSBuildInstance(
+                    "Another Valid Test Instance",
+                    TestIO.GetRandomTempFolderPath(),
+                    Version.Parse("16.6.1.0"),
+                    DiscoveryType.VisualStudioSetup
+                ).AddDotNetCoreToFakeInstance(),
+                GetStandAloneMSBuildInstance()
+            };
+
+            var msbuildLocator = new MSFakeLocator(msBuildInstances);
+
+            var logger = LoggerFactory.CreateLogger(
+                nameof(RegisterDefaultInstanceFindsTheBestInstanceAvailableEvenWithOtherValidInstances)
+            );
+
+            // test
+            msbuildLocator.RegisterDefaultInstance(logger, dotNetInfo: null);
 
             Assert.NotNull(msbuildLocator.RegisteredInstance);
             Assert.Same(msBuildInstances[2], msbuildLocator.RegisteredInstance);
@@ -107,7 +151,7 @@ namespace OmniSharp.MSBuild.Tests
                 new MSBuildInstance(
                     "Manually Overridden",
                     TestIO.GetRandomTempFolderPath(),
-                    Version.Parse("99.0.0"),
+                    Version.Parse("1.0.0"),
                     DiscoveryType.UserOverride
                 ).AddDotNetCoreToFakeInstance(),
             };
@@ -119,7 +163,7 @@ namespace OmniSharp.MSBuild.Tests
             );
 
             // test
-            msbuildLocator.RegisterDefaultInstance(logger);
+            msbuildLocator.RegisterDefaultInstance(logger, dotNetInfo: null);
 
             Assert.NotNull(msbuildLocator.RegisteredInstance);
             Assert.Same(msBuildInstances[4], msbuildLocator.RegisteredInstance);
@@ -129,24 +173,24 @@ namespace OmniSharp.MSBuild.Tests
         }
 
         [Fact]
-        public void RegisterDefaultInstanceStillPrefersTheFirstInstance()
+        public void RegisterDefaultInstancePrefersSupportedVSLowerVersionInstanceOverStandAlone()
         {
             var msBuildInstances = new[]
             {
                 new MSBuildInstance(
                     "Test Instance",
                     TestIO.GetRandomTempFolderPath(),
-                    Version.Parse("16.1.2.3"),
+                    Version.Parse("16.3.2.3"),
                     DiscoveryType.VisualStudioSetup
-                ),
+                ).AddDotNetCoreToFakeInstance(),
                 GetStandAloneMSBuildInstance()
             };
 
             var msbuildLocator = new MSFakeLocator(msBuildInstances);
-            var logger = LoggerFactory.CreateLogger(nameof(RegisterDefaultInstanceStillPrefersTheFirstInstance));
+            var logger = LoggerFactory.CreateLogger(nameof(RegisterDefaultInstancePrefersSupportedVSLowerVersionInstanceOverStandAlone));
 
             // test
-            msbuildLocator.RegisterDefaultInstance(logger);
+            msbuildLocator.RegisterDefaultInstance(logger, dotNetInfo: null);
 
             Assert.NotNull(msbuildLocator.RegisteredInstance);
             Assert.Same(msBuildInstances[0], msbuildLocator.RegisteredInstance);
@@ -155,25 +199,27 @@ namespace OmniSharp.MSBuild.Tests
             msbuildLocator.DeleteFakeInstancesFolders();
         }
 
-        [Fact]
-        public void StandAloneIsPreferredOverVS2017()
+        [Theory]
+        [InlineData("16.2.2.3")] // lower than standalone
+        [InlineData("16.6.2.3")] // higher than standalone
+        public void RegisterDefaultInstancePrefersStandAloneOverSupportedVSInstanceWithoutDotnetCore(string vsVersion)
         {
             var msBuildInstances = new[]
             {
                 new MSBuildInstance(
                     "Test Instance",
                     TestIO.GetRandomTempFolderPath(),
-                    Version.Parse("15.1.2.3"),
+                    Version.Parse(vsVersion),
                     DiscoveryType.VisualStudioSetup
                 ),
                 GetStandAloneMSBuildInstance()
             };
 
             var msbuildLocator = new MSFakeLocator(msBuildInstances);
-            var logger = LoggerFactory.CreateLogger(nameof(StandAloneIsPreferredOverVS2017));
+            var logger = LoggerFactory.CreateLogger(nameof(RegisterDefaultInstancePrefersStandAloneOverSupportedVSInstanceWithoutDotnetCore));
 
             // test
-            msbuildLocator.RegisterDefaultInstance(logger);
+            msbuildLocator.RegisterDefaultInstance(logger, dotNetInfo: null);
 
             Assert.NotNull(msbuildLocator.RegisteredInstance);
             Assert.Same(msBuildInstances[1], msbuildLocator.RegisteredInstance);
@@ -182,14 +228,59 @@ namespace OmniSharp.MSBuild.Tests
             msbuildLocator.DeleteFakeInstancesFolders();
         }
 
+        [Theory]
+        [InlineData("15.1.2.3")]
+        [InlineData("15.9.2.3")]
+        [InlineData("16.1.2.3")]
+        [InlineData("16.2.2.3")]
+        public void StandAloneIsPreferredOverUnsupportedVS(string vsVersion)
+        {
+            var msBuildInstances = new[]
+            {
+                new MSBuildInstance(
+                    "Test Instance",
+                    TestIO.GetRandomTempFolderPath(),
+                    Version.Parse(vsVersion),
+                    DiscoveryType.VisualStudioSetup
+                ).AddDotNetCoreToFakeInstance(),
+                GetStandAloneMSBuildInstance()
+            };
+
+            var msbuildLocator = new MSFakeLocator(msBuildInstances);
+            var logger = LoggerFactory.CreateLogger(nameof(StandAloneIsPreferredOverUnsupportedVS));
+
+            // test
+            msbuildLocator.RegisterDefaultInstance(logger, dotNetInfo: null);
+
+            Assert.NotNull(msbuildLocator.RegisteredInstance);
+            Assert.Same(msBuildInstances[1], msbuildLocator.RegisteredInstance);
+
+            // clean up
+            msbuildLocator.DeleteFakeInstancesFolders();
+        }
+
+        [Fact]
+        public void CreateDefault_UseBundledOnly_True_LocatesOnlyStandAloneInstance()
+        {
+            var configBuilder = new Microsoft.Extensions.Configuration.ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>()
+            {
+                ["useBundledOnly"] = "true"
+            });
+            var loggerFactory = new LoggerFactory();
+            var locator = MSBuildLocator.CreateDefault(loggerFactory, new AssemblyLoader(loggerFactory), configBuilder.Build());
+            var instances = locator.GetInstances();
+            Assert.Single(instances);
+            Assert.Equal(DiscoveryType.StandAlone, instances[0].DiscoveryType);
+        }
+
         private static MSBuildInstance GetStandAloneMSBuildInstance()
         {
             return new MSBuildInstance(
                 "Stand Alone :(",
                 TestIO.GetRandomTempFolderPath(),
-                Version.Parse("16.0.0.0"),
+                Version.Parse("16.4.0.0"),
                 DiscoveryType.StandAlone
-            );
+            ).AddDotNetCoreToFakeInstance();
         }
 
         private static MSBuildInstance GetInvalidMsBuildInstance()

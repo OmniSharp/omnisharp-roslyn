@@ -7,6 +7,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeRefactorings;
 using Microsoft.CodeAnalysis.Text;
+using OmniSharp.Extensions;
 using OmniSharp.Mef;
 using OmniSharp.Models.CodeAction;
 using OmniSharp.Services;
@@ -40,7 +41,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
             if (document != null)
             {
                 var sourceText = await document.GetTextAsync();
-                var position = sourceText.Lines.GetPosition(new LinePosition(request.Line, request.Column));
+                var position = sourceText.GetTextPosition(request);
                 var location = new TextSpan(position, 1);
                 return new CodeRefactoringContext(document, location, (a) => actionsDestination.Add(a), CancellationToken.None);
             }

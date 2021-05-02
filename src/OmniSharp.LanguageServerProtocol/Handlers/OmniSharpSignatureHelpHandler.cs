@@ -5,24 +5,22 @@ using System.Threading;
 using System.Threading.Tasks;
 using OmniSharp.Extensions.JsonRpc;
 using OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities;
+using OmniSharp.Extensions.LanguageServer.Protocol.Document;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OmniSharp.Extensions.LanguageServer.Protocol.Server;
 using OmniSharp.Models.SignatureHelp;
 
 namespace OmniSharp.LanguageServerProtocol.Handlers
 {
-    internal class OmniSharpSignatureHelpHandler : SignatureHelpHandler
+    internal class OmniSharpSignatureHelpHandler : SignatureHelpHandlerBase
     {
         private readonly Mef.IRequestHandler<SignatureHelpRequest, SignatureHelpResponse> _signatureHandler;
+        private readonly DocumentSelector _documentSelector;
 
         public OmniSharpSignatureHelpHandler(Mef.IRequestHandler<SignatureHelpRequest, SignatureHelpResponse> signatureHandler, DocumentSelector documentSelector)
-            : base(new SignatureHelpRegistrationOptions()
-            {
-                DocumentSelector = documentSelector,
-                TriggerCharacters = new[] { ".", "?", "[" }
-            })
         {
             _signatureHandler = signatureHandler;
+            _documentSelector = documentSelector;
         }
 
         public static IEnumerable<IJsonRpcHandler> Enumerate(RequestHandlers handlers)
@@ -33,7 +31,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                     yield return new OmniSharpSignatureHelpHandler(handler, selector);
         }
 
-        public async override Task<SignatureHelp> Handle(SignatureHelpParams request, CancellationToken token)
+        public override async Task<SignatureHelp> Handle(SignatureHelpParams request, CancellationToken token)
         {
             var omnisharpRequest = new SignatureHelpRequest
             {
@@ -44,7 +42,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
 
             var omnisharpResponse = await _signatureHandler.Handle(omnisharpRequest);
 
-            if (!omnisharpResponse.Signatures.Any())
+            if (omnisharpResponse == null || !omnisharpResponse.Signatures.Any())
             {
                 return null;
             }
@@ -67,6 +65,15 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                 ActiveParameter = omnisharpResponse.ActiveParameter,
                 ActiveSignature = omnisharpResponse.ActiveSignature,
                 Signatures = signatures
+            };
+        }
+
+        protected override SignatureHelpRegistrationOptions CreateRegistrationOptions(SignatureHelpCapability capability, ClientCapabilities clientCapabilities)
+        {
+            return new SignatureHelpRegistrationOptions()
+            {
+                DocumentSelector = _documentSelector,
+                TriggerCharacters = new[] {".", "?", "["}
             };
         }
     }

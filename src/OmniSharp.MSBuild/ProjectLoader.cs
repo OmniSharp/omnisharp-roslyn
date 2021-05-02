@@ -67,11 +67,12 @@ namespace OmniSharp.MSBuild
             return globalProperties;
         }
 
-        public (MSB.Execution.ProjectInstance projectInstance, ImmutableArray<MSBuildDiagnostic> diagnostics) BuildProject(string filePath)
+        public (MSB.Execution.ProjectInstance projectInstance, MSB.Evaluation.Project project, ImmutableArray<MSBuildDiagnostic> diagnostics) BuildProject(
+            string filePath, IReadOnlyDictionary<string, string> configurationsInSolution)
         {
             using (_sdksPathResolver.SetSdksPathEnvironmentVariable(filePath))
             {
-                var evaluatedProject = EvaluateProjectFileCore(filePath);
+                var evaluatedProject = EvaluateProjectFileCore(filePath, configurationsInSolution);
 
                 SetTargetFrameworkIfNeeded(evaluatedProject);
 
@@ -102,8 +103,8 @@ namespace OmniSharp.MSBuild
                 var diagnostics = msbuildLogger.GetDiagnostics();
 
                 return buildResult
-                    ? (projectInstance, diagnostics)
-                    : (null, diagnostics);
+                    ? (projectInstance, evaluatedProject, diagnostics)
+                    : (null, null, diagnostics);
             }
         }
 
@@ -115,10 +116,37 @@ namespace OmniSharp.MSBuild
             }
         }
 
-        private MSB.Evaluation.Project EvaluateProjectFileCore(string filePath)
+        private MSB.Evaluation.Project EvaluateProjectFileCore(string filePath, IReadOnlyDictionary<string, string> projectConfigurationsInSolution = null)
         {
+            var localProperties = new Dictionary<string, string>(_globalProperties);
+            if (projectConfigurationsInSolution != null
+                && localProperties.TryGetValue(PropertyNames.Configuration, out string solutionConfiguration))
+            {
+                if (!localProperties.TryGetValue(PropertyNames.Platform, out string solutionPlatform))
+                {
+                    solutionPlatform = "Any CPU";
+                }
+
+                var solutionSelector = $"{solutionConfiguration}|{solutionPlatform}.ActiveCfg";
+                _logger.LogDebug($"Found configuration `{solutionSelector}` in solution for '{filePath}'.");
+
+                if (projectConfigurationsInSolution.TryGetValue(solutionSelector, out string projectSelector))
+                {
+                    var splitted = projectSelector.Split('|');
+                    if (splitted.Length == 2)
+                    {
+                        var projectConfiguration = splitted[0];
+                        localProperties[PropertyNames.Configuration] = projectConfiguration;
+                        // NOTE: Solution often defines configuration as `Any CPU` whereas project relies on `AnyCPU`
+                        var projectPlatform = splitted[1].Replace("Any CPU", "AnyCPU");
+                        localProperties[PropertyNames.Platform] = projectPlatform;
+                        _logger.LogDebug($"Using configuration from solution: `{projectConfiguration}|{projectPlatform}`");
+                    }
+                }
+            }
+
             // Evaluate the MSBuild project
-            var projectCollection = new MSB.Evaluation.ProjectCollection(_globalProperties);
+            var projectCollection = new MSB.Evaluation.ProjectCollection(localProperties);
 
             var toolsVersion = _options.ToolsVersion;
             if (string.IsNullOrEmpty(toolsVersion) || Version.TryParse(toolsVersion, out _))
@@ -148,7 +176,7 @@ namespace OmniSharp.MSBuild
                 // For now, we'll just pick the first target framework. Eventually, we'll need to
                 // do better and potentially allow OmniSharp hosts to select a target framework.
                 targetFramework = targetFrameworks[0];
-                evaluatedProject.SetProperty(PropertyNames.TargetFramework, targetFramework);
+                evaluatedProject.SetGlobalProperty(PropertyNames.TargetFramework, targetFramework);
                 evaluatedProject.ReevaluateIfNecessary();
             }
         }

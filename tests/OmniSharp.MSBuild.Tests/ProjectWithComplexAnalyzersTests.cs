@@ -1,5 +1,8 @@
-﻿using System.IO;
+﻿
+using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
+using OmniSharp.Models.Diagnostics;
 using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
@@ -22,7 +25,7 @@ namespace OmniSharp.MSBuild.Tests
                 var diagnostics = await host.RequestCodeCheckAsync(Path.Combine(testProject.Directory, "Program.cs"));
 
                 Assert.NotEmpty(diagnostics.QuickFixes);
-                Assert.Contains(diagnostics.QuickFixes, x => x.ToString().Contains("CA1303"));
+                Assert.Contains(diagnostics.QuickFixes.OfType<DiagnosticLocation>(), x => x.Id == "CA1303");
                 // warning CA1303: Method 'void Program.Main(string[] args)' passes a literal string as parameter 'value' of a call to 'void Console.WriteLine(string value)'. Retrieve the following string(s) from
                 // a resource table instead: "Hello World!"
             }

@@ -8,6 +8,12 @@ insert_final_newline = true
 indent_style = space
 indent_size = 4
 
+dotnet_diagnostic.VSTHRD002.severity = none
+dotnet_diagnostic.VSTHRD003.severity = none
+dotnet_diagnostic.VSTHRD105.severity = none
+dotnet_diagnostic.VSTHRD110.severity = none
+dotnet_diagnostic.VSTHRD200.severity = none
+
 [*.cs]
 indent_size = 4
 

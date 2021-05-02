@@ -1,15 +1,18 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Composition;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Threading.Tasks;
 using Cake.Scripting.Abstractions.Models;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Scripting;
+using Microsoft.CodeAnalysis.Text;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Cake.Services;
@@ -18,6 +21,7 @@ using OmniSharp.FileWatching;
 using OmniSharp.Helpers;
 using OmniSharp.Mef;
 using OmniSharp.Models.WorkspaceInformation;
+using OmniSharp.Roslyn.EditorConfig;
 using OmniSharp.Roslyn.Utilities;
 using OmniSharp.Services;
 
@@ -123,7 +127,7 @@ namespace OmniSharp.Cake
                 // add Cake project to workspace
                 _workspace.AddProject(project);
                 var documentId = DocumentId.CreateNewId(project.Id);
-                var loader = new CakeTextLoader(cakeFilePath, _scriptService);
+                var loader = TextLoader.From(TextAndVersion.Create(SourceText.From(cakeScript.Source), VersionStamp.Create(DateTime.UtcNow)));
                 var documentInfo = DocumentInfo.Create(
                     documentId,
                     cakeFilePath,
@@ -228,6 +232,8 @@ namespace OmniSharp.Cake
             }
         }
 
+        public Task WaitForIdleAsync() => Task.CompletedTask;
+
         public Task<object> GetWorkspaceModelAsync(WorkspaceInformationRequest request)
         {
             var scriptContextModels = new List<CakeContextModel>();
@@ -280,8 +286,21 @@ namespace OmniSharp.Cake
                 throw new InvalidOperationException($"Could not get host object type: {cakeScript.Host.TypeName}.");
             }
 
+            var projectId = ProjectId.CreateNewId(Guid.NewGuid().ToString());
+            var analyzerConfigDocuments = _workspace.EditorConfigEnabled
+                ? EditorConfigFinder
+                    .GetEditorConfigPaths(filePath)
+                    .Select(path =>
+                        DocumentInfo.Create(
+                            DocumentId.CreateNewId(projectId),
+                            name: ".editorconfig",
+                            loader: new FileTextLoader(path, Encoding.UTF8),
+                            filePath: path))
+                    .ToImmutableArray()
+                : ImmutableArray<DocumentInfo>.Empty;
+
             return ProjectInfo.Create(
-                id: ProjectId.CreateNewId(Guid.NewGuid().ToString()),
+                id: projectId,
                 version: VersionStamp.Create(),
                 name: name,
                 filePath: filePath,
@@ -292,7 +311,8 @@ namespace OmniSharp.Cake
                 metadataReferences: GetMetadataReferences(cakeScript.References),
                 // TODO: projectReferences?
                 isSubmission: true,
-                hostObjectType: hostObjectType);
+                hostObjectType: hostObjectType)
+                .WithAnalyzerConfigDocuments(analyzerConfigDocuments);
         }
 
         private IEnumerable<MetadataReference> GetMetadataReferences(IEnumerable<string> references)

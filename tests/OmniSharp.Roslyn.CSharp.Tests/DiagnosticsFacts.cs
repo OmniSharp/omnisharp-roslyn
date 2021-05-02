@@ -18,7 +18,6 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             _testOutput = testOutput;
         }
 
-
         [Theory]
         [InlineData(true)]
         [InlineData(false)]
@@ -29,14 +28,14 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 host.AddFilesToWorkspace(new TestFile("a.cs", "class C { int n = true; }"));
                 var quickFixes = await host.RequestCodeCheckAsync("a.cs");
 
-                Assert.Contains(quickFixes.QuickFixes.Select(x => x.ToString()), x => x.Contains("CS0029"));
+                Assert.Contains(quickFixes.QuickFixes.OfType<DiagnosticLocation>(), x => x.Id == "CS0029");
                 Assert.Equal("a.cs", quickFixes.QuickFixes.First().FileName);
             }
         }
 
         private OmniSharpTestHost GetHost(bool roslynAnalyzersEnabled)
         {
-            return OmniSharpTestHost.Create(testOutput: _testOutput, configurationData: new Dictionary<string, string>() { { "RoslynExtensionsOptions:EnableAnalyzersSupport", roslynAnalyzersEnabled.ToString() } });
+            return OmniSharpTestHost.Create(testOutput: _testOutput, configurationData: new Dictionary<string, string>() { { "RoslynExtensionsOptions:EnableAnalyzersSupport", roslynAnalyzersEnabled.ToString() } }.ToConfiguration());
         }
 
         [Fact]
@@ -50,8 +49,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
                 var quickFixes = await host.RequestCodeCheckAsync();
 
-                Assert.Contains(quickFixes.QuickFixes, x => x.Text.Contains("CS0029") && x.FileName == "a.cs");
-                Assert.Contains(quickFixes.QuickFixes, x => x.Text.Contains("CS0029") && x.FileName == "b.cs");
+                Assert.Contains(quickFixes.QuickFixes.OfType<DiagnosticLocation>(), x => x.Id == "CS0029" && x.FileName == "a.cs");
+                Assert.Contains(quickFixes.QuickFixes.OfType<DiagnosticLocation>(), x => x.Id == "CS0029" && x.FileName == "b.cs");
             }
         }
 
@@ -70,8 +69,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
                 var quickFixes = await host.RequestCodeCheckAsync();
 
-                Assert.Contains(quickFixes.QuickFixes, x => x.Text.Contains("CS0029") && x.FileName == "a.cs");
-                Assert.Contains(quickFixes.QuickFixes, x => x.Text.Contains("CS0029") && x.FileName == "b.cs");
+                Assert.Contains(quickFixes.QuickFixes.OfType<DiagnosticLocation>(), x => x.Id == "CS0029" && x.FileName == "a.cs");
+                Assert.Contains(quickFixes.QuickFixes.OfType<DiagnosticLocation>(), x => x.Id == "CS0029" && x.FileName == "b.cs");
             }
         }
 
@@ -93,7 +92,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
                 var quickFixes = await host.RequestCodeCheckAsync();
 
-                Assert.DoesNotContain(quickFixes.QuickFixes, x => x.Text.Contains("CS0029") && x.FileName == "a.cs");
+                Assert.DoesNotContain(quickFixes.QuickFixes.OfType<DiagnosticLocation>(), x => x.Id == "CS0029" && x.FileName == "a.cs");
             }
         }
 
@@ -106,7 +105,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     new TestFile("a.cs", "class C1 { int n = true; }"));
 
                 var quickFixes = await host.RequestCodeCheckAsync("a.cs");
-                Assert.Contains(quickFixes.QuickFixes, x => x.Text.Contains("IDE0044"));
+                Assert.Contains(quickFixes.QuickFixes.OfType<DiagnosticLocation>(), x => x.Id == "IDE0044");
             }
         }
 
@@ -141,6 +140,21 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     .OfType<DiagnosticLocation>()
                     .Single(x => x.Id == "IDE0005")
                     .Tags);
+            }
+        }
+
+        [Fact]
+        // issue: https://github.com/OmniSharp/omnisharp-roslyn/issues/1619
+        public async Task DoesNotErroneouslyReportCS0019_WhenComparingToDefault()
+        {
+            using (var host = GetHost(roslynAnalyzersEnabled: true))
+            {
+                host.AddFilesToWorkspace(
+                    new TestFile("a.cs", "class C1 { bool Test(object input) => input == default; }"));
+
+                var quickFixes = await host.RequestCodeCheckAsync("a.cs");
+                var allDiagnostics = quickFixes.QuickFixes.OfType<DiagnosticLocation>().Where(x => x.Id == "CS0019");
+                Assert.Empty(allDiagnostics);
             }
         }
     }

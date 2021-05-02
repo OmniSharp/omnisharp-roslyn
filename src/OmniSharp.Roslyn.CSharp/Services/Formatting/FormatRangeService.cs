@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.Extensions.Logging;
+using OmniSharp.Extensions;
 using OmniSharp.Mef;
 using OmniSharp.Models.Format;
 using OmniSharp.Options;
@@ -34,7 +35,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Formatting
             }
 
             var text = await document.GetTextAsync();
-            var start = text.Lines.GetPosition(new LinePosition(request.Line, request.Column));
+            var start = text.GetTextPosition(request);
             var end = text.Lines.GetPosition(new LinePosition(request.EndLine, request.EndColumn));
             var syntaxTree = await document.GetSyntaxRootAsync();
             var tokenStart = syntaxTree.FindToken(start).FullSpan.Start;

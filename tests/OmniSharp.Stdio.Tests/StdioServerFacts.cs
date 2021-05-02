@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Composition.Hosting.Core;
 using System.IO;
 using System.Threading;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,7 +15,8 @@ namespace OmniSharp.Stdio.Tests
 {
     public class StdioServerFacts
     {
-        private Host BuildTestServerAndStart(TextReader reader, ISharedTextWriter writer, Action<Host> programDelegate = null)
+        internal static Host BuildTestServerAndStart(TextReader reader, ISharedTextWriter writer, Action<Host> programDelegate = null,
+            IEnumerable<ExportDescriptorProvider> additionalExports = null)
         {
             var configuration = new Microsoft.Extensions.Configuration.ConfigurationBuilder().Build();
             var environment = new OmniSharpEnvironment();
@@ -22,7 +25,7 @@ namespace OmniSharp.Stdio.Tests
             var host = new Host(reader, writer,
                 environment,
                 serviceProvider,
-                new CompositionHostBuilder(serviceProvider),
+                new CompositionHostBuilder(serviceProvider, exportDescriptorProviders: additionalExports),
                 serviceProvider.GetRequiredService<ILoggerFactory>(),
                 cancelationTokenSource);
 

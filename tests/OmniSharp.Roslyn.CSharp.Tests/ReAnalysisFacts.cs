@@ -2,6 +2,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using OmniSharp.Abstractions.Models.V1.ReAnalyze;
 using OmniSharp.Models.ChangeBuffer;
+using OmniSharp.Models.Diagnostics;
 using OmniSharp.Models.Events;
 using OmniSharp.Roslyn.CSharp.Services.Buffer;
 using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
@@ -31,7 +32,9 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 var changeBufferHandler = host.GetRequestHandler<ChangeBufferService>(OmniSharpEndpoints.ChangeBuffer);
                 var reAnalyzeHandler = host.GetRequestHandler<ReAnalyzeService>(OmniSharpEndpoints.ReAnalyze);
 
-                host.AddFilesToWorkspace(new TestFile("a.cs", "public class A: B { }"), new TestFile("b.cs", "public class B { }"));
+                var bContent = "public class B { }";
+
+                host.AddFilesToWorkspace(new TestFile("a.cs", "public class A: B { }"), new TestFile("b.cs", bContent));
 
                 await host.RequestCodeCheckAsync("a.cs");
 
@@ -42,7 +45,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     StartLine = 0,
                     StartColumn = 0,
                     EndLine = 0,
-                    EndColumn = newContent.Length,
+                    EndColumn = bContent.Length,
                     NewText = newContent,
                     FileName = "b.cs"
                 });
@@ -53,7 +56,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
                 // Reference to B is lost, a.cs should contain error about invalid reference to it.
                 // error CS0246: The type or namespace name 'B' could not be found
-                Assert.Contains(quickFixes.QuickFixes.Select(x => x.ToString()), x => x.Contains("CS0246"));
+                Assert.Contains(quickFixes.QuickFixes.OfType<DiagnosticLocation>(), x => x.Id == "CS0246");
             }
         }
 

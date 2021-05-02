@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.FindSymbols;
 using Microsoft.CodeAnalysis.Text;
-using OmniSharp.Cake.Extensions;
+using OmniSharp.Extensions;
 using OmniSharp.Mef;
 using OmniSharp.Models.GotoDefinition;
 using OmniSharp.Models.Metadata;
@@ -20,15 +20,15 @@ namespace OmniSharp.Cake.Services.RequestHandlers.Navigation
     {
         private const int MethodLineOffset = 3;
         private const int PropertyLineOffset = 7;
-        private readonly MetadataHelper _metadataHelper;
+        private readonly MetadataExternalSourceService _metadataExternalSourceService;
 
         [ImportingConstructor]
         public GotoDefinitionHandler(
             OmniSharpWorkspace workspace,
-            MetadataHelper metadataHelper)
+            MetadataExternalSourceService metadataExternalSourceService)
             : base(workspace)
         {
-            _metadataHelper = metadataHelper ?? throw new ArgumentNullException(nameof(metadataHelper));
+            _metadataExternalSourceService = metadataExternalSourceService ?? throw new ArgumentNullException(nameof(metadataExternalSourceService));
         }
 
         protected override async Task<GotoDefinitionResponse> TranslateResponse(GotoDefinitionResponse response, GotoDefinitionRequest request)
@@ -109,14 +109,14 @@ namespace OmniSharp.Cake.Services.RequestHandlers.Navigation
                 return response;
             }
             var cancellationSource = new CancellationTokenSource(TimeSpan.FromMilliseconds(request.Timeout));
-            var (metadataDocument, _) = await _metadataHelper.GetAndAddDocumentFromMetadata(document.Project, symbol, cancellationSource.Token);
+            var (metadataDocument, _) = await _metadataExternalSourceService.GetAndAddExternalSymbolDocument(document.Project, symbol, cancellationSource.Token);
             if (metadataDocument == null)
             {
                 return response;
             }
 
             cancellationSource = new CancellationTokenSource(TimeSpan.FromMilliseconds(request.Timeout));
-            var metadataLocation = await _metadataHelper.GetSymbolLocationFromMetadata(symbol, metadataDocument, cancellationSource.Token);
+            var metadataLocation = await _metadataExternalSourceService.GetExternalSymbolLocation(symbol, metadataDocument, cancellationSource.Token);
             var lineSpan = metadataLocation.GetMappedLineSpan();
 
             response = new GotoDefinitionResponse
@@ -127,7 +127,7 @@ namespace OmniSharp.Cake.Services.RequestHandlers.Navigation
                 {
                     AssemblyName = symbol.ContainingAssembly.Name,
                     ProjectName = document.Project.Name,
-                    TypeName = _metadataHelper.GetSymbolName(symbol)
+                    TypeName = symbol.GetSymbolName()
                 },
             };
 

@@ -1,6 +1,7 @@
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
+using OmniSharp.DotNetTest.Models;
 using OmniSharp.Eventing;
 using OmniSharp.Mef;
 using OmniSharp.Models;
@@ -10,21 +11,20 @@ namespace OmniSharp.DotNetTest.Services
 {
     [OmniSharpHandler(OmniSharpEndpoints.V2.GetTestStartInfo, LanguageNames.CSharp)]
     internal abstract class BaseTestService<TRequest, TResponse> : BaseTestService, IRequestHandler<TRequest, TResponse>
-        where TRequest: Request
+        where TRequest: BaseTestRequest
     {
         protected BaseTestService(OmniSharpWorkspace workspace, IDotNetCliService dotNetCli, IEventEmitter eventEmitter, ILoggerFactory loggerFactory)
             : base(workspace, dotNetCli, eventEmitter, loggerFactory)
         {
         }
 
-        protected abstract TResponse HandleRequest(TRequest request, TestManager testManager);
+        protected abstract Task<TResponse> HandleRequest(TRequest request, TestManager testManager);
 
-        public Task<TResponse> Handle(TRequest request)
+        public async Task<TResponse> Handle(TRequest request)
         {
-            using (var testManager = CreateTestManager(request.FileName))
+            using (var testManager = CreateTestManager(request.FileName, request.NoBuild))
             {
-                var response = HandleRequest(request, testManager);
-                return Task.FromResult(response);
+                return await HandleRequest(request, testManager);
             }
         }
     }

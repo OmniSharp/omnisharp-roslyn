@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using OmniSharp.Models;
 using OmniSharp.Models.CodeCheck;
+using OmniSharp.Models.Diagnostics;
 using OmniSharp.Models.FilesChanged;
 using OmniSharp.Models.FindImplementations;
 using OmniSharp.Models.FindSymbols;
@@ -36,7 +37,8 @@ namespace OmniSharp.Tests
                     var request = new CodeCheckRequest() { FileName = filePath };
                     var actual = await host.GetResponse<CodeCheckRequest, QuickFixResponse>(OmniSharpEndpoints.CodeCheck, request);
                     Assert.Single(actual.QuickFixes);
-                    Assert.Equal("; expected (CS1002)", actual.QuickFixes.First().Text);
+                    Assert.Equal("; expected", actual.QuickFixes.First().Text);
+                    Assert.Equal("CS1002", actual.QuickFixes.OfType<DiagnosticLocation>().First().Id);
                 }
             }
         }

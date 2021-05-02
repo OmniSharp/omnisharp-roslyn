@@ -11,5 +11,7 @@ namespace OmniSharp.Models
         public int Column { get; set; }
         public string Buffer { get; set; }
         public IEnumerable<LinePositionSpanTextChange> Changes { get; set; }
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
+        public bool ApplyChangesTogether { get; set; }
     }
 }

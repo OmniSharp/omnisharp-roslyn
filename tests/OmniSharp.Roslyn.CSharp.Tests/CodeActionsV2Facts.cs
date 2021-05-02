@@ -87,7 +87,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 public class c {public c() {Guid.NewGuid();}}";
 
             var response = await RunRefactoringAsync(code, "Remove Unnecessary Usings", isAnalyzersEnabled: roslynAnalyzersEnabled);
-            AssertIgnoringIndent(expected, ((ModifiedFileResponse)response.Changes.First()).Buffer);
+            AssertUtils.AssertIgnoringIndent(expected, ((ModifiedFileResponse)response.Changes.First()).Buffer);
         }
 
         [Theory]
@@ -105,7 +105,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 }";
 
             var refactorings = await FindRefactoringNamesAsync(code, roslynAnalyzersEnabled);
-            Assert.Contains("Extract Method", refactorings);
+            Assert.Contains("Extract method", refactorings);
         }
 
         [Theory]
@@ -137,7 +137,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 "Generate type 'Console' -> Generate class 'Console' in new file",
                 "Generate type 'Console' -> Generate class 'Console'",
                 "Generate type 'Console' -> Generate nested class 'Console'",
-                "Extract Method",
+                "Extract local function",
+                "Extract method",
                 "Introduce local for 'Console.Write(\"should be using System;\")'"
             } : new List<string>
             {
@@ -151,7 +152,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 "Generate type 'Console' -> Generate class 'Console' in new file",
                 "Generate type 'Console' -> Generate class 'Console'",
                 "Generate type 'Console' -> Generate nested class 'Console'",
-                "Extract Method",
+                "Extract local function",
+                "Extract method",
                 "Introduce local for 'Console.Write(\"should be using System;\")'"
             };
             Assert.Equal(expected.OrderBy(x => x), refactorings.OrderBy(x => x));
@@ -184,7 +186,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     }
                 }";
             var response = await RunRefactoringAsync(code, "Extract Method", isAnalyzersEnabled: roslynAnalyzersEnabled);
-            AssertIgnoringIndent(expected, ((ModifiedFileResponse)response.Changes.First()).Buffer);
+            AssertUtils.AssertIgnoringIndent(expected, ((ModifiedFileResponse)response.Changes.First()).Buffer);
         }
 
         [Theory]
@@ -193,7 +195,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         public async Task Can_generate_type_and_return_name_of_new_file(bool roslynAnalyzersEnabled)
         {
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithMissingType"))
-            using (var host =  OmniSharpTestHost.Create(testProject.Directory, testOutput: TestOutput, configurationData: TestHelpers.GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled)))
+            using (var host = OmniSharpTestHost.Create(testProject.Directory, testOutput: TestOutput, configurationData: TestHelpers.GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled)))
             {
                 var requestHandler = host.GetRequestHandler<RunCodeActionService>(OmniSharpEndpoints.V2.RunCodeAction);
                 var document = host.Workspace.CurrentSolution.Projects.First().Documents.First();
@@ -266,30 +268,31 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public async Task CanRunCodeFix_ThatModifiesAdditionalFile()
         {
-            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithMismatchedFileName"))
-            using (var host = OmniSharpTestHost.Create(testProject.Directory, testOutput: TestOutput, new Dictionary<string, string>
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithAnalyzersWithAdditionalFiles"))
+            using (var host = OmniSharpTestHost.Create(testProject.Directory, testOutput: TestOutput, configurationData: TestHelpers.GetConfigurationDataWithAnalyzerConfig(true, true)))
             {
-                ["FormattingOptions:EnableEditorConfigSupport"] = "true",
-                ["RoslynExtensionsOptions:EnableAnalyzersSupport"] = "true"
-            }))
-            {
+                var requestHandler = host.GetRequestHandler<RunCodeActionService>(OmniSharpEndpoints.V2.RunCodeAction);
                 var document = host.Workspace.CurrentSolution.Projects.First().Documents.First();
                 var buffer = await document.GetTextAsync();
                 var path = document.FilePath;
-                var runRequestHandler = host.GetRequestHandler<RunCodeActionService>(OmniSharpEndpoints.V2.RunCodeAction);
-                var runRequest = new RunCodeActionRequest
+
+                var request = new RunCodeActionRequest
                 {
-                    Line = point.Line,
-                    Column = point.Offset,
+                    Line = 3,
+                    Column = 20,
                     FileName = path,
+                    Buffer = buffer.ToString(),
                     Identifier = "Add Foo to public API'",
                     WantsTextChanges = false,
-                    WantsAllCodeActionOperations = true,
-                    Buffer = buffer.ToString()
+                    WantsAllCodeActionOperations = true
                 };
-                var runResponse = await runRequestHandler.Handle(runRequest);
 
-                AssertIgnoringIndent(expected, ((ModifiedFileResponse)runResponse.Changes.First()).Buffer);
+                var response = await requestHandler.Handle(request);
+                var changes = response.Changes.ToArray();
+                
+                var expected = "HelloWorld.Foo";
+
+                AssertIgnoringIndent(expected, ((ModifiedFileResponse)response.Changes.First()).Buffer);
             }
         }
     }

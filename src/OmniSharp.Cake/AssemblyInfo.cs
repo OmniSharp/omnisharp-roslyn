@@ -1,3 +1,4 @@
-﻿using System.Runtime.CompilerServices;
+﻿using OmniSharp;
+using System.Runtime.CompilerServices;
 
-[assembly: InternalsVisibleTo("OmniSharp.Cake.Tests")]
+[assembly: InternalsVisibleTo("OmniSharp.Cake.Tests" + OmniSharpPublicKey.Key)]

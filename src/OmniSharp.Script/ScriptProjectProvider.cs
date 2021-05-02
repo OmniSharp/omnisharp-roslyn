@@ -1,8 +1,10 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using Dotnet.Script.DependencyModel.NuGet;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -10,6 +12,7 @@ using Microsoft.CodeAnalysis.Scripting;
 using Microsoft.CodeAnalysis.Scripting.Hosting;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Helpers;
+using OmniSharp.Roslyn.EditorConfig;
 using OmniSharp.Roslyn.Utilities;
 
 namespace OmniSharp.Script
@@ -25,7 +28,7 @@ namespace OmniSharp.Script
         private const string FileReferenceProviderField = "_fileReferenceProvider";
 
         // aligned with CSI.exe
-        // https://github.com/dotnet/roslyn/blob/version-2.0.0-rc3/src/Interactive/csi/csi.rsp
+        // https://github.com/dotnet/roslyn/blob/version-3.2.0/src/Interactive/csi/csi.desktop.rsp
         internal static readonly IEnumerable<string> DefaultNamespaces = new[]
         {
             "System",
@@ -40,7 +43,7 @@ namespace OmniSharp.Script
             "System.Threading.Tasks"
         };
 
-        private static readonly CSharpParseOptions ParseOptions = new CSharpParseOptions(LanguageVersion.CSharp8, DocumentationMode.Parse, SourceCodeKind.Script);
+        private static readonly CSharpParseOptions ParseOptions = new CSharpParseOptions(LanguageVersion.Latest, DocumentationMode.Parse, SourceCodeKind.Script);
 
         private readonly Lazy<CSharpCompilationOptions> _compilationOptions;
         private readonly Lazy<CSharpCommandLineArguments> _commandLineArgs;
@@ -48,8 +51,9 @@ namespace OmniSharp.Script
         private readonly IOmniSharpEnvironment _env;
         private readonly ILogger _logger;
         private readonly bool _isDesktopClr;
+        private readonly bool _editorConfigEnabled;
 
-        public ScriptProjectProvider(ScriptOptions scriptOptions, IOmniSharpEnvironment env, ILoggerFactory loggerFactory, bool isDesktopClr)
+        public ScriptProjectProvider(ScriptOptions scriptOptions, IOmniSharpEnvironment env, ILoggerFactory loggerFactory, bool isDesktopClr, bool editorConfigEnabled)
         {
             _scriptOptions = scriptOptions ?? throw new ArgumentNullException(nameof(scriptOptions));
             _env = env ?? throw new ArgumentNullException(nameof(env));
@@ -58,6 +62,7 @@ namespace OmniSharp.Script
             _compilationOptions = new Lazy<CSharpCompilationOptions>(CreateCompilationOptions);
             _commandLineArgs = new Lazy<CSharpCommandLineArguments>(CreateCommandLineArguments);
             _isDesktopClr = isDesktopClr;
+            _editorConfigEnabled = editorConfigEnabled;
         }
 
         private CSharpCommandLineArguments CreateCommandLineArguments()
@@ -67,13 +72,19 @@ namespace OmniSharp.Script
                 var rspFilePath = _scriptOptions.GetNormalizedRspFilePath(_env);
                 if (rspFilePath != null)
                 {
+                    if(!File.Exists(rspFilePath))
+                    {
+                        _logger.LogError($"Unable to find RSP file at '{rspFilePath}` at path. Falling back on default values.");
+                        return null;
+                    }
+
                     _logger.LogInformation($"Discovered an RSP file at '{rspFilePath}' - will use this file to discover CSX namespaces and references.");
                     return CSharpCommandLineParser.Script.Parse(new string[] { $"@{rspFilePath}" },
                         _env.TargetDirectory,
                         _isDesktopClr ? Path.GetDirectoryName(typeof(object).GetTypeInfo().Assembly.ManifestModule.FullyQualifiedName) : null);
                 }
             }
-            
+
             return null;
         }
 
@@ -93,12 +104,25 @@ namespace OmniSharp.Script
                 _logger.LogDebug($"CSX global using statement: {ns}");
             }
 
+            if(csharpCommandLineArguments != null)
+            {
+                foreach(var error in csharpCommandLineArguments.Errors)
+                {
+                    _logger.LogError($"CSX RSP parse error. {error.GetMessage()}");
+                }
+            }
+
+            var metadataReferenceResolver = CreateMetadataReferenceResolver(csharpCommandLineArguments?.ReferencePaths);
+            var sourceResolver = CreateScriptSourceResolver(csharpCommandLineArguments?.SourcePaths);
+
             compilationOptions = compilationOptions
                 .WithAllowUnsafe(true)
-                .WithMetadataReferenceResolver(CreateMetadataReferenceResolver())
-                .WithSourceReferenceResolver(ScriptSourceResolver.Default)
+                .WithMetadataReferenceResolver(metadataReferenceResolver)
+                .WithSourceReferenceResolver(sourceResolver)
                 .WithAssemblyIdentityComparer(DesktopAssemblyIdentityComparer.Default)
-                .WithSpecificDiagnosticOptions(CompilationOptionsHelper.GetDefaultSuppressedDiagnosticOptions());
+                .WithSpecificDiagnosticOptions(!_scriptOptions.IsNugetEnabled()
+                    ? CompilationOptionsHelper.GetDefaultSuppressedDiagnosticOptions()
+                    : CompilationOptionsHelper.GetDefaultSuppressedDiagnosticOptions(_scriptOptions.NullableDiagnostics)); // for .NET Core 3.0 dotnet-script use extra nullable diagnostics
 
             var topLevelBinderFlagsProperty = typeof(CSharpCompilationOptions).GetProperty(TopLevelBinderFlagsProperty, BindingFlags.Instance | BindingFlags.NonPublic);
             var binderFlagsType = typeof(CSharpCompilationOptions).GetTypeInfo().Assembly.GetType(BinderFlagsType);
@@ -118,24 +142,52 @@ namespace OmniSharp.Script
             return compilationOptions;
         }
 
-        private CachingScriptMetadataResolver CreateMetadataReferenceResolver()
+        private ScriptSourceResolver CreateScriptSourceResolver(IEnumerable<string> searchPaths)
+        {
+            var defaultResolver = ScriptSourceResolver.Default;
+
+            if (searchPaths != null)
+            {
+                defaultResolver = defaultResolver.WithSearchPaths(searchPaths);
+
+                foreach (string path in searchPaths)
+                {
+                    _logger.LogInformation($"CSX source path: {path}.");
+                }
+            }
+
+            return defaultResolver;
+        }
+
+        private CachingScriptMetadataResolver CreateMetadataReferenceResolver(IEnumerable<string> searchPaths)
         {
             var defaultResolver = ScriptMetadataResolver.Default.WithBaseDirectory(_env.TargetDirectory);
+
+            if (searchPaths != null)
+            {
+                defaultResolver = defaultResolver.WithSearchPaths(searchPaths);
+
+                foreach (string path in searchPaths)
+                {
+                    _logger.LogInformation($"CSX reference path: {path}.");
+                }
+            }
+
             InjectXMLDocumentationProviderIntoRuntimeMetadataReferenceResolver(defaultResolver);
 
             var decoratedResolver = _scriptOptions.EnableScriptNuGetReferences
-                ? new CachingScriptMetadataResolver(new NuGetMetadataReferenceResolver(defaultResolver)) 
+                ? new CachingScriptMetadataResolver(new NuGetMetadataReferenceResolver(defaultResolver))
                 : new CachingScriptMetadataResolver(defaultResolver);
 
             return decoratedResolver;
         }
- 
+
         public ProjectInfo CreateProject(string csxFileName, IEnumerable<MetadataReference> references, string csxFilePath, Type globalsType, IEnumerable<string> namespaces = null)
         {
             var csharpCommandLineArguments = _commandLineArgs.Value;
 
             // if RSP file was used, include the metadata references from RSP merged with the provided set
-            // otherwise just use the provided metadata references 
+            // otherwise just use the provided metadata references
             if (csharpCommandLineArguments != null && csharpCommandLineArguments.MetadataReferences.Any())
             {
                 var resolvedRspReferences = csharpCommandLineArguments.ResolveMetadataReferences(_compilationOptions.Value.MetadataReferenceResolver);
@@ -156,9 +208,22 @@ namespace OmniSharp.Script
                     Union(references, MetadataReferenceEqualityComparer.Instance);
             }
 
+            var projectId = ProjectId.CreateNewId();
+            var analyzerConfigDocuments = _editorConfigEnabled
+                ? EditorConfigFinder
+                    .GetEditorConfigPaths(csxFilePath)
+                    .Select(path =>
+                        DocumentInfo.Create(
+                            DocumentId.CreateNewId(projectId),
+                            name: ".editorconfig",
+                            loader: new FileTextLoader(path, Encoding.UTF8),
+                            filePath: path))
+                    .ToImmutableArray()
+                : ImmutableArray<DocumentInfo>.Empty;
+
             var project = ProjectInfo.Create(
                 filePath: csxFilePath,
-                id: ProjectId.CreateNewId(),
+                id: projectId,
                 version: VersionStamp.Create(),
                 name: csxFileName,
                 assemblyName: $"{csxFileName}.dll",
@@ -169,7 +234,8 @@ namespace OmniSharp.Script
                 metadataReferences: references,
                 parseOptions: ParseOptions,
                 isSubmission: true,
-                hostObjectType: globalsType);
+                hostObjectType: globalsType)
+                .WithAnalyzerConfigDocuments(analyzerConfigDocuments);
 
             return project;
         }

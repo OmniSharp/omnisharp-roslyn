@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Microsoft.Extensions.Logging;
+using NuGet.Versioning;
 
 namespace OmniSharp.MSBuild.Discovery
 {
@@ -95,6 +97,17 @@ namespace OmniSharp.MSBuild.Discovery
             return Directory.Exists(result)
                 ? result
                 : null;
+        }
+
+        protected static Version GetMSBuildVersion(string microsoftBuildPath)
+        {
+            var msbuildVersionInfo = FileVersionInfo.GetVersionInfo(microsoftBuildPath);
+            var semanticVersion = SemanticVersion.Parse(msbuildVersionInfo.ProductVersion);
+            return new Version(
+                semanticVersion.Major,
+                semanticVersion.Minor,
+                semanticVersion.Patch
+            );
         }
     }
 }

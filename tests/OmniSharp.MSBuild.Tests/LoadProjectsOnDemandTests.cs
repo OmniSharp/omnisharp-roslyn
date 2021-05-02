@@ -27,7 +27,7 @@ namespace OmniSharp.MSBuild.Tests
         {
             var configData = new Dictionary<string, string> { [$"MsBuild:{nameof(MSBuildOptions.LoadProjectsOnDemand)}"] = "true" };
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("TwoProjectsWithSolution"))
-            using (var host = CreateMSBuildTestHost(testProject.Directory, configurationData: configData))
+            using (var host = CreateMSBuildTestHost(testProject.Directory, configurationData: configData.ToConfiguration()))
             {
                 MSBuildWorkspaceInfo workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
 
@@ -64,7 +64,7 @@ namespace OmniSharp.MSBuild.Tests
         [Fact]
         public async Task LoadOnDemandProjectAndItsReference()
         {
-            var configData = new Dictionary<string, string> { [$"MsBuild:{nameof(MSBuildOptions.LoadProjectsOnDemand)}"] = "true" };
+            var configData = new Dictionary<string, string> { [$"MsBuild:{nameof(MSBuildOptions.LoadProjectsOnDemand)}"] = "true" }.ToConfiguration();
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("TwoProjectsWithSolution"))
             using (var host = CreateMSBuildTestHost(testProject.Directory, configurationData: configData))
             {
@@ -93,7 +93,7 @@ namespace OmniSharp.MSBuild.Tests
         [Fact]
         public async Task LoadOnDemandProjectWithTwoLevelsOfTransitiveReferences()
         {
-            var configData = new Dictionary<string, string> { [$"MsBuild:{nameof(MSBuildOptions.LoadProjectsOnDemand)}"] = "true" };
+            var configData = new Dictionary<string, string> { [$"MsBuild:{nameof(MSBuildOptions.LoadProjectsOnDemand)}"] = "true" }.ToConfiguration();
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("DeepProjectTransitiveReference"))
             using (var host = CreateMSBuildTestHost(testProject.Directory, configurationData: configData))
             {

@@ -63,8 +63,6 @@ mono_version=`mono --version | head -n 1 | sed 's/[^0-9.]*\([0-9.]*\).*/\1/'`
 
 gac_assemblies=(
     "Microsoft.Build.Engine/4.0.0.0__b03f5f7f11d50a3a/Microsoft.Build.Engine.dll"
-    "Microsoft.Build.Tasks.v4.0/4.0.0.0__b03f5f7f11d50a3a/Microsoft.Build.Tasks.v4.0.dll"
-    "Microsoft.Build.Utilities.v4.0/4.0.0.0__b03f5f7f11d50a3a/Microsoft.Build.Utilities.v4.0.dll"
     "Mono.Data.Tds/4.0.0.0__0738eb9f132ed756/Mono.Data.Tds.dll"
     "Mono.Posix/4.0.0.0__0738eb9f132ed756/Mono.Posix.dll"
     "Mono.Security/4.0.0.0__0738eb9f132ed756/Mono.Security.dll"
@@ -116,6 +114,9 @@ framework_facades=(
     "System.ObjectModel.dll"
     "System.Reflection.dll"
     "System.Reflection.Extensions.dll"
+    "System.Reflection.Emit.ILGeneration.dll"
+    "System.Reflection.Emit.Lightweight.dll"
+    "System.Reflection.Emit.dll"
     "System.Reflection.Primitives.dll"
     "System.Resources.ResourceManager.dll"
     "System.Runtime.dll"
@@ -171,8 +172,10 @@ _copy_runtime_assets() {
     local mono_etc_path=""
     local libMonoPosixHelper_name=""
     local libMonoBtlsShared_name=""
-    local libMonoSystemNative_name=""
-    local libMonoSystemNative_target_name=""
+    local libMonoNative_name=""
+    local libMonoNative_target_name=""
+    local libMonoNative2_name=""
+    local libMonoNative2_target_name=""
 
     if [ "$os" = "$OS_MAC" ]; then
         mono_base_path=/Library/Frameworks/Mono.framework/Versions/Current
@@ -181,19 +184,23 @@ _copy_runtime_assets() {
         mono_lib_path=$mono_base_path/lib
         mono_etc_path=$mono_base_path/etc/mono
         libMonoPosixHelper_name=libMonoPosixHelper.dylib
-        libMonoSystemNative_name=libmono-system-native.0.dylib
-        libMonoSystemNative_target_name=libmono-system-native.dylib
+        libMonoBtlsShared_name=libmono-btls-shared.dylib
+        libMonoNative_name=libmono-native-unified.0.dylib
+        libMonoNative_target_name=libmono-native-unified.dylib
+        libMonoNative2_name=libmono-native-compat.0.dylib
+        libMonoNative2_target_name=libmono-native-compat.dylib
     else # Linux
         mono_runtime_path=/usr/bin/mono-sgen
         mono_lib_path=/usr/lib
         mono_etc_path=/etc/mono
         libMonoPosixHelper_name=libMonoPosixHelper.so
         libMonoBtlsShared_name=libmono-btls-shared.so
-        libMonoSystemNative_name=libmono-system-native.so.0.0.0
-        libMonoSystemNative_target_name=libmono-system-native.so
+        libMonoNative_name=libmono-native.so.0.0.0
+        libMonoNative_target_name=libmono-native.so
     fi
 
-    local mono_libMonoSystemNative_path=$mono_lib_path/$libMonoSystemNative_name
+    local mono_libMonoNative_path=$mono_lib_path/$libMonoNative_name
+    local mono_libMonoNative2_path=$mono_lib_path/$libMonoNative2_name
     local mono_libMonoPosixHelper_path=$mono_lib_path/$libMonoPosixHelper_name
     local mono_libMonoBtlsShared_path=$mono_lib_path/$libMonoBtlsShared_name
     local mono_config_path=$mono_etc_path/config
@@ -201,7 +208,7 @@ _copy_runtime_assets() {
 
     _verify_file "$mono_runtime_path"
     _verify_file "$mono_libMonoPosixHelper_path"
-    _verify_file "$mono_libMonoSystemNative_path"
+    _verify_file "$mono_libMonoNative_path"
 
     _verify_file "$mono_libMonoBtlsShared_path"
     _verify_file "$mono_config_path"
@@ -222,7 +229,7 @@ _copy_runtime_assets() {
 
     target_runtime_path=$target_bin_path/mono
     target_libMonoPosixHelper_path=$target_lib_path/$libMonoPosixHelper_name
-    target_liblibMonoSystemNative_path=$target_lib_path/$libMonoSystemNative_target_name
+    target_libMonoNative_path=$target_lib_path/$libMonoNative_target_name
 
     target_libMonoBtlsShared_path=$target_lib_path/$libMonoBtlsShared_name
     target_config_path=$target_etc_path/config
@@ -230,7 +237,16 @@ _copy_runtime_assets() {
 
     cp "$mono_runtime_path" "$target_runtime_path"
     cp "$mono_libMonoPosixHelper_path" "$target_libMonoPosixHelper_path"
-    cp "$mono_libMonoSystemNative_path" "$target_liblibMonoSystemNative_path"
+    cp "$mono_libMonoNative_path" "$target_libMonoNative_path"
+
+    if [ "$os" = "$OS_MAC" ]; then
+        _verify_file "$mono_libMonoNative2_path"
+
+        target_libMonoNative2_path=$target_lib_path/$libMonoNative2_target_name
+
+        cp "$mono_libMonoNative2_path" "$target_libMonoNative2_path"
+    fi
+
     cp "$mono_libMonoBtlsShared_path" "$target_libMonoBtlsShared_path"
     cp "$mono_config_path" "$target_config_path"
     cp "$mono_machine_config_path" "$target_machine_config_path"
@@ -263,7 +279,7 @@ _copy_framework_assets() {
 
     mkdir -p "$target_gac_path"
     mkdir -p "$target_45_facades_path"
-    
+
     _copy_file "$mono_45_path/mscorlib.dll" "$target_45_path/mscorlib.dll"
 
     for file in "${gac_assemblies[@]}"; do

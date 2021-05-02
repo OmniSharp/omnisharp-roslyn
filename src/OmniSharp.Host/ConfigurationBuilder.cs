@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.FileProviders;
 using OmniSharp.Internal;
@@ -7,49 +8,48 @@ using OmniSharp.Utilities;
 
 namespace OmniSharp
 {
-    public class ConfigurationBuilder : IConfigurationBuilder
+    public class ConfigurationBuilder
     {
         private readonly IOmniSharpEnvironment _environment;
-        private readonly IConfigurationBuilder _builder;
 
         public ConfigurationBuilder(IOmniSharpEnvironment environment)
         {
             _environment = environment;
-            _builder = new Microsoft.Extensions.Configuration.ConfigurationBuilder()
-                .SetBasePath(AppContext.BaseDirectory);
         }
 
-        public IConfigurationBuilder Add(IConfigurationSource source)
+        public ConfigurationResult Build(Action<IConfigurationBuilder> additionalSetup = null)
         {
-            _builder.Add(source);
-            return this;
-        }
-
-        public IConfigurationRoot Build()
-        {
-            var configBuilder = new Microsoft.Extensions.Configuration.ConfigurationBuilder()
-                .SetBasePath(AppContext.BaseDirectory)
-                .AddEnvironmentVariables("OMNISHARP_");
-
-            if (_environment.AdditionalArguments?.Length > 0)
+            try
             {
-                configBuilder.AddCommandLine(_environment.AdditionalArguments);
+                var configBuilder = new Microsoft.Extensions.Configuration.ConfigurationBuilder()
+                    .SetBasePath(AppContext.BaseDirectory)
+                    .AddEnvironmentVariables("OMNISHARP_");
+
+                if (_environment.AdditionalArguments?.Length > 0)
+                {
+                    configBuilder.AddCommandLine(_environment.AdditionalArguments);
+                }
+
+                // Use the global omnisharp config if there's any in the shared path
+                configBuilder.CreateAndAddGlobalOptionsFile(_environment);
+
+                // Use the local omnisharp config if there's any in the root path
+                configBuilder.AddJsonFile(
+                    new PhysicalFileProvider(_environment.TargetDirectory).WrapForPolling(),
+                    Constants.OptionsFile,
+                    optional: true,
+                    reloadOnChange: true);
+
+                // bootstrap additional host configuration at the end
+                additionalSetup?.Invoke(configBuilder);
+
+                var config = configBuilder.Build();
+                return new ConfigurationResult(config);
             }
-
-            // Use the global omnisharp config if there's any in the shared path
-            configBuilder.CreateAndAddGlobalOptionsFile(_environment);
-
-            // Use the local omnisharp config if there's any in the root path
-            configBuilder.AddJsonFile(
-                new PhysicalFileProvider(_environment.TargetDirectory).WrapForPolling(),
-                Constants.OptionsFile,
-                optional: true,
-                reloadOnChange: true);
-
-            return configBuilder.Build();
+            catch (Exception ex)
+            {
+                return new ConfigurationResult(ex);
+            }
         }
-
-        public IDictionary<string, object> Properties => _builder.Properties;
-        public IList<IConfigurationSource> Sources => _builder.Sources;
     }
 }

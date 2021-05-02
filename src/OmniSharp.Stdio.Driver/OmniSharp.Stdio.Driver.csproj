@@ -6,7 +6,7 @@
         <AssemblyName>OmniSharp</AssemblyName>
         <OutputType>Exe</OutputType>
         <PreserveCompilationContext>true</PreserveCompilationContext>
-        <RuntimeIdentifiers>win7-x64;win7-x86</RuntimeIdentifiers>
+        <RuntimeIdentifiers>win7-x64;win7-x86;win10-arm64</RuntimeIdentifiers>
     </PropertyGroup>
 
     <ItemGroup>

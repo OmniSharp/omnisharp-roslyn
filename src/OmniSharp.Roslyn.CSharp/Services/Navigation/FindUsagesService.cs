@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Composition;
@@ -6,6 +7,7 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.FindSymbols;
 using Microsoft.CodeAnalysis.Text;
+using Microsoft.Extensions.Logging;
 using OmniSharp.Helpers;
 using OmniSharp.Mef;
 using OmniSharp.Models;
@@ -17,11 +19,14 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
     public class FindUsagesService : IRequestHandler<FindUsagesRequest, QuickFixResponse>
     {
         private readonly OmniSharpWorkspace _workspace;
+        private readonly ILogger<FindUsagesService> _logger;
 
         [ImportingConstructor]
-        public FindUsagesService(OmniSharpWorkspace workspace)
+        public FindUsagesService(OmniSharpWorkspace workspace, ILoggerFactory loggerFactory)
         {
             _workspace = workspace;
+            _logger = loggerFactory.CreateLogger<FindUsagesService>();
+
         }
 
         public async Task<QuickFixResponse> Handle(FindUsagesRequest request)
@@ -30,6 +35,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
             var document = await _workspace.GetDocumentFromFullProjectModelAsync(request.FileName);
             if (document == null)
             {
+                _logger.LogWarning($"No document found. File: {request.FileName}.");
                 return new QuickFixResponse();
             }
 
@@ -37,6 +43,12 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
             var sourceText = await document.GetTextAsync();
             var position = sourceText.Lines.GetPosition(new LinePosition(request.Line, request.Column));
             var symbol = await SymbolFinder.FindSymbolAtPositionAsync(semanticModel, position, _workspace);
+            if (symbol is null)
+            {
+                _logger.LogWarning($"No symbol found. File: {request.FileName}, Line: {request.Line}, Column: {request.Column}.");
+                return new QuickFixResponse();
+            }
+
             var definition = await SymbolFinder.FindSourceDefinitionAsync(symbol, _workspace.CurrentSolution);
             var usages = request.OnlyThisFile
                 ? await SymbolFinder.FindReferencesAsync(definition ?? symbol, _workspace.CurrentSolution, ImmutableHashSet.Create(document))
@@ -60,6 +72,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
                                             .OrderBy(q => q.FileName)
                                             .ThenBy(q => q.Line)
                                             .ThenBy(q => q.Column));
+
         }
     }
 }

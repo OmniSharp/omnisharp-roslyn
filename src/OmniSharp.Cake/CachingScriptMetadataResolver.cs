@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Scripting;
@@ -7,8 +8,8 @@ namespace OmniSharp.Cake
 {
     internal class CachingScriptMetadataResolver : MetadataReferenceResolver
     {
-        private static readonly Dictionary<string, ImmutableArray<PortableExecutableReference>> DirectReferenceCache = new Dictionary<string, ImmutableArray<PortableExecutableReference>>();
-        private static readonly Dictionary<string, PortableExecutableReference> MissingReferenceCache = new Dictionary<string, PortableExecutableReference>();
+        private static readonly ConcurrentDictionary<string, ImmutableArray<PortableExecutableReference>> DirectReferenceCache = new ConcurrentDictionary<string, ImmutableArray<PortableExecutableReference>>();
+        private static readonly ConcurrentDictionary<string, PortableExecutableReference> MissingReferenceCache = new ConcurrentDictionary<string, PortableExecutableReference>();
         private static readonly MetadataReferenceResolver DefaultRuntimeResolver = ScriptMetadataResolver.Default;
 
         public override bool Equals(object other)

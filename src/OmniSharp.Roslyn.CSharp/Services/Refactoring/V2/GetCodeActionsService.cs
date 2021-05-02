@@ -6,9 +6,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Mef;
 using OmniSharp.Models.V2.CodeActions;
-using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Services.CodeActions;
-using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
 using OmniSharp.Roslyn.CSharp.Workers.Diagnostics;
 using OmniSharp.Services;
 

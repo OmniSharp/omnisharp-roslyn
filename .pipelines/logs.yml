@@ -1,0 +1,13 @@
+parameters:
+  Artifacts: $(Build.ArtifactStagingDirectory)
+steps:
+  - task: PublishBuildArtifacts@1
+    displayName: Publish Logs
+    condition: always()
+    continueOnError: true # allow logs to fail...
+    inputs:
+      PathtoPublish: "$(Artifacts)/logs/"
+      ArtifactName: "logs - $(system.phaseName)"
+      ArtifactType: "Container"
+    env:
+      Artifacts: ${{ parameters.Artifacts }}

@@ -22,6 +22,7 @@ namespace OmniSharp.Cake.Services
         private readonly ILoggerFactory _loggerFactory;
         private readonly IDictionary<string, ISet<string>> _cachedReferences;
         private readonly IDictionary<string, ISet<string>> _cachedUsings;
+        private readonly ILogger<CakeScriptService> _logger;
         private ScriptGenerationClient _generationService;
 
         [ImportingConstructor]
@@ -32,6 +33,7 @@ namespace OmniSharp.Cake.Services
             _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
             _cachedReferences = new Dictionary<string, ISet<string>>();
             _cachedUsings = new Dictionary<string, ISet<string>>();
+            _logger = _loggerFactory.CreateLogger<CakeScriptService>();
         }
 
         public bool Initialize(CakeOptions options)
@@ -40,9 +42,15 @@ namespace OmniSharp.Cake.Services
 
             if (File.Exists(serverExecutablePath))
             {
+                _logger.LogInformation($"Using Cake.Bakery at {serverExecutablePath}");
+
                 _generationService = PlatformHelper.IsMono ?
                     new ScriptGenerationClient(new MonoScriptGenerationProcess(serverExecutablePath, _environment, _loggerFactory), _environment.TargetDirectory, _loggerFactory) :
                     new ScriptGenerationClient(serverExecutablePath, _environment.TargetDirectory, _loggerFactory);
+            }
+            else if (!string.IsNullOrEmpty(serverExecutablePath))
+            {
+                _logger.LogWarning($"Cake.Bakery not found at path {serverExecutablePath}");
             }
 
             return _generationService != null;
@@ -52,10 +60,26 @@ namespace OmniSharp.Cake.Services
         {
             if (_generationService == null)
             {
-                throw new InvalidOperationException("Service not initialized.");
+                throw new InvalidOperationException("Cake.Bakery not initialized.");
+            }
+
+            if (!fileChange.FromDisk && fileChange.Buffer is null && fileChange.LineChanges.Count == 0)
+            {
+                return new CakeScript
+                {
+                    Source = null
+                };
             }
 
             var cakeScript = _generationService.Generate(fileChange);
+
+            if (string.IsNullOrEmpty(cakeScript?.Source))
+            {
+                return new CakeScript
+                {
+                    Source = null
+                };
+            }
 
             // Set line processor for generated aliases. TODO: Move to Cake.Bakery
             cakeScript.Source = cakeScript.Source.Insert(0, $"{Constants.Directive.Generated}\n");

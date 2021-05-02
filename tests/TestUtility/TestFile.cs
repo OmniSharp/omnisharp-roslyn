@@ -1,4 +1,6 @@
-﻿namespace TestUtility
+﻿using System.IO;
+
+namespace TestUtility
 {
     public class TestFile
     {

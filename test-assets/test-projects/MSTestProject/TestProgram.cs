@@ -6,11 +6,13 @@ namespace Main.Test
     [TestClass]
     public class MainTest
     {
+        public TestContext TestContext { get; set; }
+
         [TestMethod]
         public void Test()
         {
             Assert.IsTrue(true);
-        }
+        } // This is here for boundary testing
 
         [TestMethod]
         [DataRow(0)]
@@ -42,9 +44,31 @@ namespace Main.Test
             Assert.AreEqual(a,b);
         }
 
+        [TestMethod]
+        public void CheckRunSettings()
+        {
+            Assert.AreEqual(TestContext.Properties["TestRunSetting"].ToString(), "CorrectValue");
+        }
+
         private void UtilityFunction()
         {
-            
+
+        }
+
+        private class NestedClass
+        {
+            public void M()
+            {
+
+            }
+        }
+    }
+
+    public class NoTests
+    {
+        public void M()
+        {
+
         }
     }
 }

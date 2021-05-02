@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.Concurrent;
 using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
 
@@ -7,8 +7,8 @@ namespace OmniSharp.Script
     public class CachingScriptMetadataResolver : MetadataReferenceResolver
     {
         private readonly MetadataReferenceResolver _defaultReferenceResolver;
-        private static Dictionary<string, ImmutableArray<PortableExecutableReference>> DirectReferenceCache = new Dictionary<string, ImmutableArray<PortableExecutableReference>>();
-        private static Dictionary<string, PortableExecutableReference> MissingReferenceCache = new Dictionary<string, PortableExecutableReference>();
+        private static ConcurrentDictionary<string, ImmutableArray<PortableExecutableReference>> DirectReferenceCache = new ConcurrentDictionary<string, ImmutableArray<PortableExecutableReference>>();
+        private static ConcurrentDictionary<string, PortableExecutableReference> MissingReferenceCache = new ConcurrentDictionary<string, PortableExecutableReference>();
 
         public CachingScriptMetadataResolver(MetadataReferenceResolver defaultReferenceResolver)
         {
