@@ -1,11 +1,6 @@
-﻿using System;
-
-namespace HelloWorld
+﻿namespace HelloWorld
 {
     public class Foo
     {
-        public void Bar() {}  
     }
-
-    public class Baz {}
 }
