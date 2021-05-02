@@ -28,6 +28,8 @@ namespace OmniSharp.Models.V2
             return true;
         }
 
+        public bool IsValid() => Start != null && Start.Line > -1 && Start.Column > -1 && End != null && End.Line > -1 && End.Column > -1;
+
         public override bool Equals(object obj)
             => Equals(obj as Range);
 

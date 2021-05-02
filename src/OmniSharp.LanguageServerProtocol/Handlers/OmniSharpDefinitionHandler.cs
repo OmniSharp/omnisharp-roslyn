@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using OmniSharp.Extensions.JsonRpc;
 using OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities;
+using OmniSharp.Extensions.LanguageServer.Protocol.Document;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OmniSharp.Extensions.LanguageServer.Protocol.Server;
 using OmniSharp.Models.GotoDefinition;
@@ -11,7 +12,7 @@ using static OmniSharp.LanguageServerProtocol.Helpers;
 
 namespace OmniSharp.LanguageServerProtocol.Handlers
 {
-    class OmniSharpDefinitionHandler : DefinitionHandler
+    class OmniSharpDefinitionHandler : DefinitionHandlerBase
     {
         public static IEnumerable<IJsonRpcHandler> Enumerate(RequestHandlers handlers)
         {
@@ -21,17 +22,15 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
         }
 
         private readonly Mef.IRequestHandler<GotoDefinitionRequest, GotoDefinitionResponse> _definitionHandler;
+        private readonly DocumentSelector _documentSelector;
 
         public OmniSharpDefinitionHandler(Mef.IRequestHandler<GotoDefinitionRequest, GotoDefinitionResponse> definitionHandler, DocumentSelector documentSelector)
-            : base(new TextDocumentRegistrationOptions()
-            {
-                DocumentSelector = documentSelector
-            })
         {
             _definitionHandler = definitionHandler;
+            _documentSelector = documentSelector;
         }
 
-        public async override Task<LocationOrLocationLinks> Handle(DefinitionParams request, CancellationToken token)
+        public override async Task<LocationOrLocationLinks> Handle(DefinitionParams request, CancellationToken token)
         {
             var omnisharpRequest = new GotoDefinitionRequest()
             {
@@ -52,6 +51,14 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                 Uri = ToUri(omnisharpResponse.FileName),
                 Range = ToRange((omnisharpResponse.Column, omnisharpResponse.Line))
             });
+        }
+
+        protected override DefinitionRegistrationOptions CreateRegistrationOptions(DefinitionCapability capability, ClientCapabilities clientCapabilities)
+        {
+            return new DefinitionRegistrationOptions()
+            {
+                DocumentSelector = _documentSelector
+            };
         }
     }
 }

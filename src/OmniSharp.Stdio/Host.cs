@@ -44,7 +44,7 @@ namespace OmniSharp.Stdio
 
             _logger.LogInformation($"Starting OmniSharp on {Platform.Current}");
 
-            _compositionHost = compositionHostBuilder.Build();
+            _compositionHost = compositionHostBuilder.Build(_environment.TargetDirectory);
             _cachedStringBuilder = new CachedStringBuilder();
 
             var handlers = Initialize();
@@ -198,7 +198,7 @@ namespace OmniSharp.Stdio
             var request = RequestPacket.Parse(json);
             if (logger.IsEnabled(LogLevel.Debug))
             {
-                LogRequest(json, logger);
+                LogRequest(json, logger, LogLevel.Debug);
             }
 
             var response = request.Reply();
@@ -232,9 +232,18 @@ namespace OmniSharp.Stdio
             }
             finally
             {
-                if (logger.IsEnabled(LogLevel.Debug))
+                // response gets logged when Debug or more detailed log level is enabled
+                // or when we have unsuccessful response (exception)
+                if (logger.IsEnabled(LogLevel.Debug) || !response.Success)
                 {
-                    LogResponse(response.ToString(), logger);
+                    // if logging is at Debug level, request would have already been logged
+                    // however not for higher log levels, so we want to explicitly log the request too
+                    if (!logger.IsEnabled(LogLevel.Debug))
+                    {
+                        LogRequest(json, logger, LogLevel.Warning);
+                    }
+
+                    LogResponse(response.ToString(), logger, response.Success);
                 }
 
                 // actually write it
@@ -242,14 +251,14 @@ namespace OmniSharp.Stdio
             }
         }
 
-        void LogRequest(string json, ILogger logger)
+        void LogRequest(string json, ILogger logger, LogLevel logLevel)
         {
             var builder = _cachedStringBuilder.Acquire();
             try
             {
                 builder.AppendLine("************ Request ************");
                 builder.Append(JToken.Parse(json).ToString(Formatting.Indented));
-                logger.LogDebug(builder.ToString());
+                logger.Log(logLevel, builder.ToString());
             }
             finally
             {
@@ -257,14 +266,22 @@ namespace OmniSharp.Stdio
             }
         }
 
-        void LogResponse(string json, ILogger logger)
+        void LogResponse(string json, ILogger logger, bool isSuccess)
         {
             var builder = _cachedStringBuilder.Acquire();
             try
             {
                 builder.AppendLine("************  Response ************ ");
                 builder.Append(JToken.Parse(json).ToString(Formatting.Indented));
-                logger.LogDebug(builder.ToString());
+
+                if (isSuccess)
+                {
+                    logger.LogDebug(builder.ToString());
+                }
+                else
+                {
+                    logger.LogError(builder.ToString());
+                }
             }
             finally
             {

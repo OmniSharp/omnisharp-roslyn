@@ -24,6 +24,7 @@ namespace OmniSharp.Utilities
 
             protected override void DisposeCore(bool disposing)
             {
+                if (_changeTokens == null) return;
                 foreach (var kvp in _changeTokens)
                 {
                     kvp.Value.Dispose();

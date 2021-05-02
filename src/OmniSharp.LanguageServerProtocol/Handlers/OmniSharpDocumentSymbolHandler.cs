@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using OmniSharp.Extensions.JsonRpc;
 using OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities;
+using OmniSharp.Extensions.LanguageServer.Protocol.Document;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OmniSharp.Extensions.LanguageServer.Protocol.Server;
 using OmniSharp.Models.MembersTree;
@@ -12,7 +13,7 @@ using OmniSharp.Models.V2.CodeStructure;
 
 namespace OmniSharp.LanguageServerProtocol.Handlers
 {
-    internal sealed class OmniSharpDocumentSymbolHandler : DocumentSymbolHandler
+    internal sealed class OmniSharpDocumentSymbolHandler : DocumentSymbolHandlerBase
     {
         public static IEnumerable<IJsonRpcHandler> Enumerate(RequestHandlers handlers)
         {
@@ -23,37 +24,15 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
         }
 
         private readonly Mef.IRequestHandler<CodeStructureRequest, CodeStructureResponse> _codeStructureHandler;
-
-        private static readonly IDictionary<string, SymbolKind> Kinds = new Dictionary<string, SymbolKind>
-        {
-            { OmniSharp.Models.V2.SymbolKinds.Class, SymbolKind.Class },
-            { OmniSharp.Models.V2.SymbolKinds.Delegate, SymbolKind.Class },
-            { OmniSharp.Models.V2.SymbolKinds.Enum, SymbolKind.Enum },
-            { OmniSharp.Models.V2.SymbolKinds.Interface, SymbolKind.Interface },
-            { OmniSharp.Models.V2.SymbolKinds.Struct, SymbolKind.Struct },
-            { OmniSharp.Models.V2.SymbolKinds.Constant, SymbolKind.Constant },
-            { OmniSharp.Models.V2.SymbolKinds.Destructor, SymbolKind.Method },
-            { OmniSharp.Models.V2.SymbolKinds.EnumMember, SymbolKind.EnumMember },
-            { OmniSharp.Models.V2.SymbolKinds.Event, SymbolKind.Event },
-            { OmniSharp.Models.V2.SymbolKinds.Field, SymbolKind.Field },
-            { OmniSharp.Models.V2.SymbolKinds.Indexer, SymbolKind.Property },
-            { OmniSharp.Models.V2.SymbolKinds.Method, SymbolKind.Method },
-            { OmniSharp.Models.V2.SymbolKinds.Operator, SymbolKind.Operator },
-            { OmniSharp.Models.V2.SymbolKinds.Property, SymbolKind.Property },
-            { OmniSharp.Models.V2.SymbolKinds.Namespace, SymbolKind.Namespace },
-            { OmniSharp.Models.V2.SymbolKinds.Unknown, SymbolKind.Class },
-        };
+        private readonly DocumentSelector _documentSelector;
 
         public OmniSharpDocumentSymbolHandler(Mef.IRequestHandler<CodeStructureRequest, CodeStructureResponse> codeStructureHandler, DocumentSelector documentSelector)
-            : base(new TextDocumentRegistrationOptions()
-            {
-                DocumentSelector = documentSelector
-            })
         {
             _codeStructureHandler = codeStructureHandler;
+            _documentSelector = documentSelector;
         }
 
-        public async override Task<SymbolInformationOrDocumentSymbolContainer> Handle(DocumentSymbolParams request, CancellationToken token)
+        public override async Task<SymbolInformationOrDocumentSymbolContainer> Handle(DocumentSymbolParams request, CancellationToken token)
         {
             var omnisharpRequest = new CodeStructureRequest()
             {
@@ -76,10 +55,18 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             return new DocumentSymbol
             {
                 Name = node.Name,
-                Kind = Kinds.ContainsKey(node.Kind) ? Kinds[node.Kind] : SymbolKind.Class,
+                Kind = Helpers.ToSymbolKind(node.Kind),
                 Range = Helpers.ToRange(node.Ranges[OmniSharp.Models.V2.SymbolRangeNames.Full]),
                 SelectionRange = Helpers.ToRange(node.Ranges[OmniSharp.Models.V2.SymbolRangeNames.Name]),
                 Children = new Container<DocumentSymbol>(node.Children?.Select(ToDocumentSymbol) ?? Enumerable.Empty<DocumentSymbol>())
+            };
+        }
+
+        protected override DocumentSymbolRegistrationOptions CreateRegistrationOptions(DocumentSymbolCapability capability, ClientCapabilities clientCapabilities)
+        {
+            return new DocumentSymbolRegistrationOptions()
+            {
+                DocumentSelector = _documentSelector
             };
         }
     }

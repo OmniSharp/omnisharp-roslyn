@@ -4,41 +4,38 @@ using System.Threading;
 using System.Threading.Tasks;
 using OmniSharp.Extensions.JsonRpc;
 using OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities;
+using OmniSharp.Extensions.LanguageServer.Protocol.Document;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
-using OmniSharp.Extensions.LanguageServer.Protocol.Server;
-using OmniSharp.Models.TypeLookup;
+using OmniSharp.Models;
 
 namespace OmniSharp.LanguageServerProtocol.Handlers
 {
-    class OmniSharpHoverHandler : HoverHandler
+    class OmniSharpHoverHandler : HoverHandlerBase
     {
         public static IEnumerable<IJsonRpcHandler> Enumerate(RequestHandlers handlers)
         {
             foreach (var (selector, handler) in handlers
-                .OfType<Mef.IRequestHandler<TypeLookupRequest, TypeLookupResponse>>())
+                .OfType<Mef.IRequestHandler<QuickInfoRequest, QuickInfoResponse>>())
                 if (handler != null)
                     yield return new OmniSharpHoverHandler(handler, selector);
         }
 
-        private readonly Mef.IRequestHandler<TypeLookupRequest, TypeLookupResponse> _definitionHandler;
+        private readonly Mef.IRequestHandler<QuickInfoRequest, QuickInfoResponse> _definitionHandler;
+        private readonly DocumentSelector _documentSelector;
 
-        public OmniSharpHoverHandler(Mef.IRequestHandler<TypeLookupRequest, TypeLookupResponse> definitionHandler, DocumentSelector documentSelector)
-            : base(new TextDocumentRegistrationOptions()
-            {
-                DocumentSelector = documentSelector
-            })
+        public OmniSharpHoverHandler(Mef.IRequestHandler<QuickInfoRequest, QuickInfoResponse> definitionHandler, DocumentSelector documentSelector)
         {
             _definitionHandler = definitionHandler;
+            _documentSelector = documentSelector;
         }
 
-        public async override Task<Hover> Handle(HoverParams request, CancellationToken token)
+        public override async Task<Hover> Handle(HoverParams request, CancellationToken token)
         {
-            var omnisharpRequest = new TypeLookupRequest()
+            var omnisharpRequest = new QuickInfoRequest()
             {
                 FileName = Helpers.FromUri(request.TextDocument.Uri),
                 Column = Convert.ToInt32(request.Position.Character),
                 Line = Convert.ToInt32(request.Position.Line),
-                IncludeDocumentation = true
             };
 
             var omnisharpResponse = await _definitionHandler.Handle(omnisharpRequest);
@@ -47,7 +44,15 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             {
                 // TODO: Range?  We don't currently have that!
                 // Range =
-                Contents = new MarkedStringsOrMarkupContent(new MarkedStringContainer(Helpers.EscapeMarkdown(omnisharpResponse.Type), Helpers.EscapeMarkdown(omnisharpResponse.Documentation)))
+                Contents = new MarkedStringsOrMarkupContent(new MarkupContent() { Value = omnisharpResponse.Markdown, Kind = MarkupKind.Markdown })
+            };
+        }
+
+        protected override HoverRegistrationOptions CreateRegistrationOptions(HoverCapability capability, ClientCapabilities clientCapabilities)
+        {
+            return new HoverRegistrationOptions()
+            {
+                DocumentSelector = _documentSelector
             };
         }
     }

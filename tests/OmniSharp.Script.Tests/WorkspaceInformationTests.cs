@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Scripting.Hosting;
 using OmniSharp.Models.FilesChanged;
 using OmniSharp.Models.WorkspaceInformation;
@@ -19,7 +20,7 @@ namespace OmniSharp.Script.Tests
         private static Dictionary<string, string> s_netCoreScriptingConfiguration = new Dictionary<string, string>
         {
             ["script:enableScriptNuGetReferences"] = "true",
-            ["script:defaultTargetFramework"] = "netcoreapp2.1"
+            ["script:defaultTargetFramework"] = "netcoreapp3.1"
         };
 
         public WorkspaceInformationTests(ITestOutputHelper output)

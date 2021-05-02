@@ -110,7 +110,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
                 var result = await host.RequestCodeCheckAsync("testFile_66.cs");
 
-                Assert.Contains(result.QuickFixes.OfType<DiagnosticLocation>(), f => f.Text.Contains(testAnalyzerRef.Id.ToString()));
+                Assert.Contains(result.QuickFixes.OfType<DiagnosticLocation>(), f => f.Id == testAnalyzerRef.Id.ToString());
             }
         }
 
@@ -129,9 +129,9 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
                 AddProjectWitFile(host, testFile);
 
-                var result = await host.RequestCodeCheckAsync();
+                var result = await host.RequestCodeCheckAsync(testFile.FileName);
 
-                Assert.Contains(result.QuickFixes.Where(x => x.FileName == testFile.FileName), f => f.Text.Contains("CS"));
+                Assert.Contains(result.QuickFixes.OfType<DiagnosticLocation>().Where(x => x.FileName == testFile.FileName), f => f.Id.Contains("CS"));
             }
         }
 
@@ -155,9 +155,9 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
                 host.Workspace.UpdateDiagnosticOptionsForProject(projectId, testRules.ToImmutableDictionary());
 
-                var result = await host.RequestCodeCheckAsync();
+                var result = await host.RequestCodeCheckAsync(testFile.FileName);
 
-                Assert.Contains(result.QuickFixes.OfType<DiagnosticLocation>(), f => f.Text.Contains("CS0162") && f.LogLevel == "Hidden");
+                Assert.Contains(result.QuickFixes.OfType<DiagnosticLocation>(), f => f.Id == "CS0162" && f.LogLevel == "Hidden");
             }
         }
 
@@ -178,7 +178,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 var result = await host.RequestCodeCheckAsync("testFile_2.cs");
 
                 var bar = result.QuickFixes.ToList();
-                Assert.Contains(result.QuickFixes.OfType<DiagnosticLocation>(), f => f.Text.Contains(testAnalyzerRef.Id.ToString()) && f.LogLevel == "Hidden");
+                Assert.Contains(result.QuickFixes.OfType<DiagnosticLocation>(), f => f.Id == testAnalyzerRef.Id.ToString() && f.LogLevel == "Hidden");
             }
         }
 
@@ -207,7 +207,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 host.Workspace.UpdateDiagnosticOptionsForProject(projectId, testRules.ToImmutableDictionary());
 
                 var result = await host.RequestCodeCheckAsync("testFile_3.cs");
-                Assert.DoesNotContain(result.QuickFixes, f => f.Text.Contains(testAnalyzerRef.Id.ToString()));
+                Assert.DoesNotContain(result.QuickFixes.OfType<DiagnosticLocation>(), f => f.Id == testAnalyzerRef.Id.ToString());
             }
         }
 
@@ -227,7 +227,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 host.Workspace.UpdateDiagnosticOptionsForProject(projectId, testRules.ToImmutableDictionary());
 
                 var result = await host.RequestCodeCheckAsync("testFile_4.cs");
-                Assert.Contains(result.QuickFixes, f => f.Text.Contains(testAnalyzerRef.Id.ToString()));
+                Assert.Contains(result.QuickFixes.OfType<DiagnosticLocation>(), f => f.Id == testAnalyzerRef.Id.ToString());
             }
         }
 
@@ -254,7 +254,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 Assert.True(workspaceUpdatedCheck.WaitOne(timeout: TimeSpan.FromSeconds(15)));
 
                 var result = await host.RequestCodeCheckAsync("testFile_4.cs");
-                Assert.DoesNotContain(result.QuickFixes, f => f.Text.Contains(testAnalyzerRef.Id.ToString()));
+                Assert.DoesNotContain(result.QuickFixes.OfType<DiagnosticLocation>(), f => f.Id == testAnalyzerRef.Id.ToString());
             }
         }
 
@@ -266,7 +266,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             return TestHelpers.AddProjectToWorkspace(
                             host.Workspace,
                             "project.csproj",
-                            new[] { "netcoreapp2.1" },
+                            new[] { "netcoreapp3.1" },
                             new[] { testFile },
                             analyzerRefs: analyzerReferences)
                     .Single();

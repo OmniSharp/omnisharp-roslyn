@@ -7,6 +7,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.FindSymbols;
 using Microsoft.CodeAnalysis.Rename;
 using Microsoft.CodeAnalysis.Text;
+using OmniSharp.Extensions;
 using OmniSharp.Mef;
 using OmniSharp.Models;
 using OmniSharp.Models.Rename;
@@ -33,7 +34,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
             if (document != null)
             {
                 var sourceText = await document.GetTextAsync();
-                var position = sourceText.Lines.GetPosition(new LinePosition(request.Line, request.Column));
+                var position = sourceText.GetTextPosition(request);
 
                 var symbol = await SymbolFinder.FindSymbolAtPositionAsync(document, position);
                 Solution solution = _workspace.CurrentSolution;

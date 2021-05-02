@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -44,7 +45,7 @@ namespace OmniSharp.Cake.Tests
                 }";
 
             var refactorings = await FindRefactoringNamesAsync(code);
-            Assert.Contains("Extract Method", refactorings);
+            Assert.Contains("Extract method", refactorings);
         }
 
         [Fact]
@@ -64,7 +65,8 @@ namespace OmniSharp.Cake.Tests
             {
                 "using System.Text.RegularExpressions;",
                 "System.Text.RegularExpressions.Regex",
-                "Extract Method",
+                "Extract method",
+                "Extract local function",
                 "Introduce local for 'Regex.Match(\"foo\", \"bar\")'"
             };
             Assert.Equal(expected, refactorings);
@@ -91,7 +93,7 @@ namespace OmniSharp.Cake.Tests
                 EndColumn = 8
             };
 
-            var response = await RunRefactoringAsync(code, "Extract Method");
+            var response = await RunRefactoringAsync(code, "Extract method");
             var modifiedFile = response.Changes.FirstOrDefault() as ModifiedFileResponse;
 
             Assert.Single(response.Changes);
@@ -119,9 +121,9 @@ namespace OmniSharp.Cake.Tests
         private async Task<RunCodeActionResponse> RunRefactoringAsync(string code, string refactoringName)
         {
             var refactorings = await FindRefactoringsAsync(code);
-            Assert.Contains(refactoringName, refactorings.Select(a => a.Name));
+            Assert.Contains(refactoringName, refactorings.Select(x => x.Name), StringComparer.OrdinalIgnoreCase);
 
-            var identifier = refactorings.First(action => action.Name.Equals(refactoringName)).Identifier;
+            var identifier = refactorings.First(action => action.Name.Equals(refactoringName, StringComparison.OrdinalIgnoreCase)).Identifier;
             return await RunRefactoringsAsync(code, identifier);
         }
 

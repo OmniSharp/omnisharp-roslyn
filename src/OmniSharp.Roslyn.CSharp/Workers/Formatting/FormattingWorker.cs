@@ -1,17 +1,19 @@
+#nullable enable
+
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Formatting;
-using Microsoft.CodeAnalysis.Options;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.Extensions.Logging;
-using Microsoft.VisualStudio.CodingConventions;
+using OmniSharp.Extensions;
 using OmniSharp.Models;
 using OmniSharp.Options;
-using OmniSharp.Roslyn.CSharp.Services.Formatting.EditorConfig;
+using OmniSharp.Roslyn.DocumentationComments;
 using OmniSharp.Roslyn.Utilities;
 
 namespace OmniSharp.Roslyn.CSharp.Workers.Formatting
@@ -20,22 +22,17 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Formatting
     {
         public static async Task<IEnumerable<LinePositionSpanTextChange>> GetFormattingChangesAfterKeystroke(Document document, int position, char character, OmniSharpOptions omnisharpOptions, ILoggerFactory loggerFactory)
         {
-            if (character == '\n')
+            if (await GetDocumentationCommentChanges(document, position, character, omnisharpOptions) is LinePositionSpanTextChange change)
             {
-                // format previous line on new line
-                var text = await document.GetTextAsync();
-                var lines = text.Lines;
-                var targetLine = lines[lines.GetLineFromPosition(position).LineNumber - 1];
-                if (!string.IsNullOrWhiteSpace(targetLine.Text.ToString(targetLine.Span)))
-                {
-                    return await GetFormattingChanges(document, targetLine.Start, targetLine.End, omnisharpOptions, loggerFactory);
-                }
+                return new[] { change };
             }
-            else if (character == '}' || character == ';')
+
+            if (character == '}' || character == ';')
             {
                 // format after ; and }
                 var root = await document.GetSyntaxRootAsync();
-                var node = FindFormatTarget(root, position);
+                Debug.Assert(root != null);
+                var node = FindFormatTarget(root!, position);
                 if (node != null)
                 {
                     return await GetFormattingChanges(document, node.FullSpan.Start, node.FullSpan.End, omnisharpOptions, loggerFactory);
@@ -45,7 +42,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Formatting
             return Enumerable.Empty<LinePositionSpanTextChange>();
         }
 
-        public static SyntaxNode FindFormatTarget(SyntaxNode root, int position)
+        public static SyntaxNode? FindFormatTarget(SyntaxNode root, int position)
         {
             // todo@jo - refine this
             var token = root.FindToken(position);
@@ -84,33 +81,72 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Formatting
 
         public static async Task<IEnumerable<LinePositionSpanTextChange>> GetFormattingChanges(Document document, int start, int end, OmniSharpOptions omnisharpOptions, ILoggerFactory loggerFactory)
         {
-            var optionSet = omnisharpOptions.FormattingOptions.EnableEditorConfigSupport
-                ? await document.Project.Solution.Workspace.Options.WithEditorConfigOptions(document.FilePath, loggerFactory)
-                : document.Project.Solution.Workspace.Options;
-            var newDocument = await Formatter.FormatAsync(document, TextSpan.FromBounds(start, end), optionSet);
-
+            var newDocument = await FormatDocument(document, omnisharpOptions, loggerFactory, TextSpan.FromBounds(start, end));
             return await TextChanges.GetAsync(newDocument, document);
         }
 
         public static async Task<string> GetFormattedText(Document document, OmniSharpOptions omnisharpOptions, ILoggerFactory loggerFactory)
         {
-            var optionSet = omnisharpOptions.FormattingOptions.EnableEditorConfigSupport
-                ? await document.Project.Solution.Workspace.Options.WithEditorConfigOptions(document.FilePath, loggerFactory)
-                : document.Project.Solution.Workspace.Options;
-            var newDocument = await Formatter.FormatAsync(document, optionSet);
+            var newDocument = await FormatDocument(document, omnisharpOptions, loggerFactory);
             var text = await newDocument.GetTextAsync();
-
             return text.ToString();
         }
 
         public static async Task<IEnumerable<LinePositionSpanTextChange>> GetFormattedTextChanges(Document document, OmniSharpOptions omnisharpOptions, ILoggerFactory loggerFactory)
         {
-            var optionSet = omnisharpOptions.FormattingOptions.EnableEditorConfigSupport
-                ? await document.Project.Solution.Workspace.Options.WithEditorConfigOptions(document.FilePath, loggerFactory)
-                : document.Project.Solution.Workspace.Options;
-            var newDocument = await Formatter.FormatAsync(document, optionSet);
-
+            var newDocument = await FormatDocument(document, omnisharpOptions, loggerFactory);
             return await TextChanges.GetAsync(newDocument, document);
+        }
+
+        private static async Task<Document> FormatDocument(Document document, OmniSharpOptions omnisharpOptions, ILoggerFactory loggerFactory, TextSpan? textSpan = null)
+        {
+            // If we are not using .editorconfig for formatting options then we can avoid any overhead of calculating document options.
+            var optionSet = omnisharpOptions.FormattingOptions.EnableEditorConfigSupport
+                ? await document.GetOptionsAsync()
+                : document.Project.Solution.Options;
+
+            var newDocument = textSpan != null ? await Formatter.FormatAsync(document, textSpan.Value, optionSet) : await Formatter.FormatAsync(document, optionSet);
+            if (omnisharpOptions.FormattingOptions.OrganizeImports)
+            {
+                newDocument = await Formatter.OrganizeImportsAsync(newDocument);
+            }
+
+            return newDocument;
+        }
+
+        private static async Task<LinePositionSpanTextChange?> GetDocumentationCommentChanges(Document document, int position, char character, OmniSharpOptions omnisharpOptions)
+        {
+            if (character != '\n' && character != '/')
+            {
+                return null;
+            }
+
+            var text = await document.GetTextAsync();
+            var syntaxTree = await document.GetSyntaxTreeAsync();
+
+            var optionSet = await document.GetOptionsAsync();
+
+            var documentationService = document.GetDocumentationCommentSnippetService();
+            var snippet = character == '\n' ?
+                documentationService.GetDocumentationCommentSnippetOnEnterTyped(syntaxTree!, text, position, optionSet, CancellationToken.None) :
+                documentationService.GetDocumentationCommentSnippetOnCharacterTyped(syntaxTree!, text, position, optionSet, CancellationToken.None);
+
+            if (snippet == null)
+            {
+                return null;
+            }
+            else
+            {
+                var range = text.GetRangeFromSpan(snippet.Value.SpanToReplace);
+                return new LinePositionSpanTextChange
+                {
+                    NewText = snippet.Value.SnippetText,
+                    StartLine = range.Start.Line,
+                    StartColumn = range.Start.Column,
+                    EndLine = range.End.Line,
+                    EndColumn = range.End.Column
+                };
+            }
         }
     }
 }

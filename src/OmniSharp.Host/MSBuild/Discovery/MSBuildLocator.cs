@@ -36,24 +36,38 @@ namespace OmniSharp.MSBuild.Discovery
         {
             if (RegisteredInstance != null)
             {
-                AppDomain.CurrentDomain.AssemblyResolve -= Resolve;
+                try
+                {
+                    AppDomain.CurrentDomain.AssemblyResolve -= Resolve;
+                }
+                catch (AppDomainUnloadedException){ } // Ignore if the AppDomain is going away (like during a test in xunit)
                 RegisteredInstance = null;
             }
         }
 
         public static MSBuildLocator CreateDefault(ILoggerFactory loggerFactory, IAssemblyLoader assemblyLoader, IConfiguration msbuildConfiguration)
-            => new MSBuildLocator(loggerFactory, assemblyLoader,
+        {
+            var useBundledOnly = msbuildConfiguration.GetValue<bool>("UseBundledOnly");
+            if (useBundledOnly)
+            {
+                var logger = loggerFactory.CreateLogger<MSBuildLocator>();
+                logger.LogInformation("Because 'UseBundledOnly' is enabled in the configuration, OmniSharp will only use the bundled MSBuild.");
+                return CreateStandAlone(loggerFactory, assemblyLoader);
+            }
+
+            return new MSBuildLocator(loggerFactory, assemblyLoader,
                 ImmutableArray.Create<MSBuildInstanceProvider>(
                     new DevConsoleInstanceProvider(loggerFactory),
                     new VisualStudioInstanceProvider(loggerFactory),
                     new MonoInstanceProvider(loggerFactory),
-                    new StandAloneInstanceProvider(loggerFactory, allowMonoPaths: true),
+                    new StandAloneInstanceProvider(loggerFactory),
                     new UserOverrideInstanceProvider(loggerFactory, msbuildConfiguration)));
+        }
 
-        public static MSBuildLocator CreateStandAlone(ILoggerFactory loggerFactory, IAssemblyLoader assemblyLoader, bool allowMonoPaths)
+        public static MSBuildLocator CreateStandAlone(ILoggerFactory loggerFactory, IAssemblyLoader assemblyLoader)
             => new MSBuildLocator(loggerFactory, assemblyLoader,
                 ImmutableArray.Create<MSBuildInstanceProvider>(
-                    new StandAloneInstanceProvider(loggerFactory, allowMonoPaths)));
+                    new StandAloneInstanceProvider(loggerFactory)));
 
         public void RegisterInstance(MSBuildInstance instance)
         {

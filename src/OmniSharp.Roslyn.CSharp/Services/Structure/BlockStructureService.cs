@@ -18,6 +18,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
     [OmniSharpHandler(OmniSharpEndpoints.V2.BlockStructure, LanguageNames.CSharp)]
     public class BlockStructureService : IRequestHandler<BlockStructureRequest, BlockStructureResponse>
     {
+        private const string PreprocessorRegion = nameof(PreprocessorRegion);
+
         private readonly IAssemblyLoader _loader;
         private readonly Lazy<Assembly> _featureAssembly;
         private readonly Lazy<Type> _blockStructureService;
@@ -83,11 +85,11 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
 
         private string ConvertToWellKnownBlockType(string kind)
         {
-            return kind == CodeFoldingBlockKinds.Comment ||
-                   kind == CodeFoldingBlockKinds.Imports ||
-                   kind == CodeFoldingBlockKinds.Region
+            return kind == CodeFoldingBlockKinds.Comment || kind == CodeFoldingBlockKinds.Imports
                 ? kind
-                : null;
+                : kind == PreprocessorRegion
+                    ? CodeFoldingBlockKinds.Region
+                    : null;
         }
     }
 }

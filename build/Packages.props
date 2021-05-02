@@ -1,90 +1,88 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
-  <PropertyGroup>
-    <MSBuildPackageVersion>16.0.461</MSBuildPackageVersion>
-    <NuGetPackageVersion>5.0.0</NuGetPackageVersion>
-    <RoslynPackageVersion>3.3.0-beta2-19401-05</RoslynPackageVersion>
-    <XunitPackageVersion>2.4.0</XunitPackageVersion>
-  </PropertyGroup>
+    <PropertyGroup>
+        <AspNetCorePackageVersion>2.1.1</AspNetCorePackageVersion>
+        <MicrosoftExtensionPackageVersion>3.1.12</MicrosoftExtensionPackageVersion>
+        <MSBuildPackageVersion>16.9.0</MSBuildPackageVersion>
+        <NuGetPackageVersion>5.2.0</NuGetPackageVersion>
+        <RoslynPackageVersion>3.10.0-1.21125.6</RoslynPackageVersion>
+        <XunitPackageVersion>2.4.1</XunitPackageVersion>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Update="Cake.Scripting.Transport" Version="0.3.0" />
+    <ItemGroup>
+        <PackageReference Update="Cake.Scripting.Transport" Version="0.6.4" />
 
-    <PackageReference Update="Dotnet.Script.DependencyModel" Version="0.6.1" />
-    <PackageReference Update="Dotnet.Script.DependencyModel.NuGet" Version="0.6.2" />
+        <PackageReference Update="Dotnet.Script.DependencyModel" Version="1.1.0" />
+        <PackageReference Update="Dotnet.Script.DependencyModel.NuGet" Version="1.1.0" />
+        <PackageReference Update="ICSharpCode.Decompiler" Version="7.0.0.6488" />
 
-    <PackageReference Update="Humanizer" Version="2.2.0" />
-    <PackageReference Update="McMaster.Extensions.CommandLineUtils" Version="2.2.4" />
+        <PackageReference Update="McMaster.Extensions.CommandLineUtils" Version="2.2.4" />
 
-    <PackageReference Update="Microsoft.AspNetCore.Diagnostics" Version="2.1.1" />
-    <PackageReference Update="Microsoft.AspNetCore.Hosting" Version="2.1.1" />
-    <PackageReference Update="Microsoft.AspNetCore.Http.Features" Version="2.1.1" />
-    <PackageReference Update="Microsoft.AspNetCore.Server.Kestrel" Version="2.1.1" />
+        <PackageReference Update="Microsoft.AspNetCore.Diagnostics" Version="$(AspNetCorePackageVersion)" />
+        <PackageReference Update="Microsoft.AspNetCore.Hosting" Version="$(AspNetCorePackageVersion)" />
+        <PackageReference Update="Microsoft.AspNetCore.Http.Features" Version="$(AspNetCorePackageVersion)" />
+        <PackageReference Update="Microsoft.AspNetCore.Server.Kestrel" Version="$(AspNetCorePackageVersion)" />
 
-    <PackageReference Update="Microsoft.Build" Version="$(MSBuildPackageVersion)" />
-    <PackageReference Update="Microsoft.Build.Framework" Version="$(MSBuildPackageVersion)" />
-    <PackageReference Update="Microsoft.Build.Tasks.Core" Version="$(MSBuildPackageVersion)" />
-    <PackageReference Update="Microsoft.Build.Utilities.Core" Version="$(MSBuildPackageVersion)" />
+        <PackageReference Update="Microsoft.Build" Version="$(MSBuildPackageVersion)" />
+        <PackageReference Update="Microsoft.Build.Framework" Version="$(MSBuildPackageVersion)" />
+        <PackageReference Update="Microsoft.Build.Tasks.Core" Version="$(MSBuildPackageVersion)" />
+        <PackageReference Update="Microsoft.Build.Utilities.Core" Version="$(MSBuildPackageVersion)" />
 
-    <PackageReference Update="Microsoft.CodeAnalysis.Common" Version="$(RoslynPackageVersion)" />
-    <PackageReference Update="Microsoft.CodeAnalysis.CSharp" Version="$(RoslynPackageVersion)" />
-    <PackageReference Update="Microsoft.CodeAnalysis.CSharp.Features" Version="$(RoslynPackageVersion)" />
-    <PackageReference Update="Microsoft.CodeAnalysis.CSharp.Scripting" Version="$(RoslynPackageVersion)" />
-    <PackageReference Update="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="$(RoslynPackageVersion)" />
-    <PackageReference Update="Microsoft.CodeAnalysis.Workspaces.Common" Version="$(RoslynPackageVersion)" />
+        <PackageReference Update="Microsoft.CodeAnalysis.Common" Version="$(RoslynPackageVersion)" />
+        <PackageReference Update="Microsoft.CodeAnalysis.CSharp" Version="$(RoslynPackageVersion)" />
+        <PackageReference Update="Microsoft.CodeAnalysis.CSharp.Features" Version="$(RoslynPackageVersion)" />
+        <PackageReference Update="Microsoft.CodeAnalysis.CSharp.Scripting" Version="$(RoslynPackageVersion)" />
+        <PackageReference Update="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="$(RoslynPackageVersion)" />
+        <PackageReference Update="Microsoft.CodeAnalysis.Workspaces.Common" Version="$(RoslynPackageVersion)" />
 
-    <PackageReference Update="Microsoft.Extensions.Caching.Memory" Version="2.1.1" />
-    <PackageReference Update="Microsoft.Extensions.Configuration" Version="2.1.1" />
-    <PackageReference Update="Microsoft.Extensions.Configuration.Binder" Version="2.1.1" />
-    <PackageReference Update="Microsoft.Extensions.Configuration.CommandLine" Version="2.1.1" />
-    <PackageReference Update="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="2.1.1" />
-    <PackageReference Update="Microsoft.Extensions.Configuration.Json" Version="2.1.1" />
-    <PackageReference Update="Microsoft.Extensions.DependencyInjection" Version="2.1.1" />
-    <PackageReference Update="Microsoft.Extensions.DependencyModel" Version="2.1.0" />
-    <PackageReference Update="Microsoft.Extensions.FileProviders.Physical" Version="2.1.1" />
-    <PackageReference Update="Microsoft.Extensions.FileSystemGlobbing" Version="2.1.1" />
-    <PackageReference Update="Microsoft.Extensions.Logging" Version="2.1.1" />
-    <PackageReference Update="Microsoft.Extensions.Logging.Console" Version="2.1.1" />
-    <PackageReference Update="Microsoft.Extensions.Options" Version="2.1.1" />
-    <PackageReference Update="Microsoft.Extensions.Options.ConfigurationExtensions" Version="2.1.1" />
+        <PackageReference Update="Microsoft.Extensions.Caching.Memory" Version="$(MicrosoftExtensionPackageVersion)" />
+        <PackageReference Update="Microsoft.Extensions.Configuration" Version="$(MicrosoftExtensionPackageVersion)" />
+        <PackageReference Update="Microsoft.Extensions.Configuration.Binder" Version="$(MicrosoftExtensionPackageVersion)" />
+        <PackageReference Update="Microsoft.Extensions.Configuration.CommandLine" Version="$(MicrosoftExtensionPackageVersion)" />
+        <PackageReference Update="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="$(MicrosoftExtensionPackageVersion)" />
+        <PackageReference Update="Microsoft.Extensions.Configuration.Json" Version="$(MicrosoftExtensionPackageVersion)" />
+        <PackageReference Update="Microsoft.Extensions.DependencyInjection" Version="$(MicrosoftExtensionPackageVersion)" />
+        <PackageReference Update="Microsoft.Extensions.DependencyModel" Version="3.1.6" />
+        <PackageReference Update="Microsoft.Extensions.FileProviders.Physical" Version="$(MicrosoftExtensionPackageVersion)" />
+        <PackageReference Update="Microsoft.Extensions.FileSystemGlobbing" Version="$(MicrosoftExtensionPackageVersion)" />
+        <PackageReference Update="Microsoft.Extensions.Logging" Version="$(MicrosoftExtensionPackageVersion)" />
+        <PackageReference Update="Microsoft.Extensions.Logging.Console" Version="$(MicrosoftExtensionPackageVersion)" />
+        <PackageReference Update="Microsoft.Extensions.Options" Version="$(MicrosoftExtensionPackageVersion)" />
+        <PackageReference Update="Microsoft.Extensions.Options.ConfigurationExtensions" Version="$(MicrosoftExtensionPackageVersion)" />
 
-    <PackageReference Update="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.0-preview.1" />
-    <PackageReference Update="Microsoft.NET.Test.Sdk" Version="15.7.2" />
-    <PackageReference Update="Microsoft.TestPlatform.TranslationLayer" Version="15.7.2" />
-    <PackageReference Update="Microsoft.VisualStudio.CodingConventions" Version="1.1.20180503.2" />
-    <PackageReference Update="Microsoft.VisualStudio.Setup.Configuration.Interop" Version="1.14.114" />
-    <PackageReference Update="Microsoft.VisualStudio.SDK.EmbedInteropTypes" Version="15.0.12" />
+        <PackageReference Update="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.0" />
+        <PackageReference Update="Microsoft.NET.Test.Sdk" Version="16.6.1" />
+        <PackageReference Update="Microsoft.TestPlatform.TranslationLayer" Version="16.6.1" />
+        <PackageReference Update="Microsoft.VisualStudio.Setup.Configuration.Interop" Version="1.14.114" />
+        <PackageReference Update="Microsoft.VisualStudio.SDK.EmbedInteropTypes" Version="15.0.12" />
 
-    <PackageReference Update="Newtonsoft.Json" Version="9.0.1" />
+        <PackageReference Update="Newtonsoft.Json" Version="12.0.3" />
 
-    <PackageReference Update="Nuget.Packaging" Version="$(NuGetPackageVersion)" />
-    <PackageReference Update="Nuget.Packaging.Core" Version="$(NuGetPackageVersion)" />
-    <PackageReference Update="Nuget.ProjectModel" Version="$(NuGetPackageVersion)" />
-    <PackageReference Update="Nuget.Versioning" Version="$(NuGetPackageVersion)" />
+        <PackageReference Update="NuGet.Packaging" Version="$(NuGetPackageVersion)" />
+        <PackageReference Update="NuGet.Packaging.Core" Version="$(NuGetPackageVersion)" />
+        <PackageReference Update="NuGet.ProjectModel" Version="$(NuGetPackageVersion)" />
+        <PackageReference Update="NuGet.Versioning" Version="$(NuGetPackageVersion)" />
 
-    <PackageReference Update="OmniSharp.Extensions.LanguageServer" Version="0.13.1" />
+        <PackageReference Update="OmniSharp.Extensions.LanguageServer" Version="0.19.0" />
+        <PackageReference Update="OmniSharp.Extensions.LanguageProtocol.Testing" Version="0.19.0" />
 
-    <PackageReference Update="SQLitePCLRaw.bundle_green" Version="1.1.2" />
-    <PackageReference Update="System.Collections.Immutable" Version="1.4.0" />
-    <PackageReference Update="System.ComponentModel.Composition" Version="4.5.0" />
-    <PackageReference Update="System.Composition" Version="1.0.31" />
-    <PackageReference Update="System.Reflection.DispatchProxy" Version="4.5.1" />
-    <PackageReference Update="System.Reflection.Metadata" Version="1.4.2" />
-    <PackageReference Update="System.Threading.Tasks.Dataflow" Version="4.9.0" />
-    <PackageReference Update="System.ValueTuple" Version="4.4.0" />
+        <PackageReference Update="SQLitePCLRaw.bundle_green" Version="2.0.4" />
+        <PackageReference Update="System.Collections.Immutable" Version="5.0.0" />
+        <PackageReference Update="System.ComponentModel.Composition" Version="4.5.0" />
+        <PackageReference Update="System.Composition" Version="1.0.31" />
+        <PackageReference Update="System.Reflection.Metadata" Version="5.0.0" />
+        <PackageReference Update="System.Threading.Tasks.Dataflow" Version="5.0.0" />
+        <PackageReference Update="System.ValueTuple" Version="4.5.0" />
 
-    <PackageReference Update="System.Reactive" Version="4.1.2" />
+        <PackageReference Update="System.Reactive" Version="4.4.1" />
 
-    <PackageReference Update="System.Reflection.DispatchProxy" Version="4.5.1" />
+        <PackageReference Update="System.Reflection.DispatchProxy" Version="4.5.1" />
 
-    <PackageReference Update="xunit.runner.visualstudio" Version="$(XunitPackageVersion)" />
-    <PackageReference Update="xunit" Version="$(XunitPackageVersion)" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0-beta2-18618-05" PrivateAssets="All" />
-  </ItemGroup>
-
-
-
+        <PackageReference Update="xunit.runner.visualstudio" Version="2.4.3" />
+        <PackageReference Update="xunit" Version="$(XunitPackageVersion)" />
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
+    </ItemGroup>
 </Project>

@@ -5,24 +5,22 @@ using System.Threading;
 using System.Threading.Tasks;
 using OmniSharp.Extensions.JsonRpc;
 using OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities;
+using OmniSharp.Extensions.LanguageServer.Protocol.Document;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OmniSharp.Extensions.LanguageServer.Protocol.Server;
 using OmniSharp.Models.Rename;
 
 namespace OmniSharp.LanguageServerProtocol.Handlers
 {
-    internal class OmniSharpRenameHandler : RenameHandler
+    internal class OmniSharpRenameHandler : RenameHandlerBase
     {
         private readonly Mef.IRequestHandler<RenameRequest, RenameResponse> _renameHandler;
+        private readonly DocumentSelector _documentSelector;
 
         public OmniSharpRenameHandler(Mef.IRequestHandler<RenameRequest, RenameResponse> renameHandler, DocumentSelector documentSelector)
-            : base(new RenameRegistrationOptions()
-            {
-                DocumentSelector = documentSelector,
-                PrepareProvider = false
-            })
         {
             _renameHandler = renameHandler;
+            _documentSelector = documentSelector;
         }
 
         public static IEnumerable<IJsonRpcHandler> Enumerate(RequestHandlers handlers)
@@ -33,7 +31,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                     yield return new OmniSharpRenameHandler(handler, selector);
         }
 
-        public async override Task<WorkspaceEdit> Handle(RenameParams request, CancellationToken token)
+        public override async Task<WorkspaceEdit> Handle(RenameParams request, CancellationToken token)
         {
             var omnisharpRequest = new RenameRequest
             {
@@ -64,6 +62,15 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             return new WorkspaceEdit
             {
                 Changes = changes
+            };
+        }
+
+        protected override RenameRegistrationOptions CreateRegistrationOptions(RenameCapability capability, ClientCapabilities clientCapabilities)
+        {
+            return new RenameRegistrationOptions()
+            {
+                DocumentSelector = _documentSelector,
+                PrepareProvider = false
             };
         }
     }

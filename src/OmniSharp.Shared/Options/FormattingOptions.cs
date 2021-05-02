@@ -59,6 +59,8 @@ namespace OmniSharp.Options
             NewLineForClausesInQuery = true;
         }
 
+        public bool OrganizeImports { get; set; }
+
         public bool EnableEditorConfigSupport { get; set; }
 
         public string NewLine { get; set; }

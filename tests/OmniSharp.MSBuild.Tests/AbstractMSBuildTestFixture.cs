@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Composition.Hosting.Core;
 using Microsoft.CodeAnalysis;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Host.Services;
 using OmniSharp.MSBuild.Discovery;
@@ -22,11 +23,11 @@ namespace OmniSharp.MSBuild.Tests
         {
             _assemblyLoader = new AssemblyLoader(this.LoggerFactory);
             _analyzerAssemblyLoader = new AnalyzerAssemblyLoader();
-            _msbuildLocator = MSBuildLocator.CreateStandAlone(this.LoggerFactory, _assemblyLoader, allowMonoPaths: false);
+            _msbuildLocator = MSBuildLocator.CreateStandAlone(this.LoggerFactory, _assemblyLoader);
 
             // Some tests require MSBuild to be discovered early
             // to ensure that the Microsoft.Build.* assemblies can be located
-            _msbuildLocator.RegisterDefaultInstance(this.LoggerFactory.CreateLogger("MSBuildTests"));
+            _msbuildLocator.RegisterDefaultInstance(this.LoggerFactory.CreateLogger("MSBuildTests"), dotNetInfo: null);
         }
 
         public void Dispose()
@@ -35,7 +36,7 @@ namespace OmniSharp.MSBuild.Tests
         }
 
         protected OmniSharpTestHost CreateMSBuildTestHost(string path, IEnumerable<ExportDescriptorProvider> additionalExports = null,
-            IEnumerable<KeyValuePair<string, string>> configurationData = null)
+            IConfiguration configurationData = null)
         {
             var environment = new OmniSharpEnvironment(path, logLevel: LogLevel.Trace);
             var serviceProvider = TestServiceProvider.Create(this.TestOutput, environment, this.LoggerFactory, _assemblyLoader, _analyzerAssemblyLoader, _msbuildLocator,

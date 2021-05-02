@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using NuGet.Versioning;
 
 namespace OmniSharp.Services
@@ -16,13 +17,15 @@ namespace OmniSharp.Services
         public string OSPlatform { get; }
         public string RID { get; }
         public string BasePath { get; }
+        public SemanticVersion SdkVersion { get; }
+        public string SdksPath { get; }
 
         private DotNetInfo()
         {
             IsEmpty = true;
         }
 
-        private DotNetInfo(string version, string osName, string osVersion, string osPlatform, string rid, string basePath)
+        private DotNetInfo(string version, string osName, string osVersion, string osPlatform, string rid, string basePath, string sdkVersion, string sdksPath)
         {
             IsEmpty = false;
 
@@ -35,6 +38,11 @@ namespace OmniSharp.Services
             OSPlatform = osPlatform;
             RID = rid;
             BasePath = basePath;
+
+            SdkVersion = SemanticVersion.TryParse(sdkVersion, out var sdkValue)
+                ? sdkValue
+                : null;
+            SdksPath = sdksPath;
         }
 
         public static DotNetInfo Parse(List<string> lines)
@@ -50,6 +58,8 @@ namespace OmniSharp.Services
             var osPlatform = string.Empty;
             var rid = string.Empty;
             var basePath = string.Empty;
+            var sdkVersion = string.Empty;
+            var sdksPath = string.Empty;
 
             foreach (var line in lines)
             {
@@ -84,6 +94,17 @@ namespace OmniSharp.Services
                         basePath = value;
                     }
                 }
+                else if (string.IsNullOrEmpty(sdkVersion))
+                {
+                    var getSdkVersionAndPath = new Regex(@"^\s*(\d+\.\d+\.\d+)\s\[(.*)\]\s*$", RegexOptions.Multiline);
+                    var match = getSdkVersionAndPath.Match(line);
+
+                    if (match.Success)
+                    {
+                        sdkVersion = match.Groups[1].Value;
+                        sdksPath = match.Groups[2].Value;
+                    }
+                }
             }
 
             if (string.IsNullOrWhiteSpace(version) &&
@@ -91,12 +112,14 @@ namespace OmniSharp.Services
                 string.IsNullOrWhiteSpace(osVersion) &&
                 string.IsNullOrWhiteSpace(osPlatform) &&
                 string.IsNullOrWhiteSpace(rid) &&
-                string.IsNullOrWhiteSpace(basePath))
+                string.IsNullOrWhiteSpace(basePath) &&
+                string.IsNullOrWhiteSpace(sdkVersion) &&
+                string.IsNullOrWhiteSpace(sdksPath))
             {
                 return Empty;
             }
 
-            return new DotNetInfo(version, osName, osVersion, osPlatform, rid, basePath);
+            return new DotNetInfo(version, osName, osVersion, osPlatform, rid, basePath, sdkVersion, sdksPath);
         }
     }
 }

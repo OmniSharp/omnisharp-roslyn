@@ -3,10 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Serialization;
 using OmniSharp.Extensions.JsonRpc;
 using OmniSharp.Extensions.LanguageServer.Protocol;
 using OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities;
+using OmniSharp.Extensions.LanguageServer.Protocol.Document;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OmniSharp.Extensions.LanguageServer.Protocol.Server;
 using OmniSharp.Models;
@@ -15,7 +18,7 @@ using OmniSharp.Models.MembersTree;
 
 namespace OmniSharp.LanguageServerProtocol.Handlers
 {
-    internal sealed class OmniSharpCodeLensHandler : CodeLensHandler
+    internal sealed class OmniSharpCodeLensHandler : CodeLensHandlerBase
     {
         public static IEnumerable<IJsonRpcHandler> Enumerate(RequestHandlers handlers)
         {
@@ -30,22 +33,19 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
 
         private readonly Mef.IRequestHandler<MembersTreeRequest, FileMemberTree> _membersAsTreeHandler;
         private readonly Mef.IRequestHandler<FindUsagesRequest, QuickFixResponse> _findUsagesHandler;
+        private readonly DocumentSelector _documentSelector;
 
         public OmniSharpCodeLensHandler(
             Mef.IRequestHandler<MembersTreeRequest, FileMemberTree> membersAsTreeHandler,
             Mef.IRequestHandler<FindUsagesRequest, QuickFixResponse> findUsagesHandler,
             DocumentSelector documentSelector)
-            : base(new CodeLensRegistrationOptions()
-            {
-                DocumentSelector = documentSelector,
-                ResolveProvider = true
-            })
         {
             _membersAsTreeHandler = membersAsTreeHandler;
             _findUsagesHandler = findUsagesHandler;
+            _documentSelector = documentSelector;
         }
 
-        public async override Task<CodeLensContainer> Handle(CodeLensParams request, CancellationToken token)
+        public override async Task<CodeLensContainer> Handle(CodeLensParams request, CancellationToken token)
         {
             var omnisharpRequest = new MembersTreeRequest()
             {
@@ -63,13 +63,13 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             return codeLenseContainer;
         }
 
-        public async override Task<CodeLens> Handle(CodeLens request, CancellationToken token)
+        public override async Task<CodeLens> Handle(CodeLens request, CancellationToken token)
         {
             var omnisharpRequest = new FindUsagesRequest
             {
                 FileName = Helpers.FromUri(request.Data.ToObject<Uri>()),
-                Column = (int)request.Range.Start.Character,
-                Line = (int)request.Range.Start.Line,
+                Column = (int) request.Range.Start.Character,
+                Line = (int) request.Range.Start.Line,
                 OnlyThisFile = false,
                 ExcludeDefinition = true
             };
@@ -78,22 +78,39 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
 
             var length = omnisharpResponse?.QuickFixes?.Count() ?? 0;
 
-            request.Command = new Command
+            var jsonCamelCaseContract = new JsonSerializer
             {
-                Title = length == 1 ? "1 reference" : $"{length} references"
-                // TODO: Hook up command.
+                ContractResolver = new CamelCasePropertyNamesContractResolver()
             };
+
+            request = request with { Command = new Command
+            {
+                Title = length == 1 ? "1 reference" : $"{length} references",
+                Name = "omnisharp/client/findReferences",
+                Arguments = new JArray(
+                    new[]
+                    {
+                        JObject.FromObject(
+                            new Location
+                            {
+                                Uri = request.Data.ToObject<Uri>()!,
+                                Range = request.Range,
+                            },
+                            jsonCamelCaseContract)
+                    }),
+            } };
 
             return request;
         }
 
-        private static void ToCodeLens(TextDocumentIdentifier textDocument, FileMemberElement node, List<CodeLens> codeLensContainer)
+        private static void ToCodeLens(TextDocumentIdentifier textDocument, FileMemberElement node,
+            List<CodeLens> codeLensContainer)
         {
             var codeLens = new CodeLens
             {
-                Data = JToken.FromObject(string.IsNullOrEmpty(node.Location.FileName) ?
-                    textDocument.Uri :
-                    Helpers.ToUri(node.Location.FileName)),
+                Data = JToken.FromObject(string.IsNullOrEmpty(node.Location.FileName)
+                    ? textDocument.Uri
+                    : Helpers.ToUri(node.Location.FileName)),
                 Range = node.Location.ToRange()
             };
 
@@ -108,12 +125,13 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             }
         }
 
-        public override bool CanResolve(CodeLens value)
+        protected override CodeLensRegistrationOptions CreateRegistrationOptions(CodeLensCapability capability, ClientCapabilities clientCapabilities)
         {
-            var textDocumentUri = value.Data.ToObject<Uri>();
-
-            return textDocumentUri != null &&
-                GetRegistrationOptions().DocumentSelector.IsMatch(new TextDocumentAttributes(textDocumentUri, string.Empty));
+            return new CodeLensRegistrationOptions()
+            {
+                DocumentSelector = _documentSelector,
+                ResolveProvider = true
+            };
         }
     }
 }

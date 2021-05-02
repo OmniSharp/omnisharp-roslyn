@@ -2,11 +2,11 @@
 
 ## Windows
 
-In order to build OmniSharp, the [.NET 4.6 targeting pack](http://go.microsoft.com/fwlink/?LinkId=528261) must be installed if it isn't already.
+In order to build OmniSharp, the [.NET 4.7.2 targeting pack](https://dotnet.microsoft.com/download/dotnet-framework/thank-you/net472-developer-pack-offline-installer) must be installed if it isn't already.
 
 ## macOS
 
-**Mono 5.2.0** or greater is required. You can install this using the latest [.pkg](http://www.mono-project.com/download/#download-mac) or install it view [Homebrew](https://brew.sh/):
+**Mono 6.6.0** or greater is required. You can install this using the latest [.pkg](http://www.mono-project.com/download/#download-mac) or install it view [Homebrew](https://brew.sh/):
 
 ```
 brew update
@@ -16,9 +16,9 @@ brew install caskroom/cask/mono-mdk
 
 ## Linux
 
-Because OmniSharp uses the .NET Core SDK as part of the build, not all Linux distros are supported. A good rule of thumb is to check the list [here](https://www.microsoft.com/net/download/linux) to see if your particular distro is supported.
+Because OmniSharp uses the .NET Core SDK as part of the build, not all Linux distros are supported. A good rule of thumb is to check the list [here](https://docs.microsoft.com/dotnet/core/install/dependencies?pivots=os-linux) to see if your particular distro is supported.
 
-**Mono 5.2.0** or greater is required. Each distro or derivative has it's own set of instructions for installing Mono which you can find [here](http://www.mono-project.com/download/#download-lin). Be sure to install `msbuild` as well, which may be a separate package.
+**Mono 6.6.0** or greater is required. Each distro or derivative has its own set of instructions for installing Mono which you can find [here](http://www.mono-project.com/download/#download-lin). Be sure to install `msbuild` as well, which may be a separate package.
 
 # Usage
 
@@ -34,7 +34,7 @@ Note: The arguments below should prefixed with a single hyphen on Windows (Power
     Defaults to `Default`.
 
   `-configuration (Release|Debug)`: The configuration to build.
-    Defaults to `Release`.
+    Defaults to `Debug`.
 
   `-test-configuration (Release|Debug)`: The configuration to use for the unit tests.
     Defaults to `Debug`.
@@ -42,11 +42,11 @@ Note: The arguments below should prefixed with a single hyphen on Windows (Power
   `-install-path Path`: Path used for the **Install** target.
     Defaults to `(%USERPROFILE%|$HOME)/.omnisharp`
 
-  `-all-publish`: Publishes all platforms for the current OS. On Windows, specifying this argument would produce win7-x86 and win7-x64 builds. On OSX/Linux, this argument causes osx, linux-x86, and linux-x64 builds to be published.
+  `-publish-all`: Publishes all platforms for the current OS. On Windows, specifying this argument would produce win7-x86, win7-x64, and win10-arm64 builds. On OSX/Linux, this argument causes osx, linux-x86, and linux-x64 builds to be published.
 
   `-archive`: Enable the generation of publishable archives after a build.
 
-Note: On macOS/Linux, be sure to pass the arguments above with double slashes! (e.g. `--target TargetName`).
+Note: On macOS/Linux, be sure to pass the arguments above with a double hyphen! (e.g. `--target TargetName`).
 
 # Targets
 

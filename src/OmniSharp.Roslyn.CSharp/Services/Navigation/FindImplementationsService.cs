@@ -34,28 +34,35 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
             {
                 var semanticModel = await document.GetSemanticModelAsync();
                 var sourceText = await document.GetTextAsync();
-                var position = sourceText.Lines.GetPosition(new LinePosition(request.Line, request.Column));
+                var position = sourceText.GetTextPosition(request);
 
                 var quickFixes = new List<QuickFix>();
                 var symbol = await SymbolFinder.FindSymbolAtPositionAsync(semanticModel, position, _workspace);
 
-                // SymbolFinder.FindImplementationsAsync will not include the method overrides
-                var implementations = await SymbolFinder.FindImplementationsAsync(symbol, _workspace.CurrentSolution);
-                foreach (var implementation in implementations)
+                if (symbol == null)
                 {
-                    quickFixes.Add(implementation, _workspace);
-
-                    if (implementation.IsOverridable())
-                    {
-                        var overrides = await SymbolFinder.FindOverridesAsync(implementation, _workspace.CurrentSolution);
-                        quickFixes.AddRange(overrides, _workspace);
-                    }
+                    return response;
                 }
 
-                // for types also include derived classes
-                // for other symbols, find overrides and include those
-                if (symbol is INamedTypeSymbol namedTypeSymbol)
+                if (symbol.IsInterfaceType() || symbol.IsImplementableMember())
                 {
+                    // SymbolFinder.FindImplementationsAsync will not include the method overrides
+                    var implementations = await SymbolFinder.FindImplementationsAsync(symbol, _workspace.CurrentSolution);
+                    foreach (var implementation in implementations)
+                    {
+                        quickFixes.Add(implementation, _workspace);
+
+                        if (implementation.IsOverridable())
+                        {
+                            var overrides = await SymbolFinder.FindOverridesAsync(implementation, _workspace.CurrentSolution);
+                            quickFixes.AddRange(overrides, _workspace);
+                        }
+                    }
+                }
+                else if (symbol is INamedTypeSymbol namedTypeSymbol)
+                {
+                    // for types also include derived classes
+                    // for other symbols, find overrides and include those
                     var derivedTypes = await SymbolFinder.FindDerivedClassesAsync(namedTypeSymbol, _workspace.CurrentSolution);
                     quickFixes.AddRange(derivedTypes, _workspace);
                 }
