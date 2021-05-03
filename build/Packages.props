@@ -11,11 +11,12 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Update="Cake.Scripting.Transport" Version="0.3.0" />
+        <PackageReference Update="Cake.Scripting.Transport" Version="0.6.4" />
 
-        <PackageReference Update="Dotnet.Script.DependencyModel" Version="1.0.2" />
-        <PackageReference Update="Dotnet.Script.DependencyModel.NuGet" Version="1.0.1" />
-        <PackageReference Update="ICSharpCode.Decompiler" Version="7.0.0.6372-preview3" />
+        <PackageReference Update="Dotnet.Script.DependencyModel" Version="1.1.0" />
+        <PackageReference Update="Dotnet.Script.DependencyModel.NuGet" Version="1.1.0" />
+        <PackageReference Update="ICSharpCode.Decompiler" Version="7.0.0.6488" />
+
         <PackageReference Update="McMaster.Extensions.CommandLineUtils" Version="2.2.4" />
 
         <PackageReference Update="Microsoft.AspNetCore.Diagnostics" Version="$(AspNetCorePackageVersion)" />

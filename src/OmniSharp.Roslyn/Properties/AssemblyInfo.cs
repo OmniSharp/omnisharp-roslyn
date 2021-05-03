@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using OmniSharp;
+using System.Runtime.CompilerServices;
 
-[assembly: InternalsVisibleTo("OmniSharp.Roslyn.CSharp.Tests")]
+[assembly: InternalsVisibleTo("OmniSharp.Roslyn.CSharp.Tests" + OmniSharpPublicKey.Key)]
 
