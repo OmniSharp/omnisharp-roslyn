@@ -36,7 +36,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
             var document = await _workspace.GetDocumentFromFullProjectModelAsync(request.FileName);
             if (document == null)
             {
-                return null;
+                return new CodeStructureResponse();
             }
 
             var elements = await GetCodeElementsAsync(document);
