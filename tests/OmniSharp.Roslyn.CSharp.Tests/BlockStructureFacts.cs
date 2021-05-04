@@ -42,6 +42,21 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         }
 
         [Fact]
+        public async Task NonExistingFile()
+        {
+            var request = new BlockStructureRequest
+            {
+                FileName = "foo.cs"
+            };
+
+            var requestHandler = GetRequestHandler(SharedOmniSharpTestHost);
+            var response = await requestHandler.Handle(request);
+
+            Assert.NotNull(response);
+            Assert.Null(response.Spans);
+        }
+
+        [Fact]
         public async Task SupportsRegionBlocks()
         {
             var testFile = new TestFile("foo.cs", @"

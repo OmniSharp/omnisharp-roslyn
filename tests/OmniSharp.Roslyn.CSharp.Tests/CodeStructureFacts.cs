@@ -413,6 +413,21 @@ class C
             AssertRange(elementC.Children[15], testFile.Content, "nameThis", "name");
         }
 
+        [Fact]
+        public async Task NonExistingFile()
+        {
+            var request = new CodeStructureRequest
+            {
+                FileName = "foo.cs"
+            };
+
+            var requestHandler = GetRequestHandler(SharedOmniSharpTestHost);
+            var response = await requestHandler.Handle(request);
+
+            Assert.NotNull(response);
+            Assert.Null(response.Elements);
+        }
+
         private static void AssertRange(CodeElement elementC, TestContent content, string contentSpanName, string elementRangeName)
         {
             var span = Assert.Single(content.GetSpans(contentSpanName));
