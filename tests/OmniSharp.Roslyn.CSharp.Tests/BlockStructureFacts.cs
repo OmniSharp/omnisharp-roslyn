@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using OmniSharp.Models.V2;
@@ -46,14 +47,14 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         {
             var request = new BlockStructureRequest
             {
-                FileName = "foo.cs"
+                FileName = $"{Guid.NewGuid().ToString("N")}.cs"
             };
 
             var requestHandler = GetRequestHandler(SharedOmniSharpTestHost);
             var response = await requestHandler.Handle(request);
 
             Assert.NotNull(response);
-            Assert.Null(response.Spans);
+            Assert.Empty(response.Spans);
         }
 
         [Fact]

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using OmniSharp.Mef;
@@ -418,14 +419,14 @@ class C
         {
             var request = new CodeStructureRequest
             {
-                FileName = "foo.cs"
+                FileName = $"{Guid.NewGuid().ToString("N")}.cs"
             };
 
             var requestHandler = GetRequestHandler(SharedOmniSharpTestHost);
             var response = await requestHandler.Handle(request);
 
             Assert.NotNull(response);
-            Assert.Null(response.Elements);
+            Assert.Empty(response.Elements);
         }
 
         private static void AssertRange(CodeElement elementC, TestContent content, string contentSpanName, string elementRangeName)
