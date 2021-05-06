@@ -231,7 +231,7 @@ namespace OmniSharp.Host.Services
             string assemblyDirectory = CreateUniqueDirectoryForAssembly();
             string shadowCopyPath = CopyFileAndResources(originalPath, assemblyDirectory);
 
-            if (Interlocked.CompareExchange(ref _hookedAssemblyResolve, 0, 1) == 0)
+            if (Interlocked.CompareExchange(ref _hookedAssemblyResolve, value: 1, comparand: 0) == 0)
             {
                 AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
             }
