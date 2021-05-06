@@ -56,7 +56,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
             var document = await _workspace.GetDocumentFromFullProjectModelAsync(request.FileName);
             if (document == null)
             {
-                return null;
+                return new BlockStructureResponse { Spans = Array.Empty<CodeFoldingBlock>() };
             }
 
             var text = await document.GetTextAsync();

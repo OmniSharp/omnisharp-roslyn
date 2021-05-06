@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using OmniSharp.Mef;
@@ -411,6 +412,21 @@ class C
             AssertRange(elementC.Children[13], testFile.Content, "nameE2", "name");
             AssertRange(elementC.Children[14], testFile.Content, "nameE3", "name");
             AssertRange(elementC.Children[15], testFile.Content, "nameThis", "name");
+        }
+
+        [Fact]
+        public async Task NonExistingFile()
+        {
+            var request = new CodeStructureRequest
+            {
+                FileName = $"{Guid.NewGuid().ToString("N")}.cs"
+            };
+
+            var requestHandler = GetRequestHandler(SharedOmniSharpTestHost);
+            var response = await requestHandler.Handle(request);
+
+            Assert.NotNull(response);
+            Assert.Empty(response.Elements);
         }
 
         private static void AssertRange(CodeElement elementC, TestContent content, string contentSpanName, string elementRangeName)

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Composition;
 using System.Threading.Tasks;
@@ -36,7 +37,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
             var document = await _workspace.GetDocumentFromFullProjectModelAsync(request.FileName);
             if (document == null)
             {
-                return null;
+                return new CodeStructureResponse { Elements = Array.Empty<CodeElement>() };
             }
 
             var elements = await GetCodeElementsAsync(document);
