@@ -241,6 +241,7 @@ Task("CreateMSBuildFolder")
     {
         "Microsoft.Deployment.DotNet.Releases",
         "Microsoft.NET.StringTools",
+        "Newtonsoft.Json",
         "System.Threading.Tasks.Dataflow",
         "System.Resources.Extensions"
     };
@@ -250,7 +251,6 @@ Task("CreateMSBuildFolder")
     var msBuildSdkDependencies = new []
     {
         "Microsoft.Bcl.AsyncInterfaces",
-        "Newtonsoft.Json",
         "NuGet.Common",
         "NuGet.Configuration",
         "NuGet.DependencyResolver.Core",
