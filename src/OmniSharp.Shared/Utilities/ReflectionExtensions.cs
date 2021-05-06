@@ -67,6 +67,27 @@ namespace OmniSharp.Utilities
             });
         }
 
+        public static Lazy<MethodInfo> LazyGetProperty(this Lazy<Type> lazyType, string propertyName, bool getMethod)
+        {
+            if (lazyType == null)
+            {
+                throw new ArgumentNullException(nameof(lazyType));
+            }
+
+            return new(() =>
+            {
+                var type = lazyType.Value;
+                var propertyInfo = type.GetProperty(propertyName);
+
+                if (propertyInfo == null)
+                {
+                    throw new InvalidOperationException($"Could not get method '{propertyName}' on type '{type.FullName}'");
+                }
+
+                return getMethod ? propertyInfo.GetMethod : propertyInfo.SetMethod;
+            });
+        }
+
         public static MethodInfo GetMethod(this Lazy<Type> lazyType, string methodName)
         {
             if (lazyType == null)
