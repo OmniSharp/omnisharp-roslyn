@@ -16,6 +16,7 @@
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" PrivateAssets="All" />
     <PackageReference Include="Microsoft.CodeAnalysis.Common" />
     <PackageReference Include="Microsoft.CodeAnalysis.Workspaces.Common" />
+    <PackageReference Include="Microsoft.CodeAnalysis.ExternalAccess.OmniSharp" />
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" />
     <PackageReference Include="Microsoft.CodeAnalysis.Common" />
     <PackageReference Include="System.ComponentModel.Composition" />

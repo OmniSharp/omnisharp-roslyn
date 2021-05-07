@@ -19,7 +19,7 @@ namespace OmniSharp.Cake.Tests
 
         public CodeCheckFacts(ITestOutputHelper testOutput) : base(testOutput)
         {
-            _logger = LoggerFactory.CreateLogger<AutoCompleteFacts>();
+            _logger = LoggerFactory.CreateLogger<CodeCheckFacts>();
         }
 
         protected override string EndpointName => OmniSharpEndpoints.CodeCheck;
