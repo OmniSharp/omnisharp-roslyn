@@ -182,8 +182,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                 case CompletionListBuilder.ExtensionMethodImportCompletionProvider:
                 case CompletionListBuilder.TypeImportCompletionProvider:
                     var sourceText = await document.GetTextAsync();
-                    var typedSpan = completionService.GetDefaultCompletionListSpan(sourceText, position);
-                    var change = await completionService.GetChangeAsync(document, lastCompletionItem, typedSpan);
+                    var change = await completionService.GetChangeAsync(document, lastCompletionItem);
 
                     var additionalChanges = new List<LinePositionSpanTextChange>();
                     foreach (var textChange in change.TextChanges)
@@ -252,7 +251,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
             var changedText = sourceText.WithChanges(new TextChange(insertedSpan, request.Item.TextEdit.NewText));
             var changedDocument = document.WithText(changedText);
 
-            var finalChange = await completionService.GetChangeAsync(changedDocument, lastCompletionItem, new TextSpan(insertedSpan.Start, request.Item.TextEdit.NewText.Length));
+            var finalChange = await completionService.GetChangeAsync(changedDocument, lastCompletionItem);
             var finalText = changedText.WithChanges(finalChange.TextChange);
             var finalPosition = finalText.GetPointFromPosition(finalChange.NewPosition!.Value);
 

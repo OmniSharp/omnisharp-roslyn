@@ -15,7 +15,7 @@ namespace OmniSharp
         }
         public OmniSharpPickMembersResult PickMembers(string title, ImmutableArray<ISymbol> members, ImmutableArray<OmniSharpPickMembersOption> options = default, bool selectAll = true)
         {
-            return new OmniSharpPickMembersResult(members, options, selectAll);
+            return new OmniSharpPickMembersResult(members, options.IsDefault ? ImmutableArray<OmniSharpPickMembersOption>.Empty : options, selectAll);
         }
     }
 }
