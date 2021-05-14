@@ -6,7 +6,7 @@
         <MicrosoftExtensionPackageVersion>5.0.0</MicrosoftExtensionPackageVersion>
         <MicrosoftTestPackageVersion>16.9.4</MicrosoftTestPackageVersion>
         <MSBuildPackageVersion>16.9.0</MSBuildPackageVersion>
-        <NuGetPackageVersion>5.9.1</NuGetPackageVersion>
+        <NuGetPackageVersion>5.9.0</NuGetPackageVersion>
         <RoslynPackageVersion>3.10.0-3.final</RoslynPackageVersion>
         <XunitPackageVersion>2.4.1</XunitPackageVersion>
     </PropertyGroup>
