@@ -15,6 +15,7 @@ on:
   pull_request:
     branches:
       - master
+      - demo/*
     tags:
       - '*'
   workflow_dispatch:
