@@ -189,18 +189,6 @@ namespace OmniSharp.MSBuild.Tests
         }
 
         [Fact]
-        public async Task The_correct_sdk_version_is_emitted_NETCore2_1()
-        {
-            // Arrange
-            var emitter = new ProjectLoadTestEventEmitter();
-
-            using var testProject = await TestAssets.Instance.GetTestProjectAsync("NetCore21Project");
-            using var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory));
-            Assert.Single(emitter.ReceivedMessages);
-            Assert.Equal(GetHashedFileExtension("2.1.814"), emitter.ReceivedMessages[0].SdkVersion);
-        }
-
-        [Fact]
         public async Task The_correct_sdk_version_is_emitted_NETCore3_1()
         {
             // Arrange
