@@ -27,7 +27,7 @@ jobs:
       matrix:
         os: [ubuntu-18.04, windows-2019, macos-10.15]
         testProjects:
-          - OmniSharp.MSBuild.Tests,OmniSharp.Roslyn.CSharp.Tests,OmniSharp.Cake.Tests,OmniSharp.Script.Tests,OmniSharp.Stdio.Tests,OmniSharp.Http.Tests,OmniSharp.Tests,OmniSharp.Lsp.Tests
+          - OmniSharp.MSBuild.Tests,OmniSharp.Roslyn.CSharp.Tests,OmniSharp.Script.Tests,OmniSharp.Stdio.Tests,OmniSharp.Http.Tests,OmniSharp.Tests,OmniSharp.Lsp.Tests
           - OmniSharp.DotNetTest.Tests
     name: 'Test'
     steps:
