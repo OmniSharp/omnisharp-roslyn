@@ -484,8 +484,8 @@ Task("CreateMSBuildFolder")
         overwrite: true);
 
      FileHelper.Copy(
-        source: CombinePaths(env.Folders.Tools, "Microsoft.Net.HostModel", "lib", "netstandard2.0", "Microsoft.Net.HostModel.dll"),
-        destination: CombinePaths(msbuildCurrentBinTargetFolder, "Microsoft.Net.HostModel.dll"),
+        source: CombinePaths(env.Folders.Tools, "Microsoft.NET.HostModel", "lib", "netstandard2.0", "Microsoft.NET.HostModel.dll"),
+        destination: CombinePaths(msbuildCurrentBinTargetFolder, "Microsoft.NET.HostModel.dll"),
         overwrite: true);
 
      FileHelper.Copy(
