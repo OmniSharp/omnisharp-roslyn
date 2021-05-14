@@ -36,6 +36,22 @@ namespace OmniSharp.Utilities
             return builder.MoveToImmutable();
         }
 
+        public static ImmutableArray<TOut> SelectAsArray<TIn, TArg, TOut>(this ImmutableArray<TIn> array, TArg arg, Func<TIn, TArg, TOut> mapper)
+        {
+            if (array.IsDefaultOrEmpty)
+            {
+                return ImmutableArray<TOut>.Empty;
+            }
+
+            var builder = ImmutableArray.CreateBuilder<TOut>(array.Length);
+            foreach (var e in array)
+            {
+                builder.Add(mapper(e, arg));
+            }
+
+            return builder.MoveToImmutable();
+        }
+
         public static ImmutableArray<T> ToImmutableAndClear<T>(this ImmutableArray<T>.Builder builder)
         {
             if (builder.Capacity == builder.Count)

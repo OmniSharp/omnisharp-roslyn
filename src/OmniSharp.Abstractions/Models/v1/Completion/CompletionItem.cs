@@ -87,7 +87,12 @@ namespace OmniSharp.Models.v1.Completion
         /// <summary>
         /// Index in the completions list that this completion occurred.
         /// </summary>
-        public int Data { get; set; }
+        public (long CacheId, int Index) Data { get; set; }
+
+        /// <summary>
+        /// True if there is a post-insert step for this completion item for asynchronous completion support.
+        /// </summary>
+        public bool HasAfterInsertStep { get; set; }
 
         public override string ToString()
         {

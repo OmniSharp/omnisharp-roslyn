@@ -28,6 +28,8 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
 {
     class OmniSharpCompletionHandler : CompletionHandlerBase
     {
+        const string AfterInsertCommandName = "csharp.completion.afterInsert";
+
         public static IEnumerable<IJsonRpcHandler> Enumerate(RequestHandlers handlers)
         {
             foreach (var (selector, completionHandler, completionResolveHandler) in handlers
@@ -139,7 +141,10 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                 AdditionalTextEdits = omnisharpCompletionItem.AdditionalTextEdits is { } edits
                     ? TextEditContainer.From(edits.Select(e => Helpers.ToTextEdit(e)))
                     : null,
-                Data = JToken.FromObject(omnisharpCompletionItem.Data)
+                Data = JToken.FromObject(omnisharpCompletionItem.Data),
+                Command = omnisharpCompletionItem.HasAfterInsertStep
+                    ? Command.Create(AfterInsertCommandName)
+                    : null,
             };
 
         private OmnisharpCompletionItem ToOmnisharpCompletionItem(CompletionItem completionItem)
@@ -157,7 +162,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                 TextEdit = Helpers.FromTextEdit(completionItem.TextEdit!.TextEdit),
                 CommitCharacters = completionItem.CommitCharacters?.Select(i => i[0]).ToList(),
                 AdditionalTextEdits = completionItem.AdditionalTextEdits?.Select(e => Helpers.FromTextEdit(e)).ToList(),
-                Data = completionItem.Data!.ToObject<int>()
+                Data = completionItem.Data!.ToObject<(long, int)>()
             };
     }
 }

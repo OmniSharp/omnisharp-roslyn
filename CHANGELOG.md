@@ -1,6 +1,13 @@
 # Changelog
 All changes to the project will be documented in this file.
 
+## [1.37.8] - 2021-03-27
+* Support Solution filter (.slnf) (PR: [#2121](https://github.com/OmniSharp/omnisharp-roslyn/pull/2121))
+* updated to IL Spy 7.0.0.6372 (PR: [#2113](https://github.com/OmniSharp/omnisharp-roslyn/pull/2113))
+* Add sentinel file to MSBuild to enable workload resolver ([omnisharp-vscode#4417](https://github.com/OmniSharp/omnisharp-vscode/issues/4417), PR: [#2111](https://github.com/OmniSharp/omnisharp-roslyn/pull/2111))
+* fixed CS8605 "Unboxing possibly null value" (PR: [#2108](https://github.com/OmniSharp/omnisharp-roslyn/pull/2108))
+* fixed a 1.37.7 regression: added binding redirects for System.Threading.Tasks.Dataflow (PR: [#2107](https://github.com/OmniSharp/omnisharp-roslyn/pull/2107))
+
 ## [1.37.7] - 2021-03-04
 * Update Roslyn version to `3.10.0-1.21125.6` (PR: [#2105](https://github.com/OmniSharp/omnisharp-roslyn/pull/2105))
 * Update included build tools to closely match NET 6 Preview 1 SDK (PR: [#2103](https://github.com/OmniSharp/omnisharp-roslyn/pull/2103))

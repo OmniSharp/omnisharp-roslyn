@@ -34,6 +34,7 @@ namespace OmniSharp.MSBuild.ProjectFile
 
         public string Configuration => _data.Configuration;
         public string Platform => _data.Platform;
+        public string PlatformTarget => _data.PlatformTarget;
         public FrameworkName TargetFramework => _data.TargetFramework;
         public ImmutableArray<string> TargetFrameworks => _data.TargetFrameworks;
 

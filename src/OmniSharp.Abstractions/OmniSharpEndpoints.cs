@@ -49,6 +49,7 @@ namespace OmniSharp
 
         public const string Completion = "/completion";
         public const string CompletionResolve = "/completion/resolve";
+        public const string CompletionAfterInsert = "/completion/afterinsert";
 
         public static class V2
         {

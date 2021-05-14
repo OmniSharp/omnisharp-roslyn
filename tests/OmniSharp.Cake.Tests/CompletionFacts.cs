@@ -75,7 +75,7 @@ namespace OmniSharp.Cake.Tests
             {
                 var fileName = Path.Combine(testProject.Directory, "build.cake");
                 var completion = (await FindCompletionsAsync(fileName, input, host))
-                    .Items.First(x => x.Preselect && x.TextEdit.NewText == "Information");
+                    .Items.First(x => x.TextEdit.NewText == "Information");
 
                 var resolved = await ResolveCompletionAsync(completion, host);
 
@@ -155,31 +155,33 @@ class FooChild : Foo
                     completions.Items.Select(c => c.Label));
                 Assert.Equal(new[]
                     {
-                        "Equals(object obj)\n    {\n        return base.Equals(obj);$0\n    \\}",
-                        "GetHashCode()\n    {\n        return base.GetHashCode();$0\n    \\}",
-                        "Test(string text)\n    {\n        base.Test(text);$0\n    \\}",
-                        "Test(string text, string moreText)\n    {\n        base.Test(text, moreText);$0\n    \\}",
-                        "ToString()\n    {\n        return base.ToString();$0\n    \\}"
+                        "public override bool Equals(object obj)\n    {\n        return base.Equals(obj);$0\n    \\}",
+                        "public override int GetHashCode()\n    {\n        return base.GetHashCode();$0\n    \\}",
+                        "public override void Test(string text)\n    {\n        base.Test(text);$0\n    \\}",
+                        "public override void Test(string text, string moreText)\n    {\n        base.Test(text, moreText);$0\n    \\}",
+                        "public override string ToString()\n    {\n        return base.ToString();$0\n    \\}"
                     },
-                    completions.Items.Select<CompletionItem, string>(c => c.TextEdit.NewText));
+                    completions.Items.Select(c => c.TextEdit.NewText));
 
                 Assert.Equal(new[]
                     {
-                        "public override bool",
-                        "public override int",
-                        "public override void",
-                        "public override void",
-                        "public override string"
+                        "override Equals",
+                        "override GetHashCode",
+                        "override Test",
+                        "override Test",
+                        "override ToString"
                     },
-                    completions.Items.Select(c => c.AdditionalTextEdits.Single().NewText));
+                    completions.Items.Select(c => c.FilterText));
 
-                Assert.All(completions.Items.Select(c => c.AdditionalTextEdits.Single()),
+                Assert.All(completions.Items, c => Assert.Null(c.AdditionalTextEdits));
+
+                Assert.All(completions.Items.Select(c => c.TextEdit),
                     r =>
                     {
                         Assert.Equal(9, r.StartLine);
                         Assert.Equal(4, r.StartColumn);
                         Assert.Equal(9, r.EndLine);
-                        Assert.Equal(12, r.EndColumn);
+                        Assert.Equal(13, r.EndColumn);
                     });
 
                 Assert.All(completions.Items, c => Assert.Equal(InsertTextFormat.Snippet, c.InsertTextFormat));

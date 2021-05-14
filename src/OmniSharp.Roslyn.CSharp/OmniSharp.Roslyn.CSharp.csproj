@@ -21,4 +21,8 @@
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Features" />
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" />
     </ItemGroup>
+
+    <ItemGroup>
+        <Compile Include="..\OmniSharp.Abstractions\IsExternalInit.cs" Link="IsExternalInit.cs" />
+    </ItemGroup>
 </Project>
