@@ -12,7 +12,7 @@
         <ProjectReference Include="..\OmniSharp.DotNetTest\OmniSharp.DotNetTest.csproj" />
         <ProjectReference Include="..\OmniSharp.MSBuild\OmniSharp.MSBuild.csproj" />
         <ProjectReference Include="..\OmniSharp.Script\OmniSharp.Script.csproj" />
-        <ProjectReference Include="..\OmniSharp.Cake\OmniSharp.Cake.csproj" />
+        <ProjectReference Condition="'$(TargetFramework)' == 'net472'" Include="..\OmniSharp.Cake\OmniSharp.Cake.csproj" />
     </ItemGroup>
 
     <ItemGroup>
