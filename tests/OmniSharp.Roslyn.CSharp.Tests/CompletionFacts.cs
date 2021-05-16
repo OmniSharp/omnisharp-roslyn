@@ -2155,7 +2155,7 @@ public class Derived : Base
             Assert.Equal("OnEnable()\n    {\n        base.OnEnable();$0\n    \\}", onEnable.TextEdit.NewText);
         }
 
-        [ConditionalTheory(typeof(WindowsOnly))]
+        [ConditionalTheory(typeof(WindowsOnly), typeof(DesktopRuntimeOnly))]
         [InlineData("dummy.cs")]
         [InlineData("dummy.csx")]
         public async Task RegexCompletionInNormalString(string filename)
@@ -2176,7 +2176,7 @@ class Foo
             Assert.Equal(@"\\A", aCompletion.TextEdit.NewText);
         }
 
-        [ConditionalTheory(typeof(WindowsOnly))]
+        [ConditionalTheory(typeof(WindowsOnly), typeof(DesktopRuntimeOnly))]
         [InlineData("dummy.cs")]
         [InlineData("dummy.csx")]
         public async Task RegexCompletionInVerbatimString(string filename)
