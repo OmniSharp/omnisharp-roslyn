@@ -479,7 +479,7 @@ class C
             Assert.Contains(@"The ""G"" standard format specifier", gStandardCompletion.Description);
         }
 
-        [ConditionalTheory(typeof(WindowsOnly))]
+        [ConditionalTheory(typeof(WindowsOnly), typeof(DesktopRuntimeOnly))]
         [InlineData("dummy.cs")]
         [InlineData("dummy.csx")]
         public async Task Embedded_language_completion_provider_for_regex(string filename)
