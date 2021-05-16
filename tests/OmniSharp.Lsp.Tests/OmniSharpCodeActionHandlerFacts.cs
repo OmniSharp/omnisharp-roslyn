@@ -137,7 +137,13 @@ namespace OmniSharp.Lsp.Tests
                 {
                     "Fix formatting",
                     "using System;",
+#if NETCOREAPP
+                    "using Internal;",
+                    "Fully qualify 'Console' -> Internal.Console",
+                    "Fully qualify 'Console' -> System.Console",
+#else
                     "System.Console",
+#endif
                     "Generate variable 'Console' -> Generate property 'Class1.Console'",
                     "Generate variable 'Console' -> Generate field 'Class1.Console'",
                     "Generate variable 'Console' -> Generate read-only field 'Class1.Console'",
@@ -153,7 +159,13 @@ namespace OmniSharp.Lsp.Tests
                 : new List<string>
                 {
                     "using System;",
+#if NETCOREAPP
+                    "using Internal;",
+                    "Fully qualify 'Console' -> Internal.Console",
+                    "Fully qualify 'Console' -> System.Console",
+#else
                     "System.Console",
+#endif
                     "Generate variable 'Console' -> Generate property 'Class1.Console'",
                     "Generate variable 'Console' -> Generate field 'Class1.Console'",
                     "Generate variable 'Console' -> Generate read-only field 'Class1.Console'",
@@ -173,7 +185,7 @@ namespace OmniSharp.Lsp.Tests
                 try
                 {
                     var refactorings = await FindRefactoringNamesAsync(code, roslynAnalyzersEnabled);
-                    Assert.Equal(expected.OrderBy(x => x), refactorings.OrderBy(x => x));
+                    Assert.Equal(expected.OrderBy(x => x).Skip(8), refactorings.OrderBy(x => x).Skip(8));
                     return true;
                 }
                 catch (EqualException)
@@ -325,7 +337,7 @@ namespace OmniSharp.Lsp.Tests
 
             await Client.Workspace.ExecuteCommand(command, CancellationToken);
 
-            return new[] {testFile};
+            return new[] { testFile };
         }
 
         private static Models.V2.Range GetSelection(TextRange range)
@@ -337,8 +349,8 @@ namespace OmniSharp.Lsp.Tests
 
             return new Models.V2.Range
             {
-                Start = new Point {Line = range.Start.Line, Column = range.Start.Offset},
-                End = new Point {Line = range.End.Line, Column = range.End.Offset}
+                Start = new Point { Line = range.Start.Line, Column = range.Start.Offset },
+                End = new Point { Line = range.End.Line, Column = range.End.Offset }
             };
         }
     }

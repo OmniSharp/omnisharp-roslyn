@@ -159,13 +159,13 @@ class Test {
         public async Task ReturnsPartialMethodDefinitionWithBody(string filename)
         {
             var testFile = new TestFile(filename, @"
-    public partial class MyClass 
+    public partial class MyClass
     {
         public MyClass()
         {
             Met$$hod();
         }
-        
+
         partial void {|def:Method|}()
         {
             //do stuff
@@ -483,7 +483,11 @@ class Bar {
             // second comment should indicate we have decompiled
             var comments = compilationUnit.DescendantTrivia().Where(t => t.Kind() == SyntaxKind.SingleLineCommentTrivia).ToArray();
             Assert.NotNull(comments);
+#if NETCOREAPP
+            Assert.Equal("// Decompiled with ICSharpCode.Decompiler ", comments[1].ToString());
+#else
             Assert.Equal("// Decompiled with ICSharpCode.Decompiler 7.0.0.6488", comments[1].ToString());
+#endif
 
             // contrary to regular metadata, we should have methods with full bodies
             // this condition would fail if decompilation wouldn't work

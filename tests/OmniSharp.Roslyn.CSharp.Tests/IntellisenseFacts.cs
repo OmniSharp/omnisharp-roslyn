@@ -316,14 +316,18 @@ public class MyClass
                        public virtual void Test(string text, string moreText) {}
                     }
 
-                    class FooChild : Foo 
+                    class FooChild : Foo
                     {
                       override $$
                     }
                 ";
 
             var completions = await FindCompletionsAsync(filename, source);
+#if NETCOREAPP
+            ContainsCompletions(completions.Select(c => c.CompletionText), "Equals(object? obj)", "GetHashCode()", "Test(string text)", "Test(string text, string moreText)", "ToString()");
+#else
             ContainsCompletions(completions.Select(c => c.CompletionText), "Equals(object obj)", "GetHashCode()", "Test(string text)", "Test(string text, string moreText)", "ToString()");
+#endif
         }
 
         [Theory]
@@ -350,7 +354,7 @@ public class MyClass
                 "Prin$$";
 
             var completions = await FindCompletionsAsync("dummy.csx", source);
-            ContainsCompletions(completions.Select(c => c.CompletionText), new[] { "Print", "PrintOptions" }); 
+            ContainsCompletions(completions.Select(c => c.CompletionText), new[] { "Print", "PrintOptions" });
         }
 
         [Theory]
@@ -480,16 +484,16 @@ class C
         [InlineData("dummy.csx")]
         public async Task Embedded_language_completion_provider_for_regex(string filename)
         {
-            const string source = @"		
- using System;		
- using System.Text.RegularExpressions;		
- class C		
- {		
-     void M()		
-     {		
-         var r = Regex.Match(""foo"", ""$$""		
-     }		
- }		
+            const string source = @"
+ using System;
+ using System.Text.RegularExpressions;
+ class C
+ {
+     void M()
+     {
+         var r = Regex.Match(""foo"", ""$$""
+     }
+ }
  ";
 
             var completions = await FindCompletionsAsync(filename, source);

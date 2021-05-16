@@ -196,7 +196,7 @@ namespace OmniSharp.Lsp.Tests
             var completions = await FindCompletionsWithImportedAsync(filename, input);
             CompletionItem localCompletion = completions.Items.First(c => c.TextEdit.TextEdit.NewText == "guid");
             CompletionItem typeCompletion = completions.Items.First(c => c.TextEdit.TextEdit.NewText == "Guid");
-            Assert.True(localCompletion.Data.ToObject<(long, int)>().Item2 < typeCompletion.Data.ToObject<(long, int)>().Item2) ;
+            Assert.True(localCompletion.Data.ToObject<(long, int)>().Item2 < typeCompletion.Data.ToObject<(long, int)>().Item2);
             Assert.StartsWith("0", localCompletion.SortText);
             Assert.StartsWith("1", typeCompletion.SortText);
             VerifySortOrders(completions.Items);
@@ -283,7 +283,7 @@ namespace N2
 
             await EnableImportCompletion();
             var completions = await FindCompletionsWithImportedAsync(filename, input);
-            var resolved = await ResolveCompletionAsync(completions.Items.First(c => c.TextEdit.TextEdit.NewText == "Console"));
+            var resolved = await ResolveCompletionAsync(completions.Items.Last(c => c.TextEdit.TextEdit.NewText == "Console"));
 
             Assert.Single(resolved.AdditionalTextEdits);
             var additionalEdit = resolved.AdditionalTextEdits.First();
@@ -615,8 +615,13 @@ class FooChild : Foo
 ";
 
             var completions = await FindCompletionsAsync(filename, source);
+#if NETCOREAPP
+            Assert.Equal(new[] { "Equals(object? obj)", "GetHashCode()", "Test(string text)", "Test(string text, string moreText)", "ToString()" },
+                         completions.Items.Select(c => c.Label));
+#else
             Assert.Equal(new[] { "Equals(object obj)", "GetHashCode()", "Test(string text)", "Test(string text, string moreText)", "ToString()" },
                          completions.Items.Select(c => c.Label));
+#endif
             Assert.Equal(new[] { "public override bool Equals(object obj)\n    {\n        return base.Equals(obj);$0\n    \\}",
                                  "public override int GetHashCode()\n    {\n        return base.GetHashCode();$0\n    \\}",
                                  "public override void Test(string text)\n    {\n        base.Test(text);$0\n    \\}",
@@ -672,8 +677,13 @@ namespace N3
 }";
 
             var completions = await FindCompletionsAsync(filename, source);
+#if NETCOREAPP
+            Assert.Equal(new[] { "Equals(object? obj)", "GetHashCode()", "GetN1()", "ToString()" },
+                         completions.Items.Select(c => c.Label));
+#else
             Assert.Equal(new[] { "Equals(object obj)", "GetHashCode()", "GetN1()", "ToString()" },
                          completions.Items.Select(c => c.Label));
+#endif
 
             Assert.Equal(new[] { "public override bool Equals(object obj)\n        {\n            return base.Equals(obj);$0\n        \\}",
                                  "public override int GetHashCode()\n        {\n            return base.GetHashCode();$0\n        \\}",
@@ -715,8 +725,13 @@ class C
 }";
 
             var completions = await FindCompletionsAsync(filename, source);
+#if NETCOREAPP
+            Assert.Equal(new[] { "Equals(object? obj)", "GetHashCode()", "ToString()" },
+                         completions.Items.Select(c => c.Label));
+#else
             Assert.Equal(new[] { "Equals(object obj)", "GetHashCode()", "ToString()" },
                          completions.Items.Select(c => c.Label));
+#endif
 
             Assert.Equal(new[] { "bool Equals(object obj)\n    {\n        return base.Equals(obj);$0\n    \\}",
                                  "int GetHashCode()\n    {\n        return base.GetHashCode();$0\n    \\}",
@@ -746,8 +761,13 @@ class C
 }";
 
             var completions = await FindCompletionsAsync(filename, source);
+#if NETCOREAPP
+            Assert.Equal(new[] { "Equals(object? obj)" },
+                         completions.Items.Select(c => c.Label));
+#else
             Assert.Equal(new[] { "Equals(object obj)" },
                          completions.Items.Select(c => c.Label));
+#endif
 
             Assert.Equal(new[] { "Equals(object obj)\n    {\n        return base.Equals(obj);$0\n    \\}" },
                          completions.Items.Select(c => c.TextEdit.TextEdit.NewText));
@@ -777,8 +797,13 @@ class Derived : Base
 }";
 
             var completions = await FindCompletionsAsync(filename, source);
+#if NETCOREAPP
+            Assert.Equal(new[] { "Equals(object? obj)", "GetHashCode()", "Test()", "ToString()" },
+                         completions.Items.Select(c => c.Label));
+#else
             Assert.Equal(new[] { "Equals(object obj)", "GetHashCode()", "Test()", "ToString()" },
                          completions.Items.Select(c => c.Label));
+#endif
 
             Assert.Equal(new[] { "public override bool Equals(object obj)\n    {\n        return base.Equals(obj);$0\n    \\}",
                                  "public override int GetHashCode()\n    {\n        return base.GetHashCode();$0\n    \\}",
@@ -1025,8 +1050,13 @@ class C
 }";
 
             var completions = await FindCompletionsAsync(filename, source);
+#if NETCOREAPP
+            Assert.Equal(new[] { "Equals(object? obj)", "GetHashCode()", "ToString()" },
+                         completions.Items.Select(c => c.Label));
+#else
             Assert.Equal(new[] { "Equals(object obj)", "GetHashCode()", "ToString()" },
                          completions.Items.Select(c => c.Label));
+#endif
 
             Assert.Equal(new[] { "public override bool Equals(object obj)\n    {\n        return base.Equals(obj);$0\n    \\}",
                                  "public override int GetHashCode()\n    {\n        return base.GetHashCode();$0\n    \\}",

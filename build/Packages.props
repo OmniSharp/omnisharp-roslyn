@@ -2,7 +2,7 @@
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
     <PropertyGroup>
-        <AspNetCorePackageVersion>2.1.1</AspNetCorePackageVersion>
+        <AspNetCorePackageVersion>2.2.0</AspNetCorePackageVersion>
         <MicrosoftExtensionPackageVersion>5.0.0</MicrosoftExtensionPackageVersion>
         <MicrosoftTestPackageVersion>16.9.4</MicrosoftTestPackageVersion>
         <MSBuildPackageVersion>16.9.0</MSBuildPackageVersion>
@@ -51,6 +51,8 @@
         <PackageReference Update="Microsoft.Extensions.Logging.Console" Version="$(MicrosoftExtensionPackageVersion)" />
         <PackageReference Update="Microsoft.Extensions.Options" Version="$(MicrosoftExtensionPackageVersion)" />
         <PackageReference Update="Microsoft.Extensions.Options.ConfigurationExtensions" Version="$(MicrosoftExtensionPackageVersion)" />
+
+        <PackageReference Update="Microsoft.Build.Locator" Version="1.4.1" />
 
         <PackageReference Update="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.0" />
 

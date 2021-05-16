@@ -25,7 +25,7 @@ namespace OmniSharp.MSBuild.Discovery.Providers
 
             var extensionsPath = path;
             var toolsPath = Path.Combine(extensionsPath, "Current", "Bin");
-            var roslynPath = Path.Combine(toolsPath, "Roslyn", "bincore");
+            var roslynPath = Path.Combine(toolsPath, "Roslyn");
 
             var version = GetMSBuildVersion(Path.Combine(toolsPath, "Microsoft.Build.dll"));
 
@@ -44,7 +44,7 @@ namespace OmniSharp.MSBuild.Discovery.Providers
             propertyOverrides.Add("MSBuildToolsPath", toolsPath);
             propertyOverrides.Add("MSBuildExtensionsPath", extensionsPath);
             propertyOverrides.Add("CscToolPath", roslynPath);
-            //propertyOverrides.Add("CscToolExe", "csc.exe");
+            propertyOverrides.Add("CscToolExe", "csc.exe");
 
             return ImmutableArray.Create(
                 new MSBuildInstance(

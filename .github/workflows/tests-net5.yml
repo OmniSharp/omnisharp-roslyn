@@ -1,5 +1,5 @@
 
-name: 'Tests'
+name: 'Tests net5.0'
 env:
   DotNetVersion: "5.0.104"
   DotNetVersion2: "3.1.407"
@@ -27,7 +27,7 @@ jobs:
       matrix:
         os: [ubuntu-18.04, windows-2019, macos-10.15]
         testProjects:
-          - OmniSharp.MSBuild.Tests,OmniSharp.Roslyn.CSharp.Tests,OmniSharp.Cake.Tests,OmniSharp.Script.Tests,OmniSharp.Stdio.Tests,OmniSharp.Http.Tests,OmniSharp.Tests,OmniSharp.Lsp.Tests
+          - OmniSharp.MSBuild.Tests,OmniSharp.Roslyn.CSharp.Tests,OmniSharp.Script.Tests,OmniSharp.Stdio.Tests,OmniSharp.Http.Tests,OmniSharp.Tests,OmniSharp.Lsp.Tests
           - OmniSharp.DotNetTest.Tests
     name: 'Test'
     steps:
@@ -89,7 +89,7 @@ jobs:
           command: |
             echo $PATH
             chmod 755 ./build.sh
-            ./build.sh --configuration Release --verbosity Verbose --target Test --test-project="$TEST_PROJECT"
+            ./build.sh --configuration Release --verbosity Verbose --target Test --test-project="$TEST_PROJECT" --use-dotnet-test
         env:
           TEST_PROJECT: ${{ matrix.testProjects }}
 
@@ -102,7 +102,7 @@ jobs:
           max_attempts: 3
           retry_on: error
           command: |
-            .\build.ps1 -configuration Release -verbosity Verbose -target Test --test-project="$ENV:TEST_PROJECT"
+            .\build.ps1 -configuration Release -verbosity Verbose -target Test --test-project="$ENV:TEST_PROJECT" --use-dotnet-test
         env:
           TEST_PROJECT: ${{ matrix.testProjects }}
 

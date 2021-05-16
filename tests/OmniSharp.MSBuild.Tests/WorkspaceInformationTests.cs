@@ -120,7 +120,7 @@ namespace OmniSharp.MSBuild.Tests
             Assert.Contains(libProject.TargetFrameworks[0].ShortName, new[] { "net50", "net5.0" });
         }
 
-        [Fact]
+        [ConditionalFact(typeof(DesktopRuntimeOnly))]
         public async Task Net60Project()
         {
             using var testProject = await TestAssets.Instance.GetTestProjectAsync("Net60Project");
