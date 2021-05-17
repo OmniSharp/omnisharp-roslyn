@@ -626,10 +626,10 @@ Task("Test")
             PrintBlankLine();
             var instanceFolder = CombinePaths(env.Folders.Bin, configuration, testProject, testTargetFramework);
             var targetPath = CombinePaths(instanceFolder, $"{testProject}.dll");
-            var logFile = CombinePaths(env.Folders.ArtifactsLogs, $"{testProject}-netsdk-result.xml");
 
             if (useDotNetTest)
             {
+                var logFile = CombinePaths(env.Folders.ArtifactsLogs, $"{testProject}-netsdk-result.xml");
                 var arguments = $"test \"{targetPath}\" --logger \"console;verbosity=normal\" --logger \"trx;LogFileName={logFile}\" --blame-hang-timeout 60sec";
 
                 Console.WriteLine($"Executing: dotnet {arguments}");
@@ -639,6 +639,8 @@ Task("Test")
             }
             else
             {
+                var logFile = CombinePaths(env.Folders.ArtifactsLogs, $"{testProject}-desktop-result.xml");
+
                 // Copy xunit executable to test folder to solve path errors
                 var xunitToolsFolder = CombinePaths(env.Folders.Tools, "xunit.runner.console", "tools", "net452");
                 var xunitInstancePath = CombinePaths(instanceFolder, "xunit.console.exe");
@@ -699,19 +701,19 @@ string PublishMonoBuild(string project, BuildEnvironment env, BuildPlan plan, st
 
     CopyExtraDependencies(env, outputFolder);
 
-     // Copy dependencies of Mono build
-     FileHelper.Copy(
-         source: CombinePaths(env.Folders.Tools, "SQLitePCLRaw.core", "lib", "netstandard2.0", "SQLitePCLRaw.core.dll"),
-         destination: CombinePaths(outputFolder, "SQLitePCLRaw.core.dll"),
-         overwrite: true);
-     FileHelper.Copy(
-         source: CombinePaths(env.Folders.Tools, "SQLitePCLRaw.provider.e_sqlite3", "lib", "netstandard2.0", "SQLitePCLRaw.provider.e_sqlite3.dll"),
-         destination: CombinePaths(outputFolder, "SQLitePCLRaw.provider.e_sqlite3.dll"),
-         overwrite: true);
-     FileHelper.Copy(
-         source: CombinePaths(env.Folders.Tools, "SQLitePCLRaw.bundle_green", "lib", "netstandard2.0", "SQLitePCLRaw.batteries_v2.dll"),
-         destination: CombinePaths(outputFolder, "SQLitePCLRaw.batteries_v2.dll"),
-         overwrite: true);
+    // Copy dependencies of Mono build
+    FileHelper.Copy(
+        source: CombinePaths(env.Folders.Tools, "SQLitePCLRaw.core", "lib", "netstandard2.0", "SQLitePCLRaw.core.dll"),
+        destination: CombinePaths(outputFolder, "SQLitePCLRaw.core.dll"),
+        overwrite: true);
+    FileHelper.Copy(
+        source: CombinePaths(env.Folders.Tools, "SQLitePCLRaw.provider.e_sqlite3", "lib", "netstandard2.0", "SQLitePCLRaw.provider.e_sqlite3.dll"),
+        destination: CombinePaths(outputFolder, "SQLitePCLRaw.provider.e_sqlite3.dll"),
+        overwrite: true);
+    FileHelper.Copy(
+        source: CombinePaths(env.Folders.Tools, "SQLitePCLRaw.bundle_green", "lib", "netstandard2.0", "SQLitePCLRaw.batteries_v2.dll"),
+        destination: CombinePaths(outputFolder, "SQLitePCLRaw.batteries_v2.dll"),
+        overwrite: true);
 
     Package(project, "mono", outputFolder, env.Folders.ArtifactsPackage, env.Folders.DeploymentPackage);
 
