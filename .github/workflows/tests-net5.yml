@@ -16,6 +16,7 @@ on:
     branches:
       - master
       - demo/*
+      - feature/*
     tags:
       - '*'
   workflow_dispatch:
