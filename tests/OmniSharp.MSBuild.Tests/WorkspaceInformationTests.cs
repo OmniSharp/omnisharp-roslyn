@@ -46,6 +46,34 @@ namespace OmniSharp.MSBuild.Tests
         }
 
         [Fact]
+        public async Task TestProjectAndSolutionFilter()
+        {
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectAndSolutionFilter"))
+            using (var host = CreateMSBuildTestHost(testProject.Directory))
+            {
+                var workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
+
+                Assert.Equal("ProjectAndSolutionFilter.slnf", Path.GetFileName(workspaceInfo.SolutionPath));
+                Assert.NotNull(workspaceInfo.Projects);
+                var project = Assert.Single(workspaceInfo.Projects);
+
+                Assert.Equal("ProjectAndSolutionFilter", project.AssemblyName);
+                Assert.Equal("bin/Debug/netcoreapp2.1/", project.OutputPath.EnsureForwardSlashes());
+                Assert.Equal("obj/Debug/netcoreapp2.1/", project.IntermediateOutputPath.EnsureForwardSlashes());
+                var expectedTargetPath = $"{testProject.Directory}/Project/{project.OutputPath}ProjectAndSolutionFilter.dll".EnsureForwardSlashes();
+                Assert.Equal(expectedTargetPath, project.TargetPath.EnsureForwardSlashes());
+                Assert.Equal("Debug", project.Configuration);
+                Assert.Equal("AnyCPU", project.Platform);
+                Assert.True(project.IsExe);
+                Assert.False(project.IsUnityProject);
+
+                Assert.Equal(".NETCoreApp,Version=v2.1", project.TargetFramework);
+                var targetFramework = Assert.Single(project.TargetFrameworks);
+                Assert.Equal("netcoreapp2.1", targetFramework.ShortName);
+            }
+        }
+
+        [Fact]
         public async Task ProjectAndSolutionWithProjectSection()
         {
             using var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectAndSolutionWithProjectSection");
@@ -92,7 +120,7 @@ namespace OmniSharp.MSBuild.Tests
             Assert.Contains(libProject.TargetFrameworks[0].ShortName, new[] { "net50", "net5.0" });
         }
 
-        [Fact]
+        [ConditionalFact(typeof(DesktopRuntimeOnly))]
         public async Task Net60Project()
         {
             using var testProject = await TestAssets.Instance.GetTestProjectAsync("Net60Project");

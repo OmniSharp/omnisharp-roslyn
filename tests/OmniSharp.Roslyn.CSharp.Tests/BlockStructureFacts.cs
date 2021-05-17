@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using OmniSharp.Models.V2;
@@ -39,6 +40,21 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 .Select(span => testFile.Content.GetRangeFromSpan(span).ToRange()).ToArray();
 
             Assert.Equal(expected, lineSpans);
+        }
+
+        [Fact]
+        public async Task NonExistingFile()
+        {
+            var request = new BlockStructureRequest
+            {
+                FileName = $"{Guid.NewGuid().ToString("N")}.cs"
+            };
+
+            var requestHandler = GetRequestHandler(SharedOmniSharpTestHost);
+            var response = await requestHandler.Handle(request);
+
+            Assert.NotNull(response);
+            Assert.Empty(response.Spans);
         }
 
         [Fact]

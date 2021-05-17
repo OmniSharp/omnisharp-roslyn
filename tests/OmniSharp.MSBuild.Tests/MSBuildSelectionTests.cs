@@ -259,7 +259,7 @@ namespace OmniSharp.MSBuild.Tests
             msbuildLocator.DeleteFakeInstancesFolders();
         }
 
-        [Fact]
+        [ConditionalFact(typeof(DesktopRuntimeOnly))]
         public void CreateDefault_UseBundledOnly_True_LocatesOnlyStandAloneInstance()
         {
             var configBuilder = new Microsoft.Extensions.Configuration.ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>()

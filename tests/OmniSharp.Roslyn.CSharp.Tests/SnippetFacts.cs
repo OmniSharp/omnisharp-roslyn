@@ -80,7 +80,12 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             var completions = await FindCompletionsAsync(filename, source, wantSnippet: true);
             ContainsSnippet("First()$0 : string", completions);
+#if NETCOREAPP
+            ContainsSnippet("FirstOrDefault(${1:Func<string, bool> predicate})$0 : string?", completions);
+#else
+
             ContainsSnippet("FirstOrDefault(${1:Func<string, bool> predicate})$0 : string", completions);
+#endif
         }
 
         [Theory]

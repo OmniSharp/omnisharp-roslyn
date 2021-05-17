@@ -27,7 +27,7 @@ namespace OmniSharp.Services
             {
                 TargetDirectory = path;
             }
-            else if (File.Exists(path) && Path.GetExtension(path).Equals(".sln", StringComparison.OrdinalIgnoreCase))
+            else if (File.Exists(path) && (Path.GetExtension(path).Equals(".sln", StringComparison.OrdinalIgnoreCase) || Path.GetExtension(path).Equals(".slnf", StringComparison.OrdinalIgnoreCase)))
             {
                 SolutionFilePath = path;
                 TargetDirectory = Path.GetDirectoryName(path);
@@ -35,7 +35,7 @@ namespace OmniSharp.Services
 
             if (TargetDirectory == null)
             {
-                throw new ArgumentException("OmniSharp only supports being launched with a directory path or a path to a solution (.sln) file.", nameof(path));
+                throw new ArgumentException("OmniSharp only supports being launched with a directory path or a path to a solution (.sln, .slnf) file.", nameof(path));
             }
 
             HostProcessId = hostPid;
