@@ -7,13 +7,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.DocumentationComments;
 using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Extensions;
 using OmniSharp.Models;
 using OmniSharp.Options;
-using OmniSharp.Roslyn.DocumentationComments;
 using OmniSharp.Roslyn.Utilities;
 
 namespace OmniSharp.Roslyn.CSharp.Workers.Formatting
@@ -126,10 +126,9 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Formatting
 
             var optionSet = await document.GetOptionsAsync();
 
-            var documentationService = document.GetDocumentationCommentSnippetService();
             var snippet = character == '\n' ?
-                documentationService.GetDocumentationCommentSnippetOnEnterTyped(syntaxTree!, text, position, optionSet, CancellationToken.None) :
-                documentationService.GetDocumentationCommentSnippetOnCharacterTyped(syntaxTree!, text, position, optionSet, CancellationToken.None);
+                OmniSharpDocumentationCommentsSnippetService.GetDocumentationCommentSnippetOnEnterTyped(document, syntaxTree!, text, position, optionSet, CancellationToken.None) :
+                OmniSharpDocumentationCommentsSnippetService.GetDocumentationCommentSnippetOnCharacterTyped(document, syntaxTree!, text, position, optionSet, CancellationToken.None);
 
             if (snippet == null)
             {
@@ -137,10 +136,10 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Formatting
             }
             else
             {
-                var range = text.GetRangeFromSpan(snippet.Value.SpanToReplace);
+                var range = text.GetRangeFromSpan(snippet.SpanToReplace);
                 return new LinePositionSpanTextChange
                 {
-                    NewText = snippet.Value.SnippetText,
+                    NewText = snippet.SnippetText,
                     StartLine = range.Start.Line,
                     StartColumn = range.Start.Column,
                     EndLine = range.End.Line,

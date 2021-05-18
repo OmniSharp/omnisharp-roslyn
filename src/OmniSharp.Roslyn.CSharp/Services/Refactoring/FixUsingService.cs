@@ -15,19 +15,16 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
     {
         private readonly OmniSharpWorkspace _workspace;
         private readonly ILoggerFactory _loggerFactory;
-        private readonly IAssemblyLoader _loader;
         private readonly IEnumerable<ICodeActionProvider> _providers;
 
         [ImportingConstructor]
         public FixUsingService(
             OmniSharpWorkspace workspace,
             ILoggerFactory loggerFactory,
-            IAssemblyLoader loader,
             [ImportMany] IEnumerable<ICodeActionProvider> codeActionProviders)
         {
             _workspace = workspace;
             _loggerFactory = loggerFactory;
-            _loader = loader;
             _providers = codeActionProviders;
         }
 

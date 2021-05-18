@@ -1,42 +1,41 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Linq;
-using System.Reflection;
+﻿using System.Composition;
 using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeActions;
+using Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.CodeRefactorings.WorkspaceServices;
 
 namespace OmniSharp
 {
-    public class OmniSharpSymbolRenamedCodeActionOperationFactoryWorkspaceService : DispatchProxy
+    [Shared]
+    [Export(typeof(IOmniSharpSymbolRenamedCodeActionOperationFactoryWorkspaceService))]
+    public class OmniSharpSymbolRenamedCodeActionOperationFactoryWorkspaceService : IOmniSharpSymbolRenamedCodeActionOperationFactoryWorkspaceService
     {
-        protected override object Invoke(MethodInfo targetMethod, object[] args)
+        [ImportingConstructor]
+        public OmniSharpSymbolRenamedCodeActionOperationFactoryWorkspaceService()
+        {
+        }
+
+        public CodeActionOperation CreateSymbolRenamedOperation(ISymbol symbol, string newName, Solution startingSolution, Solution updatedSolution)
         {
             return new RenameSymbolOperation(
-                (ISymbol)args[0],
-                (string)args[1],
-                (Solution)args[2],
-                (Solution)args[3]);
+                symbol,
+                newName,
+                updatedSolution);
         }
 
         private class RenameSymbolOperation : CodeActionOperation
         {
             private readonly ISymbol _symbol;
             private readonly string _newName;
-            private readonly Solution _startingSolution;
             private readonly Solution _updatedSolution;
 
             public RenameSymbolOperation(
                 ISymbol symbol,
                 string newName,
-                Solution startingSolution,
                 Solution updatedSolution)
             {
                 _symbol = symbol;
                 _newName = newName;
-                _startingSolution = startingSolution;
                 _updatedSolution = updatedSolution;
             }
 

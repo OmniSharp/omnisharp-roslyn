@@ -21,7 +21,7 @@ namespace OmniSharp.Cake.Tests
 
         public QuickInfoFacts(ITestOutputHelper testOutput) : base(testOutput)
         {
-            _logger = LoggerFactory.CreateLogger<AutoCompleteFacts>();
+            _logger = LoggerFactory.CreateLogger<QuickInfoFacts>();
         }
 
         protected override string EndpointName => OmniSharpEndpoints.QuickInfo;

@@ -4,10 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Globalization;
-using System.Linq;
 using System.Reflection.PortableExecutable;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using ICSharpCode.Decompiler;
@@ -17,45 +14,23 @@ using ICSharpCode.Decompiler.Metadata;
 using ICSharpCode.Decompiler.TypeSystem;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Formatting;
-using Microsoft.CodeAnalysis.Host;
 using Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Extensions;
-using System.IO;
 using Microsoft.CodeAnalysis;
-using OmniSharp.Services;
-using System.Reflection;
-using OmniSharp.Utilities;
-using System.Text;
 using Microsoft.Extensions.Logging;
+using Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.MetadataAsSource;
+using Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.CSharp.DocumentationComments;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Decompilation
 {
     public class OmniSharpCSharpDecompiledSourceService
     {
         private readonly ILoggerFactory _loggerFactory;
-        private const string MetadataAsSourceHelpers = "Microsoft.CodeAnalysis.MetadataAsSource.MetadataAsSourceHelpers";
-        private const string CSharpDocumentationCommentFormattingService = "Microsoft.CodeAnalysis.CSharp.DocumentationComments.CSharpDocumentationCommentFormattingService";
-        private const string DocCommentConverter = "Microsoft.CodeAnalysis.CSharp.DocumentationComments.DocCommentConverter";
         private static readonly FileVersionInfo decompilerVersion = FileVersionInfo.GetVersionInfo(typeof(CSharpDecompiler).Assembly.Location);
-        private readonly Lazy<Assembly> _roslynFeatureAssembly;
-        private readonly Lazy<Assembly> _csharpFeatureAssembly;
-        private readonly Lazy<Type> _csharpMetadataAsSourceService;
-        private readonly Lazy<Type> _csharpDocumentationCommentFormattingService;
-        private readonly Lazy<Type> _docCommentConverter;
-        private readonly Lazy<MethodInfo> _metadataGetAssemblyInfo;
-        private readonly Lazy<MethodInfo> _metadataGetAssemblyDisplay;
 
-        public OmniSharpCSharpDecompiledSourceService(IAssemblyLoader loader, ILoggerFactory loggerFactory)
+        public OmniSharpCSharpDecompiledSourceService(ILoggerFactory loggerFactory)
         {
-            _roslynFeatureAssembly = loader.LazyLoad(Configuration.RoslynFeatures);
-            _csharpFeatureAssembly = loader.LazyLoad(Configuration.RoslynCSharpFeatures);
-            _csharpMetadataAsSourceService = _roslynFeatureAssembly.LazyGetType(MetadataAsSourceHelpers);
-            _csharpDocumentationCommentFormattingService = _csharpFeatureAssembly.LazyGetType(CSharpDocumentationCommentFormattingService);
-            _docCommentConverter = _csharpFeatureAssembly.LazyGetType(DocCommentConverter);
-            _metadataGetAssemblyInfo = _csharpMetadataAsSourceService.LazyGetMethod("GetAssemblyInfo");
-            _metadataGetAssemblyDisplay = _csharpMetadataAsSourceService.LazyGetMethod("GetAssemblyDisplay");
-
             _loggerFactory = loggerFactory;
         }
 
@@ -78,8 +53,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Decompilation
             document = await AddAssemblyInfoRegionAsync(document, symbol, cancellationToken).ConfigureAwait(false);
 
             // Convert XML doc comments to regular comments, just like MAS
-            var docCommentFormattingService = _csharpDocumentationCommentFormattingService.CreateInstance();
-            document = await ConvertDocCommentsToRegularCommentsAsync(document, docCommentFormattingService, cancellationToken).ConfigureAwait(false);
+            document = await ConvertDocCommentsToRegularCommentsAsync(document, cancellationToken).ConfigureAwait(false);
 
             var node = await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
 
@@ -111,9 +85,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Decompilation
 
         private async Task<Document> AddAssemblyInfoRegionAsync(Document document, Microsoft.CodeAnalysis.ISymbol symbol, CancellationToken cancellationToken)
         {
-            var assemblyInfo = _metadataGetAssemblyInfo.Value.InvokeStatic<string>(new object[] { symbol.ContainingAssembly });
+            var assemblyInfo = OmniSharpMetadataAsSourceHelpers.GetAssemblyInfo(symbol.ContainingAssembly);
             var compilation = await document.Project.GetCompilationAsync(cancellationToken).ConfigureAwait(false);
-            var assemblyPath = _metadataGetAssemblyDisplay.Value.InvokeStatic<string>(new object[] { compilation, symbol.ContainingAssembly });
+            var assemblyPath = OmniSharpMetadataAsSourceHelpers.GetAssemblyDisplay(compilation, symbol.ContainingAssembly);
 
             var regionTrivia = SyntaxFactory.RegionDirectiveTrivia(true)
                 .WithTrailingTrivia(new[] { SyntaxFactory.Space, SyntaxFactory.PreprocessingMessage(assemblyInfo) });
@@ -135,12 +109,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Decompilation
             return document.WithSyntaxRoot(newRoot);
         }
 
-        private async Task<Document> ConvertDocCommentsToRegularCommentsAsync(Document document, object docCommentFormattingService, CancellationToken cancellationToken)
+        private async Task<Document> ConvertDocCommentsToRegularCommentsAsync(Document document, CancellationToken cancellationToken)
         {
             var syntaxRoot = await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
-
-            var newSyntaxRoot = _docCommentConverter.InvokeStatic<SyntaxNode>("ConvertToRegularComments", new object[] { syntaxRoot, docCommentFormattingService, cancellationToken });
-
+            var newSyntaxRoot = OmniSharpDocCommentConverter.ConvertToRegularComments(syntaxRoot, document.Project, cancellationToken);
             return document.WithSyntaxRoot(newSyntaxRoot);
         }
 

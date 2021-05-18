@@ -11,6 +11,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CodeRefactorings;
+using Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.CodeActions;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Extensions;
@@ -36,7 +37,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
         protected readonly ILogger Logger;
         private readonly ICsDiagnosticWorker _diagnostics;
         private readonly CachingCodeFixProviderForProjects _codeFixesForProject;
-        private readonly MethodInfo _getNestedCodeActions;
 
         protected Lazy<List<CodeRefactoringProvider>> OrderedCodeRefactoringProviders;
 
@@ -59,20 +59,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             _diagnostics = diagnostics;
             _codeFixesForProject = codeFixesForProject;
             OrderedCodeRefactoringProviders = new Lazy<List<CodeRefactoringProvider>>(() => GetSortedCodeRefactoringProviders());
-
-            // Sadly, the CodeAction.NestedCodeActions property is still internal.
-            var nestedCodeActionsProperty = typeof(CodeAction).GetProperty("NestedCodeActions", BindingFlags.NonPublic | BindingFlags.Instance);
-            if (nestedCodeActionsProperty == null)
-            {
-                throw new InvalidOperationException("Could not find CodeAction.NestedCodeActions property.");
-            }
-
-            this._getNestedCodeActions = nestedCodeActionsProperty.GetGetMethod(nonPublic: true);
-
-            if (this._getNestedCodeActions == null)
-            {
-                throw new InvalidOperationException("Could not retrieve 'get' method for CodeAction.NestedCodeActions property.");
-            }
         }
 
         public abstract Task<TResponse> Handle(TRequest request);
@@ -204,9 +190,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
         {
             return actions.SelectMany(action =>
             {
-                var nestedActions = this._getNestedCodeActions.Invoke<ImmutableArray<CodeAction>>(action, null);
-
-                if (nestedActions.Any())
+                var nestedActions = action.GetNestedCodeActions();
+                if (!nestedActions.IsDefaultOrEmpty)
                 {
                     return nestedActions.Select(nestedAction => new AvailableCodeAction(nestedAction, action));
                 }

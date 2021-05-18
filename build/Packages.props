@@ -6,7 +6,7 @@
         <MicrosoftExtensionPackageVersion>3.1.12</MicrosoftExtensionPackageVersion>
         <MSBuildPackageVersion>16.9.0</MSBuildPackageVersion>
         <NuGetPackageVersion>5.2.0</NuGetPackageVersion>
-        <RoslynPackageVersion>3.10.0-3.21222.20</RoslynPackageVersion>
+        <RoslynPackageVersion>3.11.0-1.21262.10</RoslynPackageVersion>
         <XunitPackageVersion>2.4.1</XunitPackageVersion>
     </PropertyGroup>
 
@@ -35,6 +35,8 @@
         <PackageReference Update="Microsoft.CodeAnalysis.CSharp.Scripting" Version="$(RoslynPackageVersion)" />
         <PackageReference Update="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="$(RoslynPackageVersion)" />
         <PackageReference Update="Microsoft.CodeAnalysis.Workspaces.Common" Version="$(RoslynPackageVersion)" />
+        <PackageReference Update="Microsoft.CodeAnalysis.ExternalAccess.OmniSharp" Version="$(RoslynPackageVersion)" />
+        <PackageReference Update="Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.CSharp" Version="$(RoslynPackageVersion)" />
 
         <PackageReference Update="Microsoft.Extensions.Caching.Memory" Version="$(MicrosoftExtensionPackageVersion)" />
         <PackageReference Update="Microsoft.Extensions.Configuration" Version="$(MicrosoftExtensionPackageVersion)" />
