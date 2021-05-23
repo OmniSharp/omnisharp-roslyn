@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis.Text;
+using OmniSharp.Models.V2;
 
 namespace TestUtility
 {
@@ -72,6 +74,14 @@ namespace TestUtility
             }
 
             return ImmutableList<TextSpan>.Empty;
+        }
+
+        public IEnumerable<(string Name, TextSpan Span)> GetNamesAndSpans()
+        {
+            return from nameAndSpans in spans
+                   from span in nameAndSpans.Value
+                   orderby span
+                   select (nameAndSpans.Key, span);
         }
 
         public static TestContent Parse(string input)
