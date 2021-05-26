@@ -42,7 +42,7 @@ namespace OmniSharp.Helpers
                 if (hasMappedPath)
                 {
                     SourceText source = null;
-                    if (documents != null && documents.FirstOrDefault(d => d.TryGetText(out source)) != null)
+                    if (documents != null && documents.FirstOrDefault(d => d != null && d.TryGetText(out source)) != null)
                     {
                         // we have a mapped document that exists in workspace
                         return source;
