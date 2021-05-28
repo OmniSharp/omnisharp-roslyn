@@ -5,7 +5,7 @@
         "2.1.816",
         "3.1.409",
         "5.0.300",
-        "6.0.100-preview.2.21155.3"
+        "6.0.0-preview.4.21253.5"
     ],
     "RequiredMonoVersion": "6.6.0",
     "DownloadURL": "https://roslynomnisharp.blob.core.windows.net/ext",
