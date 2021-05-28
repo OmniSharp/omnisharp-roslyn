@@ -4,7 +4,7 @@
     "DotNetVersions": [
         "2.1.814",
         "3.1.407",
-        "5.0.104",
+        "5.0.300",
         "6.0.100-preview.2.21155.3"
     ],
     "RequiredMonoVersion": "6.6.0",
