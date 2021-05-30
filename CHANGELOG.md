@@ -1,6 +1,9 @@
 # Changelog
 All changes to the project will be documented in this file.
 
+## [1.37.10] - 2021-05-25
+* Update included toolset to match .NET 6 preview4 (PR: [#2159](https://github.com/OmniSharp/omnisharp-roslyn/pull/2159))
+
 ## [1.37.9] - 2021-05-17
 * Add async completion support (PR: [#1986](https://www.github.com/OmniSharp/omnisharp-roslyn/pull/1986))
 * Only subscribe to AppDomain.AssemblyResolve once (PR: [#2149](https://www.github.com/OmniSharp/omnisharp-roslyn/pull/2149))
