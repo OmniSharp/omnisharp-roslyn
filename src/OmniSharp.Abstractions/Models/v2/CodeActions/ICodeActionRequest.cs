@@ -5,12 +5,12 @@ namespace OmniSharp.Models.V2.CodeActions
     public interface ICodeActionRequest
     {
         [JsonConverter(typeof(ZeroBasedIndexConverter))]
-        int Line { get; set; }
+        int Line { get; }
         [JsonConverter(typeof(ZeroBasedIndexConverter))]
-        int Column { get; set; }
-        string Buffer { get; set; }
-        string FileName { get; set; }
-        Range Selection { get; set; }
+        int Column { get; }
+        string Buffer { get; }
+        string FileName { get; }
+        Range Selection { get; }
 
         ICodeActionRequest WithSelection(Range newSelection);
     }
