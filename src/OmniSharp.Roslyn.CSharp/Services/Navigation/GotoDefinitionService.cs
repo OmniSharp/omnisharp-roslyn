@@ -30,10 +30,11 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
         public async Task<GotoDefinitionResponse> Handle(GotoDefinitionRequest request)
         {
             var externalSourceService = _externalSourceServiceFactory.Create(_omnisharpOptions);
+            var cancellationToken = _externalSourceServiceFactory.CreateCancellationToken(_omnisharpOptions, request.Timeout);
             var document = externalSourceService.FindDocumentInCache(request.FileName) ??
                 _workspace.GetDocument(request.FileName);
 
-            var symbol = await GoToDefinitionHelpers.GetDefinitionSymbol(document, request.Line, request.Column);
+            var symbol = await GoToDefinitionHelpers.GetDefinitionSymbol(document, request.Line, request.Column, cancellationToken);
             if (symbol == null)
             {
                 return new GotoDefinitionResponse();
@@ -54,7 +55,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
             }
             else if (location.IsInMetadata && request.WantMetadata)
             {
-                var maybeSpan = await GoToDefinitionHelpers.GetMetadataMappedSpan(document, symbol, _externalSourceServiceFactory, externalSourceService, _omnisharpOptions, request.Timeout);
+                var maybeSpan = await GoToDefinitionHelpers.GetMetadataMappedSpan(document, symbol, externalSourceService, cancellationToken);
 
                 if (maybeSpan is FileLinePositionSpan lineSpan)
                 {

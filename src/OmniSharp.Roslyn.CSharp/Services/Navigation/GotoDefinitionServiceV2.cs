@@ -38,7 +38,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
                 return new GotoDefinitionResponse();
             }
 
-            var symbol = await GoToDefinitionHelpers.GetDefinitionSymbol(document, request.Line, request.Column);
+            var symbol = await GoToDefinitionHelpers.GetDefinitionSymbol(document, request.Line, request.Column, cancellationToken);
             if (symbol?.Locations.IsDefaultOrEmpty != false)
             {
                 return new GotoDefinitionResponse();
@@ -55,7 +55,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
             }
             else
             {
-                var maybeSpan = await GoToDefinitionHelpers.GetMetadataMappedSpan(document, symbol, _externalSourceServiceFactory, externalSourceService, _omnisharpOptions, request.Timeout);
+                var maybeSpan = await GoToDefinitionHelpers.GetMetadataMappedSpan(document, symbol, externalSourceService, cancellationToken);
 
                 if (maybeSpan is FileLinePositionSpan lineSpan)
                 {

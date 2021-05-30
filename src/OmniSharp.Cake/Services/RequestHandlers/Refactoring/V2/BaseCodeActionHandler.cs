@@ -5,7 +5,7 @@ using OmniSharp.Models.V2.CodeActions;
 namespace OmniSharp.Cake.Services.RequestHandlers.Refactoring.V2
 {
     public abstract class BaseCodeActionsHandler<TRequest, TResponse> : CakeRequestHandler<TRequest, TResponse>
-        where TRequest : ICodeActionRequest, new()
+        where TRequest : ICodeActionRequest
     {
         protected BaseCodeActionsHandler(
             OmniSharpWorkspace workspace)
@@ -21,14 +21,12 @@ namespace OmniSharp.Cake.Services.RequestHandlers.Refactoring.V2
                 var endLine = request.Selection.Start.Line != request.Selection.End.Line
                     ? await LineIndexHelper.TranslateToGenerated(request.FileName, request.Selection.End.Line, Workspace)
                     : startLine;
-                request = new TRequest()
-                {
-                    Selection = request.Selection with
+                request = (TRequest)request.WithSelection(
+                    request.Selection with
                     {
                         Start = request.Selection.Start with { Line = startLine },
                         End = request.Selection.End with { Line = endLine }
-                    }
-                };
+                    });
             }
 
             return await base.TranslateRequestAsync(request);

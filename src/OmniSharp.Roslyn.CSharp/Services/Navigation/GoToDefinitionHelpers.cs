@@ -3,18 +3,18 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.FindSymbols;
 using OmniSharp.Extensions;
-using OmniSharp.Options;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Navigation
 {
     internal static class GoToDefinitionHelpers
     {
-        internal static async Task<ISymbol?> GetDefinitionSymbol(Document document, int line, int column)
+        internal static async Task<ISymbol?> GetDefinitionSymbol(Document document, int line, int column, CancellationToken cancellationToken)
         {
-            var sourceText = await document.GetTextAsync();
+            var sourceText = await document.GetTextAsync(cancellationToken);
             var position = sourceText.GetPositionFromLineAndOffset(line, column);
-            var symbol = await SymbolFinder.FindSymbolAtPositionAsync(document, position);
+            var symbol = await SymbolFinder.FindSymbolAtPositionAsync(document, position, cancellationToken);
 
             return symbol switch
             {
@@ -30,17 +30,12 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
         internal static async Task<FileLinePositionSpan?> GetMetadataMappedSpan(
             Document document,
             ISymbol symbol,
-            ExternalSourceServiceFactory externalSourceServiceFactory,
             IExternalSourceService externalSourceService,
-            OmniSharpOptions options,
-            int timeout)
+            CancellationToken cancellationToken)
         {
-
-            var cancellationToken = externalSourceServiceFactory.CreateCancellationToken(options, timeout);
             var (metadataDocument, _) = await externalSourceService.GetAndAddExternalSymbolDocument(document.Project, symbol, cancellationToken);
             if (metadataDocument != null)
             {
-                cancellationToken = externalSourceServiceFactory.CreateCancellationToken(options, timeout);
                 var metadataLocation = await externalSourceService.GetExternalSymbolLocation(symbol, metadataDocument, cancellationToken);
                 return metadataLocation.GetMappedLineSpan();
             }
