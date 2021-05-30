@@ -260,7 +260,7 @@ namespace OmniSharp.Cake.Extensions
                     continue;
                 }
 
-                builder.AddChild(childElement);
+                builder.AddChild(translatedElement);
             }
 
             return builder.ToCodeElement();
