@@ -1,4 +1,5 @@
-﻿using Microsoft.CodeAnalysis.Text;
+﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
 using OmniSharp.Models.V2;
 
@@ -40,6 +41,17 @@ namespace OmniSharp.Extensions
             {
                 Start = text.GetPointFromPosition(span.Start),
                 End = text.GetPointFromPosition(span.End)
+            };
+
+        public static Models.V2.Location GetLocationFromFileLinePositionSpan(this FileLinePositionSpan linePositionSpan)
+            => new()
+            {
+                FileName = linePositionSpan.Path,
+                Range = new()
+                {
+                    Start = new Point { Line = linePositionSpan.StartLinePosition.Line, Column = linePositionSpan.StartLinePosition.Character },
+                    End = new Point { Line = linePositionSpan.EndLinePosition.Line, Column = linePositionSpan.EndLinePosition.Character }
+                }
             };
 
         /// <summary>

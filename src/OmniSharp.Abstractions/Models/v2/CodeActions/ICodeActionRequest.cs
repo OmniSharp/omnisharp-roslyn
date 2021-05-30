@@ -10,6 +10,6 @@ namespace OmniSharp.Models.V2.CodeActions
         int Column { get; }
         string Buffer { get; }
         string FileName { get; }
-        Range Selection { get; }
+        Range Selection { get; set; }
     }
 }
