@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using OmniSharp.Extensions.JsonRpc;
 using OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities;
 using OmniSharp.Extensions.LanguageServer.Protocol.Document;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
-using OmniSharp.Extensions.LanguageServer.Protocol.Server;
-using OmniSharp.Models.GotoDefinition;
+using OmniSharp.Models.V2.GotoDefinition;
 using static OmniSharp.LanguageServerProtocol.Helpers;
 
 namespace OmniSharp.LanguageServerProtocol.Handlers
@@ -41,16 +41,16 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
 
             var omnisharpResponse = await _definitionHandler.Handle(omnisharpRequest);
 
-            if (string.IsNullOrWhiteSpace(omnisharpResponse.FileName))
+            if (omnisharpResponse.Definitions == null)
             {
                 return new LocationOrLocationLinks();
             }
 
-            return new LocationOrLocationLinks(new Location()
+            return new LocationOrLocationLinks(omnisharpResponse.Definitions.Select<Definition, LocationOrLocationLink>(definition => new Location()
             {
-                Uri = ToUri(omnisharpResponse.FileName),
-                Range = ToRange((omnisharpResponse.Column, omnisharpResponse.Line))
-            });
+                Uri = definition.Location.FileName,
+                Range = ToRange(definition.Location.Range)
+            }));
         }
 
         protected override DefinitionRegistrationOptions CreateRegistrationOptions(DefinitionCapability capability, ClientCapabilities clientCapabilities)

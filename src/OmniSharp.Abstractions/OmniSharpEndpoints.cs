@@ -72,6 +72,7 @@ namespace OmniSharp
 
             public const string Highlight = "/v2/highlight";
 
+            public const string GotoDefinition = "/v2/gotodefinition";
         }
     }
 }
