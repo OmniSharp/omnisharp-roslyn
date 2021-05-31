@@ -260,7 +260,7 @@ namespace OmniSharp.Cake.Extensions
                     continue;
                 }
 
-                builder.AddChild(childElement);
+                builder.AddChild(translatedElement);
             }
 
             return builder.ToCodeElement();
@@ -272,16 +272,19 @@ namespace OmniSharp.Cake.Extensions
 
             if (range.Start.Line == range.End.Line)
             {
-                range.Start.Line = line;
-                range.End.Line = line;
-                return range;
+                return range with
+                {
+                    Start = range.Start with { Line = line },
+                    End = range.End with { Line = line }
+                };
             }
 
-            range.Start.Line = line;
-            (line, _) = await LineIndexHelper.TranslateFromGenerated(request.FileName, range.End.Line, workspace, true);
-            range.End.Line = line;
-
-            return range;
+            var (endLine, _) = await LineIndexHelper.TranslateFromGenerated(request.FileName, range.End.Line, workspace, true);
+            return range with
+            {
+                Start = range.Start with { Line = line },
+                End = range.End with { Line = endLine }
+            };
         }
 
         private static async Task<FileMemberElement> TranslateAsync(this FileMemberElement element, OmniSharpWorkspace workspace, Request request)

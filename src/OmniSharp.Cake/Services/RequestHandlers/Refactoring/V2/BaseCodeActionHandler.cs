@@ -18,10 +18,15 @@ namespace OmniSharp.Cake.Services.RequestHandlers.Refactoring.V2
             if (request.Selection != null)
             {
                 var startLine = await LineIndexHelper.TranslateToGenerated(request.FileName, request.Selection.Start.Line, Workspace);
-                request.Selection.End.Line = request.Selection.Start.Line != request.Selection.End.Line
+                var endLine = request.Selection.Start.Line != request.Selection.End.Line
                     ? await LineIndexHelper.TranslateToGenerated(request.FileName, request.Selection.End.Line, Workspace)
                     : startLine;
-                request.Selection.Start.Line = startLine;
+                request = (TRequest)request.WithSelection(
+                    request.Selection with
+                    {
+                        Start = request.Selection.Start with { Line = startLine },
+                        End = request.Selection.End with { Line = endLine }
+                    });
             }
 
             return await base.TranslateRequestAsync(request);
