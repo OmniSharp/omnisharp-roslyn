@@ -1,9 +1,12 @@
 ﻿using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Diagnostics;
 using OmniSharp.Mef;
 using OmniSharp.Models.Metadata;
+using OmniSharp.Models.v1.SourceGeneratedFile;
 using OmniSharp.Roslyn.CSharp.Services.Navigation;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using TestUtility;
@@ -506,6 +509,61 @@ class Bar {
             Assert.Empty(GetInfo(response));
         }
 
+        [Fact]
+        public async Task ReturnsResultsForSourceGenerators()
+        {
+            const string Source = @"
+public class {|generatedClassName:Generated|}
+{
+    public int {|propertyName:Property|} { get; set; }
+}
+";
+            const string FileName = "real.cs";
+            TestFile generatedTestFile = new("GeneratedFile.cs", Source);
+            var testFile = new TestFile(FileName, @"
+class C
+{
+    public void M(Generated g)
+    {
+        _ = g.P$$roperty;
+}
+");
+
+            TestHelpers.AddProjectToWorkspace(SharedOmniSharpTestHost.Workspace,
+                "project.csproj",
+                new[] { "netcoreapp3.1" },
+                new[] { testFile },
+                analyzerRefs: ImmutableArray.Create<AnalyzerReference>(new TestGeneratorReference(
+                    context => context.AddSource("GeneratedFile", Source))));
+
+            var point = testFile.Content.GetPointFromPosition();
+
+            var gotoDefRequest = CreateRequest(FileName, point.Line, point.Offset, wantMetadata: true);
+            var gotoDefHandler = GetRequestHandler(SharedOmniSharpTestHost);
+            var response = await gotoDefHandler.Handle(gotoDefRequest);
+            var info = GetInfo(response).Single();
+
+            Assert.NotNull(info.SourceGeneratorInfo);
+
+            var expectedSpan = generatedTestFile.Content.GetSpans("propertyName").Single();
+            var expectedRange = generatedTestFile.Content.GetRangeFromSpan(expectedSpan);
+
+            Assert.Equal(expectedRange.Start.Line, info.Line);
+            Assert.Equal(expectedRange.Start.Offset, info.Column);
+
+            var sourceGeneratedFileHandler = SharedOmniSharpTestHost.GetRequestHandler<SourceGeneratedFileService>(OmniSharpEndpoints.SourceGeneratedFile);
+            var sourceGeneratedRequest = new SourceGeneratedFileRequest
+            {
+                DocumentGuid = info.SourceGeneratorInfo.DocumentGuid,
+                ProjectGuid = info.SourceGeneratorInfo.ProjectGuid
+            };
+
+            var sourceGeneratedFileResponse = await sourceGeneratedFileHandler.Handle(sourceGeneratedRequest);
+            Assert.NotNull(sourceGeneratedFileResponse);
+            Assert.Equal(generatedTestFile.Content.Code, sourceGeneratedFileResponse.Source);
+            Assert.Equal(@"OmniSharp.Roslyn.CSharp.Tests\OmniSharp.Roslyn.CSharp.Tests.TestSourceGenerator\GeneratedFile.cs", sourceGeneratedFileResponse.SourceName);
+        }
+
         protected async Task TestGoToSourceAsync(params TestFile[] testFiles)
         {
             var response = await GetResponseAsync(testFiles, wantMetadata: false);
@@ -581,6 +639,6 @@ class Bar {
 
         protected abstract TGotoDefinitionRequest CreateRequest(string fileName, int line, int column, bool wantMetadata, int timeout = 60000);
         protected abstract MetadataSource GetMetadataSource(TGotoDefinitionResponse response);
-        protected abstract IEnumerable<(int Line, int Column, string FileName)> GetInfo(TGotoDefinitionResponse response);
+        protected abstract IEnumerable<(int Line, int Column, string FileName, SourceGeneratedFileInfo SourceGeneratorInfo)> GetInfo(TGotoDefinitionResponse response);
     }
 }
