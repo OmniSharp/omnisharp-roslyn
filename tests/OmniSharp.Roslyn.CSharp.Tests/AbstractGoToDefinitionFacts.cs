@@ -562,7 +562,7 @@ class C
             var sourceGeneratedFileResponse = await sourceGeneratedFileHandler.Handle(sourceGeneratedRequest);
             Assert.NotNull(sourceGeneratedFileResponse);
             Assert.Equal(generatedTestFile.Content.Code, sourceGeneratedFileResponse.Source);
-            Assert.Equal(@"OmniSharp.Roslyn.CSharp.Tests\OmniSharp.Roslyn.CSharp.Tests.TestSourceGenerator\GeneratedFile.cs", sourceGeneratedFileResponse.SourceName);
+            Assert.Equal(@"OmniSharp.Roslyn.CSharp.Tests\OmniSharp.Roslyn.CSharp.Tests.TestSourceGenerator\GeneratedFile.cs", sourceGeneratedFileResponse.SourceName.Replace("/", @"\"));
         }
 
         protected async Task TestGoToSourceAsync(params TestFile[] testFiles)
