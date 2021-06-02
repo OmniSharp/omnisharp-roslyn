@@ -15,6 +15,6 @@ namespace OmniSharp.Models.GotoDefinition
         public int Column { get; set; }
         public MetadataSource? MetadataSource { get; set; }
         public SourceGeneratedFileInfo? SourceGeneratedInfo { get; set; }
-        public bool IsEmpty => string.IsNullOrWhiteSpace(FileName) && MetadataSource == null;
+        public bool IsEmpty => string.IsNullOrWhiteSpace(FileName) && MetadataSource == null && SourceGeneratedInfo == null;
     }
 }

@@ -526,6 +526,7 @@ class C
     public void M(Generated g)
     {
         _ = g.P$$roperty;
+    }
 }
 ");
 
@@ -534,7 +535,7 @@ class C
                 new[] { "netcoreapp3.1" },
                 new[] { testFile },
                 analyzerRefs: ImmutableArray.Create<AnalyzerReference>(new TestGeneratorReference(
-                    context => context.AddSource("GeneratedFile", Source))));
+                    context => context.AddSource("GeneratedFile", generatedTestFile.Content.Code))));
 
             var point = testFile.Content.GetPointFromPosition();
 
