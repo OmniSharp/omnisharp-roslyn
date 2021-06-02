@@ -3,6 +3,8 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.FindSymbols;
 using OmniSharp.Extensions;
+using OmniSharp.Models.v1.SourceGeneratedFile;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -41,6 +43,22 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
             }
 
             return null;
+        }
+
+        internal static SourceGeneratedFileInfo? GetSourceGeneratedFileInfo(OmniSharpWorkspace workspace, Location location)
+        {
+            Debug.Assert(location.IsInSource);
+            var document = workspace.CurrentSolution.GetDocument(location.SourceTree);
+            if (document is not SourceGeneratedDocument)
+            {
+                return null;
+            }
+
+            return new SourceGeneratedFileInfo
+            {
+                ProjectGuid = document.Project.Id.Id,
+                DocumentGuid = document.Id.Id
+            };
         }
     }
 }

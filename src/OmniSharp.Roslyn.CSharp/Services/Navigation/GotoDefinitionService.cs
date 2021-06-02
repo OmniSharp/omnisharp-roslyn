@@ -50,7 +50,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
                 {
                     FileName = lineSpan.Path,
                     Line = lineSpan.StartLinePosition.Line,
-                    Column = lineSpan.StartLinePosition.Character
+                    Column = lineSpan.StartLinePosition.Character,
+                    SourceGeneratedInfo = GoToDefinitionHelpers.GetSourceGeneratedFileInfo(_workspace, location)
                 };
             }
             else if (location.IsInMetadata && request.WantMetadata)

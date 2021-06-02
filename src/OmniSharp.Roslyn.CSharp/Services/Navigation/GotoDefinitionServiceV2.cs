@@ -49,7 +49,11 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
                 return new GotoDefinitionResponse()
                 {
                     Definitions = symbol.Locations
-                        .Select(location => new Definition { Location = location.GetMappedLineSpan().GetLocationFromFileLinePositionSpan() })
+                        .Select(location => new Definition
+                        {
+                            Location = location.GetMappedLineSpan().GetLocationFromFileLinePositionSpan(),
+                            SourceGeneratedFileInfo = GoToDefinitionHelpers.GetSourceGeneratedFileInfo(_workspace, location)
+                        })
                         .ToList()
                 };
             }
