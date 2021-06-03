@@ -245,4 +245,4 @@ namespace OmniSharp.MSBuild.Tests
             return _referenceHashingAlgorithm.HashInput(reference).Value;
         }
     }
-}
+} 
