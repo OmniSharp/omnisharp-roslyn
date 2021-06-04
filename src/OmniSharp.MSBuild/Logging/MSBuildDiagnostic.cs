@@ -40,7 +40,7 @@ namespace OmniSharp.MSBuild.Logging
 
             // https://github.com/dotnet/msbuild/blob/v16.8.3/src/Tasks/Resources/Strings.resx#L2155-L2158
             // for MSB3644, we should print a different message on Unix because the default one is Windows-specific
-            if (args.Code.Equals("MSB3644", StringComparison.OrdinalIgnoreCase))
+            if (args.Code?.Equals("MSB3644", StringComparison.OrdinalIgnoreCase) == true)
             {
                 // https://github.com/dotnet/msbuild/issues/5820
                 // older versions of MSBuild incorrectly treat 'net5.0'/'net6.0' moniker as ".NETFramework,Version=v5.0/6.0"
