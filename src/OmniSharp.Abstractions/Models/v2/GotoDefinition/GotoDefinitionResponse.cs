@@ -1,6 +1,7 @@
 #nullable enable
 
 using OmniSharp.Models.Metadata;
+using OmniSharp.Models.v1.SourceGeneratedFile;
 using System.Collections.Generic;
 
 namespace OmniSharp.Models.V2.GotoDefinition
@@ -14,5 +15,6 @@ namespace OmniSharp.Models.V2.GotoDefinition
     {
         public Location Location { get; init; } = null!;
         public MetadataSource? MetadataSource { get; init; }
+        public SourceGeneratedFileInfo? SourceGeneratedFileInfo { get; init; }
     }
 }

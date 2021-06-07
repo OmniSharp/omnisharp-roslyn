@@ -6,6 +6,7 @@ using Xunit;
 using Xunit.Abstractions;
 using System.Collections.Generic;
 using OmniSharp.Models.V2.GotoDefinition;
+using OmniSharp.Models.v1.SourceGeneratedFile;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
@@ -63,24 +64,20 @@ partial class {|def:Class|}
                 Timeout = timeout
             };
 
-        protected override IEnumerable<(int Line, int Column, string FileName)> GetInfo(GotoDefinitionResponse response)
+        protected override IEnumerable<(int Line, int Column, string FileName, SourceGeneratedFileInfo SourceGeneratorInfo)> GetInfo(GotoDefinitionResponse response)
         {
             if (response.Definitions is null)
                 yield break;
 
             foreach (var definition in response.Definitions)
             {
-                yield return (definition.Location.Range.Start.Line, definition.Location.Range.Start.Column, definition.Location.FileName);
+                yield return (definition.Location.Range.Start.Line, definition.Location.Range.Start.Column, definition.Location.FileName, definition.SourceGeneratedFileInfo);
             }
         }
 
         protected override MetadataSource GetMetadataSource(GotoDefinitionResponse response)
         {
-            if (response.Definitions?.Count != 1)
-            {
-                return null;
-            }
-
+            Assert.Single(response.Definitions);
             return response.Definitions[0].MetadataSource;
         }
     }

@@ -4,6 +4,7 @@ using OmniSharp.Models.Metadata;
 using TestUtility;
 using Xunit.Abstractions;
 using System.Collections.Generic;
+using OmniSharp.Models.v1.SourceGeneratedFile;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
@@ -26,14 +27,14 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 Timeout = timeout
             };
 
-        protected override IEnumerable<(int Line, int Column, string FileName)> GetInfo(GotoDefinitionResponse response)
+        protected override IEnumerable<(int Line, int Column, string FileName, SourceGeneratedFileInfo SourceGeneratorInfo)> GetInfo(GotoDefinitionResponse response)
         {
             if (response.IsEmpty)
             {
                 yield break;
             }
 
-            yield return (response.Line, response.Column, response.FileName);
+            yield return (response.Line, response.Column, response.FileName, response.SourceGeneratedInfo);
         }
 
         protected override MetadataSource GetMetadataSource(GotoDefinitionResponse response)
