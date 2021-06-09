@@ -1,9 +1,9 @@
+#nullable enable
+
 using System.Composition;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.FindSymbols;
-using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Extensions;
 using OmniSharp.Mef;
 using OmniSharp.Models.GotoDefinition;
@@ -30,70 +30,51 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
         public async Task<GotoDefinitionResponse> Handle(GotoDefinitionRequest request)
         {
             var externalSourceService = _externalSourceServiceFactory.Create(_omnisharpOptions);
+            var cancellationToken = _externalSourceServiceFactory.CreateCancellationToken(_omnisharpOptions, request.Timeout);
             var document = externalSourceService.FindDocumentInCache(request.FileName) ??
                 _workspace.GetDocument(request.FileName);
 
-            var response = new GotoDefinitionResponse();
-
-            if (document != null)
+            var symbol = await GoToDefinitionHelpers.GetDefinitionSymbol(document, request.Line, request.Column, cancellationToken);
+            if (symbol == null)
             {
-                var semanticModel = await document.GetSemanticModelAsync();
-                var sourceText = await document.GetTextAsync();
-                var position = sourceText.GetTextPosition(request);
-                var symbol = await SymbolFinder.FindSymbolAtPositionAsync(semanticModel, position, _workspace);
+                return new GotoDefinitionResponse();
+            }
 
-                // go to definition for namespaces is not supported
-                if (symbol != null && !(symbol is INamespaceSymbol))
+            var location = symbol.Locations.First();
+
+            GotoDefinitionResponse? response = null;
+            if (location.IsInSource)
+            {
+                var lineSpan = symbol.Locations.First().GetMappedLineSpan();
+                response = new GotoDefinitionResponse
                 {
-                    // for partial methods, pick the one with body
-                    if (symbol is IMethodSymbol method)
+                    FileName = lineSpan.Path,
+                    Line = lineSpan.StartLinePosition.Line,
+                    Column = lineSpan.StartLinePosition.Character,
+                    SourceGeneratedInfo = GoToDefinitionHelpers.GetSourceGeneratedFileInfo(_workspace, location)
+                };
+            }
+            else if (location.IsInMetadata && request.WantMetadata)
+            {
+                var maybeSpan = await GoToDefinitionHelpers.GetMetadataMappedSpan(document, symbol, externalSourceService, cancellationToken);
+
+                if (maybeSpan is FileLinePositionSpan lineSpan)
+                {
+                    response = new GotoDefinitionResponse
                     {
-                        // Return an empty response for property accessor symbols like get and set
-                        if (method.AssociatedSymbol is IPropertySymbol)
-                            return response;
-
-                        symbol = method.PartialImplementationPart ?? symbol;
-                    }
-
-                    var location = symbol.Locations.First();
-
-                    if (location.IsInSource)
-                    {
-                        var lineSpan = symbol.Locations.First().GetMappedLineSpan();
-                        response = new GotoDefinitionResponse
+                        Line = lineSpan.StartLinePosition.Line,
+                        Column = lineSpan.StartLinePosition.Character,
+                        MetadataSource = new MetadataSource()
                         {
-                            FileName = lineSpan.Path,
-                            Line = lineSpan.StartLinePosition.Line,
-                            Column = lineSpan.StartLinePosition.Character
-                        };
-                    }
-                    else if (location.IsInMetadata && request.WantMetadata)
-                    {
-                        var cancellationToken = _externalSourceServiceFactory.CreateCancellationToken(_omnisharpOptions, request.Timeout);
-                        var (metadataDocument, _) = await externalSourceService.GetAndAddExternalSymbolDocument(document.Project, symbol, cancellationToken);
-                        if (metadataDocument != null)
-                        {
-                            cancellationToken = _externalSourceServiceFactory.CreateCancellationToken(_omnisharpOptions, request.Timeout);
-                            var metadataLocation = await externalSourceService.GetExternalSymbolLocation(symbol, metadataDocument, cancellationToken);
-                            var lineSpan = metadataLocation.GetMappedLineSpan();
-
-                            response = new GotoDefinitionResponse
-                            {
-                                Line = lineSpan.StartLinePosition.Line,
-                                Column = lineSpan.StartLinePosition.Character,
-                                MetadataSource = new MetadataSource()
-                                {
-                                    AssemblyName = symbol.ContainingAssembly.Name,
-                                    ProjectName = document.Project.Name,
-                                    TypeName = symbol.GetSymbolName()
-                                },
-                            };
-                        }
-                    }
+                            AssemblyName = symbol.ContainingAssembly.Name,
+                            ProjectName = document.Project.Name,
+                            TypeName = symbol.GetSymbolName()
+                        },
+                    };
                 }
             }
 
-            return response;
+            return response ?? new GotoDefinitionResponse();
         }
     }
 }
