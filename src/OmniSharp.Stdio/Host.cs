@@ -31,6 +31,7 @@ namespace OmniSharp.Stdio
         private readonly IOmniSharpEnvironment _environment;
         private readonly CancellationTokenSource _cancellationTokenSource;
         private readonly CachedStringBuilder _cachedStringBuilder;
+        private static readonly double TimestampToTicks = TimeSpan.TicksPerSecond / (double)Stopwatch.Frequency;
 
         public Host(
             TextReader input, ISharedTextWriter writer, IOmniSharpEnvironment environment,
@@ -193,8 +194,6 @@ namespace OmniSharp.Stdio
                 }
             }
         }
-
-        private static readonly double TimestampToTicks = TimeSpan.TicksPerSecond / (double)Stopwatch.Frequency;
 
         private async Task HandleRequest(string json, ILogger logger)
         {
