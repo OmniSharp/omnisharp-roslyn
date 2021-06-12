@@ -5,7 +5,7 @@
         <AspNetCorePackageVersion>2.1.1</AspNetCorePackageVersion>
         <MicrosoftExtensionPackageVersion>3.1.12</MicrosoftExtensionPackageVersion>
         <MSBuildPackageVersion>16.9.0</MSBuildPackageVersion>
-        <NuGetPackageVersion>5.2.0</NuGetPackageVersion>
+        <NuGetPackageVersion>5.8.1</NuGetPackageVersion>
         <RoslynPackageVersion>3.11.0-1.21262.10</RoslynPackageVersion>
         <XunitPackageVersion>2.4.1</XunitPackageVersion>
     </PropertyGroup>
