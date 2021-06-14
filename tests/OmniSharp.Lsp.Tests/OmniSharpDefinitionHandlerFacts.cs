@@ -33,7 +33,20 @@ namespace OmniSharp.Lsp.Tests
             var definition = await FindDefinitionAsync(code);
 
             Assert.Single(definition);
-            Assert.Equal("file:///dummy.cs", definition.Single().Location.Uri.ToString());
+
+            if (Path.DirectorySeparatorChar == '/')
+            {
+                Assert.Equal("file:///dummy.cs", definition.Single().Location.Uri.ToString());
+            }
+            else if (Path.DirectorySeparatorChar == '\\')
+            {
+                Assert.Equal("file:///%5Cdummy.cs", definition.Single().Location.Uri.ToString());
+            }
+            else
+            {
+                throw new NotImplementedException();
+            }
+
             Assert.Equal(new Range((1,29), (1,36)), definition.Single().Location.Range);
         }
 
