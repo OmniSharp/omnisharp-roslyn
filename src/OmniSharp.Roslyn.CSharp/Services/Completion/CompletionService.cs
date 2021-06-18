@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.Completion;
 using Microsoft.CodeAnalysis.Completion;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.Extensions.Logging;
@@ -17,7 +18,6 @@ using OmniSharp.Models;
 using OmniSharp.Models.v1.Completion;
 using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Helpers;
-using OmniSharp.Roslyn.CSharp.Services.Intellisense;
 using OmniSharp.Utilities;
 using CompletionItem = OmniSharp.Models.v1.Completion.CompletionItem;
 using CompletionTriggerKind = OmniSharp.Models.v1.Completion.CompletionTriggerKind;
@@ -80,7 +80,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                 return new CompletionResponse { Items = ImmutableArray<CompletionItem>.Empty };
             }
 
-            var (completions, expandedItemsAvailable) = await completionService.GetCompletionsInternalAsync(document, position, trigger);
+            var (completions, expandedItemsAvailable) = await OmniSharpCompletionService.GetCompletionsAsync(completionService, document, position, trigger);
             _logger.LogTrace("Found {0} completions for {1}:{2},{3}",
                              completions?.Items.IsDefaultOrEmpty != false ? 0 : completions.Items.Length,
                              request.FileName,
@@ -95,9 +95,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
             if (request.TriggerCharacter == ' ' && !completions.Items.Any(c =>
             {
                 var providerName = c.GetProviderName();
-                return providerName is CompletionItemExtensions.OverrideCompletionProvider or
-                                       CompletionItemExtensions.PartialMethodCompletionProvider or
-                                       CompletionItemExtensions.ObjectCreationCompletionProvider;
+                return providerName is CompletionListBuilder.OverrideCompletionProvider or
+                                       CompletionListBuilder.PartialMethodCompletionProvider or
+                                       CompletionListBuilder.ObjectCreationCompletionProvider;
             }))
             {
                 // Only trigger on space if there is an object creation completion
@@ -114,7 +114,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
             // that completion provider is still creating the cache. We'll mark this completion list as not completed, and the
             // editor will ask again when the user types more. By then, hopefully the cache will have populated and we can mark
             // the completion as done.
-            bool expectingImportedItems = expandedItemsAvailable && _workspace.Options.GetOption(CompletionItemExtensions.ShowItemsFromUnimportedNamespaces, LanguageNames.CSharp) == true;
+            bool expectingImportedItems = expandedItemsAvailable && _workspace.Options.GetOption(OmniSharpCompletionService.ShowItemsFromUnimportedNamespaces, LanguageNames.CSharp) == true;
             var syntax = await document.GetSyntaxTreeAsync();
 
             var replacingSpanStartPosition = sourceText.Lines.GetLinePosition(typedSpan.Start);
@@ -179,11 +179,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
             string providerName = lastCompletionItem.GetProviderName();
             switch (providerName)
             {
-                case CompletionItemExtensions.ExtensionMethodImportCompletionProvider:
-                case CompletionItemExtensions.TypeImportCompletionProvider:
+                case CompletionListBuilder.ExtensionMethodImportCompletionProvider:
+                case CompletionListBuilder.TypeImportCompletionProvider:
                     var sourceText = await document.GetTextAsync();
-                    var typedSpan = completionService.GetDefaultCompletionListSpan(sourceText, position);
-                    var change = await completionService.GetChangeAsync(document, lastCompletionItem, typedSpan);
+                    var change = await completionService.GetChangeAsync(document, lastCompletionItem);
 
                     var additionalChanges = new List<LinePositionSpanTextChange>();
                     foreach (var textChange in change.TextChanges)
@@ -235,8 +234,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                 return new CompletionAfterInsertResponse();
             }
 
-            if (lastCompletionItem.GetProviderName() is not (CompletionItemExtensions.OverrideCompletionProvider or
-                                                             CompletionItemExtensions.PartialMethodCompletionProvider)
+            if (lastCompletionItem.GetProviderName() is not (CompletionListBuilder.OverrideCompletionProvider or
+                                                             CompletionListBuilder.PartialMethodCompletionProvider)
                                                         and var name)
             {
                 _logger.LogWarning("Received unsupported afterInsert completion request for provider {0}", name);
@@ -252,7 +251,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
             var changedText = sourceText.WithChanges(new TextChange(insertedSpan, request.Item.TextEdit.NewText));
             var changedDocument = document.WithText(changedText);
 
-            var finalChange = await completionService.GetChangeAsync(changedDocument, lastCompletionItem, new TextSpan(insertedSpan.Start, request.Item.TextEdit.NewText.Length));
+            var finalChange = await completionService.GetChangeAsync(changedDocument, lastCompletionItem);
             var finalText = changedText.WithChanges(finalChange.TextChange);
             var finalPosition = finalText.GetPointFromPosition(finalChange.NewPosition!.Value);
 

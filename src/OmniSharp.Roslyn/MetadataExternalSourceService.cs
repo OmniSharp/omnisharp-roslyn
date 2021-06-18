@@ -1,16 +1,10 @@
-using System;
-using System.Collections.Generic;
 using System.Composition;
-using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.MetadataAsSource;
 using OmniSharp.Extensions;
-using OmniSharp.Services;
-using OmniSharp.Utilities;
 
 namespace OmniSharp.Roslyn
 {
@@ -18,13 +12,10 @@ namespace OmniSharp.Roslyn
     public class MetadataExternalSourceService : BaseExternalSourceService, IExternalSourceService
     {
         private const string MetadataKey = "$Metadata$";
-        private readonly Lazy<Type> _csharpMetadataAsSourceService;
-        private const string CSharpMetadataAsSourceService = "Microsoft.CodeAnalysis.CSharp.MetadataAsSource.CSharpMetadataAsSourceService";
 
         [ImportingConstructor]
-        public MetadataExternalSourceService(IAssemblyLoader loader) : base(loader)
+        public MetadataExternalSourceService() : base()
         {
-            _csharpMetadataAsSourceService = _csharpFeatureAssembly.LazyGetType(CSharpMetadataAsSourceService);
         }
 
         public async Task<(Document document, string documentPath)> GetAndAddExternalSymbolDocument(Project project, ISymbol symbol, CancellationToken cancellationToken)
@@ -56,11 +47,12 @@ namespace OmniSharp.Roslyn
                 var topLevelSymbol = symbol.GetTopLevelContainingNamedType();
 
                 var temporaryDocument = metadataProject.AddDocument(fileName, string.Empty);
-                var service = _csharpMetadataAsSourceService.CreateInstance();
-                var method = _csharpMetadataAsSourceService.GetMethod(AddSourceToAsync);
 
-                var documentTask = method.Invoke<Task<Document>>(service, new object[] { temporaryDocument, await metadataProject.GetCompilationAsync(), topLevelSymbol, cancellationToken });
-                document = await documentTask;
+                document = await OmniSharpMetadataAsSourceService.AddSourceToAsync(
+                    temporaryDocument,
+                    await metadataProject.GetCompilationAsync(),
+                    topLevelSymbol,
+                    cancellationToken);
 
                 _cache.TryAdd(fileName, document);
             }

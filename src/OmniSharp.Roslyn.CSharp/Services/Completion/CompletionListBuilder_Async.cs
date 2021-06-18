@@ -2,10 +2,10 @@
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Completion;
+using Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.Completion;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
 using OmniSharp.Models.v1.Completion;
-using OmniSharp.Roslyn.CSharp.Services.Intellisense;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
@@ -33,7 +33,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
             var commitCharacterRuleCache = new Dictionary<ImmutableArray<CharacterSetModificationRule>, IReadOnlyList<char>>();
             var commitCharacterRuleBuilder = new HashSet<char>();
             var isOverrideOrPartialCompletion = completions.Items.Length > 0
-                && completions.Items[0].GetProviderName() is CompletionItemExtensions.OverrideCompletionProvider or CompletionItemExtensions.PartialMethodCompletionProvider;
+                && completions.Items[0].GetProviderName() is OverrideCompletionProvider or PartialMethodCompletionProvider;
 
             for (int i = 0; i < completions.Items.Length; i++)
             {
@@ -50,8 +50,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                 {
                     // The completion is somehow expensive. Currently, this one of two categories: import completion, or override/partial
                     // completion.
-                    Debug.Assert(completion.GetProviderName() is CompletionItemExtensions.OverrideCompletionProvider or CompletionItemExtensions.PartialMethodCompletionProvider
-                                                              or CompletionItemExtensions.TypeImportCompletionProvider or CompletionItemExtensions.ExtensionMethodImportCompletionProvider);
+                    Debug.Assert(completion.GetProviderName() is OverrideCompletionProvider or PartialMethodCompletionProvider
+                                                              or TypeImportCompletionProvider or ExtensionMethodImportCompletionProvider);
 
                     changeSpan = typedSpan;
 

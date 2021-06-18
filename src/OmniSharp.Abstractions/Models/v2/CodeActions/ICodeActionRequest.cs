@@ -11,5 +11,7 @@ namespace OmniSharp.Models.V2.CodeActions
         string Buffer { get; }
         string FileName { get; }
         Range Selection { get; }
+
+        ICodeActionRequest WithSelection(Range newSelection);
     }
 }

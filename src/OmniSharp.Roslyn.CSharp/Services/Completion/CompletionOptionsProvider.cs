@@ -2,9 +2,9 @@
 
 using System.Composition;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.Completion;
 using Microsoft.CodeAnalysis.Options;
 using OmniSharp.Options;
-using OmniSharp.Roslyn.CSharp.Services.Intellisense;
 using OmniSharp.Roslyn.Options;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Completion
@@ -16,7 +16,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
 
         public OptionSet Process(OptionSet currentOptionSet, OmniSharpOptions omniSharpOptions, IOmniSharpEnvironment omnisharpEnvironment)
             => currentOptionSet.WithChangedOption(
-                option: CompletionItemExtensions.ShowItemsFromUnimportedNamespaces,
+                option: OmniSharpCompletionService.ShowItemsFromUnimportedNamespaces,
                 language: LanguageNames.CSharp,
                 value: omniSharpOptions.RoslynExtensionsOptions.EnableImportCompletion);
     }
