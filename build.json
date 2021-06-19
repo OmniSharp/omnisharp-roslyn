@@ -2,9 +2,9 @@
     "DotNetInstallScriptURL": "https://dot.net/v1",
     "DotNetChannel": "Preview",
     "DotNetVersions": [
-        "3.1.407",
-        "5.0.104",
-        "6.0.100-preview.2.21155.3"
+        "3.1.409",
+        "5.0.300",
+        "6.0.100-preview.4.21255.9"
     ],
     "RequiredMonoVersion": "6.6.0",
     "DownloadURL": "https://roslynomnisharp.blob.core.windows.net/ext",

@@ -1,12 +1,12 @@
 ﻿#nullable enable
 
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.Completion;
 using Microsoft.CodeAnalysis.Completion;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
 using OmniSharp.Models.v1.Completion;
 using OmniSharp.Roslyn.CSharp.Helpers;
-using OmniSharp.Roslyn.CSharp.Services.Intellisense;
 using OmniSharp.Utilities;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -41,8 +41,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
             var completionTasksAndProviderNames = completions.Items.SelectAsArray((document, completionService), (completion, arg) =>
             {
                 var providerName = completion.GetProviderName();
-                if (providerName is CompletionItemExtensions.TypeImportCompletionProvider or
-                                    CompletionItemExtensions.ExtensionMethodImportCompletionProvider)
+                if (providerName is TypeImportCompletionProvider or
+                                    ExtensionMethodImportCompletionProvider)
                 {
                     return (null, providerName);
                 }
@@ -65,7 +65,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                 var (changeTask, providerName) = completionTasksAndProviderNames[i];
                 switch (providerName)
                 {
-                    case CompletionItemExtensions.TypeImportCompletionProvider or CompletionItemExtensions.ExtensionMethodImportCompletionProvider:
+                    case TypeImportCompletionProvider or ExtensionMethodImportCompletionProvider:
                         changeSpan = typedSpan;
                         insertText = completion.DisplayText;
                         seenUnimportedCompletions = true;
@@ -73,7 +73,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                         filterText = null;
                         break;
 
-                    case CompletionItemExtensions.InternalsVisibleToCompletionProvider:
+                    case InternalsVisibleToCompletionProvider:
                         // if the completion is for the hidden Misc files project, skip it
                         if (completion.DisplayText == Configuration.OmniSharpMiscProjectName) continue;
                         goto default;

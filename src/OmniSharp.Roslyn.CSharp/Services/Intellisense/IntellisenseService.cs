@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Composition;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.Completion;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Completion;
 using Microsoft.CodeAnalysis.Recommendations;
@@ -12,6 +13,8 @@ using OmniSharp.Mef;
 using OmniSharp.Models.AutoComplete;
 using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Services.Documentation;
+using OmniSharp.Roslyn.CSharp.Services.Completion;
+using CompletionService = Microsoft.CodeAnalysis.Completion.CompletionService;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
 {
@@ -45,7 +48,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
                 if (completionList != null)
                 {
                     // Only trigger on space if Roslyn has object creation items
-                    if (request.TriggerCharacter == " " && !completionList.Items.Any(i => i.IsObjectCreationCompletionItem()))
+                    if (request.TriggerCharacter == " " && !completionList.Items.Any(i => i.GetProviderName() is CompletionListBuilder.ObjectCreationCompletionProvider))
                     {
                         return completions;
                     }

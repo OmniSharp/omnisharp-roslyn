@@ -20,7 +20,7 @@ namespace OmniSharp.Cake.Tests
 
         public CompletionFacts(ITestOutputHelper testOutput) : base(testOutput)
         {
-            _logger = LoggerFactory.CreateLogger<AutoCompleteFacts>();
+            _logger = LoggerFactory.CreateLogger<CompletionFacts>();
         }
 
         protected override string EndpointName => OmniSharpEndpoints.Completion;

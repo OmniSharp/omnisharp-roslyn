@@ -1,6 +1,31 @@
 # Changelog
 All changes to the project will be documented in this file.
 
+## [1.37.11] - 2021-06-18
+* Include timing info in logged responses (PR: [#2173](https://www.github.com/omnisharp/omnisharp-roslyn/pull/2173))
+* Defend against null value in BuildErrorEventArgs ([#2171](https://github.com/OmniSharp/omnisharp-roslyn/issues/2171), PR: [#2172](https://www.github.com/omnisharp/omnisharp-roslyn/pull/2172))
+* Updated to all the latest .NET SDKs (PR: [#2166](https://www.github.com/omnisharp/omnisharp-roslyn/pull/2166))
+* Add support for GoToDefinition on source-generated files (PR: [#2170](https://www.github.com/omnisharp/omnisharp-roslyn/pull/2170))
+* Add V2 version of GotoDefinitionService (PR: [#2168](https://www.github.com/omnisharp/omnisharp-roslyn/pull/2168))
+* avoid NRE when document is null (PR: [#2163](https://www.github.com/omnisharp/omnisharp-roslyn/pull/2163)))
+
+## [1.37.10] - 2021-05-25
+* Update included toolset to match .NET 6 preview4 (PR: [#2159](https://github.com/OmniSharp/omnisharp-roslyn/pull/2159))
+
+## [1.37.9] - 2021-05-17
+* Add async completion support (PR: [#1986](https://www.github.com/OmniSharp/omnisharp-roslyn/pull/1986))
+* Only subscribe to AppDomain.AssemblyResolve once (PR: [#2149](https://www.github.com/OmniSharp/omnisharp-roslyn/pull/2149))
+* Update build tools to match .NET 6 Preview 3 SDK. (PR: [#2134](https://www.github.com/OmniSharp/omnisharp-roslyn/pull/2134))
+* Do not return null responses from BlockStructureService and CodeStructureService (PR: [#2148](https://www.github.com/OmniSharp/omnisharp-roslyn/pull/2148))
+* Strong-name sign OmniSharp assemblies (PR: [#2143](https://www.github.com/OmniSharp/omnisharp-roslyn/pull/2143))
+* Updated IL Spy to 7.0.0 stable (PR: [#2142](https://www.github.com/OmniSharp/omnisharp-roslyn/pull/2142))
+* Do not crash on startup when configuration is invalid (PR: [#2140](https://www.github.com/OmniSharp/omnisharp-roslyn/pull/2140))
+* Bump System.Text.Encodings.Web from 4.7.1 to 4.7.2 in /tools (PR: [#2137](https://www.github.com/OmniSharp/omnisharp-roslyn/pull/2137))
+* Correctly set compilation platform of the project (PR: [#2135](https://www.github.com/OmniSharp/omnisharp-roslyn/pull/2135))
+* Fix typo (PR: [#2098](https://www.github.com/OmniSharp/omnisharp-roslyn/pull/2098))
+* Rework completion resolution ([#2123](https://github.com/OmniSharp/omnisharp-roslyn/issues/2123), PR: [#2126](https://www.github.com/OmniSharp/omnisharp-roslyn/pull/2126))
+* Report back the solution filter name in workspace updated event (PR: [#2130](https://www.github.com/OmniSharp/omnisharp-roslyn/pull/2130))
+
 ## [1.37.8] - 2021-03-27
 * Support Solution filter (.slnf) (PR: [#2121](https://github.com/OmniSharp/omnisharp-roslyn/pull/2121))
 * updated to IL Spy 7.0.0.6372 (PR: [#2113](https://github.com/OmniSharp/omnisharp-roslyn/pull/2113))
