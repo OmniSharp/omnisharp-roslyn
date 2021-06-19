@@ -15,6 +15,7 @@ on:
   pull_request:
     branches:
       - master
+      - feature/*
     tags:
       - '*'
   workflow_dispatch:
