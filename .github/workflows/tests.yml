@@ -15,7 +15,6 @@ on:
   pull_request:
     branches:
       - master
-      - demo/*
       - feature/*
     tags:
       - '*'

@@ -1,6 +1,14 @@
 # Changelog
 All changes to the project will be documented in this file.
 
+## [1.37.11] - 2021-06-18
+* Include timing info in logged responses (PR: [#2173](https://www.github.com/omnisharp/omnisharp-roslyn/pull/2173))
+* Defend against null value in BuildErrorEventArgs ([#2171](https://github.com/OmniSharp/omnisharp-roslyn/issues/2171), PR: [#2172](https://www.github.com/omnisharp/omnisharp-roslyn/pull/2172))
+* Updated to all the latest .NET SDKs (PR: [#2166](https://www.github.com/omnisharp/omnisharp-roslyn/pull/2166))
+* Add support for GoToDefinition on source-generated files (PR: [#2170](https://www.github.com/omnisharp/omnisharp-roslyn/pull/2170))
+* Add V2 version of GotoDefinitionService (PR: [#2168](https://www.github.com/omnisharp/omnisharp-roslyn/pull/2168))
+* avoid NRE when document is null (PR: [#2163](https://www.github.com/omnisharp/omnisharp-roslyn/pull/2163)))
+
 ## [1.37.10] - 2021-05-25
 * Update included toolset to match .NET 6 preview4 (PR: [#2159](https://github.com/OmniSharp/omnisharp-roslyn/pull/2159))
 
