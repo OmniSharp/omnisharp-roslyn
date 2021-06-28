@@ -292,6 +292,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                     diagnostics = semanticDiagnosticsWithAnalyzers
                         .Concat(syntaxDiagnosticsWithAnalyzers)
                         .Concat(documentSemanticModel.GetDiagnostics())
+                        .Where(d => !d.IsSuppressed)
                         .ToImmutableArray();
                 }
                 else
