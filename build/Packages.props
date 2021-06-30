@@ -2,11 +2,12 @@
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
     <PropertyGroup>
-        <AspNetCorePackageVersion>2.1.1</AspNetCorePackageVersion>
-        <MicrosoftExtensionPackageVersion>3.1.12</MicrosoftExtensionPackageVersion>
-        <MSBuildPackageVersion>16.9.0</MSBuildPackageVersion>
+        <AspNetCorePackageVersion>2.2.0</AspNetCorePackageVersion>
+        <MicrosoftExtensionPackageVersion>5.0.0</MicrosoftExtensionPackageVersion>
+        <MicrosoftTestPackageVersion>16.9.4</MicrosoftTestPackageVersion>
+        <MSBuildPackageVersion>16.10.0</MSBuildPackageVersion>
         <NuGetPackageVersion>5.2.0</NuGetPackageVersion>
-        <RoslynPackageVersion>3.11.0-1.21262.10</RoslynPackageVersion>
+        <RoslynPackageVersion>4.0.0-2.21322.50</RoslynPackageVersion>
         <XunitPackageVersion>2.4.1</XunitPackageVersion>
     </PropertyGroup>
 
@@ -15,7 +16,7 @@
 
         <PackageReference Update="Dotnet.Script.DependencyModel" Version="1.1.0" />
         <PackageReference Update="Dotnet.Script.DependencyModel.NuGet" Version="1.1.0" />
-        <PackageReference Update="ICSharpCode.Decompiler" Version="7.0.0.6488" />
+        <PackageReference Update="ICSharpCode.Decompiler" Version="7.1.0.6543" />
 
         <PackageReference Update="McMaster.Extensions.CommandLineUtils" Version="2.2.4" />
 
@@ -45,7 +46,7 @@
         <PackageReference Update="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="$(MicrosoftExtensionPackageVersion)" />
         <PackageReference Update="Microsoft.Extensions.Configuration.Json" Version="$(MicrosoftExtensionPackageVersion)" />
         <PackageReference Update="Microsoft.Extensions.DependencyInjection" Version="$(MicrosoftExtensionPackageVersion)" />
-        <PackageReference Update="Microsoft.Extensions.DependencyModel" Version="3.1.6" />
+        <PackageReference Update="Microsoft.Extensions.DependencyModel" Version="$(MicrosoftExtensionPackageVersion)" />
         <PackageReference Update="Microsoft.Extensions.FileProviders.Physical" Version="$(MicrosoftExtensionPackageVersion)" />
         <PackageReference Update="Microsoft.Extensions.FileSystemGlobbing" Version="$(MicrosoftExtensionPackageVersion)" />
         <PackageReference Update="Microsoft.Extensions.Logging" Version="$(MicrosoftExtensionPackageVersion)" />
@@ -53,9 +54,13 @@
         <PackageReference Update="Microsoft.Extensions.Options" Version="$(MicrosoftExtensionPackageVersion)" />
         <PackageReference Update="Microsoft.Extensions.Options.ConfigurationExtensions" Version="$(MicrosoftExtensionPackageVersion)" />
 
+        <PackageReference Update="Microsoft.Build.Locator" Version="1.4.1" />
+
         <PackageReference Update="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.0" />
-        <PackageReference Update="Microsoft.NET.Test.Sdk" Version="16.6.1" />
-        <PackageReference Update="Microsoft.TestPlatform.TranslationLayer" Version="16.6.1" />
+
+        <PackageReference Update="Microsoft.NET.Test.Sdk" Version="$(MicrosoftTestPackageVersion)" />
+        <PackageReference Update="Microsoft.TestPlatform.TranslationLayer" Version="$(MicrosoftTestPackageVersion)" />
+
         <PackageReference Update="Microsoft.VisualStudio.Setup.Configuration.Interop" Version="1.14.114" />
         <PackageReference Update="Microsoft.VisualStudio.SDK.EmbedInteropTypes" Version="15.0.12" />
 

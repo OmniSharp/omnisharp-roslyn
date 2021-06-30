@@ -67,7 +67,13 @@ namespace OmniSharp.Cake.Tests
                 "System.Text.RegularExpressions.Regex",
                 "Extract method",
                 "Extract local function",
-                "Introduce local for 'Regex.Match(\"foo\", \"bar\")'"
+                "Introduce local for 'Regex.Match(\"foo\", \"bar\")'",
+                "Introduce parameter for 'Regex.Match(\"foo\", \"bar\")' -> and update call sites directly",
+                "Introduce parameter for 'Regex.Match(\"foo\", \"bar\")' -> into extracted method to invoke at call sites",
+                "Introduce parameter for 'Regex.Match(\"foo\", \"bar\")' -> into new overload",
+                "Introduce parameter for all occurrences of 'Regex.Match(\"foo\", \"bar\")' -> and update call sites directly",
+                "Introduce parameter for all occurrences of 'Regex.Match(\"foo\", \"bar\")' -> into extracted method to invoke at call sites",
+                "Introduce parameter for all occurrences of 'Regex.Match(\"foo\", \"bar\")' -> into new overload"
             };
             Assert.Equal(expected, refactorings);
         }

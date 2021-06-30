@@ -17,6 +17,7 @@ pr:
   branches:
     include:
       - master
+      - feature/*
 
 resources:
   repositories:

@@ -49,7 +49,8 @@
         "NetCore31Project",
         "Net50Project",
         "ProjectWithAnalyzersAndEditorConfig",
-        "ProjectWithParentEditorConfig"
+        "ProjectWithParentEditorConfig",
+        "TwoProjectsWithAnalyzerSuppressor"
     ],
     "CakeTestAssets": [
         "CakeProject"
