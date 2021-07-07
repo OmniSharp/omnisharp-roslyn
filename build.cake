@@ -721,9 +721,9 @@ void CopyExtraDependencies(BuildEnvironment env, string outputFolder)
     FileHelper.Copy(CombinePaths(env.WorkingDirectory, "license.md"), CombinePaths(outputFolder, "license.md"), overwrite: true);
 }
 
-void AddOmniSharpBindingRedirects(string outputFolder)
+void AddOmniSharpBindingRedirects(string omnisharpFolder)
 {
-    var appConfig = CombinePaths(outputFolder, "OmniSharp.exe.config");
+    var appConfig = CombinePaths(omnisharpFolder, "OmniSharp.exe.config");
 
     // Load app.config
     var document = new XmlDocument();
@@ -733,9 +733,10 @@ void AddOmniSharpBindingRedirects(string outputFolder)
     var runtime = document.GetElementsByTagName("runtime")[0];
     var assemblyBinding = document.CreateElement("assemblyBinding", "urn:schemas-microsoft-com:asm.v1");
 
-    foreach (var filePath in System.IO.Directory.GetFiles(outputFolder, "OmniSharp.*.dll"))
+    // Find OmniSharp libraries
+    foreach (var filePath in System.IO.Directory.GetFiles(omnisharpFolder, "OmniSharp.*.dll"))
     {
-        // Read assembly names for OmniSharp libraries
+        // Read assembly name from OmniSharp library
         var assemblyName = AssemblyName.GetAssemblyName(filePath);
 
         // Create binding redirect and add to bindings
@@ -817,7 +818,7 @@ string PublishMonoBuildForPlatform(string project, MonoRuntime monoRuntime, Buil
     CopyMonoBuild(env, sourceFolder, omnisharpFolder);
 
     CopyExtraDependencies(env, outputFolder);
-    AddOmniSharpBindingRedirects(outputFolder);
+    AddOmniSharpBindingRedirects(omnisharpFolder);
 
     Package(project, monoRuntime.PlatformName, outputFolder, env.Folders.ArtifactsPackage, env.Folders.DeploymentPackage);
 
