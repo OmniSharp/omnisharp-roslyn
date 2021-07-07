@@ -7,6 +7,8 @@
 
 using System.ComponentModel;
 using System.Net;
+using System.Reflection;
+using System.Xml;
 
 // Arguments
 var target = Argument("target", "Default");
@@ -719,6 +721,54 @@ void CopyExtraDependencies(BuildEnvironment env, string outputFolder)
     FileHelper.Copy(CombinePaths(env.WorkingDirectory, "license.md"), CombinePaths(outputFolder, "license.md"), overwrite: true);
 }
 
+void AddOmniSharpBindingRedirects(string omnisharpFolder)
+{
+    var appConfig = CombinePaths(omnisharpFolder, "OmniSharp.exe.config");
+
+    // Load app.config
+    var document = new XmlDocument();
+    document.Load(appConfig);
+
+    // Find bindings
+    var runtime = document.GetElementsByTagName("runtime")[0];
+    var assemblyBinding = document.CreateElement("assemblyBinding", "urn:schemas-microsoft-com:asm.v1");
+
+    // Find OmniSharp libraries
+    foreach (var filePath in System.IO.Directory.GetFiles(omnisharpFolder, "OmniSharp.*.dll"))
+    {
+        // Read assembly name from OmniSharp library
+        var assemblyName = AssemblyName.GetAssemblyName(filePath);
+
+        // Create binding redirect and add to bindings
+        var redirect = CreateBindingRedirect(document, assemblyName);
+        assemblyBinding.AppendChild(redirect);
+    }
+
+    runtime.AppendChild(assemblyBinding);
+
+    // Save updated app.config
+    document.Save(appConfig);
+}
+
+XmlElement CreateBindingRedirect(XmlDocument document, AssemblyName assemblyName)
+{
+    var dependentAssembly = document.CreateElement("dependentAssembly", "urn:schemas-microsoft-com:asm.v1");
+
+    var assemblyIdentity = document.CreateElement("assemblyIdentity", "urn:schemas-microsoft-com:asm.v1");
+    assemblyIdentity.SetAttribute("name", assemblyName.Name);
+    var publicKeyToken = BitConverter.ToString(assemblyName.GetPublicKeyToken()).Replace("-", string.Empty).ToLower();
+    assemblyIdentity.SetAttribute("publicKeyToken", publicKeyToken);
+    assemblyIdentity.SetAttribute("culture", "neutral");
+    dependentAssembly.AppendChild(assemblyIdentity);
+
+    var bindingRedirect = document.CreateElement("bindingRedirect", "urn:schemas-microsoft-com:asm.v1");
+    bindingRedirect.SetAttribute("oldVersion", $"0.0.0.0-{assemblyName.Version}");
+    bindingRedirect.SetAttribute("newVersion", assemblyName.Version.ToString());
+    dependentAssembly.AppendChild(bindingRedirect);
+
+    return dependentAssembly;
+}
+
 string PublishMonoBuild(string project, BuildEnvironment env, BuildPlan plan, string configuration)
 {
     Information($"Publishing Mono build for {project}...");
@@ -730,6 +780,7 @@ string PublishMonoBuild(string project, BuildEnvironment env, BuildPlan plan, st
     CopyMonoBuild(env, buildFolder, outputFolder);
 
     CopyExtraDependencies(env, outputFolder);
+    AddOmniSharpBindingRedirects(outputFolder);
 
     // Copy dependencies of Mono build
     FileHelper.Copy(
@@ -767,6 +818,7 @@ string PublishMonoBuildForPlatform(string project, MonoRuntime monoRuntime, Buil
     CopyMonoBuild(env, sourceFolder, omnisharpFolder);
 
     CopyExtraDependencies(env, outputFolder);
+    AddOmniSharpBindingRedirects(omnisharpFolder);
 
     Package(project, monoRuntime.PlatformName, outputFolder, env.Folders.ArtifactsPackage, env.Folders.DeploymentPackage);
 
@@ -829,6 +881,7 @@ string PublishWindowsBuild(string project, BuildEnvironment env, BuildPlan plan,
     DirectoryHelper.Copy($"{env.Folders.MSBuild}", CombinePaths(outputFolder, ".msbuild"));
 
     CopyExtraDependencies(env, outputFolder);
+    AddOmniSharpBindingRedirects(outputFolder);
 
     Package(project, rid, outputFolder, env.Folders.ArtifactsPackage, env.Folders.DeploymentPackage);
 
