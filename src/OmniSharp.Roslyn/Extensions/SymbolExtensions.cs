@@ -108,87 +108,51 @@ namespace OmniSharp.Extensions
         }
 
         public static string GetAccessibilityString(this ISymbol symbol)
-        {
-            switch (symbol.DeclaredAccessibility)
+            => symbol.DeclaredAccessibility switch
             {
-                case Accessibility.Public:
-                    return SymbolAccessibilities.Public;
-                case Accessibility.Internal:
-                    return SymbolAccessibilities.Internal;
-                case Accessibility.Private:
-                    return SymbolAccessibilities.Private;
-                case Accessibility.Protected:
-                    return SymbolAccessibilities.Protected;
-                case Accessibility.ProtectedOrInternal:
-                    return SymbolAccessibilities.ProtectedInternal;
-                case Accessibility.ProtectedAndInternal:
-                    return SymbolAccessibilities.PrivateProtected;
-                default:
-                    return null;
-            }
-        }
+                Accessibility.Public => SymbolAccessibilities.Public,
+                Accessibility.Internal => SymbolAccessibilities.Internal,
+                Accessibility.Private => SymbolAccessibilities.Private,
+                Accessibility.Protected => SymbolAccessibilities.Protected,
+                Accessibility.ProtectedOrInternal => SymbolAccessibilities.ProtectedInternal,
+                Accessibility.ProtectedAndInternal => SymbolAccessibilities.PrivateProtected,
+                _ => null,
+            };
 
         public static string GetKindString(this ISymbol symbol)
-        {
-            switch (symbol)
+            => symbol switch
             {
-                case INamespaceSymbol _:
-                    return SymbolKinds.Namespace;
-                case INamedTypeSymbol namedTypeSymbol:
-                    return namedTypeSymbol.GetKindString();
-                case IMethodSymbol methodSymbol:
-                    return methodSymbol.GetKindString();
-                case IFieldSymbol fieldSymbol:
-                    return fieldSymbol.GetKindString();
-                case IPropertySymbol propertySymbol:
-                    return propertySymbol.GetKindString();
-                case IEventSymbol _:
-                    return SymbolKinds.Event;
-                default:
-                    return SymbolKinds.Unknown;
-            }
-        }
+                INamespaceSymbol _ => SymbolKinds.Namespace,
+                ITypeSymbol typeSymbol => typeSymbol.GetKindString(),
+                IMethodSymbol methodSymbol => methodSymbol.GetKindString(),
+                IFieldSymbol fieldSymbol => fieldSymbol.GetKindString(),
+                IPropertySymbol propertySymbol => propertySymbol.GetKindString(),
+                IEventSymbol _ => SymbolKinds.Event,
+                IParameterSymbol _ => SymbolKinds.Parameter,
+                _ => SymbolKinds.Unknown,
+            };
 
-        public static string GetKindString(this INamedTypeSymbol namedTypeSymbol)
-        {
-            switch (namedTypeSymbol.TypeKind)
+        public static string GetKindString(this ITypeSymbol namedTypeSymbol)
+            => namedTypeSymbol.TypeKind switch
             {
-                case TypeKind.Class:
-                    return SymbolKinds.Class;
-                case TypeKind.Delegate:
-                    return SymbolKinds.Delegate;
-                case TypeKind.Enum:
-                    return SymbolKinds.Enum;
-                case TypeKind.Interface:
-                    return SymbolKinds.Interface;
-                case TypeKind.Struct:
-                    return SymbolKinds.Struct;
-                default:
-                    return SymbolKinds.Unknown;
-            }
-        }
+                TypeKind.Class => SymbolKinds.Class,
+                TypeKind.Delegate => SymbolKinds.Delegate,
+                TypeKind.Enum => SymbolKinds.Enum,
+                TypeKind.Interface => SymbolKinds.Interface,
+                TypeKind.Struct => SymbolKinds.Struct,
+                TypeKind.Array => SymbolKinds.Array,
+                TypeKind.TypeParameter => SymbolKinds.TypeParameter,
+                _ => SymbolKinds.Unknown,
+            };
 
         public static string GetKindString(this IMethodSymbol methodSymbol)
-        {
-            switch (methodSymbol.MethodKind)
+            => methodSymbol.MethodKind switch
             {
-                case MethodKind.Ordinary:
-                case MethodKind.ReducedExtension:
-                case MethodKind.ExplicitInterfaceImplementation:
-                    return SymbolKinds.Method;
-                case MethodKind.Constructor:
-                case MethodKind.StaticConstructor:
-                    return SymbolKinds.Constructor;
-                case MethodKind.Destructor:
-                    return SymbolKinds.Destructor;
-                case MethodKind.Conversion:
-                case MethodKind.BuiltinOperator:
-                case MethodKind.UserDefinedOperator:
-                    return SymbolKinds.Operator;
-                default:
-                    return SymbolKinds.Unknown;
-            }
-        }
+                MethodKind.Constructor or MethodKind.StaticConstructor => SymbolKinds.Constructor,
+                MethodKind.Destructor => SymbolKinds.Destructor,
+                MethodKind.Conversion or MethodKind.BuiltinOperator or MethodKind.UserDefinedOperator => SymbolKinds.Operator,
+                _ => SymbolKinds.Method,
+            };
 
         public static string GetKindString(this IFieldSymbol fieldSymbol)
         {
@@ -204,11 +168,9 @@ namespace OmniSharp.Extensions
         }
 
         public static string GetKindString(this IPropertySymbol propertySymbol)
-        {
-            return propertySymbol.IsIndexer
+            => propertySymbol.IsIndexer
                 ? SymbolKinds.Indexer
                 : SymbolKinds.Property;
-        }
 
         public static bool IsOverridable(this ISymbol symbol) => symbol?.ContainingType?.TypeKind == TypeKind.Class && !symbol.IsSealed && (symbol.IsVirtual || symbol.IsAbstract || symbol.IsOverride);
 

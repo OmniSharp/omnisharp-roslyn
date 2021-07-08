@@ -55,6 +55,11 @@ namespace OmniSharp
         public const string UpdateSourceGeneratedFile = "/updatesourcegeneratedfile";
         public const string SourceGeneratedFileClosed = "/sourcegeneratedfileclosed";
 
+        public const string SyntaxTree = "/syntaxtree";
+        public const string SyntaxNodeAtRange = "/syntaxtree/nodeatpoint";
+        public const string SyntaxTreeParentNode = "/syntaxtree/parentnode";
+        public const string SyntaxTreeNodeInfo = "/syntaxtree/info";
+
         public static class V2
         {
             public const string GetCodeActions = "/v2/getcodeactions";
