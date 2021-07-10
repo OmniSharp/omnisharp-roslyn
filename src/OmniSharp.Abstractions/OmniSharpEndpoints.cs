@@ -51,6 +51,7 @@ namespace OmniSharp
         public const string CompletionResolve = "/completion/resolve";
         public const string CompletionAfterInsert = "/completion/afterinsert";
 
+        public const string InlineValues = "/inlinevalues";
         public const string SourceGeneratedFile = "/sourcegeneratedfile";
         public const string UpdateSourceGeneratedFile = "/updatesourcegeneratedfile";
         public const string SourceGeneratedFileClosed = "/sourcegeneratedfileclosed";
