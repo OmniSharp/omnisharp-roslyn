@@ -48,7 +48,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
 
             return new LocationOrLocationLinks(omnisharpResponse.Definitions.Select<Definition, LocationOrLocationLink>(definition => new Location()
             {
-                Uri = definition.Location.FileName,
+                Uri = (definition.MetadataSource != null) ? ToUri(definition.MetadataSource) : definition.Location.FileName,
                 Range = ToRange(definition.Location.Range)
             }));
         }
