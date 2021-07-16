@@ -40,7 +40,7 @@ For historical reasons OmniSharp defaults to using one-based indices.   That mea
 
 ## Configuration options
 
-A detailed list of the exposed settings can be found in our [Wiki](wiki/Configuration-Options).
+A detailed list of the exposed settings can be found in our [Wiki](https://github.com/OmniSharp/omnisharp-roslyn/wiki/Configuration-Options).
 
 
 ## Plugins
