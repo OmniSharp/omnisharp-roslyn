@@ -65,6 +65,25 @@ namespace OmniSharp
             return Application.Execute(args.Except(OtherArgs).ToArray());
         }
 
+        [Obsolete("Please use OnExecuteAsync instead")]
+        public void OnExecute(Func<Task<int>> func)
+        {
+            Application.OnExecuteAsync((_) =>
+            {
+                DebugAttach();
+                return func();
+            });
+        }
+
+        public void OnExecuteAsync(Func<CancellationToken, Task<int>> func)
+        {
+            Application.OnExecuteAsync((token) =>
+            {
+                DebugAttach();
+                return func(token);
+            });
+        }
+
         public void OnExecute(Func<int> func)
         {
             Application.OnExecute(() =>
