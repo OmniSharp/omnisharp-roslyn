@@ -2,6 +2,7 @@
 using System.Composition;
 using System.Linq;
 using System.Reflection;
+using Microsoft.Extensions.Logging;
 using OmniSharp.Options;
 using OmniSharp.Services;
 
@@ -15,16 +16,25 @@ namespace OmniSharp.Roslyn.CSharp.Services
         public ImmutableArray<Assembly> Assemblies { get; }
 
         [ImportingConstructor]
-        public ExternalFeaturesHostServicesProvider(IAssemblyLoader loader, OmniSharpOptions options, IOmniSharpEnvironment environment)
+        public ExternalFeaturesHostServicesProvider(IAssemblyLoader loader, OmniSharpOptions options, IOmniSharpEnvironment environment, ILoggerFactory loggerFactory)
         {
             var builder = ImmutableArray.CreateBuilder<Assembly>();
 
             var roslynExtensionsLocations = options.RoslynExtensionsOptions.GetNormalizedLocationPaths(environment);
             if (roslynExtensionsLocations?.Any() == true)
             {
+                var logger = loggerFactory.CreateLogger<ExternalFeaturesHostServicesProvider>();
                 foreach (var roslynExtensionsLocation in roslynExtensionsLocations)
                 {
-                    builder.AddRange(loader.LoadAllFrom(roslynExtensionsLocation));
+                    var loadedAssemblies = loader.LoadAllFrom(roslynExtensionsLocation);
+                    if (loadedAssemblies.Any())
+                    {
+                        builder.AddRange(loadedAssemblies);
+                    }
+                    else
+                    {
+                        logger.LogWarning($"The path '{roslynExtensionsLocation}' is configured in the RoslynExtensionsOptions as the external features source but no assemblies were found at this path.");
+                    }
                 }
             }
 
