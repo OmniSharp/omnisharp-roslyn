@@ -32,8 +32,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
             var seenUnimportedCompletions = false;
             var commitCharacterRuleCache = new Dictionary<ImmutableArray<CharacterSetModificationRule>, IReadOnlyList<char>>();
             var commitCharacterRuleBuilder = new HashSet<char>();
-            var isOverrideOrPartialCompletion = completions.Items.Length > 0
-                && completions.Items[0].GetProviderName() is OverrideCompletionProvider or PartialMethodCompletionProvider;
 
             for (int i = 0; i < completions.Items.Length; i++)
             {
@@ -51,23 +49,26 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                     // The completion is somehow expensive. Currently, this one of two categories: import completion, or override/partial
                     // completion.
                     Debug.Assert(completion.GetProviderName() is OverrideCompletionProvider or PartialMethodCompletionProvider
-                                                              or TypeImportCompletionProvider or ExtensionMethodImportCompletionProvider);
+                                                              or TypeImportCompletionProvider or ExtensionMethodImportCompletionProvider
+                                                              or AwaitCompletionProvider);
 
                     changeSpan = typedSpan;
 
-                    if (isOverrideOrPartialCompletion)
+                    switch (completion.GetProviderName())
                     {
-                        // For override and partial completion, we don't want to use the DisplayText as the insert text because they contain
-                        // characters that will affect our ability to asynchronously resolve the change later.
-                        insertText = completion.FilterText;
-                        sortText = GetSortText(completion, labelText, expectingImportedItems);
-                        hasAfterInsertStep = true;
-                    }
-                    else
-                    {
-                        insertText = completion.DisplayText;
-                        sortText = '1' + completion.SortText;
-                        seenUnimportedCompletions = true;
+                        case OverrideCompletionProvider or PartialMethodCompletionProvider or AwaitCompletionProvider:
+                            // For override and partial completion, we don't want to use the DisplayText as the insert text because they contain
+                            // characters that will affect our ability to asynchronously resolve the change later.
+                            insertText = completion.FilterText;
+                            sortText = GetSortText(completion, labelText, expectingImportedItems);
+                            hasAfterInsertStep = true;
+                            break;
+
+                        default: // case TypeImportCompletionProvider or ExtensionMethodImportCompletionProvider:
+                            insertText = completion.DisplayText;
+                            sortText = '1' + completion.SortText;
+                            seenUnimportedCompletions = true;
+                            break;
                     }
                 }
                 else
