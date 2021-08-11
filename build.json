@@ -3,9 +3,9 @@
     "DotNetChannel": "Preview",
     "DotNetVersions": [
         "2.1.816",
-        "3.1.409",
-        "5.0.300",
-        "6.0.100-preview.4.21255.9"
+        "3.1.411",
+        "5.0.302",
+        "6.0.100-preview.6.21355.2"
     ],
     "RequiredMonoVersion": "6.6.0",
     "DownloadURL": "https://roslynomnisharp.blob.core.windows.net/ext",
@@ -49,7 +49,8 @@
         "NetCore31Project",
         "Net50Project",
         "ProjectWithAnalyzersAndEditorConfig",
-        "ProjectWithParentEditorConfig"
+        "ProjectWithParentEditorConfig",
+        "TwoProjectsWithAnalyzerSuppressor"
     ],
     "CakeTestAssets": [
         "CakeProject"
