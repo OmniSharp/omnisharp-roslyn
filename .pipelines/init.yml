@@ -3,7 +3,7 @@ parameters:
   Verbosity: Normal
   DotNetVersion: "5.0.302"
   DotNetVersion2: "3.1.411"
-  CakeVersion: "1.0.0-rc0001"
+  CakeVersion: "1.1.0"
   NuGetVersion: "5.7.0"
   MonoVersion: ''
 steps:
