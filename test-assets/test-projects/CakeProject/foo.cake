@@ -1,3 +1,5 @@
+var HelloText = "Hello World!";
+
 public class Foo
 {
     public static Foo Create()

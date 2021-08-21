@@ -9,7 +9,8 @@ Task("Default")
     .Create()
     .Bar();
 
-  Information("Hello World!");
+  Information(HelloText);
+  Information("Building on" + BuildSystem)
 });
 
 RunTarget(target);
