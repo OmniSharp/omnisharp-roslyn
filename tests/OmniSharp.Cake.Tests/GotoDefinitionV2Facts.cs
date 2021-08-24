@@ -99,8 +99,6 @@ namespace OmniSharp.Cake.Tests
                 Assert.Single(response.Definitions);
                 var definition = response.Definitions.Single();
                 Assert.StartsWith("$metadata$", definition.Location.FileName);
-                Assert.Equal(198, definition.Location.Range.Start.Line);
-                Assert.Equal(27, definition.Location.Range.Start.Column);
 
                 var metadata = definition.MetadataSource;
                 Assert.NotNull(metadata);
@@ -132,10 +130,6 @@ namespace OmniSharp.Cake.Tests
                 Assert.Single(response.Definitions);
                 var definition = response.Definitions.Single();
                 Assert.StartsWith("$metadata$", definition.Location.FileName);
-                // TODO: if https://github.com/OmniSharp/omnisharp-roslyn/issues/2211 is corrected
-                // line should be 63, and col 24
-                Assert.Equal(0, definition.Location.Range.Start.Line);
-                Assert.Equal(0, definition.Location.Range.Start.Column);
 
                 var metadata = definition.MetadataSource;
                 Assert.NotNull(metadata);
@@ -167,8 +161,6 @@ namespace OmniSharp.Cake.Tests
                 Assert.Single(response.Definitions);
                 var definition = response.Definitions.Single();
                 Assert.StartsWith("$metadata$", definition.Location.FileName);
-                Assert.Equal(115, definition.Location.Range.Start.Line);
-                Assert.Equal(34, definition.Location.Range.Start.Column);
 
                 var metadata = definition.MetadataSource;
                 Assert.NotNull(metadata);

@@ -84,8 +84,6 @@ namespace OmniSharp.Cake.Tests
                 var response = await requestHandler.Handle(request);
 
                 Assert.StartsWith("$metadata$", response.FileName);
-                Assert.Equal(198, response.Line);
-                Assert.Equal(27, response.Column);
                 var metadata = response.MetadataSource;
                 Assert.NotNull(metadata);
                 Assert.Equal("Cake.Common", metadata.AssemblyName);
@@ -113,10 +111,6 @@ namespace OmniSharp.Cake.Tests
                 var response = await requestHandler.Handle(request);
 
                 Assert.StartsWith("$metadata$", response.FileName);
-                // TODO: if https://github.com/OmniSharp/omnisharp-roslyn/issues/2211 is corrected
-                // line should be 63, and col 24
-                Assert.Equal(0, response.Line);
-                Assert.Equal(0, response.Column);
                 var metadata = response.MetadataSource;
                 Assert.NotNull(metadata);
                 Assert.Equal("Cake.Common", metadata.AssemblyName);
@@ -144,8 +138,6 @@ namespace OmniSharp.Cake.Tests
                 var response = await requestHandler.Handle(request);
 
                 Assert.StartsWith("$metadata$", response.FileName);
-                Assert.Equal(115, response.Line);
-                Assert.Equal(34, response.Column);
                 var metadata = response.MetadataSource;
                 Assert.NotNull(metadata);
                 Assert.Equal("Cake.Common", metadata.AssemblyName);
