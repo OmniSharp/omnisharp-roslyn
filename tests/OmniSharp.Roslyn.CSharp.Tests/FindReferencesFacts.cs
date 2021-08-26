@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using OmniSharp.Models;
@@ -132,7 +133,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 {
                     public FooConsumer()
                     {
-#line " + mappingLine+ @"
+#line " + mappingLine + @"
                         new Foo().bar();
 #line default
                     }
@@ -152,7 +153,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             Assert.Equal(expectedMappingText, mappedResult.Text);
 
             Assert.Equal(3, regularResult.Line);
-            Assert.Equal(mappingLine-1, mappedResult.Line);
+            Assert.Equal(mappingLine - 1, mappedResult.Line);
 
             // regular result has regular postition
             Assert.Equal(32, regularResult.Column);
@@ -186,7 +187,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 #line default
                     }
                 }"),
-                
+
             };
 
             if (mappedFileExistsInWorkspace)
@@ -205,7 +206,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             Assert.Equal("b.cs", mappedResult.FileName);
 
             Assert.Equal(3, regularResult.Line);
-            Assert.Equal(mappingLine-1, mappedResult.Line);
+            Assert.Equal(mappingLine - 1, mappedResult.Line);
 
             Assert.Equal("public void bar() { }", regularResult.Text);
             Assert.Equal(expectedMappingText, mappedResult.Text);
@@ -418,6 +419,34 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         }
 
         [Fact]
+        public async Task MappedLocationFileNameProperlyRooted()
+        {
+            var relativeFile = ".\\pages\\test.xaml";
+
+            var testFiles = new[]
+            {
+                new TestFile("a.cs",
+                 @"public class Bar : F$$oo {}"),
+                new TestFile("b.cs", $@"
+                    #line 23 ""{relativeFile}""
+                    public class Foo {{ }}
+                    #line default
+                    #line hidden")
+            };
+
+            var usages = await FindUsagesAsync(testFiles, onlyThisFile: false);
+
+            Assert.DoesNotContain(usages.QuickFixes, location => location.FileName.EndsWith("b.cs"));
+            Assert.DoesNotContain(usages.QuickFixes, location => location.FileName.Equals(relativeFile));
+
+            var project = SharedOmniSharpTestHost.Workspace.CurrentSolution.Projects.Single();
+            var projectFolder = Path.GetDirectoryName(project.FilePath);
+            var mappedFilePath = Path.GetFullPath(Path.Combine(projectFolder, relativeFile));
+
+            Assert.Single(usages.QuickFixes, location => location.FileName.Equals(mappedFilePath));
+        }
+
+        [Fact]
         public async Task DontFindDefinitionInAnotherFile()
         {
             var testFiles = new[]
@@ -449,13 +478,13 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     {{
                     }}
                 }}";
-            
-            var exception = await Record.ExceptionAsync(async () => 
+
+            var exception = await Record.ExceptionAsync(async () =>
             {
                 var usages = await FindUsagesAsync(code);
                 Assert.NotNull(usages);
             });
-            
+
             Assert.Null(exception);
         }
 
