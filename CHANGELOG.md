@@ -1,6 +1,15 @@
 # Changelog
 All changes to the project will be documented in this file.
 
+## [1.37.14] - 2021-07-27
+* Update to latest .NET SDKs (PR: [#2197](https://github.com/OmniSharp/omnisharp-roslyn/pull/2197))
+* Update included Build Tools to match .NET SDK 6 Preview 7 (PR: [#2196](https://github.com/OmniSharp/omnisharp-roslyn/pull/2196))
+* Upgrade McMaster.Extensions.CommandLineUtils to 3.1.0 ([omnisharp-vscode#4090](https://github.com/OmniSharp/omnisharp-vscode/issues/4090), PR: [#2192](https://github.com/OmniSharp/omnisharp-roslyn/pull/2192))
+
+## [1.37.13] - 2021-07-16
+* Update Roslyn to 4.0.0-2.21354.7 (PR: [#2189](https://github.com/OmniSharp/omnisharp-roslyn/pull/2189))
+* Update included Build Tools to match .NET SDK 6 Preview 6 (PR: [#2187](https://github.com/OmniSharp/omnisharp-roslyn/pull/2187))
+
 ## [1.37.12] - 2021-07-09
 * Generate binary redirects for OmniSharp libraries (PR: [#2185](https://www.github.com/OmniSharp/omnisharp-roslyn/pull/2185))
 * Update Roslyn to 4.0.0-2.21322.50 (PR: [#2183](https://www.github.com/OmniSharp/omnisharp-roslyn/pull/2183))
