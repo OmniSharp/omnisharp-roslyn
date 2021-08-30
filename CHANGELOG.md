@@ -1,6 +1,12 @@
 # Changelog
 All changes to the project will be documented in this file.
 
+## [1.37.15] - Not released
+* Update versions to match .NET SDK 6 RC1 (PR: [#2217](https://github.com/OmniSharp/omnisharp-roslyn/pull/2217))
+* Use FullPaths for Locations that are returned with relative paths. (PR: [#2216](https://github.com/OmniSharp/omnisharp-roslyn/pull/2216))
+* Improved logging in project manager (PR: [#2203](https://github.com/OmniSharp/omnisharp-roslyn/pull/2203))
+* Log a warning when external features path has no assemblies (PR: [#2202](https://github.com/OmniSharp/omnisharp-roslyn/pull/2202))       
+
 ## [1.37.14] - 2021-07-27
 * Update to latest .NET SDKs (PR: [#2197](https://github.com/OmniSharp/omnisharp-roslyn/pull/2197))
 * Update included Build Tools to match .NET SDK 6 Preview 7 (PR: [#2196](https://github.com/OmniSharp/omnisharp-roslyn/pull/2196))
