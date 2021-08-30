@@ -56,6 +56,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
             { WellKnownTags.Warning, CompletionItemKind.Text },
         };
 
+        internal const string AwaitCompletionProvider = "Microsoft.CodeAnalysis.CSharp.Completion.Providers.AwaitCompletionProvider";
         internal const string ObjectCreationCompletionProvider = "Microsoft.CodeAnalysis.CSharp.Completion.Providers.ObjectCreationCompletionProvider";
         internal const string OverrideCompletionProvider = "Microsoft.CodeAnalysis.CSharp.Completion.Providers.OverrideCompletionProvider";
         internal const string PartialMethodCompletionProvider = "Microsoft.CodeAnalysis.CSharp.Completion.Providers.PartialMethodCompletionProvider";

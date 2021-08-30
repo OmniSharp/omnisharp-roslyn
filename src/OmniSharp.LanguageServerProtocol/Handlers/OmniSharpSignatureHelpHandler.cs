@@ -73,7 +73,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             return new SignatureHelpRegistrationOptions()
             {
                 DocumentSelector = _documentSelector,
-                TriggerCharacters = new[] {".", "?", "["}
+                TriggerCharacters = new[] { "(", ",", "<", "{", "[" }
             };
         }
     }

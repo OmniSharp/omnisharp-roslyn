@@ -7,7 +7,7 @@
         <MicrosoftTestPackageVersion>16.9.4</MicrosoftTestPackageVersion>
         <MSBuildPackageVersion>16.10.0</MSBuildPackageVersion>
         <NuGetPackageVersion>5.10.0</NuGetPackageVersion>
-        <RoslynPackageVersion>4.0.0-2.21354.7</RoslynPackageVersion>
+        <RoslynPackageVersion>4.0.0-3.21373.8</RoslynPackageVersion>
         <XunitPackageVersion>2.4.1</XunitPackageVersion>
     </PropertyGroup>
 
@@ -18,7 +18,7 @@
         <PackageReference Update="Dotnet.Script.DependencyModel.NuGet" Version="1.1.0" />
         <PackageReference Update="ICSharpCode.Decompiler" Version="7.1.0.6543" />
 
-        <PackageReference Update="McMaster.Extensions.CommandLineUtils" Version="2.2.4" />
+        <PackageReference Update="McMaster.Extensions.CommandLineUtils" Version="3.1.0" />
 
         <PackageReference Update="Microsoft.AspNetCore.Diagnostics" Version="$(AspNetCorePackageVersion)" />
         <PackageReference Update="Microsoft.AspNetCore.Hosting" Version="$(AspNetCorePackageVersion)" />

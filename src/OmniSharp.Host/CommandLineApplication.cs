@@ -24,7 +24,10 @@ namespace OmniSharp
 
         public CommandLineApplication()
         {
-            Application = new McMaster.Extensions.CommandLineUtils.CommandLineApplication(throwOnUnexpectedArg: false);
+            Application = new McMaster.Extensions.CommandLineUtils.CommandLineApplication
+            {
+                UnrecognizedArgumentHandling = UnrecognizedArgumentHandling.StopParsingAndCollect
+            };
             Application.HelpOption("-? | -h | --help");
 
             _applicationRoot = Application.Option("-s | --source", "Solution or directory for OmniSharp to point at (defaults to current directory).", CommandOptionType.SingleValue);
@@ -62,12 +65,22 @@ namespace OmniSharp
             return Application.Execute(args.Except(OtherArgs).ToArray());
         }
 
+        [Obsolete("Please use OnExecuteAsync instead")]
         public void OnExecute(Func<Task<int>> func)
         {
-            Application.OnExecute(() =>
+            Application.OnExecuteAsync((_) =>
             {
                 DebugAttach();
                 return func();
+            });
+        }
+
+        public void OnExecuteAsync(Func<CancellationToken, Task<int>> func)
+        {
+            Application.OnExecuteAsync((token) =>
+            {
+                DebugAttach();
+                return func(token);
             });
         }
 
