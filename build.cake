@@ -694,6 +694,10 @@ void CopyExtraDependencies(BuildEnvironment env, string outputFolder)
 void AddOmniSharpBindingRedirects(string omnisharpFolder)
 {
     var appConfig = CombinePaths(omnisharpFolder, "OmniSharp.exe.config");
+    if (!FileHelper.Exists(appConfig))
+    {
+        appConfig = CombinePaths(omnisharpFolder, "OmniSharp.dll.config");
+    }
 
     // Load app.config
     var document = new XmlDocument();
