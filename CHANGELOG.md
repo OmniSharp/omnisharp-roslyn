@@ -2,10 +2,13 @@
 All changes to the project will be documented in this file.
 
 ## [1.37.15] - Not released
+* Update Roslyn to 4.0.0-4.21427.11 (PR: [#2220](https://github.com/OmniSharp/omnisharp-roslyn/pull/2220))
+* Update NuGet to 5.10.0 ([#2027](https://github.com/OmniSharp/omnisharp-roslyn/issues/2027), PR: [#2034](https://github.com/OmniSharp/omnisharp-roslyn/pull/2034))
+* Remove .NET Core 2.1 (PR: [#2219](https://github.com/OmniSharp/omnisharp-roslyn/pull/2219))
 * Update versions to match .NET SDK 6 RC1 (PR: [#2217](https://github.com/OmniSharp/omnisharp-roslyn/pull/2217))
-* Use FullPaths for Locations that are returned with relative paths. (PR: [#2216](https://github.com/OmniSharp/omnisharp-roslyn/pull/2216))
+* Use FullPaths for Locations that are returned with relative paths. ([#2215](https://github.com/OmniSharp/omnisharp-roslyn/issues/2215), PR: [#2216](https://github.com/OmniSharp/omnisharp-roslyn/pull/2216))
 * Improved logging in project manager (PR: [#2203](https://github.com/OmniSharp/omnisharp-roslyn/pull/2203))
-* Log a warning when external features path has no assemblies (PR: [#2202](https://github.com/OmniSharp/omnisharp-roslyn/pull/2202))       
+* Log a warning when external features path has no assemblies ([#2201](https://github.com/OmniSharp/omnisharp-roslyn/issues/2201), PR: [#2202](https://github.com/OmniSharp/omnisharp-roslyn/pull/2202))
 
 ## [1.37.14] - 2021-07-27
 * Update to latest .NET SDKs (PR: [#2197](https://github.com/OmniSharp/omnisharp-roslyn/pull/2197))
