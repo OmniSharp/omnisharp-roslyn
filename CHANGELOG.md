@@ -1,7 +1,7 @@
 # Changelog
 All changes to the project will be documented in this file.
 
-## [1.37.15] - Not released
+## [1.37.15] - 2021-08-31
 * Update Roslyn to 4.0.0-4.21427.11 (PR: [#2220](https://github.com/OmniSharp/omnisharp-roslyn/pull/2220))
 * Update NuGet to 5.10.0 ([#2027](https://github.com/OmniSharp/omnisharp-roslyn/issues/2027), PR: [#2034](https://github.com/OmniSharp/omnisharp-roslyn/pull/2034))
 * Remove .NET Core 2.1 (PR: [#2219](https://github.com/OmniSharp/omnisharp-roslyn/pull/2219))
