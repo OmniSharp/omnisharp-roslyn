@@ -128,7 +128,13 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             {
                 "Fix formatting",
                 "using System;",
+#if NETCOREAPP
+                "using Internal;",
+                "Fully qualify 'Console' -> Internal.Console",
+                "Fully qualify 'Console' -> System.Console",
+#else
                 "System.Console",
+#endif
                 "Generate variable 'Console' -> Generate property 'Class1.Console'",
                 "Generate variable 'Console' -> Generate field 'Class1.Console'",
                 "Generate variable 'Console' -> Generate read-only field 'Class1.Console'",
@@ -143,7 +149,13 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             } : new List<string>
             {
                 "using System;",
+#if NETCOREAPP
+                "using Internal;",
+                "Fully qualify 'Console' -> Internal.Console",
+                "Fully qualify 'Console' -> System.Console",
+#else
                 "System.Console",
+#endif
                 "Generate variable 'Console' -> Generate property 'Class1.Console'",
                 "Generate variable 'Console' -> Generate field 'Class1.Console'",
                 "Generate variable 'Console' -> Generate read-only field 'Class1.Console'",
@@ -195,7 +207,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         public async Task Can_generate_type_and_return_name_of_new_file(bool roslynAnalyzersEnabled)
         {
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithMissingType"))
-            using (var host =  OmniSharpTestHost.Create(testProject.Directory, testOutput: TestOutput, configurationData: TestHelpers.GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled)))
+            using (var host = OmniSharpTestHost.Create(testProject.Directory, testOutput: TestOutput, configurationData: TestHelpers.GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled)))
             {
                 var requestHandler = host.GetRequestHandler<RunCodeActionService>(OmniSharpEndpoints.V2.RunCodeAction);
                 var document = host.Workspace.CurrentSolution.Projects.First().Documents.First();

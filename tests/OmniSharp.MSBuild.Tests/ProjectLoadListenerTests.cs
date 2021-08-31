@@ -212,7 +212,7 @@ namespace OmniSharp.MSBuild.Tests
             Assert.Equal(GetHashedFileExtension("5.0.302"), emitter.ReceivedMessages[0].SdkVersion);
         }
 
-        [Fact]
+        [ConditionalFact(typeof(DesktopRuntimeOnly))]
         public async Task The_correct_sdk_version_is_emitted_NET6()
         {
             // Arrange

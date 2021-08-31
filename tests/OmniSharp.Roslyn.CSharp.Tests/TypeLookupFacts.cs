@@ -98,7 +98,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var source = @"namespace Bar {
             class Foo {
                     class Xyz {}
-                }   
+                }
             }";
 
             var testFile = new TestFile("dummy.cs", source);
@@ -170,7 +170,11 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         {
             var response = await GetTypeLookUpResponse(line: 6, column: 35);
 
+#if NETCOREAPP
+            Assert.Equal("void Console.WriteLine(string? value)", response.Type);
+#else
             Assert.Equal("void Console.WriteLine(string value)", response.Type);
+#endif
         }
 
         [Fact]
@@ -367,7 +371,7 @@ class testissue
             string content = @"
 class testissue
 {
-    /// <param name=""gameObject"">The game object.</param> 
+    /// <param name=""gameObject"">The game object.</param>
     /// <param name=""tagName"">Name of the tag.</param>
     public static bool C$$ompare(int gameObject, string tagName)
     {
@@ -475,9 +479,9 @@ public class TestClass
 {
     /// <example>This sample shows how to call the <see cref=""GetZero""/> method.
     /// <code>
-    /// class TestClass 
+    /// class TestClass
     /// {
-    ///     static int Main() 
+    ///     static int Main()
     ///     {
     ///         return GetZero();
     ///     }
@@ -493,9 +497,9 @@ public class TestClass
             var expected =
 @"This sample shows how to call the TestClass.GetZero  method.
 
-    class TestClass 
+    class TestClass
     {
-        static int Main() 
+        static int Main()
         {
             return GetZero();
         }
@@ -557,7 +561,7 @@ See also: TestClass.Main ";
 class testissue
 {
     ///<summary>Checks if object is tagged with the tag.</summary>
-    /// <param name=""gameObject"">The game object.</param> 
+    /// <param name=""gameObject"">The game object.</param>
     /// <param name=""tagName"">Name of the tag.</param>
     public static bool C$$ompare(int gameObject, string tagName)
     {
@@ -582,7 +586,7 @@ class testissue
 class testissue
 {
     ///<summary>Checks if object is tagged with the tag.</summary>
-    ///<param name=""gameObject"">The game object.</param> 
+    ///<param name=""gameObject"">The game object.</param>
     ///<example>Invoke using A.Compare(5) where A is an instance of the class testissue.</example>
     ///<typeparam name=""T"">The element type of the array</typeparam>
     ///<exception cref=""System.Exception"">Thrown when something goes wrong</exception>
@@ -600,7 +604,7 @@ class testissue
             Assert.Single(response.StructuredDocumentation.ParamElements);
             Assert.Equal("gameObject", response.StructuredDocumentation.ParamElements[0].Name);
             Assert.Equal("The game object.", response.StructuredDocumentation.ParamElements[0].Documentation);
-            
+
             var expectedExample =
             @"Invoke using A.Compare(5) where A is an instance of the class testissue.";
             Assert.Equal(expectedExample, response.StructuredDocumentation.ExampleText);
@@ -645,7 +649,7 @@ public class TestClass
             string content = @"
 class testissue
 {
-    /// <param name=""gameObject"">The game object.</param> 
+    /// <param name=""gameObject"">The game object.</param>
     /// <param name=""tagName"">Name of the tag.</param>
     public static bool Compare(int gam$$eObject, string tagName)
     {
@@ -661,7 +665,7 @@ class testissue
             string content = @"
 class testissue
 {
-    /// <param name=""gameObject"">The game object.</param> 
+    /// <param name=""gameObject"">The game object.</param>
     /// <param name=""tagName"">Name of the tag.</param>
     public static bool Compare(int gameObject, string tag$$Name)
     {

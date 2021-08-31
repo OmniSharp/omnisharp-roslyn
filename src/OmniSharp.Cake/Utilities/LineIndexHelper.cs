@@ -7,6 +7,7 @@ using OmniSharp.Extensions;
 using OmniSharp.Models.V2;
 using OmniSharp.Roslyn.Extensions;
 using OmniSharp.Utilities;
+using Range = OmniSharp.Models.V2.Range;
 
 namespace OmniSharp.Cake.Utilities
 {
@@ -44,7 +45,7 @@ namespace OmniSharp.Cake.Utilities
                     continue;
                 }
 
-                var lineDirectiveValue = (int) lineDirective.Line.Value - 1;
+                var lineDirectiveValue = (int)lineDirective.Line.Value - 1;
 
                 if (index < lineDirectiveValue)
                 {
