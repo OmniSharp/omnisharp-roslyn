@@ -85,7 +85,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
                 case EnumDeclarationSyntax enumDeclaration:
                     yield return CreateCodeElement(enumDeclaration, text, semanticModel);
                     break;
-                case NamespaceDeclarationSyntax namespaceDeclaration:
+                case BaseNamespaceDeclarationSyntax namespaceDeclaration:
                     yield return CreateCodeElement(namespaceDeclaration, text, semanticModel);
                     break;
                 case BaseMethodDeclarationSyntax baseMethodDeclaration:
@@ -186,7 +186,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
             return builder.ToCodeElement();
         }
 
-        private CodeElement CreateCodeElement(NamespaceDeclarationSyntax namespaceDeclaration, SourceText text, SemanticModel semanticModel)
+        private CodeElement CreateCodeElement(BaseNamespaceDeclarationSyntax namespaceDeclaration, SourceText text, SemanticModel semanticModel)
         {
             var symbol = semanticModel.GetDeclaredSymbol(namespaceDeclaration);
             if (symbol == null)
