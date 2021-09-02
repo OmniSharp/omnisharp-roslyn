@@ -9,6 +9,7 @@ using OmniSharp.Eventing;
 using OmniSharp.FileWatching;
 using OmniSharp.Models.Diagnostics;
 using OmniSharp.Models.FilesChanged;
+using OmniSharp.Options;
 using OmniSharp.Services;
 using TestUtility;
 using Xunit;
@@ -348,7 +349,14 @@ dotnet_diagnostic.IDE0005.severity = none
 
         private static async Task RestoreProject(ITestProject testProject)
         {
-            await new DotNetCliService(new LoggerFactory(), NullEventEmitter.Instance).RestoreAsync(testProject.Directory);
+            DotNetCliOptions options = new DotNetCliOptions
+            {
+                LocationPaths = new[]
+                {
+                    Path.Combine(TestAssets.Instance.RootFolder, DotNetCliVersion.Current.GetFolderName())
+                }
+            };
+            await new DotNetCliService(new LoggerFactory(), NullEventEmitter.Instance, Microsoft.Extensions.Options.Options.Create(options), new OmniSharpEnvironment(testProject.Directory)).RestoreAsync(testProject.Directory);
         }
     }
 }

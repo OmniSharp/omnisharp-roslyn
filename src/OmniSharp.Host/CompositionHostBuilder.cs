@@ -140,6 +140,12 @@ namespace OmniSharp
             services.AddSingleton<IAnalyzerAssemblyLoader, AnalyzerAssemblyLoader>();
             services.AddOptions();
 
+            // Setup the options from configuration
+            services.Configure<OmniSharpOptions>(configuration)
+                .PostConfigure<OmniSharpOptions>(OmniSharpOptions.PostConfigure);
+            services.AddSingleton(configuration);
+            services.AddSingleton<IConfiguration>(configuration);
+
             services.AddSingleton<IDotNetCliService, DotNetCliService>();
 
             // MSBuild
@@ -148,13 +154,6 @@ namespace OmniSharp
                     loggerFactory: sp.GetService<ILoggerFactory>(),
                     assemblyLoader: sp.GetService<IAssemblyLoader>(),
                     msbuildConfiguration: configuration.GetSection("msbuild")));
-
-
-            // Setup the options from configuration
-            services.Configure<OmniSharpOptions>(configuration)
-                .PostConfigure<OmniSharpOptions>(OmniSharpOptions.PostConfigure);
-            services.AddSingleton(configuration);
-            services.AddSingleton<IConfiguration>(configuration);
 
             services.AddLogging(builder =>
             {

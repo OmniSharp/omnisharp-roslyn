@@ -129,9 +129,9 @@ namespace OmniSharp.MSBuild.Tests
             var emitter = new ProjectLoadTestEventEmitter();
 
             using var testProject = await TestAssets.Instance.GetTestProjectAsync("HelloWorld");
-            var dotnetCliService = new DotNetCliService(LoggerFactory, emitter);
-            await dotnetCliService.RestoreAsync(testProject.Directory);
             using var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory));
+            var dotnetCliService = host.GetExport<IDotNetCliService>();
+            await dotnetCliService.RestoreAsync(testProject.Directory);
             Assert.Single(emitter.ReceivedMessages);
             Assert.NotEmpty(emitter.ReceivedMessages[0].References.Where(reference => reference == GetHashedReference("system.core")));
         }
