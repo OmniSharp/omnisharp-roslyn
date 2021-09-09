@@ -145,7 +145,9 @@ namespace TestUtility
                 Path.Combine(folderPath, "project.csproj"),
                 new[] { "net472" },
                 testFiles.Where(f => f.FileName.EndsWith(".cs", StringComparison.OrdinalIgnoreCase)).ToArray(),
-                testFiles.Where(f => !f.FileName.EndsWith(".cs", StringComparison.OrdinalIgnoreCase) && !f.FileName.EndsWith(".csx", StringComparison.OrdinalIgnoreCase)).ToArray());
+                testFiles.Where(f => !f.FileName.EndsWith(".cs", StringComparison.OrdinalIgnoreCase)
+                    && !f.FileName.EndsWith(".csx", StringComparison.OrdinalIgnoreCase)
+                    && !f.FileName.EndsWith(".cake", StringComparison.OrdinalIgnoreCase)).ToArray());
 
             foreach (var csxFile in testFiles.Where(f => f.FileName.EndsWith(".csx", StringComparison.OrdinalIgnoreCase)))
             {
