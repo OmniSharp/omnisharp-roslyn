@@ -421,29 +421,46 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public async Task MappedLocationFileNameProperlyRooted()
         {
-            var relativeFile = ".\\pages\\test.xaml";
+            var folderPath = Directory.GetCurrentDirectory();
+            var relativeFile = ".\\Index.cshtml";
+            var mappedFilePath = Path.GetFullPath(Path.Combine(folderPath, relativeFile));
 
             var testFiles = new[]
             {
-                new TestFile("a.cs",
-                 @"public class Bar : F$$oo {}"),
-                new TestFile("b.cs", $@"
-                    #line 23 ""{relativeFile}""
-                    public class Foo {{ }}
+                new TestFile("Constants.cs", @"
+                    public static class Constants
+                    {
+                        public const string My$$Text = ""Hello World"";
+                    }"),
+                new TestFile("Index.cshtml.cs", @"
+                    using Microsoft.AspNetCore.Mvc.RazorPages;
+
+                    public class IndexModel : PageModel
+                    {
+                        public IndexModel()
+                        {
+                        }
+
+                        public void OnGet()
+                        {
+
+                        }
+                    }"),
+                new TestFile("Index.cshtml_virtual.cs", $@"
+                    #line 1 ""{relativeFile}""
+                    Constants.MyText
                     #line default
-                    #line hidden")
+                    #line hidden"),
+                new TestFile(mappedFilePath, "<p>@Constants.MyText</p>")
             };
 
-            var usages = await FindUsagesAsync(testFiles, onlyThisFile: false);
+            var usages = await FindUsagesAsync(testFiles, onlyThisFile: false, folderPath: folderPath);
 
-            Assert.DoesNotContain(usages.QuickFixes, location => location.FileName.EndsWith("b.cs"));
+            Assert.DoesNotContain(usages.QuickFixes, location => location.FileName.EndsWith("Index.cshtml_virtual.cs"));
             Assert.DoesNotContain(usages.QuickFixes, location => location.FileName.Equals(relativeFile));
 
-            var project = SharedOmniSharpTestHost.Workspace.CurrentSolution.Projects.Single();
-            var projectFolder = Path.GetDirectoryName(project.FilePath);
-            var mappedFilePath = Path.GetFullPath(Path.Combine(projectFolder, relativeFile));
-
-            Assert.Single(usages.QuickFixes, location => location.FileName.Equals(mappedFilePath));
+            var quickFix = Assert.Single(usages.QuickFixes, location => location.FileName.Equals(mappedFilePath));
+            Assert.Empty(quickFix.Projects);
         }
 
         [Fact]
@@ -493,9 +510,9 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             return FindUsagesAsync(new[] { new TestFile("dummy.cs", code) }, false, excludeDefinition);
         }
 
-        private async Task<QuickFixResponse> FindUsagesAsync(TestFile[] testFiles, bool onlyThisFile, bool excludeDefinition = false)
+        private async Task<QuickFixResponse> FindUsagesAsync(TestFile[] testFiles, bool onlyThisFile, bool excludeDefinition = false, string folderPath = null)
         {
-            SharedOmniSharpTestHost.AddFilesToWorkspace(testFiles);
+            SharedOmniSharpTestHost.AddFilesToWorkspace(folderPath, testFiles);
             var file = testFiles.Single(tf => tf.Content.HasPosition);
             var point = file.Content.GetPointFromPosition();
 
