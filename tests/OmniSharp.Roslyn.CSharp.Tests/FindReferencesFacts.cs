@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.CodeAnalysis;
 using OmniSharp.Models;
 using OmniSharp.Models.FindUsages;
 using OmniSharp.Roslyn.CSharp.Services.Navigation;
@@ -419,7 +420,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         }
 
         [Fact]
-        public async Task MappedLocationFileNameProperlyRooted()
+        public async Task MappedLocationFileNameProperlyRootedInAdditionalDocuments()
         {
             var folderPath = Directory.GetCurrentDirectory();
             var relativeFile = ".\\Index.cshtml";
@@ -455,6 +456,45 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             };
 
             var usages = await FindUsagesAsync(testFiles, onlyThisFile: false, folderPath: folderPath);
+
+            Assert.DoesNotContain(usages.QuickFixes, location => location.FileName.EndsWith("Index.cshtml_virtual.cs"));
+            Assert.DoesNotContain(usages.QuickFixes, location => location.FileName.Equals(relativeFile));
+
+            var quickFix = Assert.Single(usages.QuickFixes, location => location.FileName.Equals(mappedFilePath));
+            Assert.Empty(quickFix.Projects);
+        }
+
+        [Fact]
+        public async Task MappedLocationFileNameProperlyRootedInMiscellaneousWorkspace()
+        {
+            var folderPath = Directory.GetCurrentDirectory();
+            var relativeFile = ".\\Index.cshtml.cs";
+            var mappedFilePath = Path.GetFullPath(Path.Combine(folderPath, relativeFile));
+
+            var testFiles = new[]
+            {
+                new TestFile("Constants.cs", @"
+                    public static class Constants
+                    {
+                        public const string My$$Text = ""Hello World"";
+                    }"),
+                new TestFile("Index.cshtml_virtual.cs", $@"
+                    #line 1 ""{relativeFile}""
+                    Constants.MyText
+                    #line default
+                    #line hidden")
+            };
+
+            var miscFile = new TestFile(mappedFilePath, "// Constants.MyText;");
+
+            SharedOmniSharpTestHost.AddFilesToWorkspace(folderPath, testFiles);
+            SharedOmniSharpTestHost.Workspace.TryAddMiscellaneousDocument(
+                miscFile.FileName,
+                TextLoader.From(TextAndVersion.Create(miscFile.Content.Text, VersionStamp.Create())),
+                LanguageNames.CSharp);
+
+            var testFile = testFiles.Single(tf => tf.Content.HasPosition);
+            var usages = await FindUsagesAsync(testFile, onlyThisFile: false);
 
             Assert.DoesNotContain(usages.QuickFixes, location => location.FileName.EndsWith("Index.cshtml_virtual.cs"));
             Assert.DoesNotContain(usages.QuickFixes, location => location.FileName.Equals(relativeFile));
@@ -510,11 +550,16 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             return FindUsagesAsync(new[] { new TestFile("dummy.cs", code) }, false, excludeDefinition);
         }
 
-        private async Task<QuickFixResponse> FindUsagesAsync(TestFile[] testFiles, bool onlyThisFile, bool excludeDefinition = false, string folderPath = null)
+        private Task<QuickFixResponse> FindUsagesAsync(TestFile[] testFiles, bool onlyThisFile, bool excludeDefinition = false, string folderPath = null)
         {
             SharedOmniSharpTestHost.AddFilesToWorkspace(folderPath, testFiles);
-            var file = testFiles.Single(tf => tf.Content.HasPosition);
-            var point = file.Content.GetPointFromPosition();
+            var testFile = testFiles.Single(tf => tf.Content.HasPosition);
+            return FindUsagesAsync(testFile, onlyThisFile, excludeDefinition);
+        }
+
+        private async Task<QuickFixResponse> FindUsagesAsync(TestFile testFile, bool onlyThisFile, bool excludeDefinition = false)
+        {
+            var point = testFile.Content.GetPointFromPosition();
 
             var requestHandler = GetRequestHandler(SharedOmniSharpTestHost);
 
@@ -522,8 +567,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             {
                 Line = point.Line,
                 Column = point.Offset,
-                FileName = file.FileName,
-                Buffer = file.Content.Code,
+                FileName = testFile.FileName,
+                Buffer = testFile.Content.Code,
                 OnlyThisFile = onlyThisFile,
                 ExcludeDefinition = excludeDefinition
             };
