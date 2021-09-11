@@ -62,12 +62,12 @@ namespace OmniSharp
 
         private void OnDirectoryRemoved(string path, FileChangeType changeType)
         {
-            if(changeType == FileChangeType.DirectoryDelete)
+            if (changeType == FileChangeType.DirectoryDelete)
             {
                 var docs = CurrentSolution.Projects.SelectMany(x => x.Documents)
                     .Where(x => x.FilePath.StartsWith(path + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase));
 
-                foreach(var doc in docs)
+                foreach (var doc in docs)
                 {
                     OnDocumentRemoved(doc.Id);
                 }
@@ -340,7 +340,8 @@ namespace OmniSharp
         {
             return CurrentSolution
                 .GetDocumentIdsWithFilePath(filePath)
-                .Select(id => CurrentSolution.GetDocument(id));
+                .Select(id => CurrentSolution.GetDocument(id))
+                .OfType<Document>();
         }
 
         public Document GetDocument(string filePath)
@@ -542,8 +543,13 @@ namespace OmniSharp
 
         public void AddAdditionalDocument(ProjectId projectId, string filePath)
         {
-            var documentId = DocumentId.CreateNewId(projectId);
             var loader = new OmniSharpTextLoader(filePath);
+            AddAdditionalDocument(projectId, filePath, loader);
+        }
+
+        public void AddAdditionalDocument(ProjectId projectId, string filePath, TextLoader loader)
+        {
+            var documentId = DocumentId.CreateNewId(projectId);
             var documentInfo = DocumentInfo.Create(documentId, Path.GetFileName(filePath), filePath: filePath, loader: loader);
             OnAdditionalDocumentAdded(documentInfo);
         }
