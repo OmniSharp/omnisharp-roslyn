@@ -185,7 +185,7 @@ namespace OmniSharp.MSBuild
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError($"Error occurred while processing project updates: {ex}");
+                    _logger.LogError(ex, "Error occurred while processing project updates");
                 }
             }
         }
@@ -329,7 +329,7 @@ namespace OmniSharp.MSBuild
             }
             catch (Exception ex)
             {
-                _logger.LogWarning($"Failed to load project file '{projectFilePath}'.", ex);
+                _logger.LogError(ex, "Failed to load project file '{projectFilePath}'.");
                 _eventEmitter.Error(ex, fileName: projectFilePath);
                 return (null, null);
             }
@@ -744,7 +744,7 @@ namespace OmniSharp.MSBuild
                 }
                 else
                 {
-                    _logger.LogDebug($"failed to get project info:{project.FilePath}");
+                    _logger.LogWarning($"Failed to get project info: {project.FilePath}");
                 }
 
                 var projectReference = new ProjectReference(referencedProject.Id, aliases);
@@ -807,13 +807,13 @@ namespace OmniSharp.MSBuild
                             if (!string.IsNullOrEmpty(aliases))
                             {
                                 reference = reference.WithAliases(aliases.Split(new char[]{','},StringSplitOptions.RemoveEmptyEntries).Select(a => a.Trim()));
-                                _logger.LogDebug($"setting aliases: {referencePath}, {aliases} ");
+                                _logger.LogDebug($"Setting aliases: {referencePath}, {aliases} ");
                             }
                         }
                     }
                     else
                     {
-                        _logger.LogDebug($"failed to get project info:{project.FilePath}");
+                        _logger.LogDebug($"Failed to get project info: {project.FilePath}");
                     }
                     _logger.LogDebug($"Adding reference '{referencePath}' to '{project.Name}'.");
                     _workspace.AddMetadataReference(project.Id, reference);

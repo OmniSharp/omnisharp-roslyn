@@ -1,6 +1,32 @@
 # Changelog
 All changes to the project will be documented in this file.
 
+## [1.37.15] - 2021-08-31
+* Update Roslyn to 4.0.0-4.21427.11 (PR: [#2220](https://github.com/OmniSharp/omnisharp-roslyn/pull/2220))
+* Update NuGet to 5.10.0 ([#2027](https://github.com/OmniSharp/omnisharp-roslyn/issues/2027), PR: [#2034](https://github.com/OmniSharp/omnisharp-roslyn/pull/2034))
+* Remove .NET Core 2.1 (PR: [#2219](https://github.com/OmniSharp/omnisharp-roslyn/pull/2219))
+* Update versions to match .NET SDK 6 RC1 (PR: [#2217](https://github.com/OmniSharp/omnisharp-roslyn/pull/2217))
+* Use FullPaths for Locations that are returned with relative paths. ([#2215](https://github.com/OmniSharp/omnisharp-roslyn/issues/2215), PR: [#2216](https://github.com/OmniSharp/omnisharp-roslyn/pull/2216))
+* Improved logging in project manager (PR: [#2203](https://github.com/OmniSharp/omnisharp-roslyn/pull/2203))
+* Log a warning when external features path has no assemblies ([#2201](https://github.com/OmniSharp/omnisharp-roslyn/issues/2201), PR: [#2202](https://github.com/OmniSharp/omnisharp-roslyn/pull/2202))
+
+## [1.37.14] - 2021-07-27
+* Update to latest .NET SDKs (PR: [#2197](https://github.com/OmniSharp/omnisharp-roslyn/pull/2197))
+* Update included Build Tools to match .NET SDK 6 Preview 7 (PR: [#2196](https://github.com/OmniSharp/omnisharp-roslyn/pull/2196))
+* Upgrade McMaster.Extensions.CommandLineUtils to 3.1.0 ([omnisharp-vscode#4090](https://github.com/OmniSharp/omnisharp-vscode/issues/4090), PR: [#2192](https://github.com/OmniSharp/omnisharp-roslyn/pull/2192))
+
+## [1.37.13] - 2021-07-16
+* Update Roslyn to 4.0.0-2.21354.7 (PR: [#2189](https://github.com/OmniSharp/omnisharp-roslyn/pull/2189))
+* Update included Build Tools to match .NET SDK 6 Preview 6 (PR: [#2187](https://github.com/OmniSharp/omnisharp-roslyn/pull/2187))
+
+## [1.37.12] - 2021-07-09
+* Generate binary redirects for OmniSharp libraries (PR: [#2185](https://www.github.com/OmniSharp/omnisharp-roslyn/pull/2185))
+* Update Roslyn to 4.0.0-2.21322.50 (PR: [#2183](https://www.github.com/OmniSharp/omnisharp-roslyn/pull/2183))
+* Added support for diagnostic suppressors ([#1711](https://github.com/OmniSharp/omnisharp-roslyn/issues/1711), PR: [#2182](https://www.github.com/OmniSharp/omnisharp-roslyn/pull/2182))
+* Use the Microsoft.Build.Locator package for discovery (PR: [#2181](https://www.github.com/OmniSharp/omnisharp-roslyn/pull/2181))
+* fixed Cake test following the auto merge of #2175 (PR: [#2176](https://www.github.com/OmniSharp/omnisharp-roslyn/pull/2176))
+* Update build tools to match NET 6 Preview 5 (PR: [#2175](https://www.github.com/OmniSharp/omnisharp-roslyn/pull/2175))
+
 ## [1.37.11] - 2021-06-18
 * Include timing info in logged responses (PR: [#2173](https://www.github.com/omnisharp/omnisharp-roslyn/pull/2173))
 * Defend against null value in BuildErrorEventArgs ([#2171](https://github.com/OmniSharp/omnisharp-roslyn/issues/2171), PR: [#2172](https://www.github.com/omnisharp/omnisharp-roslyn/pull/2172))

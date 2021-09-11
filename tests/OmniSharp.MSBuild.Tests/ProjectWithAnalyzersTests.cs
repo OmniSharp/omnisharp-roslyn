@@ -302,6 +302,32 @@ dotnet_diagnostic.IDE0005.severity = none
             }
         }
 
+        [Fact]
+        public async Task WhenProjectIsLoadedThenItRespectsDiagnosticSuppressors()
+        {
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("TwoProjectsWithAnalyzerSuppressor"))
+            using (var host = CreateMSBuildTestHost(testProject.Directory, configurationData: TestHelpers.GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled: true)))
+            {
+                var project = host.Workspace.CurrentSolution.Projects.First(p => p.Name == "App");
+
+                // by default Stylecop reported diagnostics should be:
+                //  - The file header is missing or not located at the top of the file. [App] SA1633
+                //  - Elements should be documented [App] SA1600
+                //  - Element 'Program' should declare an access modifier [App] SA1400
+                //  - Element 'Main' should declare an access modifier [App] SA1400
+                // However, SA1200 should be suppressed
+
+                var diagnostics = await host.RequestCodeCheckAsync(Path.Combine(testProject.Directory, "App", "Program.cs"));
+
+                Assert.NotEmpty(diagnostics.QuickFixes);
+
+                Assert.Contains(diagnostics.QuickFixes.OfType<DiagnosticLocation>(), x => x.Id == "SA1633" && x.LogLevel == "Warning");
+                Assert.Contains(diagnostics.QuickFixes.OfType<DiagnosticLocation>(), x => x.Id == "SA1600" && x.LogLevel == "Warning");
+                Assert.Contains(diagnostics.QuickFixes.OfType<DiagnosticLocation>(), x => x.Id == "SA1400" && x.LogLevel == "Warning");
+                Assert.DoesNotContain(diagnostics.QuickFixes.OfType<DiagnosticLocation>(), x => x.Id == "SA1200");
+            }
+        }
+
         private string ModifyXmlFileInPlace(string file, Action<XDocument> docUpdateAction)
         {
             var xmlFile = XDocument.Load(file);
