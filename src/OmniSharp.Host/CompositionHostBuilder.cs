@@ -137,7 +137,7 @@ namespace OmniSharp
             // Caching
             services.AddSingleton<IMemoryCache, MemoryCache>();
             services.AddSingleton<IAssemblyLoader, AssemblyLoader>();
-            services.AddSingleton<IAnalyzerAssemblyLoader, AnalyzerAssemblyLoader>();
+            services.AddSingleton<IAnalyzerAssemblyLoader, DefaultAnalyzerAssemblyLoader>();
             services.AddOptions();
 
             services.AddSingleton<IDotNetCliService, DotNetCliService>();
