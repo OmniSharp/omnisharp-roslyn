@@ -14,9 +14,9 @@ using Microsoft.VisualStudio.TestPlatform.PlatformAbstractions.Interfaces;
 using OmniSharp;
 using OmniSharp.Eventing;
 using OmniSharp.FileWatching;
-using OmniSharp.Host.Services;
 using OmniSharp.MSBuild.Discovery;
 using OmniSharp.Options;
+using OmniSharp.Roslyn.Utilities;
 using OmniSharp.Services;
 using OmniSharp.Utilities;
 using TestUtility.Logging;
@@ -87,7 +87,7 @@ namespace TestUtility
             var configuration = CreateConfiguration(configurationData);
             var msbuildLocator = CreateMSBuildLocator(loggerFactory, assemblyLoader);
             var sharedTextWriter = CreateSharedTextWriter(testOutput);
-            var analyzerAssemblyLoader = new DefaultAnalyzerAssemblyLoader();
+            var analyzerAssemblyLoader = ShadowCopyAnalyzerAssemblyLoader.Instance;
 
             return new TestServiceProvider(
                 environment, loggerFactory, assemblyLoader, analyzerAssemblyLoader, sharedTextWriter,

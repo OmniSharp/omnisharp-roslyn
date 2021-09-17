@@ -15,11 +15,11 @@ using Microsoft.Extensions.Options;
 using OmniSharp.Eventing;
 using OmniSharp.FileSystem;
 using OmniSharp.FileWatching;
-using OmniSharp.Host.Services;
 using OmniSharp.Mef;
 using OmniSharp.MSBuild.Discovery;
 using OmniSharp.Options;
 using OmniSharp.Roslyn;
+using OmniSharp.Roslyn.Utilities;
 using OmniSharp.Services;
 
 namespace OmniSharp
@@ -137,7 +137,7 @@ namespace OmniSharp
             // Caching
             services.AddSingleton<IMemoryCache, MemoryCache>();
             services.AddSingleton<IAssemblyLoader, AssemblyLoader>();
-            services.AddSingleton<IAnalyzerAssemblyLoader, DefaultAnalyzerAssemblyLoader>();
+            services.AddSingleton(sp => ShadowCopyAnalyzerAssemblyLoader.Instance);
             services.AddOptions();
 
             // Setup the options from configuration
