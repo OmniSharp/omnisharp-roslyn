@@ -16,6 +16,8 @@ dotnet_diagnostic.VSTHRD105.severity = none
 dotnet_diagnostic.VSTHRD110.severity = none
 dotnet_diagnostic.VSTHRD200.severity = none
 
+dotnet_sort_system_directives_first = true
+
 [*.cs]
 indent_size = 4
 
