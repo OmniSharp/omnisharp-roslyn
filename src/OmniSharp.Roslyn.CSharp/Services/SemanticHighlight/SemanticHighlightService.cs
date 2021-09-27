@@ -82,13 +82,16 @@ namespace OmniSharp.Roslyn.CSharp.Services.SemanticHighlight
 
             var linePos = lines.GetLinePositionSpan(span.TextSpan);
 
+            var type = SemanticHighlightClassification.Text;
+            _classificationMap.TryGetValue(span.ClassificationType, out type);
+
             return new SemanticHighlightSpan
             {
                 StartLine = linePos.Start.Line,
                 EndLine = linePos.End.Line,
                 StartColumn = linePos.Start.Character,
                 EndColumn = linePos.End.Character,
-                Type = _classificationMap[span.ClassificationType],
+                Type = type,
                 Modifiers = modifiers
             };
         }
@@ -100,7 +103,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.SemanticHighlight
         }
 
         private static readonly Dictionary<string, SemanticHighlightClassification> _classificationMap =
-            new Dictionary<string, SemanticHighlightClassification>
+            new()
             {
                 [ClassificationTypeNames.Comment] = SemanticHighlightClassification.Comment,
                 [ClassificationTypeNames.ExcludedCode] = SemanticHighlightClassification.ExcludedCode,
@@ -126,6 +129,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.SemanticHighlight
                 [ClassificationTypeNames.InterfaceName] = SemanticHighlightClassification.InterfaceName,
                 [ClassificationTypeNames.ModuleName] = SemanticHighlightClassification.ModuleName,
                 [ClassificationTypeNames.StructName] = SemanticHighlightClassification.StructName,
+                [ClassificationTypeNames.RecordStructName] = SemanticHighlightClassification.StructName,
                 [ClassificationTypeNames.TypeParameterName] = SemanticHighlightClassification.TypeParameterName,
                 [ClassificationTypeNames.FieldName] = SemanticHighlightClassification.FieldName,
                 [ClassificationTypeNames.EnumMemberName] = SemanticHighlightClassification.EnumMemberName,
@@ -171,7 +175,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.SemanticHighlight
             };
 
         private static readonly Dictionary<string, SemanticHighlightModifier> _modifierMap =
-            new Dictionary<string, SemanticHighlightModifier>
+            new()
             {
                 [ClassificationTypeNames.StaticSymbol] = SemanticHighlightModifier.Static,
             };
