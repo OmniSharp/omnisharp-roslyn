@@ -24,10 +24,15 @@ namespace OmniSharp.Helpers
             var sourceText = GetSourceText(location, documents, lineSpan.HasMappedPath);
             var text = GetLineText(location, sourceText, lineSpan.StartLinePosition.Line);
 
+            var fileName = Path.IsPathRooted(lineSpan.Path)
+                ? lineSpan.Path
+                // when a #line directive maps into a separate file using a relative path, get the full path relative to the folder containing the source tree
+                : Path.GetFullPath(Path.Combine(Path.GetDirectoryName(location.SourceTree.FilePath), lineSpan.Path));
+
             return new QuickFix
             {
                 Text = text.Trim(),
-                FileName = lineSpan.Path,
+                FileName = fileName,
                 Line = lineSpan.StartLinePosition.Line,
                 Column = lineSpan.HasMappedPath ? 0 : lineSpan.StartLinePosition.Character, // when a #line directive maps into a separate file, assume columns (0,0)
                 EndLine = lineSpan.EndLinePosition.Line,

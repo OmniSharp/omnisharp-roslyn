@@ -72,6 +72,33 @@ namespace N
         }
 
         [Fact]
+        public async Task AllTypesInFileScopedNamespace()
+        {
+            const string source = @"
+namespace N;
+
+class C { }
+delegate void D(int i, ref string s);
+enum E { One, Two, Three }
+interface I { }
+struct S { }
+";
+
+            var response = await GetCodeStructureAsync(source);
+
+            var elementN = Assert.Single(response.Elements);
+            AssertElement(elementN, SymbolKinds.Namespace, "N", "N");
+
+            var children = elementN.Children;
+            Assert.Equal(5, children.Count);
+            AssertElement(children[0], SymbolKinds.Class, "C", "N.C");
+            AssertElement(children[1], SymbolKinds.Delegate, "D", "N.D");
+            AssertElement(children[2], SymbolKinds.Enum, "E", "N.E");
+            AssertElement(children[3], SymbolKinds.Interface, "I", "N.I");
+            AssertElement(children[4], SymbolKinds.Struct, "S", "N.S");
+        }
+
+        [Fact]
         public async Task GenericTypesInNamespace()
         {
             const string source = @"

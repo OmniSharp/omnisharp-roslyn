@@ -361,6 +361,12 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
         private static string GetNewFilePath(string newFileName, string currentFilePath)
         {
             var directory = Path.GetDirectoryName(currentFilePath);
+            if (directory is null)
+            {
+                // if the current file path is not nested within a directory, then return the new filename.
+                return newFileName;
+            }
+
             return Path.Combine(directory, newFileName);
         }
     }

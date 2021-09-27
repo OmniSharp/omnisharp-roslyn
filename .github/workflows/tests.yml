@@ -50,11 +50,6 @@ jobs:
         with:
           nuget-version: ${{ env.NuGetVersion }}
 
-      - name: 🔨 Use .NET Core 2.1 SDK
-        uses: actions/setup-dotnet@v1.7.2
-        with:
-          dotnet-version: '2.1.x'
-
       - name: 🔨 Use .NET Core ${{ env.DotNetVersion2 }} SDK
         uses: actions/setup-dotnet@v1.7.2
         with:

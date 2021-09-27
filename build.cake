@@ -256,7 +256,6 @@ Task("CreateMSBuildFolder")
         "NuGet.Common",
         "NuGet.Configuration",
         "NuGet.DependencyResolver.Core",
-        "NuGet.Frameworks",
         "NuGet.LibraryModel",
         "NuGet.Packaging",
         "NuGet.ProjectModel",
@@ -461,7 +460,8 @@ Task("CreateMSBuildFolder")
     var nugetPackages = new []
     {
         "NuGet.Commands",
-        "NuGet.Credentials"
+        "NuGet.Credentials",
+        "NuGet.Frameworks"
     };
 
     foreach (var nugetPackage in nugetPackages)
