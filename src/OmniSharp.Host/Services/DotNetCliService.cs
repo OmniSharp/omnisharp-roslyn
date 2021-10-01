@@ -2,11 +2,16 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using NuGet.Versioning;
 using OmniSharp.Eventing;
+using OmniSharp.Options;
 using OmniSharp.Utilities;
 
 namespace OmniSharp.Services
@@ -20,14 +25,45 @@ namespace OmniSharp.Services
 
         public string DotNetPath { get; }
 
-        public DotNetCliService(ILoggerFactory loggerFactory, IEventEmitter eventEmitter, string dotnetPath = null)
+        public DotNetCliService(ILoggerFactory loggerFactory, IEventEmitter eventEmitter, IOptions<DotNetCliOptions> dotNetCliOptions, IOmniSharpEnvironment environment)
         {
             _logger = loggerFactory.CreateLogger<DotNetCliService>();
             _eventEmitter = eventEmitter;
             _locks = new ConcurrentDictionary<string, object>();
             _semaphore = new SemaphoreSlim(Environment.ProcessorCount / 2);
 
-            DotNetPath = dotnetPath ?? "dotnet";
+            // Check if any of the provided paths have a dotnet executable.
+            string executableExtension = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? ".exe" : string.Empty;
+            foreach (var path in dotNetCliOptions.Value.GetNormalizedLocationPaths(environment))
+            {
+                if (File.Exists(Path.Combine(path, $"dotnet{executableExtension}")))
+                {
+                    // We'll take the first path that has a dotnet executable.
+                    DotNetPath = Path.Combine(path, "dotnet");
+                }
+                else
+                {
+                    _logger.LogInformation($"Provided dotnet CLI path does not contain the dotnet executable: '{path}'.");
+                }
+            }
+
+            // If we still haven't found a dotnet CLI, check the DOTNET_ROOT environment variable.
+            if (DotNetPath is null)
+            {
+                _logger.LogInformation("Checking the 'DOTNET_ROOT' environment variable to find a .NET SDK");
+                string dotnetRoot = Environment.GetEnvironmentVariable("DOTNET_ROOT");
+                if (!string.IsNullOrEmpty(dotnetRoot) && File.Exists(Path.Combine(dotnetRoot, $"dotnet{executableExtension}")))
+                {
+                    DotNetPath = Path.Combine(dotnetRoot, "dotnet");
+                }
+            }
+
+            // If we still haven't found the CLI, use the one on the PATH.
+            if (DotNetPath is null)
+            {
+                _logger.LogInformation("Using the 'dotnet' on the PATH.");
+                DotNetPath = "dotnet";
+            }
 
             _logger.LogInformation($"DotNetPath set to {DotNetPath}");
         }
