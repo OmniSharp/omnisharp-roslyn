@@ -1,6 +1,14 @@
 # Changelog
 All changes to the project will be documented in this file.
 
+## [1.37.16] - 2021-10-01
+*  Update included Build Tools to match .NET SDK 6 (PR: [#2239](https://github.com/OmniSharp/omnisharp-roslyn/pull/2239))
+* Add Custom .NET CLI support to OmniSharp (PR: [#2227](https://github.com/OmniSharp/omnisharp-roslyn/pull/2227))
+* Handle .editorconfig changes without running a new design time build ([#2112](https://github.com/OmniSharp/omnisharp-roslyn/issues/2112) PR: [#2234](https://github.com/OmniSharp/omnisharp-roslyn/pull/2234))
+* Do not return nulls when getting documents by path ([#2125](https://github.com/OmniSharp/omnisharp-roslyn/issues/2125) PR: [#2233](https://github.com/OmniSharp/omnisharp-roslyn/pull/2233))
+* handle RecordStructName in semantic highlighting classification ([#2228](https://github.com/OmniSharp/omnisharp-roslyn/issues/2228) PR: [#2232](https://github.com/OmniSharp/omnisharp-roslyn/pull/2232))
+* Update CodeStructureService with FileScoped Namespace support ([#2225](https://github.com/OmniSharp/omnisharp-roslyn/issues/2225) PR: [#2226](https://github.com/OmniSharp/omnisharp-roslyn/pull/2226))
+
 ## [1.37.15] - 2021-08-31
 * Update Roslyn to 4.0.0-4.21427.11 (PR: [#2220](https://github.com/OmniSharp/omnisharp-roslyn/pull/2220))
 * Update NuGet to 5.10.0 ([#2027](https://github.com/OmniSharp/omnisharp-roslyn/issues/2027), PR: [#2034](https://github.com/OmniSharp/omnisharp-roslyn/pull/2034))
