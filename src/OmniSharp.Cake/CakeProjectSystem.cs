@@ -71,7 +71,7 @@ namespace OmniSharp.Cake
             _compilationOptions = new Lazy<CSharpCompilationOptions>(CreateCompilationOptions);
         }
 
-        public void Initalize(IConfiguration configuration)
+        public void Initialize(IConfiguration configuration)
         {
             if (Initialized) return;
 
