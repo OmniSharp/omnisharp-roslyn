@@ -111,7 +111,7 @@ jobs:
 
   - job: Release
     pool:
-      vmImage: "Ubuntu-16.04"
+      vmImage: "Ubuntu-latest"
     dependsOn:
       - macOS
       - Linux
