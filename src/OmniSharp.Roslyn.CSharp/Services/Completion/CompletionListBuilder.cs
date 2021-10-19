@@ -100,10 +100,17 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
 
         private static IReadOnlyList<char>? BuildCommitCharacters(ImmutableArray<CharacterSetModificationRule> characterRules, bool isSuggestionMode, Dictionary<ImmutableArray<CharacterSetModificationRule>, IReadOnlyList<char>> commitCharacterRulesCache, HashSet<char> commitCharactersBuilder)
         {
+            if (isSuggestionMode)
+            {
+                // To emulate soft selection we should remove all trigger characters forcing the Editor to
+                // fallback to only <tab> and <enter> for accepting the completions.
+                return null;
+            }
+
             if (characterRules.IsEmpty)
             {
                 // Use defaults
-                return isSuggestionMode ? DefaultRulesWithoutSpace : CompletionRules.Default.DefaultCommitCharacters;
+                return CompletionRules.Default.DefaultCommitCharacters;
             }
 
             if (commitCharacterRulesCache.TryGetValue(characterRules, out var cachedRules))
