@@ -329,7 +329,7 @@ namespace OmniSharp.MSBuild
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to load project file '{projectFilePath}'.");
+                _logger.LogError(ex, $"Failed to load project file '{projectFilePath}'.");
                 _eventEmitter.Error(ex, fileName: projectFilePath);
                 return (null, null);
             }
