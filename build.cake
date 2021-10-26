@@ -172,6 +172,11 @@ Task("InstallMonoAssets")
     DownloadFileAndUnzip($"{buildPlan.DownloadURL}/{buildPlan.MonoRuntimeLinux32}", env.Folders.MonoRuntimeLinux32);
     DownloadFileAndUnzip($"{buildPlan.DownloadURL}/{buildPlan.MonoRuntimeLinux64}", env.Folders.MonoRuntimeLinux64);
 
+    var runScriptFile = CombinePaths(env.Folders.MonoPackaging, "run");
+    FileHelper.Copy(runScriptFile, CombinePaths(env.Folders.MonoRuntimeMacOS, "run"), overwrite: true);
+    FileHelper.Copy(runScriptFile, CombinePaths(env.Folders.MonoRuntimeLinux32, "run"), overwrite: true);
+    FileHelper.Copy(runScriptFile, CombinePaths(env.Folders.MonoRuntimeLinux64, "run"), overwrite: true);
+
     var monoInstallFolder = env.CurrentMonoRuntime.InstallFolder;
     var monoRuntimeFile = env.CurrentMonoRuntime.RuntimeFile;
 
