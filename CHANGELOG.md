@@ -2,7 +2,6 @@
 All changes to the project will be documented in this file.
 
 ## [1.37.17]
-
 * Update versions to match dotnet SDK 6.0.1xx (PR: [#2262](https://github.com/OmniSharp/omnisharp-roslyn/pull/2262))
 * Remove all completion commit characters in suggestion mode. ([#1974](https://github.com/OmniSharp/omnisharp-vscode/issues/1974), [#3219](https://github.com/OmniSharp/omnisharp-vscode/issues/3219), [#3647](https://github.com/OmniSharp/omnisharp-vscode/issues/3647), [#4833](https://github.com/OmniSharp/omnisharp-vscode/issues/4833), PR: [#2253](https://github.com/OmniSharp/omnisharp-roslyn/pull/2253))
 * fixed logging interpolation in ProjectManager (PR: [#2246](https://github.com/OmniSharp/omnisharp-roslyn/pull/2246))
