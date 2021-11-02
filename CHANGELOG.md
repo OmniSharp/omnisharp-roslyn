@@ -1,6 +1,13 @@
 # Changelog
 All changes to the project will be documented in this file.
 
+## [1.37.17]
+* Update versions to match dotnet SDK 6.0.1xx (PR: [#2262](https://github.com/OmniSharp/omnisharp-roslyn/pull/2262))
+* Remove all completion commit characters in suggestion mode. ([#1974](https://github.com/OmniSharp/omnisharp-vscode/issues/1974), [#3219](https://github.com/OmniSharp/omnisharp-vscode/issues/3219), [#3647](https://github.com/OmniSharp/omnisharp-vscode/issues/3647), [#4833](https://github.com/OmniSharp/omnisharp-vscode/issues/4833), PR: [#2253](https://github.com/OmniSharp/omnisharp-roslyn/pull/2253))
+* fixed logging interpolation in ProjectManager (PR: [#2246](https://github.com/OmniSharp/omnisharp-roslyn/pull/2246))
+* Support signature help for implicit object creation ([#2243](https://github.com/OmniSharp/omnisharp-roslyn/issues/2243), PR: [#2244](https://github.com/OmniSharp/omnisharp-roslyn/pull/2244))
+* Implement /v2/gotodefinition for Cake ([#2209](https://github.com/OmniSharp/omnisharp-roslyn/issues/2209), PR: [#2212](https://github.com/OmniSharp/omnisharp-roslyn/pull/2212))
+
 ## [1.37.16] - 2021-10-01
 *  Update included Build Tools to match .NET SDK 6 (PR: [#2239](https://github.com/OmniSharp/omnisharp-roslyn/pull/2239))
 * Add Custom .NET CLI support to OmniSharp (PR: [#2227](https://github.com/OmniSharp/omnisharp-roslyn/pull/2227))
