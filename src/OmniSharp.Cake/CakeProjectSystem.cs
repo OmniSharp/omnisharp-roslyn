@@ -84,7 +84,7 @@ namespace OmniSharp.Cake
             var allCakeFiles = _fileSystemHelper.GetFiles("**/*.cake").ToArray();
             if (allCakeFiles.Length == 0)
             {
-                _logger.LogInformation("Could not find any Cake files");
+                _logger.LogInformation("Did not find any Cake files");
                 return;
             }
 
