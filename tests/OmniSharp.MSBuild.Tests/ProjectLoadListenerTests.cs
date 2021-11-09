@@ -197,7 +197,7 @@ namespace OmniSharp.MSBuild.Tests
             using var testProject = await TestAssets.Instance.GetTestProjectAsync("NetCore31Project");
             using var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory));
             Assert.Single(emitter.ReceivedMessages);
-            Assert.Equal(GetHashedFileExtension("3.1.414"), emitter.ReceivedMessages[0].SdkVersion);
+            Assert.Equal(GetHashedFileExtension("3.1.415"), emitter.ReceivedMessages[0].SdkVersion);
         }
 
         [Fact]

@@ -2,7 +2,7 @@
     "DotNetInstallScriptURL": "https://dot.net/v1",
     "DotNetChannel": "Preview",
     "DotNetVersions": [
-        "3.1.414",
+        "3.1.415",
         "5.0.403",
         "6.0.100"
     ],
