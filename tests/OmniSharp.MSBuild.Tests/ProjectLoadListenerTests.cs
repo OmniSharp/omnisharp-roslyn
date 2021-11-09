@@ -221,7 +221,7 @@ namespace OmniSharp.MSBuild.Tests
             using var testProject = await TestAssets.Instance.GetTestProjectAsync("Net60Project");
             using var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory));
             Assert.Single(emitter.ReceivedMessages);
-            Assert.Equal(GetHashedFileExtension("6.0.100-rc.2.21505.57"), emitter.ReceivedMessages[0].SdkVersion);
+            Assert.Equal(GetHashedFileExtension("6.0.100"), emitter.ReceivedMessages[0].SdkVersion);
         }
 
         private string GetHashedFileExtension(string fileExtension)
