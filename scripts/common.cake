@@ -150,8 +150,9 @@ public class Folders
     public string ArtifactsScripts { get; }
 
     public string MonoRuntimeMacOS { get; }
-    public string MonoRuntimeLinux32 { get; }
-    public string MonoRuntimeLinux64 { get; }
+    public string MonoRuntimeLinuxX86 { get; }
+    public string MonoRuntimeLinuxX64 { get; }
+    public string MonoRuntimeLinuxArm64 { get; }
     public string MonoMSBuildRuntime { get; }
     public string MonoMSBuildLib { get; }
 
@@ -176,8 +177,9 @@ public class Folders
         this.ArtifactsScripts = PathHelper.Combine(this.Artifacts, "scripts");
 
         this.MonoRuntimeMacOS = PathHelper.Combine(this.Tools, "Mono.Runtime.MacOS");
-        this.MonoRuntimeLinux32 = PathHelper.Combine(this.Tools, "Mono.Runtime.Linux-x86");
-        this.MonoRuntimeLinux64 = PathHelper.Combine(this.Tools, "Mono.Runtime.Linux-x64");
+        this.MonoRuntimeLinuxX86 = PathHelper.Combine(this.Tools, "Mono.Runtime.Linux-x86");
+        this.MonoRuntimeLinuxX64 = PathHelper.Combine(this.Tools, "Mono.Runtime.Linux-x64");
+        this.MonoRuntimeLinuxArm64 = PathHelper.Combine(this.Tools, "Mono.Runtime.Linux-arm64");
         this.MonoMSBuildRuntime = PathHelper.Combine(this.Tools, "Microsoft.Build.Runtime.Mono");
         this.MonoMSBuildLib = PathHelper.Combine(this.Tools, "Microsoft.Build.Lib.Mono");
     }
@@ -230,8 +232,9 @@ public class BuildEnvironment
         this.MonoRuntimes = new []
         {
             new MonoRuntime("osx", this.Folders.MonoRuntimeMacOS, "mono"),
-            new MonoRuntime("linux-x86", this.Folders.MonoRuntimeLinux32, "mono"),
-            new MonoRuntime("linux-x64", this.Folders.MonoRuntimeLinux64, "mono")
+            new MonoRuntime("linux-x86", this.Folders.MonoRuntimeLinuxX86, "mono"),
+            new MonoRuntime("linux-x64", this.Folders.MonoRuntimeLinuxX64, "mono"),
+            new MonoRuntime("linux-arm64", this.Folders.MonoRuntimeLinuxArm64, "mono")
         };
 
         if (Platform.Current.IsMacOS)
@@ -248,6 +251,10 @@ public class BuildEnvironment
             else if (Platform.Current.IsX64)
             {
                 this.CurrentMonoRuntime = this.MonoRuntimes[2];
+            }
+            else if (Platform.Current.IsArm64)
+            {
+                this.CurrentMonoRuntime = this.MonoRuntimes[3];
             }
             this.BuildMonoRuntimes = this.MonoRuntimes.Skip(1).ToArray();
         }
@@ -364,8 +371,9 @@ public class BuildPlan
     public string RequiredMonoVersion { get; set; }
     public string DownloadURL { get; set; }
     public string MonoRuntimeMacOS { get; set; }
-    public string MonoRuntimeLinux32 { get; set; }
-    public string MonoRuntimeLinux64 { get; set; }
+    public string MonoRuntimeLinuxX86 { get; set; }
+    public string MonoRuntimeLinuxX64 { get; set; }
+    public string MonoRuntimeLinuxArm64 { get; set; }
     public string MonoMSBuildRuntime { get; set; }
     public string MonoMSBuildLib { get; set; }
     public string[] HostProjects { get; set; }
