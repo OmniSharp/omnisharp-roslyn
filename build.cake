@@ -169,13 +169,15 @@ Task("InstallMonoAssets")
     Information("Acquiring Mono runtimes and framework...");
 
     DownloadFileAndUnzip($"{buildPlan.DownloadURL}/{buildPlan.MonoRuntimeMacOS}", env.Folders.MonoRuntimeMacOS);
-    DownloadFileAndUnzip($"{buildPlan.DownloadURL}/{buildPlan.MonoRuntimeLinux32}", env.Folders.MonoRuntimeLinux32);
-    DownloadFileAndUnzip($"{buildPlan.DownloadURL}/{buildPlan.MonoRuntimeLinux64}", env.Folders.MonoRuntimeLinux64);
+    DownloadFileAndUnzip($"{buildPlan.DownloadURL}/{buildPlan.MonoRuntimeLinuxX86}", env.Folders.MonoRuntimeLinuxX86);
+    DownloadFileAndUnzip($"{buildPlan.DownloadURL}/{buildPlan.MonoRuntimeLinuxX64}", env.Folders.MonoRuntimeLinuxX64);
+    DownloadFileAndUnzip($"{buildPlan.DownloadURL}/{buildPlan.MonoRuntimeLinuxArm64}", env.Folders.MonoRuntimeLinuxArm64);
 
     var runScriptFile = CombinePaths(env.Folders.MonoPackaging, "run");
     FileHelper.Copy(runScriptFile, CombinePaths(env.Folders.MonoRuntimeMacOS, "run"), overwrite: true);
-    FileHelper.Copy(runScriptFile, CombinePaths(env.Folders.MonoRuntimeLinux32, "run"), overwrite: true);
-    FileHelper.Copy(runScriptFile, CombinePaths(env.Folders.MonoRuntimeLinux64, "run"), overwrite: true);
+    FileHelper.Copy(runScriptFile, CombinePaths(env.Folders.MonoRuntimeLinuxX86, "run"), overwrite: true);
+    FileHelper.Copy(runScriptFile, CombinePaths(env.Folders.MonoRuntimeLinuxX64, "run"), overwrite: true);
+    FileHelper.Copy(runScriptFile, CombinePaths(env.Folders.MonoRuntimeLinuxArm64, "run"), overwrite: true);
 
     var monoInstallFolder = env.CurrentMonoRuntime.InstallFolder;
     var monoRuntimeFile = env.CurrentMonoRuntime.RuntimeFile;
@@ -429,7 +431,14 @@ Task("CreateMSBuildFolder")
     }
     else if (Platform.Current.IsLinux)
     {
-        CopyDotNetHostResolver(env, "linux", "x64", "libhostfxr.so", msbuildSdkResolverTargetFolder, copyToArchSpecificFolder: false);
+        if (Platform.Current.IsArm64)
+        {
+            CopyDotNetHostResolver(env, "linux", "arm64", "libhostfxr.so", msbuildSdkResolverTargetFolder, copyToArchSpecificFolder: false);
+        }
+        else
+        {
+            CopyDotNetHostResolver(env, "linux", "x64", "libhostfxr.so", msbuildSdkResolverTargetFolder, copyToArchSpecificFolder: false);
+        }
     }
 
     Information("Copying NuGet SDK resolver...");
