@@ -741,7 +741,6 @@ void CopyMonoBuild(BuildEnvironment env, string sourceFolder, string outputFolde
     var platform = platformParts[0];
     var architecture = platformParts.Length > 1 ? platformParts[1] : "x64";
 
-    // Since multiple linux builds will be generated we need to
     var msbuildSdkResolverTargetFolder = CombinePaths(msbuildBinFolder, "SdkResolvers", "Microsoft.DotNet.MSBuildSdkResolver");
     var hostfxrDylibPath = CombinePaths(msbuildSdkResolverTargetFolder, "libhostfxr.dylib");
     var hostfxrSoPath = CombinePaths(msbuildSdkResolverTargetFolder, "libhostfxr.so");
