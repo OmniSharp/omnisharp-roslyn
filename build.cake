@@ -737,7 +737,7 @@ void CopyMonoBuild(BuildEnvironment env, string sourceFolder, string outputFolde
     // We are now copying Mono for a particular platform and need to ensure that
     // we are including the appropriate hostfxr library.
 
-    var platformParts = platformName.Split("-");
+    var platformParts = platformName.Split('-');
     var platform = platformParts[0];
     var architecture = platformParts.Length > 1 ? platformParts[1] : "x64";
 
