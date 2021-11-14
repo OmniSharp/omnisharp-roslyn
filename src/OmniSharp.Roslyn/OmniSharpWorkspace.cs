@@ -593,5 +593,32 @@ namespace OmniSharp
 
             base.ApplyProjectChanges(projectChanges);
         }
+
+        /// <summary>
+        /// Finds closest project which contains specified path.
+        /// </summary>
+        /// <param name="path">Directory path.</param>
+        /// <returns>Closest project if path doest't belong to any project. Null otherwise.</returns>
+        public Project FingProjectByPath(string path)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                return null;
+            }
+
+            string loweredPath = path.ToLower().Trim();
+            Project closestProject = CurrentSolution
+                .Projects
+                .Where(x => x.FilePath is not null)
+                .OrderBy(x => new FileInfo(x.FilePath).DirectoryName.Length)
+                .FirstOrDefault(x => loweredPath.Contains(new FileInfo(x.FilePath).DirectoryName.ToLower()) && IsFileIncludedInProject(x, path));
+
+            return closestProject;
+        }
+
+        private bool IsFileIncludedInProject(Project project, string filename)
+        {
+            return documentInclusionRulesPerProject.TryGetValue(project.Id, out Predicate<string> documentInclusionFilter) && documentInclusionFilter(filename);
+        }
     }
 }

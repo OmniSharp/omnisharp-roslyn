@@ -55,6 +55,8 @@ namespace OmniSharp
         public const string UpdateSourceGeneratedFile = "/updatesourcegeneratedfile";
         public const string SourceGeneratedFileClosed = "/sourcegeneratedfileclosed";
 
+        public const string CreateNewType = "/createnewtype";
+
         public static class V2
         {
             public const string GetCodeActions = "/v2/getcodeactions";
