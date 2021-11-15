@@ -5,6 +5,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.ServiceModel.Configuration;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
@@ -46,7 +47,14 @@ namespace TestUtility
             workspace.AddDocument(documentInfo);
         }
 
-        public static IEnumerable<ProjectId> AddProjectToWorkspace(OmniSharpWorkspace workspace, string filePath, string[] frameworks, TestFile[] testFiles, TestFile[] otherFiles = null, ImmutableArray<AnalyzerReference> analyzerRefs = default)
+        public static IEnumerable<ProjectId> AddProjectToWorkspace(
+            OmniSharpWorkspace workspace,
+            string filePath,
+            string[] frameworks,
+            TestFile[] testFiles,
+            TestFile[] analyzerConfigFiles = null,
+            TestFile[] otherFiles = null,
+            ImmutableArray<AnalyzerReference> analyzerRefs = default)
         {
             otherFiles ??= Array.Empty<TestFile>();
 
@@ -84,6 +92,11 @@ namespace TestUtility
                 foreach (var testFile in testFiles)
                 {
                     workspace.AddDocument(projectInfo.Id, testFile.FileName, TextLoader.From(TextAndVersion.Create(testFile.Content.Text, versionStamp)), SourceCodeKind.Regular);
+                }
+
+                foreach (var analyzerConfigFile in analyzerConfigFiles)
+                {
+                    workspace.AddAnalyzerConfigDocument(projectInfo.Id, analyzerConfigFile.FileName, TextLoader.From(TextAndVersion.Create(analyzerConfigFile.Content.Text, versionStamp)));
                 }
 
                 foreach (var otherFile in otherFiles)
