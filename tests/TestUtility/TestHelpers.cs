@@ -56,6 +56,7 @@ namespace TestUtility
             TestFile[] otherFiles = null,
             ImmutableArray<AnalyzerReference> analyzerRefs = default)
         {
+            analyzerConfigFiles ??= Array.Empty<TestFile>();
             otherFiles ??= Array.Empty<TestFile>();
 
             var versionStamp = VersionStamp.Create();
