@@ -1,23 +1,24 @@
+using System;
 using System.Collections;
-using System.Collections.Immutable;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Options;
+using OmniSharp.Utilities;
 
 namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
 {
     public static class DiagnosticAnalyzerExtensions
     {
-        private static MethodInfo TryGetMappedOptionsMethod { get; }
+        private static Lazy<MethodInfo> TryGetMappedOptionsMethod { get; }
 
         static DiagnosticAnalyzerExtensions()
         {
-            TryGetMappedOptionsMethod = Assembly.Load(new AssemblyName("Microsoft.CodeAnalysis.Features"))
-                .GetType("Microsoft.CodeAnalysis.Diagnostics.IDEDiagnosticIdToOptionMappingHelper")
-                .GetMethod("TryGetMappedOptions", BindingFlags.Static | BindingFlags.Public);
+            TryGetMappedOptionsMethod = new Lazy<Assembly>(() => Assembly.Load(new AssemblyName("Microsoft.CodeAnalysis.Features")))
+                .LazyGetType("Microsoft.CodeAnalysis.Diagnostics.IDEDiagnosticIdToOptionMappingHelper")
+                .LazyGetMethod("TryGetMappedOptions", BindingFlags.Static | BindingFlags.Public);
         }
         /// <summary>
         /// Get the highest possible severity for any formattable document in the project.
@@ -136,7 +137,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
                 severity = ReportDiagnostic.Suppress;
 
                 var parameters = new object[] { descriptor.Id, compilation.Language, null };
-                var result = (bool)(TryGetMappedOptionsMethod.Invoke(null, parameters) ?? false);
+                var result = (bool)(TryGetMappedOptionsMethod.InvokeStatic(parameters) ?? false);
 
                 if (!result)
                 {
