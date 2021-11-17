@@ -320,7 +320,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                     var compilationWithAnalyzers = compilation.WithAnalyzers(analyzers, new CompilationWithAnalyzersOptions(
                         workspaceAnalyzerOptions,
                         onAnalyzerException: OnAnalyzerException,
-                        concurrentAnalysis: false,
+                        concurrentAnalysis: true,
                         logAnalyzerExecutionTime: false,
                         reportSuppressedDiagnostics: false));
 
@@ -367,7 +367,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                     var compilationWithAnalyzers = compilation.WithAnalyzers(analyzers, new CompilationWithAnalyzersOptions(
                         workspaceAnalyzerOptions,
                         onAnalyzerException: OnAnalyzerException,
-                        concurrentAnalysis: false,
+                        concurrentAnalysis: true,
                         logAnalyzerExecutionTime: false,
                         reportSuppressedDiagnostics: false));
 
