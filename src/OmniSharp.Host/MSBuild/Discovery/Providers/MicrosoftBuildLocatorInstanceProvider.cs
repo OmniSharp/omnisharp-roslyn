@@ -18,12 +18,19 @@ namespace OmniSharp.MSBuild.Discovery.Providers
 
         public override ImmutableArray<MSBuildInstance> GetInstances()
         {
+
+#if NETCOREAPP
+            // Restrict instances to NET 5 SDK
+            var instances = MicrosoftBuildLocator.QueryVisualStudioInstances()
+                .Where(instance => instance.Version.Major == 5);
+#else
             if (!PlatformHelper.IsWindows)
             {
                 return NoInstances;
             }
 
             var instances = MicrosoftBuildLocator.QueryVisualStudioInstances();
+#endif
 
             return instances.Select(instance =>
             {
@@ -43,6 +50,7 @@ namespace OmniSharp.MSBuild.Discovery.Providers
                 {
                     MicrosoftDiscoveryType.DeveloperConsole => DiscoveryType.DeveloperConsole,
                     MicrosoftDiscoveryType.VisualStudioSetup => DiscoveryType.VisualStudioSetup,
+                    MicrosoftDiscoveryType.DotNetSdk => DiscoveryType.DotNetSdk,
                     _ => throw new ArgumentException()
                 };
             }

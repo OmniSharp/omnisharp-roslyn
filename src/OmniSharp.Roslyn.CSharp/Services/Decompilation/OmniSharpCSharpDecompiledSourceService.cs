@@ -99,7 +99,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Decompilation
                     SyntaxFactory.CarriageReturnLineFeed,
                     SyntaxFactory.Comment("// " + assemblyPath),
                     SyntaxFactory.CarriageReturnLineFeed,
-                    SyntaxFactory.Comment($"// Decompiled with ICSharpCode.Decompiler {decompilerVersion.FileVersion}"),
+                    SyntaxFactory.Comment($"// Decompiled with ICSharpCode.Decompiler {GetVersion(decompilerVersion)}"),
                     SyntaxFactory.CarriageReturnLineFeed,
                     SyntaxFactory.Trivia(SyntaxFactory.EndRegionDirectiveTrivia(true)),
                     SyntaxFactory.CarriageReturnLineFeed,
@@ -107,6 +107,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Decompilation
                 });
 
             return document.WithSyntaxRoot(newRoot);
+
+            static string GetVersion(FileVersionInfo versionInfo) => versionInfo.ProductVersion.Split('-')[0];
         }
 
         private async Task<Document> ConvertDocCommentsToRegularCommentsAsync(Document document, CancellationToken cancellationToken)

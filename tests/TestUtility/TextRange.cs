@@ -1,5 +1,6 @@
 ﻿using OmniSharp.Models.V2;
 using System;
+using Range = OmniSharp.Models.V2.Range;
 
 namespace TestUtility
 {

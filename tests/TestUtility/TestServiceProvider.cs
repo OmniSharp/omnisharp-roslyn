@@ -87,7 +87,7 @@ namespace TestUtility
             var configuration = CreateConfiguration(configurationData);
             var msbuildLocator = CreateMSBuildLocator(loggerFactory, assemblyLoader);
             var sharedTextWriter = CreateSharedTextWriter(testOutput);
-            var analyzerAssemblyLoader = new AnalyzerAssemblyLoader();
+            var analyzerAssemblyLoader = new DefaultAnalyzerAssemblyLoader();
 
             return new TestServiceProvider(
                 environment, loggerFactory, assemblyLoader, analyzerAssemblyLoader, sharedTextWriter,

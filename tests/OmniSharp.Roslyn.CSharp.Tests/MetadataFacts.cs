@@ -32,7 +32,12 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [InlineData("dummy.csx")]
         public async Task ReturnsSource_ForNormalType(string filename)
         {
-            var assemblyName = "System.Core";
+            var assemblyName =
+#if NETCOREAPP
+            "System.Linq";
+#else
+            "System.Core";
+#endif
             var typeName = "System.Linq.Enumerable";
 
             await TestMetadataAsync(filename, assemblyName, typeName);
