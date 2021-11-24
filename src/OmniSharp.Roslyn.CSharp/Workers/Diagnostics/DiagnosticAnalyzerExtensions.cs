@@ -20,19 +20,20 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
                 .LazyGetType("Microsoft.CodeAnalysis.Diagnostics.IDEDiagnosticIdToOptionMappingHelper")
                 .LazyGetMethod("TryGetMappedOptions", BindingFlags.Static | BindingFlags.Public);
         }
+
         /// <summary>
-        /// Get the highest possible severity for any formattable document in the project.
+        /// Determines whether this analyzer will generate diagnostics of at least a minimum severity for any document within the project.
         /// </summary>
-        public static async Task<ReportDiagnostic> GetSeverityAsync(
+        public static async Task<bool> HasMinimumSeverityAsync(
             this DiagnosticAnalyzer analyzer,
             Project project,
             Compilation compilation,
+            ReportDiagnostic minimumSeverity,
             CancellationToken cancellationToken)
         {
-            var severity = ReportDiagnostic.Suppress;
             if (compilation is null)
             {
-                return severity;
+                return false;
             }
 
             foreach (var document in project.Documents)
@@ -45,14 +46,13 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
 
                 var options = await document.GetOptionsAsync(cancellationToken).ConfigureAwait(false);
 
-                var documentSeverity = analyzer.GetSeverity(document, project.AnalyzerOptions, options, compilation);
-                if (documentSeverity < severity)
+                if (analyzer.HasMinimumSeverity(document, project.AnalyzerOptions, options, minimumSeverity, compilation))
                 {
-                    severity = documentSeverity;
+                    return true;
                 }
             }
 
-            return severity;
+            return false;
         }
 
         public static ReportDiagnostic FromSeverity(this DiagnosticSeverity diagnosticSeverity)
@@ -77,25 +77,29 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
             };
         }
 
-        public static ReportDiagnostic GetSeverity(
+        /// <summary>
+        /// Determines whether this analyzer will generate diagnostics of at least a minimum severity for this document.
+        /// </summary>
+        public static bool HasMinimumSeverity(
             this DiagnosticAnalyzer analyzer,
             Document document,
             AnalyzerOptions analyzerOptions,
             OptionSet options,
+            ReportDiagnostic minimumSeverity,
             Compilation compilation)
         {
-            var severity = ReportDiagnostic.Suppress;
-
             if (!document.TryGetSyntaxTree(out var tree))
             {
-                return severity;
+                return false;
             }
+
+            var severity = ReportDiagnostic.Suppress;
 
             foreach (var descriptor in analyzer.SupportedDiagnostics)
             {
-                if (severity == ReportDiagnostic.Error)
+                if (severity <= minimumSeverity)
                 {
-                    break;
+                    return true;
                 }
 
                 if (analyzerOptions.TryGetSeverityFromConfiguration(tree, compilation, descriptor, out var reportDiagnostic))
@@ -126,7 +130,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
                 }
             }
 
-            return severity;
+            return severity <= minimumSeverity;
 
             static bool TryGetSeverityFromCodeStyleOption(
                 DiagnosticDescriptor descriptor,

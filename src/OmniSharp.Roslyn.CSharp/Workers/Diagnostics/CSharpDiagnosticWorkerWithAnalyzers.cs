@@ -200,7 +200,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
             var compilation = await project.GetCompilationAsync();
             var workspaceAnalyzerOptions = (AnalyzerOptions)_workspaceAnalyzerOptionsConstructor.Invoke(new object[] { project.AnalyzerOptions, project.Solution });
-            var filteredAnalyzers = await FilterSuppressedAnalyzersAsync(allAnalyzers, document, workspaceAnalyzerOptions, compilation, cancellationToken);
+            // Filter out suppressed analyzers by requiring a minimum diagnostic severity of Hidden
+            var filteredAnalyzers = await FilterAnalyzersBySeverityAsync(allAnalyzers, document, workspaceAnalyzerOptions, compilation, ReportDiagnostic.Hidden, cancellationToken);
 
             cancellationToken.ThrowIfCancellationRequested();
             return await AnalyzeDocumentAsync(project, filteredAnalyzers, compilation, workspaceAnalyzerOptions, document);
@@ -216,12 +217,13 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
             var compilation = await project.GetCompilationAsync();
             var workspaceAnalyzerOptions = (AnalyzerOptions)_workspaceAnalyzerOptionsConstructor.Invoke(new object[] { project.AnalyzerOptions, project.Solution });
-            var filteredAnalyzers = await FilterSuppressedAnalyzersAsync(allAnalyzers, project, compilation, cancellationToken);
+            // Filter out suppressed analyzers by requiring a minimum diagnostic severity of Hidden
+            var filteredAnalyzers = await FilterAnalyzersBySeverityAsync(allAnalyzers, project, compilation, ReportDiagnostic.Hidden, cancellationToken);
 
             return await AnalyzeProjectAsync(project, filteredAnalyzers, compilation, workspaceAnalyzerOptions);
         }
 
-        public static async Task<ImmutableArray<DiagnosticAnalyzer>> FilterSuppressedAnalyzersAsync(ImmutableArray<DiagnosticAnalyzer> allAnalyzers, Document document, AnalyzerOptions analyzerOptions, Compilation compilation, CancellationToken cancellationToken = default)
+        public static async Task<ImmutableArray<DiagnosticAnalyzer>> FilterAnalyzersBySeverityAsync(ImmutableArray<DiagnosticAnalyzer> allAnalyzers, Document document, AnalyzerOptions analyzerOptions, Compilation compilation, ReportDiagnostic minimumSeverity, CancellationToken cancellationToken = default)
         {
             var documentOptions = await document.GetOptionsAsync(cancellationToken);
             var filteredAnalyzersBuilder = ImmutableArray.CreateBuilder<DiagnosticAnalyzer>();
@@ -233,8 +235,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                     filteredAnalyzersBuilder.Add(analyzer);
                 }
 
-                var severity = analyzer.GetSeverity(document, analyzerOptions, documentOptions, compilation);
-                if (severity != ReportDiagnostic.Suppress)
+                var hasMinimumSeverity = analyzer.HasMinimumSeverity(document, analyzerOptions, documentOptions, minimumSeverity, compilation);
+                if (hasMinimumSeverity)
                 {
                     filteredAnalyzersBuilder.Add(analyzer);
                 }
@@ -243,7 +245,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             return filteredAnalyzersBuilder.ToImmutable();
         }
 
-        public static async Task<ImmutableArray<DiagnosticAnalyzer>> FilterSuppressedAnalyzersAsync(ImmutableArray<DiagnosticAnalyzer> allAnalyzers, Project project, Compilation compilation, CancellationToken cancellationToken = default)
+        public static async Task<ImmutableArray<DiagnosticAnalyzer>> FilterAnalyzersBySeverityAsync(ImmutableArray<DiagnosticAnalyzer> allAnalyzers, Project project, Compilation compilation, ReportDiagnostic minimumSeverity, CancellationToken cancellationToken = default)
         {
             var filteredAnalyzersBuilder = ImmutableArray.CreateBuilder<DiagnosticAnalyzer>();
 
@@ -254,8 +256,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                     filteredAnalyzersBuilder.Add(analyzer);
                 }
 
-                var severity = await analyzer.GetSeverityAsync(project, compilation, cancellationToken);
-                if (severity != ReportDiagnostic.Suppress)
+                var hasMinimumSeverity = await analyzer.HasMinimumSeverityAsync(project, compilation, minimumSeverity, cancellationToken);
+                if (hasMinimumSeverity)
                 {
                     filteredAnalyzersBuilder.Add(analyzer);
                 }
@@ -277,7 +279,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
                 var compilation = await project.GetCompilationAsync();
                 var workspaceAnalyzerOptions = (AnalyzerOptions)_workspaceAnalyzerOptionsConstructor.Invoke(new object[] { project.AnalyzerOptions, project.Solution });
-                var filteredAnalyzers = await FilterSuppressedAnalyzersAsync(allAnalyzers, project, compilation);
+                // Filter out suppressed analyzers by requiring a minimum diagnostic severity of Hidden
+                var filteredAnalyzers = await FilterAnalyzersBySeverityAsync(allAnalyzers, project, compilation, ReportDiagnostic.Hidden);
 
                 var diagnostics = await AnalyzeProjectAsync(project, filteredAnalyzers, compilation, workspaceAnalyzerOptions);
                 var diagnosticsByFilePath = diagnostics

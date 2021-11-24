@@ -157,7 +157,7 @@ dotnet_diagnostic.IDE0055.severity = error
 
             Assert.NotEmpty(allAnalyzers);
 
-            return await CSharpDiagnosticWorkerWithAnalyzers.FilterSuppressedAnalyzersAsync(allAnalyzers, project, compilation);
+            return await CSharpDiagnosticWorkerWithAnalyzers.FilterAnalyzersBySeverityAsync(allAnalyzers, project, compilation, ReportDiagnostic.Hidden);
         }
 
         private async Task<ImmutableDictionary<TestFile, ImmutableArray<DiagnosticAnalyzer>>> GetFilteredDocumentAnalyzersAsync(TestFile codeFile, TestFile codeFile2, TestFile editorconfigFile)
@@ -175,7 +175,7 @@ dotnet_diagnostic.IDE0055.severity = error
 
             foreach (var document in project.Documents)
             {
-                var documentAnalyzers = await CSharpDiagnosticWorkerWithAnalyzers.FilterSuppressedAnalyzersAsync(allAnalyzers, document, project.AnalyzerOptions, compilation);
+                var documentAnalyzers = await CSharpDiagnosticWorkerWithAnalyzers.FilterAnalyzersBySeverityAsync(allAnalyzers, document, project.AnalyzerOptions, compilation, ReportDiagnostic.Hidden);
 
                 var testFile = document.FilePath == codeFile.FileName
                     ? codeFile
