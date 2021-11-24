@@ -139,7 +139,7 @@ Task("InstallMonoAssets")
     .WithCriteria(() => !Platform.Current.IsWindows)
     .Does(() =>
 {
-    if (DirectoryHelper.Exists(env.Folders.Mono))
+    if (DirectoryHelper.Exists(env.Folders.Mono) && !publishAll)
     {
         Information($"'{env.Folders.Mono}' folder exists... Skipping acquiring of Mono assets.");
         return;
@@ -147,8 +147,15 @@ Task("InstallMonoAssets")
     Information("Acquiring Mono runtimes and framework...");
 
     DownloadFileAndUnzip($"{buildPlan.DownloadURL}/{buildPlan.MonoRuntimeMacOS}", env.Folders.MonoRuntimeMacOS);
-    DownloadFileAndUnzip($"{buildPlan.DownloadURL}/{buildPlan.MonoRuntimeLinux32}", env.Folders.MonoRuntimeLinux32);
-    DownloadFileAndUnzip($"{buildPlan.DownloadURL}/{buildPlan.MonoRuntimeLinux64}", env.Folders.MonoRuntimeLinux64);
+    DownloadFileAndUnzip($"{buildPlan.DownloadURL}/{buildPlan.MonoRuntimeLinuxX86}", env.Folders.MonoRuntimeLinuxX86);
+    DownloadFileAndUnzip($"{buildPlan.DownloadURL}/{buildPlan.MonoRuntimeLinuxX64}", env.Folders.MonoRuntimeLinuxX64);
+    DownloadFileAndUnzip($"{buildPlan.DownloadURL}/{buildPlan.MonoRuntimeLinuxArm64}", env.Folders.MonoRuntimeLinuxArm64);
+
+    var runScriptFile = CombinePaths(env.Folders.MonoPackaging, "run");
+    FileHelper.Copy(runScriptFile, CombinePaths(env.Folders.MonoRuntimeMacOS, "run"), overwrite: true);
+    FileHelper.Copy(runScriptFile, CombinePaths(env.Folders.MonoRuntimeLinuxX86, "run"), overwrite: true);
+    FileHelper.Copy(runScriptFile, CombinePaths(env.Folders.MonoRuntimeLinuxX64, "run"), overwrite: true);
+    FileHelper.Copy(runScriptFile, CombinePaths(env.Folders.MonoRuntimeLinuxArm64, "run"), overwrite: true);
 
     var monoInstallFolder = env.CurrentMonoRuntime.InstallFolder;
     var monoRuntimeFile = env.CurrentMonoRuntime.RuntimeFile;
@@ -402,7 +409,14 @@ Task("CreateMSBuildFolder")
     }
     else if (Platform.Current.IsLinux)
     {
-        CopyDotNetHostResolver(env, "linux", "x64", "libhostfxr.so", msbuildSdkResolverTargetFolder, copyToArchSpecificFolder: false);
+        if (Platform.Current.IsArm64)
+        {
+            CopyDotNetHostResolver(env, "linux", "arm64", "libhostfxr.so", msbuildSdkResolverTargetFolder, copyToArchSpecificFolder: false);
+        }
+        else
+        {
+            CopyDotNetHostResolver(env, "linux", "x64", "libhostfxr.so", msbuildSdkResolverTargetFolder, copyToArchSpecificFolder: false);
+        }
     }
 
     Information("Copying NuGet SDK resolver...");
@@ -672,7 +686,7 @@ Task("Test")
         }
 });
 
-void CopyMonoBuild(BuildEnvironment env, string sourceFolder, string outputFolder)
+void CopyMonoBuild(BuildEnvironment env, string sourceFolder, string outputFolder, string platformName = null)
 {
     DirectoryHelper.Copy(sourceFolder, outputFolder, copySubDirectories: false);
 
@@ -681,8 +695,51 @@ void CopyMonoBuild(BuildEnvironment env, string sourceFolder, string outputFolde
     // Copy MSBuild runtime and libraries
     DirectoryHelper.Copy($"{env.Folders.MSBuild}", msbuildFolder);
 
-    var msbuildBinFolder = CombinePaths(msbuildFolder, "bin", "Current");
+    var msbuildBinFolder = CombinePaths(msbuildFolder, "Current", "Bin");
     EnsureDirectoryExists(msbuildBinFolder);
+
+    if (platformName == null)
+    {
+        return;
+    }
+
+    // We built the .msbuild folder initially based on the current platform.
+    // We are now copying Mono for a particular platform and need to ensure that
+    // we are including the appropriate hostfxr library.
+
+    var platformParts = platformName.Split('-');
+    var platform = platformParts[0];
+    var architecture = platformParts.Length > 1 ? platformParts[1] : "x64";
+
+    var msbuildSdkResolverTargetFolder = CombinePaths(msbuildBinFolder, "SdkResolvers", "Microsoft.DotNet.MSBuildSdkResolver");
+    var hostfxrDylibPath = CombinePaths(msbuildSdkResolverTargetFolder, "libhostfxr.dylib");
+    var hostfxrSoPath = CombinePaths(msbuildSdkResolverTargetFolder, "libhostfxr.so");
+
+    if (FileHelper.Exists(hostfxrSoPath))
+    {
+        // Remove the Linux hostfxr library.
+        FileHelper.Delete(hostfxrSoPath);
+    }
+    else if (FileHelper.Exists(hostfxrDylibPath))
+    {
+        // Remove the MacOS hostfxr library.
+        FileHelper.Delete(hostfxrDylibPath);
+    }
+
+    if (platform == "osx")
+    {
+        CopyDotNetHostResolver(env, "osx", "x64", "libhostfxr.dylib", msbuildSdkResolverTargetFolder, copyToArchSpecificFolder: false);
+    }
+    else if (platform == "linux")
+    {
+        if (architecture == "x86")
+        {
+            // There is no x86 hostfxr use x64 instead.
+            architecture = "x64";
+        }
+
+        CopyDotNetHostResolver(env, "linux", architecture, "libhostfxr.so", msbuildSdkResolverTargetFolder, copyToArchSpecificFolder: false);
+    }
 }
 
 void CopyExtraDependencies(BuildEnvironment env, string outputFolder)
@@ -789,7 +846,7 @@ string PublishMonoBuildForPlatform(string project, MonoRuntime monoRuntime, Buil
     var sourceFolder = CombinePaths(env.Folders.ArtifactsPublish, project, "mono");
     var omnisharpFolder = CombinePaths(outputFolder, "omnisharp");
 
-    CopyMonoBuild(env, sourceFolder, omnisharpFolder);
+    CopyMonoBuild(env, sourceFolder, omnisharpFolder, monoRuntime.PlatformName);
 
     CopyExtraDependencies(env, outputFolder);
     AddOmniSharpBindingRedirects(omnisharpFolder);

@@ -29,8 +29,8 @@ resources:
 
 variables:
   Verbosity: Diagnostic
-  DotNetVersion: "5.0.302"
-  DotNetVersion2: "3.1.411"
+  DotNetVersion: "6.0.100"
+  DotNetVersion2: "3.1.415"
   CakeVersion: "1.1.0"
   NuGetVersion: "5.7.0"
   GitVersionVersion: "5.0.1"
@@ -111,7 +111,7 @@ jobs:
 
   - job: Release
     pool:
-      vmImage: "Ubuntu-16.04"
+      vmImage: "Ubuntu-latest"
     dependsOn:
       - macOS
       - Linux

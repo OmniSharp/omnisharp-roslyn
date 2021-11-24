@@ -46,8 +46,10 @@ namespace TestUtility
             workspace.AddDocument(documentInfo);
         }
 
-        public static IEnumerable<ProjectId> AddProjectToWorkspace(OmniSharpWorkspace workspace, string filePath, string[] frameworks, TestFile[] testFiles, ImmutableArray<AnalyzerReference> analyzerRefs = default)
+        public static IEnumerable<ProjectId> AddProjectToWorkspace(OmniSharpWorkspace workspace, string filePath, string[] frameworks, TestFile[] testFiles, TestFile[] otherFiles = null, ImmutableArray<AnalyzerReference> analyzerRefs = default)
         {
+            otherFiles ??= Array.Empty<TestFile>();
+
             var versionStamp = VersionStamp.Create();
             var references = GetReferences();
             frameworks = frameworks ?? new[] { string.Empty };
@@ -82,6 +84,11 @@ namespace TestUtility
                 foreach (var testFile in testFiles)
                 {
                     workspace.AddDocument(projectInfo.Id, testFile.FileName, TextLoader.From(TextAndVersion.Create(testFile.Content.Text, versionStamp)), SourceCodeKind.Regular);
+                }
+
+                foreach (var otherFile in otherFiles)
+                {
+                    workspace.AddAdditionalDocument(projectInfo.Id, otherFile.FileName, TextLoader.From(TextAndVersion.Create(otherFile.Content.Text, versionStamp)));
                 }
 
                 projectsIds.Add(projectInfo.Id);

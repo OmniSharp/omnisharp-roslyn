@@ -1,20 +1,24 @@
-﻿using System.IO;
+﻿using OmniSharp.Cake.Services.RequestHandlers.Navigation;
+using OmniSharp.Models.V2.GotoDefinition;
+
+using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
-using OmniSharp.Cake.Services.RequestHandlers.Navigation;
-using OmniSharp.Models.GotoDefinition;
+
 using TestUtility;
+
 using Xunit;
 using Xunit.Abstractions;
 
 namespace OmniSharp.Cake.Tests
 {
-    public sealed class GotoDefinitionFacts : CakeSingleRequestHandlerTestFixture<GotoDefinitionHandler>
+    public sealed class GotoDefinitionV2Facts : CakeSingleRequestHandlerTestFixture<GotoDefinitionV2Handler>
     {
-        public GotoDefinitionFacts(ITestOutputHelper testOutput) : base(testOutput)
+        public GotoDefinitionV2Facts(ITestOutputHelper testOutput) : base(testOutput)
         {
         }
 
-        protected override string EndpointName => OmniSharpEndpoints.GotoDefinition;
+        protected override string EndpointName => OmniSharpEndpoints.V2.GotoDefinition;
 
         [Fact]
         public async Task ShouldSupportLoadedFiles()
@@ -34,9 +38,13 @@ namespace OmniSharp.Cake.Tests
                 var requestHandler = GetRequestHandler(host);
                 var response = await requestHandler.Handle(request);
 
-                Assert.Equal(Path.Combine(testProject.Directory, "foo.cake"), response.FileName);
-                Assert.Equal(4, response.Line);
-                Assert.Equal(22, response.Column);
+                Assert.NotNull(response.Definitions);
+                Assert.Single(response.Definitions);
+                var definition = response.Definitions.Single();
+
+                Assert.Equal(Path.Combine(testProject.Directory, "foo.cake"), definition.Location.FileName);
+                Assert.Equal(4, definition.Location.Range.Start.Line);
+                Assert.Equal(22, definition.Location.Range.Start.Column);
             }
         }
 
@@ -58,9 +66,13 @@ namespace OmniSharp.Cake.Tests
                 var requestHandler = GetRequestHandler(host);
                 var response = await requestHandler.Handle(request);
 
-                Assert.Equal(Path.Combine(testProject.Directory, "foo.cake"), response.FileName);
-                Assert.Equal(0, response.Line);
-                Assert.Equal(4, response.Column);
+                Assert.NotNull(response.Definitions);
+                Assert.Single(response.Definitions);
+                var definition = response.Definitions.Single();
+
+                Assert.Equal(Path.Combine(testProject.Directory, "foo.cake"), definition.Location.FileName);
+                Assert.Equal(0, definition.Location.Range.Start.Line);
+                Assert.Equal(4, definition.Location.Range.Start.Column);
             }
         }
 
@@ -83,8 +95,12 @@ namespace OmniSharp.Cake.Tests
                 var requestHandler = GetRequestHandler(host);
                 var response = await requestHandler.Handle(request);
 
-                Assert.StartsWith("$metadata$", response.FileName);
-                var metadata = response.MetadataSource;
+                Assert.NotNull(response.Definitions);
+                Assert.Single(response.Definitions);
+                var definition = response.Definitions.Single();
+                Assert.StartsWith("$metadata$", definition.Location.FileName);
+
+                var metadata = definition.MetadataSource;
                 Assert.NotNull(metadata);
                 Assert.Equal("Cake.Common", metadata.AssemblyName);
                 Assert.Equal("Cake.Common.Diagnostics.LoggingAliases", metadata.TypeName);
@@ -110,8 +126,12 @@ namespace OmniSharp.Cake.Tests
                 var requestHandler = GetRequestHandler(host);
                 var response = await requestHandler.Handle(request);
 
-                Assert.StartsWith("$metadata$", response.FileName);
-                var metadata = response.MetadataSource;
+                Assert.NotNull(response.Definitions);
+                Assert.Single(response.Definitions);
+                var definition = response.Definitions.Single();
+                Assert.StartsWith("$metadata$", definition.Location.FileName);
+
+                var metadata = definition.MetadataSource;
                 Assert.NotNull(metadata);
                 Assert.Equal("Cake.Common", metadata.AssemblyName);
                 Assert.Equal("Cake.Common.ArgumentAliases", metadata.TypeName);
@@ -137,11 +157,52 @@ namespace OmniSharp.Cake.Tests
                 var requestHandler = GetRequestHandler(host);
                 var response = await requestHandler.Handle(request);
 
-                Assert.StartsWith("$metadata$", response.FileName);
-                var metadata = response.MetadataSource;
+                Assert.NotNull(response.Definitions);
+                Assert.Single(response.Definitions);
+                var definition = response.Definitions.Single();
+                Assert.StartsWith("$metadata$", definition.Location.FileName);
+
+                var metadata = definition.MetadataSource;
                 Assert.NotNull(metadata);
                 Assert.Equal("Cake.Common", metadata.AssemblyName);
                 Assert.Equal("Cake.Common.Build.BuildSystemAliases", metadata.TypeName);
+            }
+        }
+
+        [Fact]
+        public async Task ShouldFindMultipleLocationsForPartial()
+        {
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("CakeProject", shadowCopy: false))
+            using (var host = CreateOmniSharpHost(testProject.Directory))
+            {
+                var fileName = Path.Combine(testProject.Directory, "build.cake");
+
+                var request = new GotoDefinitionRequest
+                {
+                    FileName = fileName,
+                    Line = 7,
+                    Column = 5
+                };
+
+                var requestHandler = GetRequestHandler(host);
+                var response = await requestHandler.Handle(request);
+
+                Assert.NotNull(response.Definitions);
+                var expectedFile = Path.Combine(testProject.Directory, "foo.cake");
+                Assert.Collection(
+                    response.Definitions,
+                    d =>
+                    {
+                        Assert.Equal(expectedFile, d.Location.FileName);
+                        Assert.Equal(2, d.Location.Range.Start.Line);
+                        Assert.Equal(21, d.Location.Range.Start.Column);
+                    },
+                    d =>
+                    {
+                        Assert.Equal(expectedFile, d.Location.FileName);
+                        Assert.Equal(15, d.Location.Range.Start.Line);
+                        Assert.Equal(21, d.Location.Range.Start.Column);
+                    });
             }
         }
     }

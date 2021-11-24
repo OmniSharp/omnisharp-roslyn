@@ -1,4 +1,6 @@
-public class Foo
+var HelloText = "Hello World!";
+
+public partial class Foo
 {
     public static Foo Create()
     {
@@ -9,4 +11,9 @@ public class Foo
     {
         return;
     }
+}
+
+public partial class Foo
+{
+
 }

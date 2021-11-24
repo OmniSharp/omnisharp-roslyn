@@ -15,6 +15,8 @@ namespace OmniSharp.Options
 
         public ImplementTypeOptions ImplementTypeOptions { get; set; } = new ImplementTypeOptions();
 
+        public DotNetCliOptions DotNetCliOptions { get; set; } = new DotNetCliOptions();
+
         public OmniSharpExtensionsOptions Plugins { get; set; } = new OmniSharpExtensionsOptions();
 
         public override string ToString() => JsonConvert.SerializeObject(this);
@@ -26,6 +28,7 @@ namespace OmniSharp.Options
             options.FileOptions ??= new FileOptions();
             options.RenameOptions ??= new RenameOptions();
             options.ImplementTypeOptions ??= new ImplementTypeOptions();
+            options.DotNetCliOptions ??= new DotNetCliOptions();
             options.Plugins ??= new OmniSharpExtensionsOptions();
         }
     }

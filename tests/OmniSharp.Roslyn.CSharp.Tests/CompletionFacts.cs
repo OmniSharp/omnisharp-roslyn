@@ -2197,6 +2197,29 @@ class Foo
             Assert.Equal(@"\A", aCompletion.TextEdit.NewText);
         }
 
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task NoTriggerCharactersWhenInSuggestionMode(string filename)
+        {
+            const string input = @"
+using System;
+
+class Program
+{
+    public static void Main()
+    {
+        var fn = (DateTime $$
+    }
+}";
+
+            var completions = await FindCompletionsAsync(filename, input, SharedOmniSharpTestHost);
+            foreach (var item in completions.Items)
+            {
+                Assert.Null(item.CommitCharacters);
+            }
+        }
+
         private CompletionService GetCompletionService(OmniSharpTestHost host)
             => host.GetRequestHandler<CompletionService>(EndpointName);
 

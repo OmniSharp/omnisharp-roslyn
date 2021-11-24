@@ -1,6 +1,21 @@
 # Changelog
 All changes to the project will be documented in this file.
 
+## [1.37.17]
+* Update versions to match dotnet SDK 6.0.1xx (PR: [#2262](https://github.com/OmniSharp/omnisharp-roslyn/pull/2262))
+* Remove all completion commit characters in suggestion mode. ([#1974](https://github.com/OmniSharp/omnisharp-vscode/issues/1974), [#3219](https://github.com/OmniSharp/omnisharp-vscode/issues/3219), [#3647](https://github.com/OmniSharp/omnisharp-vscode/issues/3647), [#4833](https://github.com/OmniSharp/omnisharp-vscode/issues/4833), PR: [#2253](https://github.com/OmniSharp/omnisharp-roslyn/pull/2253))
+* fixed logging interpolation in ProjectManager (PR: [#2246](https://github.com/OmniSharp/omnisharp-roslyn/pull/2246))
+* Support signature help for implicit object creation ([#2243](https://github.com/OmniSharp/omnisharp-roslyn/issues/2243), PR: [#2244](https://github.com/OmniSharp/omnisharp-roslyn/pull/2244))
+* Implement /v2/gotodefinition for Cake ([#2209](https://github.com/OmniSharp/omnisharp-roslyn/issues/2209), PR: [#2212](https://github.com/OmniSharp/omnisharp-roslyn/pull/2212))
+
+## [1.37.16] - 2021-10-01
+*  Update included Build Tools to match .NET SDK 6 (PR: [#2239](https://github.com/OmniSharp/omnisharp-roslyn/pull/2239))
+* Add Custom .NET CLI support to OmniSharp (PR: [#2227](https://github.com/OmniSharp/omnisharp-roslyn/pull/2227))
+* Handle .editorconfig changes without running a new design time build ([#2112](https://github.com/OmniSharp/omnisharp-roslyn/issues/2112) PR: [#2234](https://github.com/OmniSharp/omnisharp-roslyn/pull/2234))
+* Do not return nulls when getting documents by path ([#2125](https://github.com/OmniSharp/omnisharp-roslyn/issues/2125) PR: [#2233](https://github.com/OmniSharp/omnisharp-roslyn/pull/2233))
+* handle RecordStructName in semantic highlighting classification ([#2228](https://github.com/OmniSharp/omnisharp-roslyn/issues/2228) PR: [#2232](https://github.com/OmniSharp/omnisharp-roslyn/pull/2232))
+* Update CodeStructureService with FileScoped Namespace support ([#2225](https://github.com/OmniSharp/omnisharp-roslyn/issues/2225) PR: [#2226](https://github.com/OmniSharp/omnisharp-roslyn/pull/2226))
+
 ## [1.37.15] - 2021-08-31
 * Update Roslyn to 4.0.0-4.21427.11 (PR: [#2220](https://github.com/OmniSharp/omnisharp-roslyn/pull/2220))
 * Update NuGet to 5.10.0 ([#2027](https://github.com/OmniSharp/omnisharp-roslyn/issues/2027), PR: [#2034](https://github.com/OmniSharp/omnisharp-roslyn/pull/2034))

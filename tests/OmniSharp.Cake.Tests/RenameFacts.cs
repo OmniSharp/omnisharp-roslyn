@@ -49,8 +49,8 @@ namespace OmniSharp.Cake.Tests
                 Assert.Contains(new LinePositionSpanTextChange
                     {
                         NewText = "Build",
-                        StartLine = 2,
-                        EndLine = 2,
+                        StartLine = 4,
+                        EndLine = 4,
                         StartColumn = 22,
                         EndColumn = 28
                     },
