@@ -47,7 +47,10 @@ namespace OmniSharp.MSBuild
                 // This properties allow the design-time build to handle the Compile target without actually invoking the compiler.
                 // See https://github.com/dotnet/roslyn/pull/4604 for details.
                 { PropertyNames.ProvideCommandLineArgs, "true" },
-                { PropertyNames.SkipCompilerExecution, "true" }
+                { PropertyNames.SkipCompilerExecution, "true" },
+
+                // Ensures the SDK doesn't try to generate app hosts for the loading projects
+                { PropertyNames.UseAppHost, "false" },
             };
 
             globalProperties.AddPropertyOverride(PropertyNames.MSBuildExtensionsPath, options.MSBuildExtensionsPath, propertyOverrides, logger);

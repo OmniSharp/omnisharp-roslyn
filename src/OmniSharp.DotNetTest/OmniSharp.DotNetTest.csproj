@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFrameworks>net472;net5.0</TargetFrameworks>
+        <TargetFrameworks>net6.0;net472</TargetFrameworks>
         <PlatformTarget>AnyCPU</PlatformTarget>
     </PropertyGroup>
 
@@ -18,8 +18,8 @@
     <!-- New VSTest 'dotnet test' support -->
     <ItemGroup>
         <PackageReference Include="Microsoft.TestPlatform.TranslationLayer" />
-        <PackageReference Condition="'$(TargetFramework)' == 'net5.0'" Include="Microsoft.TestPlatform.ObjectModel" />
-        <PackageReference Condition="'$(TargetFramework)' == 'net5.0'" Include="System.Runtime.InteropServices.RuntimeInformation" />
+        <PackageReference Condition="'$(TargetFramework)' == 'net6.0'" Include="Microsoft.TestPlatform.ObjectModel" />
+        <PackageReference Condition="'$(TargetFramework)' == 'net6.0'" Include="System.Runtime.InteropServices.RuntimeInformation" />
     </ItemGroup>
 
 </Project>

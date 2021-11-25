@@ -1,9 +1,8 @@
 
-name: 'Tests net5.0'
+name: 'Tests net6.0'
 env:
   DotNetVersion: "6.0.100"
   DotNetVersion2: "3.1.415"
-  DotNetVersion3: "5.0.403"
   NuGetVersion: "5.7.0"
   MonoVersion: "6.12.0"
   Artifacts: ${{ github.workspace }}/artifacts/
@@ -51,11 +50,6 @@ jobs:
         uses: nuget/setup-nuget@v1
         with:
           nuget-version: ${{ env.NuGetVersion }}
-
-      - name: 🔨 Use .NET Core ${{ env.DotNetVersion3 }} SDK
-        uses: actions/setup-dotnet@v1.7.2
-        with:
-          dotnet-version: ${{ env.DotNetVersion3 }}
 
       - name: 🔨 Use .NET Core ${{ env.DotNetVersion2 }} SDK
         uses: actions/setup-dotnet@v1.7.2

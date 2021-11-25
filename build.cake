@@ -635,7 +635,7 @@ Task("Test")
     .IsDependentOn("PrepareTestAssets")
     .Does(() =>
 {
-        var testTargetFramework = useDotNetTest ? "net5.0" : "net472";
+        var testTargetFramework = useDotNetTest ? "net6.0" : "net472";
         var testProjects = string.IsNullOrEmpty(testProjectArgument) ? buildPlan.TestProjects : testProjectArgument.Split(',');
         foreach (var testProject in testProjects)
         {
@@ -877,7 +877,7 @@ Task("PublishMonoBuilds")
     }
 });
 
-Task("PublishNet5Builds")
+Task("PublishNet6Builds")
     .IsDependentOn("Setup")
     .Does(() =>
 {
@@ -885,36 +885,36 @@ Task("PublishNet5Builds")
     {
         if (publishAll)
         {
-            PublishBuild(project, env, buildPlan, configuration, "linux-x64", "net5.0");
-            PublishBuild(project, env, buildPlan, configuration, "osx-x64", "net5.0");
-            PublishBuild(project, env, buildPlan, configuration, "win7-x86", "net5.0");
-            PublishBuild(project, env, buildPlan, configuration, "win7-x64", "net5.0");
-            PublishBuild(project, env, buildPlan, configuration, "win10-arm64", "net5.0");
+            PublishBuild(project, env, buildPlan, configuration, "linux-x64", "net6.0");
+            PublishBuild(project, env, buildPlan, configuration, "osx-x64", "net6.0");
+            PublishBuild(project, env, buildPlan, configuration, "win7-x86", "net6.0");
+            PublishBuild(project, env, buildPlan, configuration, "win7-x64", "net6.0");
+            PublishBuild(project, env, buildPlan, configuration, "win10-arm64", "net6.0");
         }
         else if (Platform.Current.IsWindows)
         {
             if (Platform.Current.IsX86)
             {
-                PublishBuild(project, env, buildPlan, configuration, "win7-x86", "net5.0");
+                PublishBuild(project, env, buildPlan, configuration, "win7-x86", "net6.0");
             }
             else if (Platform.Current.IsX64)
             {
-                PublishBuild(project, env, buildPlan, configuration, "win7-x64", "net5.0");
+                PublishBuild(project, env, buildPlan, configuration, "win7-x64", "net6.0");
             }
             else
             {
-                PublishBuild(project, env, buildPlan, configuration, "win10-arm64", "net5.0");
+                PublishBuild(project, env, buildPlan, configuration, "win10-arm64", "net6.0");
             }
         }
         else
         {
             if (Platform.Current.IsMacOS)
             {
-                PublishBuild(project, env, buildPlan, configuration, "osx-x64", "net5.0");
+                PublishBuild(project, env, buildPlan, configuration, "osx-x64", "net6.0");
             }
             else
             {
-                PublishBuild(project, env, buildPlan, configuration, "linux-x64", "net5.0");
+                PublishBuild(project, env, buildPlan, configuration, "linux-x64", "net6.0");
             }
         }
 
@@ -1022,7 +1022,7 @@ Task("PublishNuGet")
 Task("Publish")
     .IsDependentOn("Build")
     .IsDependentOn("PublishMonoBuilds")
-    .IsDependentOn("PublishNet5Builds")
+    .IsDependentOn("PublishNet6Builds")
     .IsDependentOn("PublishWindowsBuilds")
     .IsDependentOn("PublishNuGet");
 

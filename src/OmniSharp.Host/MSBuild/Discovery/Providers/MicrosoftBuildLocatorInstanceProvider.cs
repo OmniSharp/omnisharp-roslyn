@@ -3,9 +3,11 @@ using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using Microsoft.Extensions.Logging;
-using OmniSharp.Utilities;
 using MicrosoftBuildLocator = Microsoft.Build.Locator.MSBuildLocator;
 using MicrosoftDiscoveryType = Microsoft.Build.Locator.DiscoveryType;
+#if !NETCOREAPP
+using OmniSharp.Utilities;
+#endif
 
 namespace OmniSharp.MSBuild.Discovery.Providers
 {
@@ -20,9 +22,9 @@ namespace OmniSharp.MSBuild.Discovery.Providers
         {
 
 #if NETCOREAPP
-            // Restrict instances to NET 5 SDK
+            // Restrict instances to NET 6 SDK
             var instances = MicrosoftBuildLocator.QueryVisualStudioInstances()
-                .Where(instance => instance.Version.Major == 5);
+                .Where(instance => instance.Version.Major == 6);
 #else
             if (!PlatformHelper.IsWindows)
             {
