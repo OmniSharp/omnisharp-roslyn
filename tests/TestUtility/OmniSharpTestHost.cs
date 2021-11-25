@@ -12,6 +12,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OmniSharp;
+using OmniSharp.Cake;
 using OmniSharp.DotNetTest.Models;
 using OmniSharp.Eventing;
 using OmniSharp.LanguageServerProtocol;
@@ -37,9 +38,7 @@ namespace TestUtility
             typeof(ScriptProjectSystem).GetTypeInfo().Assembly, // OmniSharp.Script
             typeof(OmniSharpWorkspace).GetTypeInfo().Assembly, // OmniSharp.Roslyn
             typeof(RoslynFeaturesHostServicesProvider).GetTypeInfo().Assembly, // OmniSharp.Roslyn.CSharp
-#if !NETCOREAPP
-            typeof(OmniSharp.Cake.CakeProjectSystem).GetTypeInfo().Assembly, // OmniSharp.Cake
-#endif
+            typeof(CakeProjectSystem).GetTypeInfo().Assembly, // OmniSharp.Cake
             typeof(LanguageServerHost).Assembly, // OmniSharp.LanguageServerProtocol
         });
 
