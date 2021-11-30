@@ -887,6 +887,7 @@ Task("PublishNet6Builds")
         {
             PublishBuild(project, env, buildPlan, configuration, "linux-x64", "net6.0");
             PublishBuild(project, env, buildPlan, configuration, "osx-x64", "net6.0");
+            PublishBuild(project, env, buildPlan, configuration, "osx-arm64", "net6.0");
             PublishBuild(project, env, buildPlan, configuration, "win7-x86", "net6.0");
             PublishBuild(project, env, buildPlan, configuration, "win7-x64", "net6.0");
             PublishBuild(project, env, buildPlan, configuration, "win10-arm64", "net6.0");
@@ -911,6 +912,7 @@ Task("PublishNet6Builds")
             if (Platform.Current.IsMacOS)
             {
                 PublishBuild(project, env, buildPlan, configuration, "osx-x64", "net6.0");
+                PublishBuild(project, env, buildPlan, configuration, "osx-arm64", "net6.0");
             }
             else
             {
