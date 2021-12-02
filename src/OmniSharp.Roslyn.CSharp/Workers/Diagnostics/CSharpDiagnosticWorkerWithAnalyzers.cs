@@ -123,16 +123,33 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                         .GroupBy(x => x.projectId, x => x.documentId)
                         .ToImmutableArray();
 
+                    var analyzerTasks = new List<Task>();
+                    var throttler = new SemaphoreSlim(_options.RoslynExtensionsOptions.ThreadsToUseForAnalyzers);
                     foreach (var projectGroup in currentWorkGroupedByProjects)
                     {
                         var projectPath = solution.GetProject(projectGroup.Key).FilePath;
 
-                        EventIfBackgroundWork(workType, projectPath, ProjectDiagnosticStatus.Started);
+                        await throttler.WaitAsync();
+                        analyzerTasks.Add(
+                            Task.Run(async () =>
+                                {
+                                    try
+                                    {
+                                        EventIfBackgroundWork(workType, projectPath, ProjectDiagnosticStatus.Started);
 
-                        await AnalyzeAndReport(solution, projectGroup);
+                                        await AnalyzeAndReport(solution, projectGroup);
 
-                        EventIfBackgroundWork(workType, projectPath, ProjectDiagnosticStatus.Ready);
+                                        EventIfBackgroundWork(workType, projectPath, ProjectDiagnosticStatus.Ready);
+                                    }
+                                    finally
+                                    {
+                                        throttler.Release();
+                                    }
+                                }
+                            )
+                        );
                     }
+                    await Task.WhenAll(analyzerTasks);
 
                     _workQueue.WorkComplete(workType);
 
