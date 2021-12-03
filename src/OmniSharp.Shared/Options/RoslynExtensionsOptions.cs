@@ -12,7 +12,7 @@ namespace OmniSharp.Options
         public bool EnableImportCompletion { get; set; }
         public bool EnableAsyncCompletion { get; set; }
         public int DocumentAnalysisTimeoutMs { get; set; } = 10 * 1000;
-        public int AnalyzerThreadCount { get; set; } = Math.Max(1, Environment.ProcessorCount / 2);
+        public int DiagnosticWorkersThreadCount { get; set; } = Math.Max(1, Environment.ProcessorCount / 2);
     }
 
     public class OmniSharpExtensionsOptions

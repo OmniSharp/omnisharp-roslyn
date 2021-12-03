@@ -150,7 +150,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
                 ).SelectMany(s => s);
 
             var diagnosticTasks = new List<Task>();
-            var throttler = new SemaphoreSlim(_options.RoslynExtensionsOptions.AnalyzerThreadCount);
+            var throttler = new SemaphoreSlim(_options.RoslynExtensionsOptions.DiagnosticWorkersThreadCount);
             foreach (var document in documents)
             {
                 if (document?.Project?.Name == null)

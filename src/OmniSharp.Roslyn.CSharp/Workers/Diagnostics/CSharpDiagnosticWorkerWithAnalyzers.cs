@@ -124,7 +124,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                         .ToImmutableArray();
 
                     var analyzerTasks = new List<Task>();
-                    var throttler = new SemaphoreSlim(_options.RoslynExtensionsOptions.AnalyzerThreadCount);
+                    var throttler = new SemaphoreSlim(_options.RoslynExtensionsOptions.DiagnosticWorkersThreadCount);
                     foreach (var projectGroup in currentWorkGroupedByProjects)
                     {
                         var projectPath = solution.GetProject(projectGroup.Key).FilePath;
