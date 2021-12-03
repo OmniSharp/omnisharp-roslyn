@@ -13,6 +13,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Helpers;
 using OmniSharp.Models.Diagnostics;
+using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
 
 namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
@@ -22,14 +23,16 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
         private readonly ILogger _logger;
         private readonly OmniSharpWorkspace _workspace;
         private readonly DiagnosticEventForwarder _forwarder;
+        private readonly OmniSharpOptions _options;
         private readonly IObserver<string> _openDocuments;
         private readonly IDisposable _disposable;
 
-        public CSharpDiagnosticWorker(OmniSharpWorkspace workspace, DiagnosticEventForwarder forwarder, ILoggerFactory loggerFactory)
+        public CSharpDiagnosticWorker(OmniSharpWorkspace workspace, DiagnosticEventForwarder forwarder, ILoggerFactory loggerFactory, OmniSharpOptions options)
         {
             _workspace = workspace;
             _forwarder = forwarder;
             _logger = loggerFactory.CreateLogger<CSharpDiagnosticWorker>();
+            _options = options;
 
             var openDocumentsSubject = new Subject<string>();
             _openDocuments = openDocumentsSubject;
@@ -146,15 +149,32 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
                         .Select(docPath => _workspace.GetDocumentsFromFullProjectModelAsync(docPath)))
                 ).SelectMany(s => s);
 
+            var diagnosticTasks = new List<Task>();
+            var throttler = new SemaphoreSlim(_options.RoslynExtensionsOptions.AnalyzerThreadCount);
             foreach (var document in documents)
             {
                 if (document?.Project?.Name == null)
                     continue;
 
                 var projectName = document.Project.Name;
-                var diagnostics = await GetDiagnosticsForDocument(document, projectName);
-                results.Add(new DocumentDiagnostics(document.Id, document.FilePath, document.Project.Id, document.Project.Name, diagnostics));
+                await throttler.WaitAsync();
+                diagnosticTasks.Add(
+                        Task.Run(async () =>
+                        {
+                            try
+                            {
+                                var diagnostics = await GetDiagnosticsForDocument(document, projectName);
+                                results.Add(new DocumentDiagnostics(document.Id, document.FilePath, document.Project.Id, document.Project.Name, diagnostics));
+                            }
+                            finally
+                            {
+                                throttler.Release();
+                            }
+                        }
+                    )
+                );
             }
+            await Task.WhenAll(diagnosticTasks);
 
             return results.ToImmutableArray();
         }
