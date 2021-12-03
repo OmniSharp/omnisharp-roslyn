@@ -14,6 +14,7 @@ using OmniSharp.Roslyn.CSharp.Services.Refactoring.V2;
 using TestUtility.Logging;
 using Xunit;
 using Xunit.Abstractions;
+using Range = OmniSharp.Models.V2.Range;
 
 namespace TestUtility
 {

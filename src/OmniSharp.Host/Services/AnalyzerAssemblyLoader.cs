@@ -2,7 +2,6 @@
 // This is simplified version from roslyn codebase, originated from https://github.com/dotnet/roslyn/blob/master/src/Compilers/Shared/ShadowCopyAnalyzerAssemblyLoader.cs
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
@@ -10,7 +9,6 @@ using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
 using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using OmniSharp.Utilities;
 
@@ -18,7 +16,7 @@ namespace OmniSharp.Host.Services
 {
     // This is shadow copying loader. Makes sure that analyzer assemblies are not locked
     // on disk during analysis.
-    public class AnalyzerAssemblyLoader : IAnalyzerAssemblyLoader
+    public abstract class AnalyzerAssemblyLoader : IAnalyzerAssemblyLoader
     {
         private readonly string _baseDirectory;
         private readonly Lazy<string> _shadowCopyDirectoryAndMutex;
@@ -26,11 +24,15 @@ namespace OmniSharp.Host.Services
 
         private readonly object _guard = new object();
 
+        // lock _guard to read/write
         private readonly Dictionary<string, Assembly> _loadedAssembliesByPath = new Dictionary<string, Assembly>();
         private readonly Dictionary<string, AssemblyIdentity> _loadedAssemblyIdentitiesByPath = new Dictionary<string, AssemblyIdentity>();
         private readonly Dictionary<AssemblyIdentity, Assembly> _loadedAssembliesByIdentity = new Dictionary<AssemblyIdentity, Assembly>();
+
+        // maps file name to a full path (lock _guard to read/write):
         private readonly Dictionary<string, HashSet<string>> _knownAssemblyPathsBySimpleName = new Dictionary<string, HashSet<string>>(StringComparer.OrdinalIgnoreCase);
-        private int _hookedAssemblyResolve;
+
+        protected abstract Assembly LoadFromPathImpl(string fullPath);
 
         public AnalyzerAssemblyLoader()
         {
@@ -148,6 +150,31 @@ namespace OmniSharp.Host.Services
             return identity;
         }
 
+        protected bool IsKnownDependencyLocation(string fullPath)
+        {
+            var simpleName = Path.GetFileNameWithoutExtension(fullPath);
+            if (!_knownAssemblyPathsBySimpleName.TryGetValue(simpleName, out var paths))
+            {
+                return false;
+            }
+
+            if (!paths.Contains(fullPath))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Shadow copy the assembly prior to loading. Return the path to the shadow copied assembly.
+        /// </summary>
+        protected string GetPathToLoad(string fullPath)
+        {
+            var assemblyDirectory = CreateUniqueDirectoryForAssembly();
+            return CopyFileAndResources(fullPath, assemblyDirectory);
+        }
+
         private static string CopyFileAndResources(string fullPath, string assemblyDirectory)
         {
             string fileNameWithExtension = Path.GetFileName(fullPath);
@@ -226,31 +253,6 @@ namespace OmniSharp.Host.Services
             return directory;
         }
 
-        private Assembly LoadFromPathImpl(string originalPath)
-        {
-            string assemblyDirectory = CreateUniqueDirectoryForAssembly();
-            string shadowCopyPath = CopyFileAndResources(originalPath, assemblyDirectory);
-
-            if (Interlocked.CompareExchange(ref _hookedAssemblyResolve, value: 1, comparand: 0) == 0)
-            {
-                AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
-            }
-
-            return Assembly.LoadFrom(shadowCopyPath);
-        }
-
-        private Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
-        {
-            try
-            {
-                return Load(AppDomain.CurrentDomain.ApplyPolicy(args.Name));
-            }
-            catch
-            {
-                return null;
-            }
-        }
-
         public Assembly Load(string displayName)
         {
             if (!AssemblyIdentity.TryParseDisplayName(displayName, out var requestedIdentity))
@@ -261,12 +263,12 @@ namespace OmniSharp.Host.Services
             ImmutableArray<string> candidatePaths;
             lock (_guard)
             {
-
                 // First, check if this loader already loaded the requested assembly:
                 if (_loadedAssembliesByIdentity.TryGetValue(requestedIdentity, out var existingAssembly))
                 {
                     return existingAssembly;
                 }
+
                 // Second, check if an assembly file of the same simple name was registered with the loader:
                 if (!_knownAssemblyPathsBySimpleName.TryGetValue(requestedIdentity.Name, out var pathList))
                 {

@@ -13,6 +13,7 @@ using OmniSharp.Models.V2;
 using OmniSharp.Models.V2.CodeActions;
 using OmniSharp.Models.V2.CodeStructure;
 using OmniSharp.Utilities;
+using Range = OmniSharp.Models.V2.Range;
 
 namespace OmniSharp.Cake.Extensions
 {
