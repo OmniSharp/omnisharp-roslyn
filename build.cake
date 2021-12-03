@@ -46,6 +46,15 @@ Task("Cleanup")
     DirectoryHelper.Create(env.Folders.ArtifactsScripts);
 });
 
+Task("GitVersion")
+    .WithCriteria(!BuildSystem.IsLocalBuild)
+    .WithCriteria(!AzurePipelines.IsRunningOnAzurePipelines)
+    .Does(() => {
+        GitVersion(new GitVersionSettings{
+            OutputType = GitVersionOutput.BuildServer
+        });
+    });
+
 /// <summary>
 ///  Pre-build setup tasks.
 /// </summary>
@@ -135,13 +144,23 @@ Task("ValidateMono")
     ValidateMonoVersion(buildPlan);
 });
 
+Task("CleanUpMonoAssets")
+    .WithCriteria(() => !Platform.Current.IsWindows)
+    .Does(() =>
+{
+    if (DirectoryHelper.Exists(env.Folders.Mono))
+    {
+        DirectoryHelper.Delete(env.Folders.Mono, recursive: true);
+    }
+});
+
 Task("InstallMonoAssets")
     .WithCriteria(() => !Platform.Current.IsWindows)
     .Does(() =>
 {
     if (DirectoryHelper.Exists(env.Folders.Mono) && !publishAll)
     {
-        Information($"'{env.Folders.Mono}' folder exists... Skipping acquiring of Mono assets.");
+        Information("Skipping Mono assets installation, because they already exist.");
         return;
     }
     Information("Acquiring Mono runtimes and framework...");
@@ -511,12 +530,25 @@ Task("PrepareTestAssets:CommonTestAssets")
 
         var folder = CombinePaths(env.Folders.TestAssets, "test-projects", project);
 
-        DotNetCoreBuild(folder, new DotNetCoreBuildSettings()
-        {
-            ToolPath = env.DotNetCommand,
-            WorkingDirectory = folder,
-            Verbosity = DotNetCoreVerbosity.Minimal
-        });
+        try {
+            DotNetCoreBuild(folder, new DotNetCoreBuildSettings()
+            {
+                ToolPath = env.DotNetCommand,
+                WorkingDirectory = folder,
+                Verbosity = DotNetCoreVerbosity.Minimal
+            });
+        } catch {
+            // ExternalAlias has issues once in a while, try building again to get it working.
+            if (project == "ExternAlias") {
+
+                DotNetCoreBuild(folder, new DotNetCoreBuildSettings()
+                {
+                    ToolPath = env.DotNetCommand,
+                    WorkingDirectory = folder,
+                    Verbosity = DotNetCoreVerbosity.Minimal
+                });
+            }
+        }
     });
 
 Task("PrepareTestAssets:RestoreOnlyTestAssets")
@@ -1109,6 +1141,7 @@ Task("Install")
 /// </summary>
 Task("All")
     .IsDependentOn("Cleanup")
+    .IsDependentOn("CleanUpMonoAssets")
     .IsDependentOn("Build")
     .IsDependentOn("Test")
     .IsDependentOn("Publish")
@@ -1125,6 +1158,7 @@ Task("Default")
 /// </summary>
 Task("CI")
     .IsDependentOn("Cleanup")
+    .IsDependentOn("CleanUpMonoAssets")
     .IsDependentOn("Build")
     .IsDependentOn("Publish")
     .IsDependentOn("ExecuteRunScript");
