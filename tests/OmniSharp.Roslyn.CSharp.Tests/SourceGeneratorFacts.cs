@@ -47,6 +47,7 @@ class GeneratedCode
                 "project.csproj",
                 new[] { "netcoreapp3.1" },
                 new[] { testFile },
+                analyzerConfigFiles: null,
                 otherFiles: null,
                 ImmutableArray.Create<AnalyzerReference>(reference));
 
