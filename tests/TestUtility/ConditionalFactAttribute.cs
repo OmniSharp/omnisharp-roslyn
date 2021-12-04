@@ -54,4 +54,19 @@ namespace TestUtility
         public override bool ShouldSkip => !PlatformHelper.IsWindows;
         public override string SkipReason => "Can only be run on Windows";
     }
+
+    public class DesktopRuntimeOnly : SkipCondition
+    {
+        public override bool ShouldSkip =>
+#if NET472
+            false;
+#elif NETCOREAPP
+            true;
+#elif NETSTANDARD2_0
+            throw new PlatformNotSupportedException();
+#else
+#error Unsupported configuration
+#endif
+        public override string SkipReason => "Can only be run on Desktop runtime";
+    }
 }

@@ -22,7 +22,7 @@ namespace OmniSharp.MSBuild.Tests
             : base(output)
         {
             _assemblyLoader = new AssemblyLoader(this.LoggerFactory);
-            _analyzerAssemblyLoader = new AnalyzerAssemblyLoader();
+            _analyzerAssemblyLoader = new DefaultAnalyzerAssemblyLoader();
             _msbuildLocator = MSBuildLocator.CreateStandAlone(this.LoggerFactory, _assemblyLoader);
 
             // Some tests require MSBuild to be discovered early

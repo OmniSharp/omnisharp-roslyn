@@ -17,18 +17,16 @@ var installFolder = Argument("install-path",
     CombinePaths(Environment.GetEnvironmentVariable(Platform.Current.IsWindows ? "USERPROFILE" : "HOME"), ".omnisharp"));
 var publishAll = HasArgument("publish-all");
 var useGlobalDotNetSdk = HasArgument("use-global-dotnet-sdk");
+var testProjectArgument = Argument("test-project", "");
+var useDotNetTest = HasArgument("use-dotnet-test");
 
 Log.Context = Context;
 
 var env = new BuildEnvironment(useGlobalDotNetSdk, Context);
 var buildPlan = BuildPlan.Load(env);
-var testProjectArgument = Argument("test-project", "");
-var testProjects = string.IsNullOrEmpty(testProjectArgument) ? buildPlan.TestProjects : testProjectArgument.Split(',');
-var nonCakeTestProjects = buildPlan.TestProjects.Except(new [] { "OmniSharp.Cake.Tests" });
 
 Information("");
 Information("Current platform: {0}", Platform.Current);
-Information("Test Projects: {0}", string.Join(", ", testProjects));
 Information("");
 
 /// <summary>
@@ -165,7 +163,6 @@ Task("InstallMonoAssets")
         Information("Skipping Mono assets installation, because they already exist.");
         return;
     }
-
     Information("Acquiring Mono runtimes and framework...");
 
     DownloadFileAndUnzip($"{buildPlan.DownloadURL}/{buildPlan.MonoRuntimeMacOS}", env.Folders.MonoRuntimeMacOS);
@@ -527,7 +524,6 @@ Task("PrepareTestAssets")
 
 Task("PrepareTestAssets:CommonTestAssets")
     .IsDependeeOf("PrepareTestAssets")
-    .WithCriteria(testProjects.Any(z => nonCakeTestProjects.Any(x => x == z)))
     .DoesForEach(buildPlan.TestAssets, (project) =>
     {
         Information("Restoring and building: {0}...", project);
@@ -557,7 +553,6 @@ Task("PrepareTestAssets:CommonTestAssets")
 
 Task("PrepareTestAssets:RestoreOnlyTestAssets")
     .IsDependeeOf("PrepareTestAssets")
-    .WithCriteria(testProjects.Any(z => nonCakeTestProjects.Any(x => x == z)))
     .DoesForEach(buildPlan.RestoreOnlyTestAssets, (project) =>
     {
         Information("Restoring: {0}...", project);
@@ -575,7 +570,6 @@ Task("PrepareTestAssets:RestoreOnlyTestAssets")
 Task("PrepareTestAssets:WindowsOnlyTestAssets")
     .WithCriteria(Platform.Current.IsWindows)
     .IsDependeeOf("PrepareTestAssets")
-    .WithCriteria(testProjects.Any(z => nonCakeTestProjects.Any(x => x == z)))
     .DoesForEach(buildPlan.WindowsOnlyTestAssets, (project) =>
     {
         Information("Restoring and building: {0}...", project);
@@ -592,20 +586,12 @@ Task("PrepareTestAssets:WindowsOnlyTestAssets")
 
 Task("PrepareTestAssets:CakeTestAssets")
     .IsDependeeOf("PrepareTestAssets")
-    .WithCriteria(testProjects.Contains("OmniSharp.Cake.Tests"))
     .DoesForEach(buildPlan.CakeTestAssets, (project) =>
     {
         Information("Restoring: {0}...", project);
 
         var toolsFolder = CombinePaths(env.Folders.TestAssets, "test-projects", project, "tools");
         var packagesConfig = CombinePaths(toolsFolder, "packages.config");
-
-        if (!Platform.Current.IsWindows)
-        {
-            Warning($"TestAssets: {toolsFolder}");
-            Run("chmod", $"777 {toolsFolder}/");
-            Information($"TestAssets: {toolsFolder}");
-        }
 
         NuGetInstallFromConfig(packagesConfig, new NuGetInstallSettings {
             OutputDirectory = toolsFolder,
@@ -681,37 +667,53 @@ Task("Test")
     .IsDependentOn("PrepareTestAssets")
     .Does(() =>
 {
+        var testTargetFramework = useDotNetTest ? "net6.0" : "net472";
+        var testProjects = string.IsNullOrEmpty(testProjectArgument) ? buildPlan.TestProjects : testProjectArgument.Split(',');
         foreach (var testProject in testProjects)
         {
             PrintBlankLine();
-            var instanceFolder = CombinePaths(env.Folders.Bin, configuration, testProject, "net472");
-
-            // Copy xunit executable to test folder to solve path errors
-            var xunitToolsFolder = CombinePaths(env.Folders.Tools, "xunit.runner.console", "tools", "net452");
-            var xunitInstancePath = CombinePaths(instanceFolder, "xunit.console.exe");
-            FileHelper.Copy(CombinePaths(xunitToolsFolder, "xunit.console.exe"), xunitInstancePath, overwrite: true);
-            FileHelper.Copy(CombinePaths(xunitToolsFolder, "xunit.runner.utility.net452.dll"), CombinePaths(instanceFolder, "xunit.runner.utility.net452.dll"), overwrite: true);
+            var instanceFolder = CombinePaths(env.Folders.Bin, configuration, testProject, testTargetFramework);
             var targetPath = CombinePaths(instanceFolder, $"{testProject}.dll");
-            var logFile = CombinePaths(env.Folders.ArtifactsLogs, $"{testProject}-desktop-result.xml");
-            var arguments = $"\"{targetPath}\" -noshadow -parallel none -xml \"{logFile}\" -notrait category=failing";
 
-            if (Platform.Current.IsWindows)
+            if (useDotNetTest)
             {
-                Run(xunitInstancePath, arguments, instanceFolder)
-                    .ExceptionOnError($"Test {testProject} failed for net472");
+                var logFile = CombinePaths(env.Folders.ArtifactsLogs, $"{testProject}-netsdk-result.xml");
+                var arguments = $"test \"{targetPath}\" --logger \"console;verbosity=normal\" --logger \"trx;LogFileName={logFile}\" --blame-hang-timeout 60sec";
+
+                Console.WriteLine($"Executing: dotnet {arguments}");
+
+                Run("dotnet", arguments, instanceFolder)
+                    .ExceptionOnError($"Test {testProject} failed for {testTargetFramework}");
             }
             else
             {
-                // Copy the Mono-built Microsoft.Build.* binaries to the test folder.
-                // This is necessary to work around a Mono bug that is exasperated by xUnit.
-                DirectoryHelper.Copy($"{env.Folders.MSBuild}/Current/Bin", instanceFolder);
+                var logFile = CombinePaths(env.Folders.ArtifactsLogs, $"{testProject}-desktop-result.xml");
 
-                var runScript = CombinePaths(env.Folders.Mono, "run");
+                // Copy xunit executable to test folder to solve path errors
+                var xunitToolsFolder = CombinePaths(env.Folders.Tools, "xunit.runner.console", "tools", "net452");
+                var xunitInstancePath = CombinePaths(instanceFolder, "xunit.console.exe");
+                FileHelper.Copy(CombinePaths(xunitToolsFolder, "xunit.console.exe"), xunitInstancePath, overwrite: true);
+                FileHelper.Copy(CombinePaths(xunitToolsFolder, "xunit.runner.utility.net452.dll"), CombinePaths(instanceFolder, "xunit.runner.utility.net452.dll"), overwrite: true);
+                var arguments = $"\"{targetPath}\" -noshadow -parallel none -xml \"{logFile}\" -notrait category=failing";
 
-                // By default, the run script launches OmniSharp. To launch our Mono runtime
-                // with xUnit rather than OmniSharp, we pass '--no-omnisharp'
-                Run(runScript, $"--no-omnisharp \"{xunitInstancePath}\" {arguments}", instanceFolder)
-                    .ExceptionOnError($"Test {testProject} failed for net472");
+                if (Platform.Current.IsWindows)
+                {
+                    Run(xunitInstancePath, arguments, instanceFolder)
+                        .ExceptionOnError($"Test {testProject} failed for {testTargetFramework}");
+                }
+                else
+                {
+                    // Copy the Mono-built Microsoft.Build.* binaries to the test folder.
+                    // This is necessary to work around a Mono bug that is exasperated by xUnit.
+                    DirectoryHelper.Copy($"{env.Folders.MSBuild}/Current/Bin", instanceFolder);
+
+                    var runScript = CombinePaths(env.Folders.Mono, "run");
+
+                    // By default, the run script launches OmniSharp. To launch our Mono runtime
+                    // with xUnit rather than OmniSharp, we pass '--no-omnisharp'
+                    Run(runScript, $"--no-omnisharp \"{xunitInstancePath}\" {arguments}", instanceFolder)
+                        .ExceptionOnError($"Test {testProject} failed for net472");
+                }
             }
         }
 });
@@ -781,6 +783,10 @@ void CopyExtraDependencies(BuildEnvironment env, string outputFolder)
 void AddOmniSharpBindingRedirects(string omnisharpFolder)
 {
     var appConfig = CombinePaths(omnisharpFolder, "OmniSharp.exe.config");
+    if (!FileHelper.Exists(appConfig))
+    {
+        appConfig = CombinePaths(omnisharpFolder, "OmniSharp.dll.config");
+    }
 
     // Load app.config
     var document = new XmlDocument();
@@ -903,19 +909,74 @@ Task("PublishMonoBuilds")
     }
 });
 
-string PublishWindowsBuild(string project, BuildEnvironment env, BuildPlan plan, string configuration, string rid)
+Task("PublishNet6Builds")
+    .IsDependentOn("Setup")
+    .Does(() =>
+{
+    foreach (var project in buildPlan.HostProjects)
+    {
+        if (publishAll)
+        {
+            if (!Platform.Current.IsWindows)
+            {
+                PublishBuild(project, env, buildPlan, configuration, "linux-x64", "net6.0");
+                PublishBuild(project, env, buildPlan, configuration, "linux-arm64", "net6.0");
+                PublishBuild(project, env, buildPlan, configuration, "osx-x64", "net6.0");
+                PublishBuild(project, env, buildPlan, configuration, "osx-arm64", "net6.0");
+            }
+            else
+            {
+                PublishBuild(project, env, buildPlan, configuration, "win7-x86", "net6.0");
+                PublishBuild(project, env, buildPlan, configuration, "win7-x64", "net6.0");
+                PublishBuild(project, env, buildPlan, configuration, "win10-arm64", "net6.0");
+            }
+        }
+        else if (Platform.Current.IsWindows)
+        {
+            if (Platform.Current.IsX86)
+            {
+                PublishBuild(project, env, buildPlan, configuration, "win7-x86", "net6.0");
+            }
+            else if (Platform.Current.IsX64)
+            {
+                PublishBuild(project, env, buildPlan, configuration, "win7-x64", "net6.0");
+            }
+            else
+            {
+                PublishBuild(project, env, buildPlan, configuration, "win10-arm64", "net6.0");
+            }
+        }
+        else
+        {
+            if (Platform.Current.IsMacOS)
+            {
+                PublishBuild(project, env, buildPlan, configuration, "osx-x64", "net6.0");
+                PublishBuild(project, env, buildPlan, configuration, "osx-arm64", "net6.0");
+            }
+            else
+            {
+                PublishBuild(project, env, buildPlan, configuration, "linux-x64", "net6.0");
+                PublishBuild(project, env, buildPlan, configuration, "linux-arm64", "net6.0");
+            }
+        }
+
+    }
+});
+
+string PublishBuild(string project, BuildEnvironment env, BuildPlan plan, string configuration, string rid, string framework)
 {
     var projectName = project + ".csproj";
     var projectFileName = CombinePaths(env.Folders.Source, project, projectName);
-    var outputFolder = CombinePaths(env.Folders.ArtifactsPublish, project, rid);
+    var outputFolder = CombinePaths(env.Folders.ArtifactsPublish, project, rid, framework);
 
     Information("Publishing {0} for {1}...", projectName, rid);
 
     try
     {
-        DotNetCorePublish(projectFileName, new DotNetCorePublishSettings()
+        var publishSettings = new DotNetCorePublishSettings()
         {
-            // Runtime = rid, // TODO: With everything today do we need to publish this with a rid?  This appears to be legacy bit when we used to push for all supported dotnet core rids.
+            Framework = framework,
+            Runtime = rid, // TODO: With everything today do we need to publish this with a rid?  This appears to be legacy bit when we used to push for all supported dotnet core rids.
             Configuration = configuration,
             OutputDirectory = outputFolder,
             MSBuildSettings = new DotNetCoreMSBuildSettings()
@@ -926,7 +987,8 @@ string PublishWindowsBuild(string project, BuildEnvironment env, BuildPlan plan,
             ToolPath = env.DotNetCommand,
             WorkingDirectory = env.WorkingDirectory,
             Verbosity = DotNetCoreVerbosity.Minimal,
-        });
+        };
+        DotNetCorePublish(projectFileName, publishSettings);
     }
     catch
     {
@@ -940,7 +1002,8 @@ string PublishWindowsBuild(string project, BuildEnvironment env, BuildPlan plan,
     CopyExtraDependencies(env, outputFolder);
     AddOmniSharpBindingRedirects(outputFolder);
 
-    Package(project, rid, outputFolder, env.Folders.ArtifactsPackage, env.Folders.DeploymentPackage);
+    var platformFolder = framework != "net472" ? $"{rid}-{framework}" : rid;
+    Package(project, platformFolder, outputFolder, env.Folders.ArtifactsPackage, env.Folders.DeploymentPackage);
 
     return outputFolder;
 }
@@ -956,9 +1019,9 @@ Task("PublishWindowsBuilds")
 
         if (publishAll)
         {
-            var outputFolderX86 = PublishWindowsBuild(project, env, buildPlan, configuration, "win7-x86");
-            var outputFolderX64 = PublishWindowsBuild(project, env, buildPlan, configuration, "win7-x64");
-            var outputFolderArm64 = PublishWindowsBuild(project, env, buildPlan, configuration, "win10-arm64");
+            var outputFolderX86 = PublishBuild(project, env, buildPlan, configuration, "win7-x86", "net472");
+            var outputFolderX64 = PublishBuild(project, env, buildPlan, configuration, "win7-x64", "net472");
+            var outputFolderArm64 = PublishBuild(project, env, buildPlan, configuration, "win10-arm64", "net472");
 
             outputFolder = Platform.Current.IsX86
                 ? outputFolderX86
@@ -968,15 +1031,15 @@ Task("PublishWindowsBuilds")
         }
         else if (Platform.Current.IsX86)
         {
-            outputFolder = PublishWindowsBuild(project, env, buildPlan, configuration, "win7-x86");
+            outputFolder = PublishBuild(project, env, buildPlan, configuration, "win7-x86", "net472");
         }
         else if (Platform.Current.IsX64)
         {
-            outputFolder = PublishWindowsBuild(project, env, buildPlan, configuration, "win7-x64");
+            outputFolder = PublishBuild(project, env, buildPlan, configuration, "win7-x64", "net472");
         }
         else
         {
-            outputFolder = PublishWindowsBuild(project, env, buildPlan, configuration, "win10-arm64");
+            outputFolder = PublishBuild(project, env, buildPlan, configuration, "win10-arm64", "net472");
         }
 
         CreateRunScript(project, outputFolder, env.Folders.ArtifactsScripts);
@@ -1001,6 +1064,7 @@ Task("PublishNuGet")
 Task("Publish")
     .IsDependentOn("Build")
     .IsDependentOn("PublishMonoBuilds")
+    .IsDependentOn("PublishNet6Builds")
     .IsDependentOn("PublishWindowsBuilds")
     .IsDependentOn("PublishNuGet");
 
@@ -1070,11 +1134,11 @@ Task("Install")
         }
 
         var outputFolder = PathHelper.GetFullPath(CombinePaths(env.Folders.ArtifactsPublish, project, platform));
-        var targetFolder = PathHelper.GetFullPath(CombinePaths(installFolder, project));
+        var targetFolder = PathHelper.GetFullPath(CombinePaths(installFolder));
 
         DirectoryHelper.Copy(outputFolder, targetFolder);
 
-        CreateRunScript(project, CombinePaths(installFolder, project), env.Folders.ArtifactsScripts);
+        CreateRunScript(project, installFolder, env.Folders.ArtifactsScripts);
 
         Information($"OmniSharp is installed locally at {installFolder}");
     }
