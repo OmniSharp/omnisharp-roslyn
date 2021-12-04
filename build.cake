@@ -917,12 +917,19 @@ Task("PublishNet6Builds")
     {
         if (publishAll)
         {
-            PublishBuild(project, env, buildPlan, configuration, "linux-x64", "net6.0");
-            PublishBuild(project, env, buildPlan, configuration, "osx-x64", "net6.0");
-            PublishBuild(project, env, buildPlan, configuration, "osx-arm64", "net6.0");
-            PublishBuild(project, env, buildPlan, configuration, "win7-x86", "net6.0");
-            PublishBuild(project, env, buildPlan, configuration, "win7-x64", "net6.0");
-            PublishBuild(project, env, buildPlan, configuration, "win10-arm64", "net6.0");
+            if (!Platform.Current.IsWindows)
+            {
+                PublishBuild(project, env, buildPlan, configuration, "linux-x64", "net6.0");
+                PublishBuild(project, env, buildPlan, configuration, "linux-arm64", "net6.0");
+                PublishBuild(project, env, buildPlan, configuration, "osx-x64", "net6.0");
+                PublishBuild(project, env, buildPlan, configuration, "osx-arm64", "net6.0");
+            }
+            else
+            {
+                PublishBuild(project, env, buildPlan, configuration, "win7-x86", "net6.0");
+                PublishBuild(project, env, buildPlan, configuration, "win7-x64", "net6.0");
+                PublishBuild(project, env, buildPlan, configuration, "win10-arm64", "net6.0");
+            }
         }
         else if (Platform.Current.IsWindows)
         {
@@ -949,6 +956,7 @@ Task("PublishNet6Builds")
             else
             {
                 PublishBuild(project, env, buildPlan, configuration, "linux-x64", "net6.0");
+                PublishBuild(project, env, buildPlan, configuration, "linux-arm64", "net6.0");
             }
         }
 
