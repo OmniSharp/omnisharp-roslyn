@@ -556,13 +556,8 @@ namespace OmniSharp
 
         public void AddAnalyzerConfigDocument(ProjectId projectId, string filePath)
         {
-            var loader = new OmniSharpTextLoader(filePath);
-            AddAnalyzerConfigDocument(projectId, filePath, loader);
-        }
-
-        public void AddAnalyzerConfigDocument(ProjectId projectId, string filePath, TextLoader loader)
-        {
             var documentId = DocumentId.CreateNewId(projectId);
+            var loader = new OmniSharpTextLoader(filePath);
             var documentInfo = DocumentInfo.Create(documentId, Path.GetFileName(filePath), filePath: filePath, loader: loader);
             OnAnalyzerConfigDocumentAdded(documentInfo);
         }
