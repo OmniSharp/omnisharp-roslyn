@@ -12,7 +12,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
         Task<ImmutableArray<DocumentDiagnostics>> GetDiagnostics(ImmutableArray<string> documentPaths);
         Task<ImmutableArray<DocumentDiagnostics>> GetAllDiagnosticsAsync();
         Task<IEnumerable<Diagnostic>> AnalyzeDocumentAsync(Document document, CancellationToken cancellationToken);
-        Task<IEnumerable<Diagnostic>> AnalyzeProjectAsync(Project project, CancellationToken cancellationToken);
+        Task<IEnumerable<Diagnostic>> AnalyzeProjectsAsync(Project project, CancellationToken cancellationToken);
         ImmutableArray<DocumentId> QueueDocumentsForDiagnostics();
         ImmutableArray<DocumentId> QueueDocumentsForDiagnostics(ImmutableArray<ProjectId> projectId);
     }
