@@ -138,7 +138,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                                     {
                                         EventIfBackgroundWork(workType, projectPath, ProjectDiagnosticStatus.Started);
 
-                                        await AnalyzeAndReport(solution, projectGroup);
+                                        await AnalyzeProject(solution, projectGroup);
 
                                         EventIfBackgroundWork(workType, projectPath, ProjectDiagnosticStatus.Ready);
                                     }
