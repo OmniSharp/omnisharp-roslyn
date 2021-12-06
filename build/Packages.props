@@ -3,16 +3,16 @@
 
     <PropertyGroup>
         <AspNetCorePackageVersion>2.2.0</AspNetCorePackageVersion>
-        <MicrosoftExtensionPackageVersion>5.0.0</MicrosoftExtensionPackageVersion>
-        <MicrosoftTestPackageVersion>16.9.4</MicrosoftTestPackageVersion>
-        <MSBuildPackageVersion>16.10.0</MSBuildPackageVersion>
-        <NuGetPackageVersion>5.2.0</NuGetPackageVersion>
-        <RoslynPackageVersion>4.0.0-3.21373.8</RoslynPackageVersion>
+        <MicrosoftExtensionPackageVersion>6.0.0</MicrosoftExtensionPackageVersion>
+        <MicrosoftTestPackageVersion>17.0.0</MicrosoftTestPackageVersion>
+        <MSBuildPackageVersion>17.0.0</MSBuildPackageVersion>
+        <NuGetPackageVersion>6.0.0</NuGetPackageVersion>
+        <RoslynPackageVersion>4.0.0-6.21526.21</RoslynPackageVersion>
         <XunitPackageVersion>2.4.1</XunitPackageVersion>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Update="Cake.Scripting.Transport" Version="0.6.4" />
+        <PackageReference Update="Cake.Scripting.Transport" Version="0.8.1" />
 
         <PackageReference Update="Dotnet.Script.DependencyModel" Version="1.1.0" />
         <PackageReference Update="Dotnet.Script.DependencyModel.NuGet" Version="1.1.0" />
@@ -60,11 +60,12 @@
 
         <PackageReference Update="Microsoft.NET.Test.Sdk" Version="$(MicrosoftTestPackageVersion)" />
         <PackageReference Update="Microsoft.TestPlatform.TranslationLayer" Version="$(MicrosoftTestPackageVersion)" />
+        <PackageReference Update="Microsoft.TestPlatform.ObjectModel" Version="$(MicrosoftTestPackageVersion)" />
 
         <PackageReference Update="Microsoft.VisualStudio.Setup.Configuration.Interop" Version="1.14.114" />
         <PackageReference Update="Microsoft.VisualStudio.SDK.EmbedInteropTypes" Version="15.0.12" />
 
-        <PackageReference Update="Newtonsoft.Json" Version="12.0.3" />
+        <PackageReference Update="Newtonsoft.Json" Version="13.0.1" />
 
         <PackageReference Update="NuGet.Packaging" Version="$(NuGetPackageVersion)" />
         <PackageReference Update="NuGet.Packaging.Core" Version="$(NuGetPackageVersion)" />
@@ -85,7 +86,7 @@
         <PackageReference Update="System.Reactive" Version="4.4.1" />
 
         <PackageReference Update="System.Reflection.DispatchProxy" Version="4.5.1" />
-
+        <PackageReference Update="System.Runtime.InteropServices.RuntimeInformation" Version="4.3.0" />
         <PackageReference Update="xunit.runner.visualstudio" Version="2.4.3" />
         <PackageReference Update="xunit" Version="$(XunitPackageVersion)" />
     </ItemGroup>
@@ -93,3 +94,4 @@
         <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
     </ItemGroup>
 </Project>
+

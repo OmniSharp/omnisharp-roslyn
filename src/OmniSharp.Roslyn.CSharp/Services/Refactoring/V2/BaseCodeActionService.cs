@@ -361,7 +361,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
         private static string GetNewFilePath(string newFileName, string currentFilePath)
         {
             var directory = Path.GetDirectoryName(currentFilePath);
-            return Path.Combine(directory, newFileName);
+            return Path.Combine(directory ?? string.Empty, newFileName);
         }
     }
 }

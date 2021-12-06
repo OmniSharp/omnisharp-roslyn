@@ -58,8 +58,8 @@ namespace OmniSharp.MSBuild.Tests
                 var project = Assert.Single(workspaceInfo.Projects);
 
                 Assert.Equal("ProjectAndSolutionFilter", project.AssemblyName);
-                Assert.Equal("bin/Debug/netcoreapp2.1/", project.OutputPath.EnsureForwardSlashes());
-                Assert.Equal("obj/Debug/netcoreapp2.1/", project.IntermediateOutputPath.EnsureForwardSlashes());
+                Assert.Equal("bin/Debug/netcoreapp3.1/", project.OutputPath.EnsureForwardSlashes());
+                Assert.Equal("obj/Debug/netcoreapp3.1/", project.IntermediateOutputPath.EnsureForwardSlashes());
                 var expectedTargetPath = $"{testProject.Directory}/Project/{project.OutputPath}ProjectAndSolutionFilter.dll".EnsureForwardSlashes();
                 Assert.Equal(expectedTargetPath, project.TargetPath.EnsureForwardSlashes());
                 Assert.Equal("Debug", project.Configuration);
@@ -67,9 +67,9 @@ namespace OmniSharp.MSBuild.Tests
                 Assert.True(project.IsExe);
                 Assert.False(project.IsUnityProject);
 
-                Assert.Equal(".NETCoreApp,Version=v2.1", project.TargetFramework);
+                Assert.Equal(".NETCoreApp,Version=v3.1", project.TargetFramework);
                 var targetFramework = Assert.Single(project.TargetFrameworks);
-                Assert.Equal("netcoreapp2.1", targetFramework.ShortName);
+                Assert.Equal("netcoreapp3.1", targetFramework.ShortName);
             }
         }
 
@@ -85,20 +85,6 @@ namespace OmniSharp.MSBuild.Tests
             var project = Assert.Single(workspaceInfo.Projects);
             Assert.Equal(".NETCoreApp,Version=v3.1", project.TargetFramework);
             Assert.Equal("netcoreapp3.1", project.TargetFrameworks[0].ShortName);
-        }
-
-        [Fact]
-        public async Task NetCore21Project()
-        {
-            using var testProject = await TestAssets.Instance.GetTestProjectAsync("NetCore21Project");
-            using var host = CreateMSBuildTestHost(testProject.Directory);
-            var workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
-
-            Assert.NotNull(workspaceInfo.Projects);
-            var project = Assert.Single(workspaceInfo.Projects);
-            Assert.Equal("NetCore21Project", project.AssemblyName);
-            Assert.Equal(".NETCoreApp,Version=v2.1", project.TargetFramework);
-            Assert.Equal("netcoreapp2.1", project.TargetFrameworks[0].ShortName);
         }
 
         [Fact]
@@ -120,7 +106,7 @@ namespace OmniSharp.MSBuild.Tests
             Assert.Contains(libProject.TargetFrameworks[0].ShortName, new[] { "net50", "net5.0" });
         }
 
-        [Fact]
+        [ConditionalFact(typeof(DesktopRuntimeOnly))]
         public async Task Net60Project()
         {
             using var testProject = await TestAssets.Instance.GetTestProjectAsync("Net60Project");

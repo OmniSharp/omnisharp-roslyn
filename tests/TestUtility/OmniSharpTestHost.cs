@@ -12,7 +12,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OmniSharp;
-using OmniSharp.Cake;
 using OmniSharp.DotNetTest.Models;
 using OmniSharp.Eventing;
 using OmniSharp.LanguageServerProtocol;
@@ -38,7 +37,9 @@ namespace TestUtility
             typeof(ScriptProjectSystem).GetTypeInfo().Assembly, // OmniSharp.Script
             typeof(OmniSharpWorkspace).GetTypeInfo().Assembly, // OmniSharp.Roslyn
             typeof(RoslynFeaturesHostServicesProvider).GetTypeInfo().Assembly, // OmniSharp.Roslyn.CSharp
-            typeof(CakeProjectSystem).GetTypeInfo().Assembly, // OmniSharp.Cake
+#if !NETCOREAPP
+            typeof(OmniSharp.Cake.CakeProjectSystem).GetTypeInfo().Assembly, // OmniSharp.Cake
+#endif
             typeof(LanguageServerHost).Assembly, // OmniSharp.LanguageServerProtocol
         });
 
@@ -144,7 +145,10 @@ namespace TestUtility
                 Workspace,
                 Path.Combine(folderPath, "project.csproj"),
                 new[] { "net472" },
-                testFiles.Where(f => f.FileName.EndsWith(".cs", StringComparison.OrdinalIgnoreCase)).ToArray());
+                testFiles.Where(f => f.FileName.EndsWith(".cs", StringComparison.OrdinalIgnoreCase)).ToArray(),
+                testFiles.Where(f => !f.FileName.EndsWith(".cs", StringComparison.OrdinalIgnoreCase)
+                    && !f.FileName.EndsWith(".csx", StringComparison.OrdinalIgnoreCase)
+                    && !f.FileName.EndsWith(".cake", StringComparison.OrdinalIgnoreCase)).ToArray());
 
             foreach (var csxFile in testFiles.Where(f => f.FileName.EndsWith(".csx", StringComparison.OrdinalIgnoreCase)))
             {

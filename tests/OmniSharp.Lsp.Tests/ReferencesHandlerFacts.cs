@@ -215,8 +215,8 @@ namespace OmniSharp.Lsp.Tests
             var regularResult = usages.ElementAt(0);
             var mappedResult = usages.ElementAt(1);
 
-            Assert.Equal("a.cs", regularResult.Uri);
-            Assert.Equal("b.cs", mappedResult.Uri);
+            Assert.EndsWith("a.cs", regularResult.Uri.Path);
+            Assert.EndsWith("b.cs", mappedResult.Uri.Path);
 
             Assert.Equal(3, regularResult.Range.Start.Line);
             Assert.Equal(mappingLine - 1, mappedResult.Range.Start.Line);
@@ -405,7 +405,7 @@ namespace OmniSharp.Lsp.Tests
 
         private Task<LocationContainer> FindUsagesAsync(string code, bool excludeDefinition = false)
         {
-            return FindUsagesAsync(new[] {new TestFile("dummy.cs", code)}, excludeDefinition);
+            return FindUsagesAsync(new[] { new TestFile("dummy.cs", code) }, excludeDefinition);
         }
 
         private async Task<LocationContainer> FindUsagesAsync(TestFile[] testFiles, bool excludeDefinition = false)

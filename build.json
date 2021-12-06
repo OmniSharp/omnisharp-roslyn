@@ -2,16 +2,16 @@
     "DotNetInstallScriptURL": "https://dot.net/v1",
     "DotNetChannel": "Preview",
     "DotNetVersions": [
-        "2.1.816",
-        "3.1.411",
-        "5.0.302",
-        "6.0.100-preview.6.21355.2"
+        "3.1.415",
+        "5.0.403",
+        "6.0.100"
     ],
     "RequiredMonoVersion": "6.6.0",
     "DownloadURL": "https://roslynomnisharp.blob.core.windows.net/ext",
-    "MonoRuntimeMacOS": "mono.macOS-6.12.0.90.zip",
-    "MonoRuntimeLinux32": "mono.linux-x86-6.12.0.90.zip",
-    "MonoRuntimeLinux64": "mono.linux-x86_64-6.12.0.90.zip",
+    "MonoRuntimeMacOS": "mono.macOS-6.12.0.122.zip",
+    "MonoRuntimeLinuxX86": "mono.linux-x86-6.12.0.122.zip",
+    "MonoRuntimeLinuxX64": "mono.linux-x86_64-6.12.0.122.zip",
+    "MonoRuntimeLinuxArm64": "mono.linux-arm64-6.12.0.122.zip",
     "HostProjects": [
         "OmniSharp.Stdio.Driver",
         "OmniSharp.Http.Driver"
@@ -23,7 +23,6 @@
         "OmniSharp.Stdio.Tests",
         "OmniSharp.DotNetTest.Tests",
         "OmniSharp.Tests",
-        "OmniSharp.Cake.Tests",
         "OmniSharp.Script.Tests",
         "OmniSharp.Lsp.Tests"
     ],
@@ -45,7 +44,6 @@
         "ProjectWithDisabledAnalyzers",
         "ProjectWithDisabledAnalyzers2",
         "ProjectWithAnalyzers",
-        "NetCore21Project",
         "NetCore31Project",
         "Net50Project",
         "ProjectWithAnalyzersAndEditorConfig",

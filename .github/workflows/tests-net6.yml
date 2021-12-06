@@ -1,5 +1,5 @@
 
-name: 'Build'
+name: 'Tests net6.0'
 env:
   DotNetVersion: "6.0.100"
   DotNetVersion2: "3.1.415"
@@ -15,6 +15,7 @@ on:
   pull_request:
     branches:
       - master
+      - demo/*
       - feature/*
     tags:
       - '*'
@@ -26,7 +27,10 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-18.04, windows-2019, macos-10.15]
-    name: 'Build'
+        testProjects:
+          - OmniSharp.MSBuild.Tests,OmniSharp.Roslyn.CSharp.Tests,OmniSharp.Script.Tests,OmniSharp.Stdio.Tests,OmniSharp.Http.Tests,OmniSharp.Tests,OmniSharp.Lsp.Tests
+          - OmniSharp.DotNetTest.Tests
+    name: 'Test'
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -68,21 +72,35 @@ jobs:
       # - name: 🍰 Run Cake
       #   run: |
       #     dotnet cake --bootstrap
-      #     dotnet cake --configuration=Release --verbosity=Verbose --target=CI --publish-all --archive
+      #     dotnet cake --configuration=Debug --verbosity=Diagnostic --target=Test --test-project="${{ matrix.testProjects }}"
 
       - name: 🍰 Run Cake
         if: ${{ runner.os == 'Linux' || runner.os == 'macOS' }}
-        shell: bash
-        run: |
-          echo $PATH
-          chmod 755 ./build.sh
-          ./build.sh --configuration Release --verbosity Verbose --target CI --publish-all --archive
+        uses: nick-invision/retry@v2
+        with:
+          shell: bash
+          timeout_minutes: 40
+          max_attempts: 3
+          retry_on: error
+          command: |
+            echo $PATH
+            chmod 755 ./build.sh
+            ./build.sh --configuration Release --verbosity Verbose --target Test --test-project="$TEST_PROJECT" --use-dotnet-test
+        env:
+          TEST_PROJECT: ${{ matrix.testProjects }}
 
       - name: 🍰 Run Cake
         if: ${{ runner.os == 'Windows' }}
-        shell: powershell
-        run: |
-          .\build.ps1 -configuration Release -verbosity Verbose -target CI --publish-all --archive
+        uses: nick-invision/retry@v2
+        with:
+          shell: powershell
+          timeout_minutes: 40
+          max_attempts: 3
+          retry_on: error
+          command: |
+            .\build.ps1 -configuration Release -verbosity Verbose -target Test --test-project="$ENV:TEST_PROJECT" --use-dotnet-test
+        env:
+          TEST_PROJECT: ${{ matrix.testProjects }}
 
       - name: ⬆ Publish Logs
         uses: actions/upload-artifact@v2
@@ -91,35 +109,3 @@ jobs:
         with:
           name: 'logs - ${{ github.workflow }} ${{ matrix.os }}'
           path: '${{ env.Artifacts }}/logs/'
-
-      - name: ⬆ Publish Packages
-        uses: actions/upload-artifact@v2
-        continue-on-error: true
-        if: ${{ always() }}
-        with:
-          name: 'packages'
-          path: '${{ env.Artifacts }}/package/'
-
-      - name: ⬆ Publish Deployment
-        uses: actions/upload-artifact@v2
-        continue-on-error: true
-        if: ${{ always() }}
-        with:
-          name: 'deployment'
-          path: '${{ env.Artifacts }}/deployment/'
-
-      - name: ⬆ Publish NuGet
-        uses: actions/upload-artifact@v2
-        continue-on-error: true
-        if: ${{ always() }}
-        with:
-          name: 'nuget'
-          path: '${{ env.Artifacts }}/nuget/'
-
-      - name: ⬆ Publish Scripts
-        uses: actions/upload-artifact@v2
-        continue-on-error: true
-        if: ${{ always() }}
-        with:
-          name: 'scripts - ${{ matrix.os }}'
-          path: '${{ env.Artifacts }}/scripts/'

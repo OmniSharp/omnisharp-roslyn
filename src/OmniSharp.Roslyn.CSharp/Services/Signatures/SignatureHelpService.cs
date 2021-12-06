@@ -119,7 +119,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Signatures
                     return new InvocationContext(semanticModel, position, invocation.Expression, invocation.ArgumentList, invocation.IsInStaticContext());
                 }
 
-                if (node is ObjectCreationExpressionSyntax objectCreation && objectCreation.ArgumentList.Span.Contains(position))
+                if (node is BaseObjectCreationExpressionSyntax objectCreation && objectCreation.ArgumentList.Span.Contains(position))
                 {
                     var semanticModel = await document.GetSemanticModelAsync();
                     return new InvocationContext(semanticModel, position, objectCreation, objectCreation.ArgumentList, objectCreation.IsInStaticContext());

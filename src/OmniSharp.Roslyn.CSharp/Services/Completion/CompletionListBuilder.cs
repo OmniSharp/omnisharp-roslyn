@@ -66,11 +66,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
         internal const string ExtensionMethodImportCompletionProvider = "Microsoft.CodeAnalysis.CSharp.Completion.Providers.ExtensionMethodImportCompletionProvider";
         internal const string EmeddedLanguageCompletionProvider = "Microsoft.CodeAnalysis.CSharp.Completion.Providers.EmbeddedLanguageCompletionProvider";
 
-        // VS has a more complex concept of a commit mode vs suggestion mode for intellisense.
-        // LSP doesn't have this, so mock it as best we can by removing space ` ` from the list
-        // of commit characters if we're in suggestion mode.
-        private static readonly IReadOnlyList<char> DefaultRulesWithoutSpace = CompletionRules.Default.DefaultCommitCharacters.Where(c => c != ' ').ToList();
-
         internal static async Task<(IReadOnlyList<CompletionItem>, bool)> BuildCompletionItems(
             Document document,
             SourceText sourceText,
@@ -100,10 +95,17 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
 
         private static IReadOnlyList<char>? BuildCommitCharacters(ImmutableArray<CharacterSetModificationRule> characterRules, bool isSuggestionMode, Dictionary<ImmutableArray<CharacterSetModificationRule>, IReadOnlyList<char>> commitCharacterRulesCache, HashSet<char> commitCharactersBuilder)
         {
+            if (isSuggestionMode)
+            {
+                // To emulate soft selection we should remove all trigger characters forcing the Editor to
+                // fallback to only <tab> and <enter> for accepting the completions.
+                return null;
+            }
+
             if (characterRules.IsEmpty)
             {
                 // Use defaults
-                return isSuggestionMode ? DefaultRulesWithoutSpace : CompletionRules.Default.DefaultCommitCharacters;
+                return CompletionRules.Default.DefaultCommitCharacters;
             }
 
             if (commitCharacterRulesCache.TryGetValue(characterRules, out var cachedRules))

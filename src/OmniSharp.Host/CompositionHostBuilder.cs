@@ -137,8 +137,14 @@ namespace OmniSharp
             // Caching
             services.AddSingleton<IMemoryCache, MemoryCache>();
             services.AddSingleton<IAssemblyLoader, AssemblyLoader>();
-            services.AddSingleton<IAnalyzerAssemblyLoader, AnalyzerAssemblyLoader>();
+            services.AddSingleton<IAnalyzerAssemblyLoader, DefaultAnalyzerAssemblyLoader>();
             services.AddOptions();
+
+            // Setup the options from configuration
+            services.Configure<OmniSharpOptions>(configuration)
+                .PostConfigure<OmniSharpOptions>(OmniSharpOptions.PostConfigure);
+            services.AddSingleton(configuration);
+            services.AddSingleton<IConfiguration>(configuration);
 
             services.AddSingleton<IDotNetCliService, DotNetCliService>();
 
@@ -148,13 +154,6 @@ namespace OmniSharp
                     loggerFactory: sp.GetService<ILoggerFactory>(),
                     assemblyLoader: sp.GetService<IAssemblyLoader>(),
                     msbuildConfiguration: configuration.GetSection("msbuild")));
-
-
-            // Setup the options from configuration
-            services.Configure<OmniSharpOptions>(configuration)
-                .PostConfigure<OmniSharpOptions>(OmniSharpOptions.PostConfigure);
-            services.AddSingleton(configuration);
-            services.AddSingleton<IConfiguration>(configuration);
 
             services.AddLogging(builder =>
             {

@@ -149,7 +149,7 @@ class FooChild : Foo
                 Assert.Equal(
                     new[]
                     {
-                        "Equals(object obj)", "GetHashCode()", "Test(string text)",
+                        "Equals(object? obj)", "GetHashCode()", "Test(string text)",
                         "Test(string text, string moreText)", "ToString()"
                     },
                     completions.Items.Select(c => c.Label));
