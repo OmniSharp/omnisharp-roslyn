@@ -18,7 +18,7 @@ using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
 
 namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
 {
-    public class CSharpDiagnosticWorker : ICsDiagnosticWorker, IDisposable
+    public class CSharpDiagnosticWorker: ICsDiagnosticWorker, IDisposable
     {
         private readonly ILogger _logger;
         private readonly OmniSharpWorkspace _workspace;
@@ -71,7 +71,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
             {
                 var newDocument = changeEvent.NewSolution.GetDocument(changeEvent.DocumentId);
 
-                EmitDiagnostics(new[] { newDocument.Id }.Union(_workspace.GetOpenDocumentIds()).Select(x => _workspace.CurrentSolution.GetDocument(x).FilePath).ToArray());
+                EmitDiagnostics(new [] {newDocument.Id}.Union(_workspace.GetOpenDocumentIds()).Select(x => _workspace.CurrentSolution.GetDocument(x).FilePath).ToArray());
             }
             else if (changeEvent.Kind == WorkspaceChangeKind.ProjectAdded || changeEvent.Kind == WorkspaceChangeKind.ProjectReloaded)
             {
@@ -153,7 +153,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
             var throttler = new SemaphoreSlim(_options.RoslynExtensionsOptions.DiagnosticWorkersThreadCount);
             foreach (var document in documents)
             {
-                if (document?.Project?.Name == null)
+                if(document?.Project?.Name == null)
                     continue;
 
                 var projectName = document.Project.Name;
@@ -229,7 +229,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
             return await GetDiagnosticsForDocument(document, document.Project.Name);
         }
 
-        public async Task<IEnumerable<Diagnostic>> AnalyzeProjectAsync(Project project, CancellationToken cancellationToken)
+        public async Task<IEnumerable<Diagnostic>> AnalyzeProjectsAsync(Project project, CancellationToken cancellationToken)
         {
             var diagnostics = new List<Diagnostic>();
             foreach (var document in project.Documents)
