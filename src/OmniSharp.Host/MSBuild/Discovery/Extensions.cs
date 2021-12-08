@@ -72,7 +72,7 @@ namespace OmniSharp.MSBuild.Discovery
             }
             else
             {
-                logger.LogError("Could not locate MSBuild instance to register with OmniSharp");
+                throw new MSBuildNotFoundException("Could not locate MSBuild instance to register with OmniSharp.");
             }
         }
 
