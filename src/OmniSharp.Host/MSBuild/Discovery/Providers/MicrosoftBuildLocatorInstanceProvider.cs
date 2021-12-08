@@ -22,9 +22,17 @@ namespace OmniSharp.MSBuild.Discovery.Providers
         {
 
 #if NETCOREAPP
+            const string DotNetSdkVersion = "6.0.100";
+
             // Restrict instances to NET 6 SDK
             var instances = MicrosoftBuildLocator.QueryVisualStudioInstances()
-                .Where(instance => instance.Version.Major == 6);
+                .Where(instance => instance.Version.ToString() == DotNetSdkVersion)
+                .ToImmutableArray();
+
+            if (instances.Length == 0)
+            {
+                Logger.LogError($"OmniSharp requires .NET SDK version '{DotNetSdkVersion}' be installed. Please visit https://dotnet.microsoft.com/download/dotnet/6.0 to download the .NET SDK.");
+            }
 #else
             if (!PlatformHelper.IsWindows)
             {
