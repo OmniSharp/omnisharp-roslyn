@@ -1,5 +1,6 @@
 using System;
 using Microsoft.Extensions.Logging;
+using OmniSharp.MSBuild.Discovery;
 using OmniSharp.Roslyn;
 using OmniSharp.Utilities;
 
@@ -27,6 +28,11 @@ namespace OmniSharp
                 }
 
                 return action();
+            }
+            catch (MSBuildNotFoundException mnfe)
+            {
+                Console.Error.WriteLine(mnfe.Message);
+                return 0xbad;
             }
             catch (Exception e)
             {
