@@ -977,6 +977,7 @@ string PublishBuild(string project, BuildEnvironment env, BuildPlan plan, string
         {
             Framework = framework,
             Runtime = rid, // TODO: With everything today do we need to publish this with a rid?  This appears to be legacy bit when we used to push for all supported dotnet core rids.
+            PublishReadyToRun = true, // Improve startup performance by applying some AOT compilation
             Configuration = configuration,
             OutputDirectory = outputFolder,
             MSBuildSettings = new DotNetCoreMSBuildSettings()
