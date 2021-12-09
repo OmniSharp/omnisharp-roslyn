@@ -6,6 +6,7 @@ using System.Composition;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.Completion;
@@ -22,7 +23,6 @@ using OmniSharp.Utilities;
 using CompletionItem = OmniSharp.Models.v1.Completion.CompletionItem;
 using CompletionTriggerKind = OmniSharp.Models.v1.Completion.CompletionTriggerKind;
 using CSharpCompletionService = Microsoft.CodeAnalysis.Completion.CompletionService;
-using System.Threading;
 using Roslyn.Utilities;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Completion
