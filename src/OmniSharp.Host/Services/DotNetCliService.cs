@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using NuGet.Versioning;
 using OmniSharp.Eventing;
 using OmniSharp.Options;
 using OmniSharp.Utilities;
@@ -209,8 +208,8 @@ namespace OmniSharp.Services
                 version.Minor == 0 &&
                 version.Patch == 0)
             {
-                if (version.Release.StartsWith("preview1") ||
-                    version.Release.StartsWith("preview2"))
+                if (version.PreReleaseLabel.StartsWith("preview1") ||
+                    version.PreReleaseLabel.StartsWith("preview2"))
                 {
                     return true;
                 }
