@@ -41,9 +41,14 @@ public static class FileHelper
 
 public static class DirectoryHelper
 {
+    public static string[] GetFiles(string path, string searchPattern = "*.*")
+    {
+        return System.IO.Directory.GetFiles(path, searchPattern);
+    }
+
     public static void Copy(string source, string destination, bool copySubDirectories = true)
     {
-        var files = System.IO.Directory.GetFiles(source);
+        var files = GetFiles(source);
         var subDirectories = System.IO.Directory.GetDirectories(source);
 
         if (!Exists(destination))
