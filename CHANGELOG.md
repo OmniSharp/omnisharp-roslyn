@@ -3,6 +3,7 @@ All changes to the project will be documented in this file.
 
 ## [1.38.0]
 * Build OmniSharp servers that run on .NET 6 SDK (PR: [2291](https://github.com/OmniSharp/omnisharp-roslyn/pull/2291))
+* Allow net6 build of O# to load newer .NET SDKs (PR: [#2308](https://github.com/OmniSharp/omnisharp-roslyn/pull/2308))
 * Allow alternate versions of documents to be Semantically Highlighted (PR: [#2304](https://github.com/OmniSharp/omnisharp-roslyn/pull/2304))
 * Pass the logger for loading projects. So errors occur in loading projects can be printed out. ([omnisharp-vscode#4832](https://github.com/OmniSharp/omnisharp-vscode/issues/4832), PR: [#2288](https://github.com/OmniSharp/omnisharp-roslyn/pull/2288))
 * Update OmniSharp.Cake dependencies (PR: [#2280](https://github.com/OmniSharp/omnisharp-roslyn/pull/2280))
