@@ -1,7 +1,18 @@
 # Changelog
 All changes to the project will be documented in this file.
 
-## [1.37.17]
+## [1.37.18]
+* Build OmniSharp servers that run on .NET 6 SDK (PR: [2291](https://github.com/OmniSharp/omnisharp-roslyn/pull/2291))
+* Allow alternate versions of documents to be Semantically Highlighted (PR: [#2304](https://github.com/OmniSharp/omnisharp-roslyn/pull/2304))
+* Pass the logger for loading projects. So errors occur in loading projects can be printed out. ([omnisharp-vscode#4832](https://github.com/OmniSharp/omnisharp-vscode/issues/4832), PR: [#2288](https://github.com/OmniSharp/omnisharp-roslyn/pull/2288))
+* Update OmniSharp.Cake dependencies (PR: [#2280](https://github.com/OmniSharp/omnisharp-roslyn/pull/2280))
+* Ensure each published platform uses matching hostfxr library (PR: [#2272](https://github.com/OmniSharp/omnisharp-roslyn/pull/2272))
+* Produce an Arm64 build for Linux (PR: [#2271](https://github.com/OmniSharp/omnisharp-roslyn/pull/2271))
+* Use 6.0.100 SDK for building (PR: [#2269](https://github.com/OmniSharp/omnisharp-roslyn/pull/2269))
+* Added Code of Conduct (PR: [#2266](https://github.com/OmniSharp/omnisharp-roslyn/pull/2266))
+* Improved Cake/CSX info messages (PR: [#2264](https://github.com/OmniSharp/omnisharp-roslyn/pull/2264))
+
+## [1.37.17] - 2021-11-02
 * Update versions to match dotnet SDK 6.0.1xx (PR: [#2262](https://github.com/OmniSharp/omnisharp-roslyn/pull/2262))
 * Remove all completion commit characters in suggestion mode. ([#1974](https://github.com/OmniSharp/omnisharp-vscode/issues/1974), [#3219](https://github.com/OmniSharp/omnisharp-vscode/issues/3219), [#3647](https://github.com/OmniSharp/omnisharp-vscode/issues/3647), [#4833](https://github.com/OmniSharp/omnisharp-vscode/issues/4833), PR: [#2253](https://github.com/OmniSharp/omnisharp-roslyn/pull/2253))
 * fixed logging interpolation in ProjectManager (PR: [#2246](https://github.com/OmniSharp/omnisharp-roslyn/pull/2246))
