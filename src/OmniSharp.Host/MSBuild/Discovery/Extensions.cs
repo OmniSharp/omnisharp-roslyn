@@ -163,7 +163,7 @@ namespace OmniSharp.MSBuild.Discovery
 
             var version = dotNetInfo.SdkVersion;
             var sdksPath = dotNetInfo.SdksPath;
-            var minimumVersionPath = Path.Combine(sdksPath, version.ToNormalizedString(), "minimumMSBuildVersion");
+            var minimumVersionPath = Path.Combine(sdksPath, version.ToString(), "minimumMSBuildVersion");
 
             if (!File.Exists(minimumVersionPath))
             {
