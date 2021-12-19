@@ -3,7 +3,7 @@ namespace OmniSharp.Models.Events
     public enum BackgroundDiagnosticStatus
     {
         Started = 0,
-        Update = 1,
+        Progress = 1,
         Finished = 2
     }
 }

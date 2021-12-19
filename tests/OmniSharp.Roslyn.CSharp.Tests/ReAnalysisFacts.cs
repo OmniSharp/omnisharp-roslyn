@@ -74,8 +74,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
                 await reAnalyzeHandler.Handle(new ReAnalyzeRequest());
 
-                await _eventListener.ExpectForEmitted(x => x.NumberFiles == 1 && x.Status == BackgroundDiagnosticStatus.Started);
-                await _eventListener.ExpectForEmitted(x => x.NumberFiles == 1 && x.Status == BackgroundDiagnosticStatus.Finished);
+                await _eventListener.ExpectForEmitted(x => x.NumberFilesTotal == 1 && x.Status == BackgroundDiagnosticStatus.Started);
+                await _eventListener.ExpectForEmitted(x => x.NumberFilesTotal == 1 && x.Status == BackgroundDiagnosticStatus.Finished);
             }
         }
 
@@ -96,8 +96,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     FileName = projectA.Documents.Single(x => x.FilePath.EndsWith("a.cs")).FilePath
                 });
 
-                await _eventListener.ExpectForEmitted(x => x.NumberFiles == 1 && x.Status == BackgroundDiagnosticStatus.Started);
-                await _eventListener.ExpectForEmitted(x => x.NumberFiles == 1 && x.Status == BackgroundDiagnosticStatus.Finished);
+                await _eventListener.ExpectForEmitted(x => x.NumberFilesTotal == 1 && x.Status == BackgroundDiagnosticStatus.Started);
+                await _eventListener.ExpectForEmitted(x => x.NumberFilesTotal == 1 && x.Status == BackgroundDiagnosticStatus.Finished);
             }
         }
 
@@ -118,8 +118,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     FileName = project.FilePath
                 });
 
-                await _eventListener.ExpectForEmitted(x => x.NumberFiles == 1 && x.Status == BackgroundDiagnosticStatus.Started);
-                await _eventListener.ExpectForEmitted(x => x.NumberFiles == 1 && x.Status == BackgroundDiagnosticStatus.Finished);
+                await _eventListener.ExpectForEmitted(x => x.NumberFilesTotal == 1 && x.Status == BackgroundDiagnosticStatus.Started);
+                await _eventListener.ExpectForEmitted(x => x.NumberFilesTotal == 1 && x.Status == BackgroundDiagnosticStatus.Finished);
             }
         }
 

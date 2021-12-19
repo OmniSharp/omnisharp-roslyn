@@ -135,8 +135,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                     void decrementDocumentCountRemaining()
                     {
                         var remaining = Interlocked.Decrement(ref documentCountRemaining);
-                        if (remaining % 50 == 0)
-                            EventIfBackgroundWork(workType, BackgroundDiagnosticStatus.Update, projectCount, documentCount, remaining);
+                        var done = documentCount - remaining;
+                        if (done % 24 == 0) // Update progress every 24 documents
+                            EventIfBackgroundWork(workType, BackgroundDiagnosticStatus.Progress, projectCount, documentCount, remaining);
                     }
 
                     try
