@@ -223,11 +223,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
         public async Task<IEnumerable<Diagnostic>> AnalyzeDocumentAsync(Document document, CancellationToken cancellationToken)
         {
             Project project = document.Project;
-            var allAnalyzers = _providers
-                .SelectMany(x => x.CodeDiagnosticAnalyzerProviders)
-                .Concat(project.AnalyzerReferences.SelectMany(x => x.GetAnalyzers(project.Language)))
-                .ToImmutableArray();
-
+            var allAnalyzers = GetAnalyzersForProject(project);
             var compilation = await project.GetCompilationAsync(cancellationToken);
             var workspaceAnalyzerOptions = (AnalyzerOptions)_workspaceAnalyzerOptionsConstructor.Invoke(new object[] { project.AnalyzerOptions, project.Solution });
 
@@ -237,11 +233,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
         public async Task<IEnumerable<Diagnostic>> AnalyzeProjectsAsync(Project project, CancellationToken cancellationToken)
         {
-            var allAnalyzers = _providers
-                .SelectMany(x => x.CodeDiagnosticAnalyzerProviders)
-                .Concat(project.AnalyzerReferences.SelectMany(x => x.GetAnalyzers(project.Language)))
-                .ToImmutableArray();
-
+            var allAnalyzers = GetAnalyzersForProject(project);
             var compilation = await project.GetCompilationAsync(cancellationToken);
             var workspaceAnalyzerOptions = (AnalyzerOptions)_workspaceAnalyzerOptionsConstructor.Invoke(new object[] { project.AnalyzerOptions, project.Solution });
             var documentAnalyzerTasks = new List<Task>();
@@ -275,12 +267,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             try
             {
                 var project = solution.GetProject(documentsGroupedByProject.Key);
-
-                var allAnalyzers = _providers
-                    .SelectMany(x => x.CodeDiagnosticAnalyzerProviders)
-                    .Concat(project.AnalyzerReferences.SelectMany(x => x.GetAnalyzers(project.Language)))
-                    .ToImmutableArray();
-
+                var allAnalyzers = GetAnalyzersForProject(project);
                 var compilation = await project.GetCompilationAsync();
                 var workspaceAnalyzerOptions = (AnalyzerOptions)_workspaceAnalyzerOptionsConstructor.Invoke(new object[] { project.AnalyzerOptions, project.Solution });
                 var documentAnalyzerTasks = new List<Task>();
@@ -361,6 +348,14 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                 _logger.LogError($"Analysis of document {document.Name} failed or cancelled by timeout: {ex.Message}, analysers: {string.Join(", ", allAnalyzers)}");
                 return ImmutableArray<Diagnostic>.Empty;
             }
+        }
+
+        private ImmutableArray<DiagnosticAnalyzer> GetAnalyzersForProject(Project project)
+        {
+            return _providers
+                .SelectMany(x => x.CodeDiagnosticAnalyzerProviders)
+                .Concat(project.AnalyzerReferences.SelectMany(x => x.GetAnalyzers(project.Language)))
+                .ToImmutableArray();
         }
 
         private void OnAnalyzerException(Exception ex, DiagnosticAnalyzer analyzer, Diagnostic diagnostic)
