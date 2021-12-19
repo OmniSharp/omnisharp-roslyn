@@ -23,9 +23,27 @@ namespace OmniSharp.Roslyn
             _emitter.Emit(EventTypes.Diagnostic, message);
         }
 
-        public void ProjectAnalyzedInBackground(string projectFileName, ProjectDiagnosticStatus status)
+        public void BackgroundDiagnosticsStatus(BackgroundDiagnosticStatus status, int numberProjects, int numberFiles, int numberFilesRemaining)
         {
-            _emitter.Emit(EventTypes.ProjectDiagnosticStatus, new ProjectDiagnosticStatusMessage { ProjectFilePath = projectFileName, Status = status });
+            // New type of background diagnostic event, allows for more control of visualization in clients:
+            _emitter.Emit(EventTypes.BackgroundDiagnosticStatus, new BackgroundDiagnosticStatusMessage
+            {
+                Status = status,
+                NumberProjects = numberProjects,
+                NumberFiles = numberFiles,
+                NumberFilesRemaining = numberFilesRemaining
+            });
+
+            // Old type of event emitted as a shim for older clients:
+             _emitter.Emit(EventTypes.ProjectDiagnosticStatus, new ProjectDiagnosticStatusMessage
+            {
+                // There is no current project file being analyzed anymore since all the analysis
+                // executes concurrently, but we have to supply some value for the ProjectFilePath
+                // property for clients that only know about this event. In VS Code the following
+                // displays nicely as "Analyzing n1 files in n2 projects".
+                ProjectFilePath = $"{numberFilesRemaining} files in {numberProjects} projects",
+                Status = status == BackgroundDiagnosticStatus.Finished ? ProjectDiagnosticStatus.Ready : ProjectDiagnosticStatus.Started
+            });
         }
     }
 }

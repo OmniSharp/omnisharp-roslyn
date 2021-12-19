@@ -15,12 +15,12 @@ namespace OmniSharp.Roslyn.CSharp.Tests
     public class ReAnalysisFacts
     {
         private readonly ITestOutputHelper _testOutput;
-        private readonly TestEventEmitter<ProjectDiagnosticStatusMessage> _eventListener;
+        private readonly TestEventEmitter<BackgroundDiagnosticStatusMessage> _eventListener;
 
         public ReAnalysisFacts(ITestOutputHelper testOutput)
         {
             _testOutput = testOutput;
-            _eventListener = new TestEventEmitter<ProjectDiagnosticStatusMessage>();
+            _eventListener = new TestEventEmitter<BackgroundDiagnosticStatusMessage>();
         }
 
 
@@ -74,8 +74,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
                 await reAnalyzeHandler.Handle(new ReAnalyzeRequest());
 
-                await _eventListener.ExpectForEmitted(x => x.ProjectFilePath == project.FilePath && x.Status == ProjectDiagnosticStatus.Started);
-                await _eventListener.ExpectForEmitted(x => x.ProjectFilePath == project.FilePath && x.Status == ProjectDiagnosticStatus.Ready);
+                await _eventListener.ExpectForEmitted(x => x.NumberFiles == 1 && x.Status == BackgroundDiagnosticStatus.Started);
+                await _eventListener.ExpectForEmitted(x => x.NumberFiles == 1 && x.Status == BackgroundDiagnosticStatus.Finished);
             }
         }
 
@@ -96,8 +96,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     FileName = projectA.Documents.Single(x => x.FilePath.EndsWith("a.cs")).FilePath
                 });
 
-                await _eventListener.ExpectForEmitted(x => x.ProjectFilePath == projectA.FilePath && x.Status == ProjectDiagnosticStatus.Started);
-                await _eventListener.ExpectForEmitted(x => x.ProjectFilePath == projectA.FilePath && x.Status == ProjectDiagnosticStatus.Ready);
+                await _eventListener.ExpectForEmitted(x => x.NumberFiles == 1 && x.Status == BackgroundDiagnosticStatus.Started);
+                await _eventListener.ExpectForEmitted(x => x.NumberFiles == 1 && x.Status == BackgroundDiagnosticStatus.Finished);
             }
         }
 
@@ -118,8 +118,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     FileName = project.FilePath
                 });
 
-                await _eventListener.ExpectForEmitted(x => x.ProjectFilePath == project.FilePath && x.Status == ProjectDiagnosticStatus.Started);
-                await _eventListener.ExpectForEmitted(x => x.ProjectFilePath == project.FilePath && x.Status == ProjectDiagnosticStatus.Ready);
+                await _eventListener.ExpectForEmitted(x => x.NumberFiles == 1 && x.Status == BackgroundDiagnosticStatus.Started);
+                await _eventListener.ExpectForEmitted(x => x.NumberFiles == 1 && x.Status == BackgroundDiagnosticStatus.Finished);
             }
         }
 
