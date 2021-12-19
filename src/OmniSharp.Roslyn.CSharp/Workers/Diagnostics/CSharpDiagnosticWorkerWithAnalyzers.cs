@@ -371,10 +371,11 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                 $"\n            exception: {ex.Message}");
         }
 
-        private void UpdateCurrentDiagnostics(Project project, Document document, ImmutableArray<Diagnostic> diagnosticsWithAnalyzers)
+        private void UpdateCurrentDiagnostics(Project project, Document document, ImmutableArray<Diagnostic> diagnostics)
         {
-            _currentDiagnosticResultLookup[document.Id] = new DocumentDiagnostics(document.Id, document.FilePath, project.Id, project.Name, diagnosticsWithAnalyzers);
-            EmitDiagnostics(_currentDiagnosticResultLookup[document.Id]);
+            var documentDiagnostics = new DocumentDiagnostics(document.Id, document.FilePath, project.Id, project.Name, diagnostics);
+            _currentDiagnosticResultLookup[document.Id] = documentDiagnostics;
+            EmitDiagnostics(documentDiagnostics);
         }
 
         private void EmitDiagnostics(DocumentDiagnostics results)
