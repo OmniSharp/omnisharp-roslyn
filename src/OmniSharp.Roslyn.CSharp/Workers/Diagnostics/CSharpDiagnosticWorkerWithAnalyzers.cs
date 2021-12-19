@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
-using Microsoft.CodeAnalysis.Options;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Helpers;
 using OmniSharp.Models.Diagnostics;
@@ -26,7 +25,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
         private readonly SemaphoreSlim _throttler;
         private readonly ILogger<CSharpDiagnosticWorkerWithAnalyzers> _logger;
 
-        private readonly ConcurrentDictionary<DocumentId, DocumentDiagnostics> _currentDiagnosticResultLookup = new ConcurrentDictionary<DocumentId, DocumentDiagnostics>();
+        private readonly ConcurrentDictionary<DocumentId, DocumentDiagnostics> _currentDiagnosticResultLookup = new();
         private readonly ImmutableArray<ICodeActionProvider> _providers;
         private readonly DiagnosticEventForwarder _forwarder;
         private readonly OmniSharpOptions _options;
@@ -123,8 +122,13 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                         .Select(documentId => (projectId: solution.GetDocument(documentId)?.Project?.Id, documentId))
                         .Where(x => x.projectId != null)
                         .ToImmutableArray();
+
                     var documentCount = documents.Length;
                     var documentCountRemaining = documentCount;
+
+                    // event every percentage increase, or every 10th if there are fewer than 1000
+                    var eventEvery = Math.Max(10, documentCount / 100);
+
                     var documentsGroupedByProjects = documents
                         .GroupBy(x => x.projectId, x => x.documentId)
                         .ToImmutableArray();
@@ -136,8 +140,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                     {
                         var remaining = Interlocked.Decrement(ref documentCountRemaining);
                         var done = documentCount - remaining;
-                        if (done % 24 == 0) // Update progress every 24 documents
+                        if (done % eventEvery == 0)
+                        {
                             EventIfBackgroundWork(workType, BackgroundDiagnosticStatus.Progress, projectCount, documentCount, remaining);
+                        }
                     }
 
                     try
@@ -211,7 +217,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                 case WorkspaceChangeKind.SolutionReloaded:
                     QueueDocumentsForDiagnostics();
                     break;
-
             }
         }
 
@@ -238,7 +243,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                 .Concat(project.AnalyzerReferences.SelectMany(x => x.GetAnalyzers(project.Language)))
                 .ToImmutableArray();
 
-            var compilation = await project.GetCompilationAsync();
+            var compilation = await project.GetCompilationAsync(cancellationToken);
             var workspaceAnalyzerOptions = (AnalyzerOptions)_workspaceAnalyzerOptionsConstructor.Invoke(new object[] { project.AnalyzerOptions, project.Solution });
             var analyzerTasks = new List<Task>();
 
@@ -304,14 +309,12 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
                 var documentSemanticModel = await document.GetSemanticModelAsync(perDocumentTimeout.Token);
 
-                var diagnostics = ImmutableArray<Diagnostic>.Empty;
-
                 // Only basic syntax check is available if file is miscellanous like orphan .cs file.
                 // Those projects are on hard coded virtual project
                 if (project.Name == $"{Configuration.OmniSharpMiscProjectName}.csproj")
                 {
                     var syntaxTree = await document.GetSyntaxTreeAsync();
-                    diagnostics = syntaxTree.GetDiagnostics().ToImmutableArray();
+                    return syntaxTree.GetDiagnostics().ToImmutableArray();
                 }
                 else if (allAnalyzers.Any()) // Analyzers cannot be called with empty analyzer list.
                 {
@@ -328,7 +331,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                     var syntaxDiagnosticsWithAnalyzers = await compilationWithAnalyzers
                         .GetAnalyzerSyntaxDiagnosticsAsync(documentSemanticModel.SyntaxTree, perDocumentTimeout.Token);
 
-                    diagnostics = semanticDiagnosticsWithAnalyzers
+                    return semanticDiagnosticsWithAnalyzers
                         .Concat(syntaxDiagnosticsWithAnalyzers)
                         .Where(d => !d.IsSuppressed)
                         .Concat(documentSemanticModel.GetDiagnostics())
@@ -336,10 +339,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                 }
                 else
                 {
-                    diagnostics = documentSemanticModel.GetDiagnostics();
+                    return documentSemanticModel.GetDiagnostics();
                 }
-
-                return diagnostics;
             }
             catch (Exception ex)
             {
@@ -350,7 +351,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
         private void OnAnalyzerException(Exception ex, DiagnosticAnalyzer analyzer, Diagnostic diagnostic)
         {
-            _logger.LogDebug($"Exception in diagnostic analyzer." +
+            _logger.LogDebug("Exception in diagnostic analyzer." +
                 $"\n            analyzer: {analyzer}" +
                 $"\n            diagnostic: {diagnostic}" +
                 $"\n            exception: {ex.Message}");

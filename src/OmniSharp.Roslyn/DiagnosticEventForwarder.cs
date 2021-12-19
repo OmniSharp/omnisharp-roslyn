@@ -37,7 +37,12 @@ namespace OmniSharp.Roslyn
             // Old type of event emitted as a shim for older clients:
             double percentComplete = 0;
             if (numberFiles > 0 && numberFiles > numberFilesRemaining)
-                percentComplete = (numberFiles - numberFilesRemaining) / (double)numberFiles;
+            {
+                percentComplete = numberFiles <= 0
+                    ? 100
+                    : (numberFiles - numberFilesRemaining) / (double)numberFiles;
+            }
+
             _emitter.Emit(EventTypes.ProjectDiagnosticStatus, new ProjectDiagnosticStatusMessage
             {
                 // There is no current project file being analyzed anymore since all the analysis
