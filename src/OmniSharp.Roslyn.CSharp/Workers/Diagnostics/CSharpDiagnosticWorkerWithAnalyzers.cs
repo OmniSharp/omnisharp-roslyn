@@ -228,7 +228,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                 .Concat(project.AnalyzerReferences.SelectMany(x => x.GetAnalyzers(project.Language)))
                 .ToImmutableArray();
 
-            var compilation = await project.GetCompilationAsync();
+            var compilation = await project.GetCompilationAsync(cancellationToken);
             var workspaceAnalyzerOptions = (AnalyzerOptions)_workspaceAnalyzerOptionsConstructor.Invoke(new object[] { project.AnalyzerOptions, project.Solution });
 
             cancellationToken.ThrowIfCancellationRequested();
@@ -237,7 +237,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
         public async Task<IEnumerable<Diagnostic>> AnalyzeProjectsAsync(Project project, CancellationToken cancellationToken)
         {
-            var diagnostics = new List<Diagnostic>();
             var allAnalyzers = _providers
                 .SelectMany(x => x.CodeDiagnosticAnalyzerProviders)
                 .Concat(project.AnalyzerReferences.SelectMany(x => x.GetAnalyzers(project.Language)))
@@ -245,13 +244,28 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
             var compilation = await project.GetCompilationAsync(cancellationToken);
             var workspaceAnalyzerOptions = (AnalyzerOptions)_workspaceAnalyzerOptionsConstructor.Invoke(new object[] { project.AnalyzerOptions, project.Solution });
-            var analyzerTasks = new List<Task>();
+            var documentAnalyzerTasks = new List<Task>();
+            var diagnostics = ImmutableList<Diagnostic>.Empty;
 
             foreach (var document in project.Documents)
             {
-                cancellationToken.ThrowIfCancellationRequested();
-                diagnostics.AddRange(await AnalyzeDocument(project, allAnalyzers, compilation, workspaceAnalyzerOptions, document));
+                await _throttler.WaitAsync(cancellationToken);
+
+                documentAnalyzerTasks.Add(Task.Run(async () =>
+                {
+                    try
+                    {
+                        var documentDiagnostics = await AnalyzeDocument(project, allAnalyzers, compilation, workspaceAnalyzerOptions, document);
+                        ImmutableInterlocked.Update(ref diagnostics, currentDiagnostics => currentDiagnostics.AddRange(documentDiagnostics));
+                    }
+                    finally
+                    {
+                        _throttler.Release();
+                    }
+                }, cancellationToken));
             }
+
+            await Task.WhenAll(documentAnalyzerTasks);
 
             return diagnostics;
         }
