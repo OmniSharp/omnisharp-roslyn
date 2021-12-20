@@ -5,7 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using OmniSharp.Extensions;
 using OmniSharp.Mef;
-using OmniSharp.Models.V2.GotoDefinition;
+using OmniSharp.Models.V2.GotoTypeDefinition;
 using OmniSharp.Models.Metadata;
 using OmniSharp.Models.v1.SourceGeneratedFile;
 using OmniSharp.Models.V2;
@@ -16,13 +16,13 @@ using Range = OmniSharp.Models.V2.Range;
 
 namespace OmniSharp.Cake.Services.RequestHandlers.Navigation
 {
-    [OmniSharpHandler(OmniSharpEndpoints.V2.GotoDefinition, Constants.LanguageNames.Cake), Shared]
-    public class GotoDefinitionV2Handler : CakeRequestHandler<GotoDefinitionRequest, GotoDefinitionResponse>
+    [OmniSharpHandler(OmniSharpEndpoints.V2.GotoTypeDefinition, Constants.LanguageNames.Cake), Shared]
+    public class GotoTypeDefinitionV2Handler : CakeRequestHandler<GotoTypeDefinitionRequest, GotoTypeDefinitionResponse>
     {
         private readonly MetadataExternalSourceService _metadataExternalSourceService;
 
         [ImportingConstructor]
-        public GotoDefinitionV2Handler(
+        public GotoTypeDefinitionV2Handler(
             OmniSharpWorkspace workspace,
             MetadataExternalSourceService metadataExternalSourceService)
             : base(workspace)
@@ -30,10 +30,10 @@ namespace OmniSharp.Cake.Services.RequestHandlers.Navigation
             _metadataExternalSourceService = metadataExternalSourceService ?? throw new ArgumentNullException(nameof(metadataExternalSourceService));
         }
 
-        protected override async Task<GotoDefinitionResponse> TranslateResponse(GotoDefinitionResponse response, GotoDefinitionRequest request)
+        protected override async Task<GotoTypeDefinitionResponse> TranslateResponse(GotoTypeDefinitionResponse response, GotoTypeDefinitionRequest request)
         {
-            var definitions = new List<Definition>();
-            foreach (var definition in response.Definitions ?? Enumerable.Empty<Definition>())
+            var definitions = new List<TypeDefinition>();
+            foreach (var definition in response.Definitions ?? Enumerable.Empty<TypeDefinition>())
             {
                 var file = definition.Location.FileName;
 
@@ -44,7 +44,7 @@ namespace OmniSharp.Cake.Services.RequestHandlers.Navigation
                         file = file.Replace('/', '\\');
                     }
 
-                    definitions.Add(new Definition
+                    definitions.Add(new TypeDefinition
                     {
                         MetadataSource = definition.MetadataSource,
                         SourceGeneratedFileInfo = definition.SourceGeneratedFileInfo,
@@ -63,7 +63,7 @@ namespace OmniSharp.Cake.Services.RequestHandlers.Navigation
                     continue;
                 }
 
-                var aliasLocations = await GotoDefinitionHandlerHelper.GetAliasFromMetadataAsync(
+                var aliasLocations = await GotoTypeDefinitionHandlerHelper.GetAliasFromMetadataAsync(
                     Workspace,
                     request.FileName,
                     definition.Location.Range.End.Line,
@@ -73,7 +73,7 @@ namespace OmniSharp.Cake.Services.RequestHandlers.Navigation
 
                 definitions.AddRange(
                     aliasLocations.Select(loc =>
-                        new Definition
+                        new TypeDefinition
                         {
                             Location = new Location
                             {
@@ -107,7 +107,7 @@ namespace OmniSharp.Cake.Services.RequestHandlers.Navigation
                         .ToList());
             }
 
-            return new GotoDefinitionResponse
+            return new GotoTypeDefinitionResponse
             {
                 Definitions = definitions
             };

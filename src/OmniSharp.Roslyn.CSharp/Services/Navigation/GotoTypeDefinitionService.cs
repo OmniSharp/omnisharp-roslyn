@@ -12,14 +12,14 @@ using System.Threading.Tasks;
 namespace OmniSharp.Roslyn.CSharp.Services.Navigation
 {
     [OmniSharpHandler(OmniSharpEndpoints.V2.GotoTypeDefinition, LanguageNames.CSharp)]
-    public class GotoTypeDefinitionServiceV2 : IRequestHandler<GotoTypeDefinitionRequest, GotoTypeDefinitionResponse>
+    public class GotoTypeDefinitionService : IRequestHandler<GotoTypeDefinitionRequest, GotoTypeDefinitionResponse>
     {
         private readonly OmniSharpOptions _omnisharpOptions;
         private readonly OmniSharpWorkspace _workspace;
         private readonly ExternalSourceServiceFactory _externalSourceServiceFactory;
 
         [ImportingConstructor]
-        public GotoTypeDefinitionServiceV2(OmniSharpWorkspace workspace, ExternalSourceServiceFactory externalSourceServiceFactory, OmniSharpOptions omnisharpOptions)
+        public GotoTypeDefinitionService(OmniSharpWorkspace workspace, ExternalSourceServiceFactory externalSourceServiceFactory, OmniSharpOptions omnisharpOptions)
         {
             _workspace = workspace;
             _externalSourceServiceFactory = externalSourceServiceFactory;
