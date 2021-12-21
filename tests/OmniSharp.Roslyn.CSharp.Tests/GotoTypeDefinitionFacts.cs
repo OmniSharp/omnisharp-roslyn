@@ -63,19 +63,6 @@ class Test {
             await TestGoToSourceAsync(testFile);
         }
 
-//        [Theory]
-//        [InlineData("foo.cs")]
-//        [InlineData("foo.csx")]
-//        public async Task DoesNotReturnOnPropertyAccessorPropertyDef(string filename)
-//        {
-//            var testFile = new TestFile(filename, @"
-//class Test {
-//    public int |def:Foo| Fo$$o{ get; set; }
-//}");
-
-//            await TestGoToSourceAsync(testFile);
-//        }
-
         [Theory]
         [InlineData("foo.cs")]
         [InlineData("foo.csx")]
