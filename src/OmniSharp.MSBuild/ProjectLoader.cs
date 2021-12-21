@@ -75,17 +75,17 @@ namespace OmniSharp.MSBuild
         {
             using (_sdksPathResolver.SetSdksPathEnvironmentVariable(filePath))
             {
-                var evaluatedProject = EvaluateProjectFileCore(filePath, configurationsInSolution);
-
-                SetTargetFrameworkIfNeeded(evaluatedProject);
-
-                var projectInstance = evaluatedProject.CreateProjectInstance();
                 var msbuildLogger = new MSBuildLogger(_logger);
-
                 var loggers = new List<MSB.Framework.ILogger>()
                 {
                     msbuildLogger
                 };
+
+                var evaluatedProject = EvaluateProjectFileCore(filePath, configurationsInSolution, loggers);
+
+                SetTargetFrameworkIfNeeded(evaluatedProject);
+
+                var projectInstance = evaluatedProject.CreateProjectInstance();
 
                 if (_options.GenerateBinaryLogs)
                 {
@@ -119,7 +119,7 @@ namespace OmniSharp.MSBuild
             }
         }
 
-        private MSB.Evaluation.Project EvaluateProjectFileCore(string filePath, IReadOnlyDictionary<string, string> projectConfigurationsInSolution = null)
+        private MSB.Evaluation.Project EvaluateProjectFileCore(string filePath, IReadOnlyDictionary<string, string> projectConfigurationsInSolution = null, IList<MSB.Framework.ILogger> loggers = null)
         {
             var localProperties = new Dictionary<string, string>(_globalProperties);
             if (projectConfigurationsInSolution != null
@@ -149,7 +149,7 @@ namespace OmniSharp.MSBuild
             }
 
             // Evaluate the MSBuild project
-            var projectCollection = new MSB.Evaluation.ProjectCollection(localProperties);
+            var projectCollection = new MSB.Evaluation.ProjectCollection(localProperties, loggers, Microsoft.Build.Evaluation.ToolsetDefinitionLocations.Default);
 
             var toolsVersion = _options.ToolsVersion;
             if (string.IsNullOrEmpty(toolsVersion) || Version.TryParse(toolsVersion, out _))
