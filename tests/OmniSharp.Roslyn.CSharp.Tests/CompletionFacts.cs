@@ -2226,19 +2226,16 @@ class Program
         public async Task TestOverrideWithTrailingWhitespacePrior(string filename)
         {
             const string input = @"
-namespace OmniSharp.Cake
+namespace N
 {
-    internal class CakeContextModel
+    internal class C
     {	
 // The trailing tabs on the previous line and the next line are integral to this bug
 	
         override $$
-        public CakeContextModel(string filePath)
+        public C()
         {
-            Path = filePath;
         }
-
-        public string Path { get; }
     }
 }
 ";

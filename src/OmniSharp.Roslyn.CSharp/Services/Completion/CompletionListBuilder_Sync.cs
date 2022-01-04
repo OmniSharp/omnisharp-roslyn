@@ -159,7 +159,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
             {
                 if (!textChange.Span.IntersectsWith(position))
                 {
-                    HandleNonIntersectingEdit(sourceText, ref additionalTextEdits, ref adjustedNewPosition, textChange);
+                    handleNonInsertsectingEdit(sourceText, ref additionalTextEdits, ref adjustedNewPosition, textChange);
                 }
                 else
                 {
@@ -204,7 +204,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
 
                         // Now that we've found the cuttoff, we can build our two subchanges
                         var prefixChange = new TextChange(new TextSpan(changeSpanStart, length: lineStartPosition - changeSpanStart), textChange.NewText!.Substring(0, cutoffPosition));
-                        HandleNonIntersectingEdit(sourceText, ref additionalTextEdits, ref adjustedNewPosition, prefixChange);
+                        handleNonInsertsectingEdit(sourceText, ref additionalTextEdits, ref adjustedNewPosition, prefixChange);
                         updatedChange = new TextChange(new TextSpan(lineStartPosition, length: textChange.Span.End - lineStartPosition), textChange.NewText.Substring(cutoffPosition));
                     }
 
@@ -267,7 +267,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                 return ($"{beforeText}$0{afterText}", InsertTextFormat.Snippet);
             }
 
-            static void HandleNonIntersectingEdit(SourceText sourceText, ref List<LinePositionSpanTextChange>? additionalTextEdits, ref int? adjustedNewPosition, TextChange textChange)
+            static void handleNonInsertsectingEdit(SourceText sourceText, ref List<LinePositionSpanTextChange>? additionalTextEdits, ref int? adjustedNewPosition, TextChange textChange)
             {
                 additionalTextEdits ??= new();
                 additionalTextEdits.Add(GetChangeForTextAndSpan(textChange.NewText!, textChange.Span, sourceText));
