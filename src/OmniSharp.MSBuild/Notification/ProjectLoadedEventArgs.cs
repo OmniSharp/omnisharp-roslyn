@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
-using NuGet.Versioning;
 using OmniSharp.MSBuild.Logging;
 using MSB = Microsoft.Build;
 

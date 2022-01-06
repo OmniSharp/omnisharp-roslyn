@@ -33,7 +33,12 @@ namespace OmniSharp.Roslyn.CSharp.Services.SemanticHighlight
             foreach (var document in documents)
             {
                 var project = document.Project.Name;
-                var text = await document.GetTextAsync();
+
+                var highlightDocument = request.VersionedText != null
+                    ? document.WithText(SourceText.From(request.VersionedText))
+                    : document;
+
+                var text = await highlightDocument.GetTextAsync();
 
                 TextSpan textSpan;
                 if (request.Range is object)
@@ -55,7 +60,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.SemanticHighlight
                     textSpan = new TextSpan(0, text.Length);
                 }
 
-                results.AddRange((await Classifier.GetClassifiedSpansAsync(document, textSpan))
+                results.AddRange((await Classifier.GetClassifiedSpansAsync(highlightDocument, textSpan))
                     .Select(span => new ClassifiedResult()
                     {
                         Span = span,

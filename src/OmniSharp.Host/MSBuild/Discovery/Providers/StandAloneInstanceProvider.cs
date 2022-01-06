@@ -3,7 +3,6 @@ using System.Collections.Immutable;
 using System.Diagnostics;
 using System.IO;
 using Microsoft.Extensions.Logging;
-using NuGet.Versioning;
 using OmniSharp.Utilities;
 
 namespace OmniSharp.MSBuild.Discovery.Providers
