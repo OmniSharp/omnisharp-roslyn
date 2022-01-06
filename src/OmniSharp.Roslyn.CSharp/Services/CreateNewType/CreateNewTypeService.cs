@@ -12,22 +12,20 @@ namespace OmniSharp.Roslyn.CSharp.Services.CreateNewType
     [OmniSharpHandler(OmniSharpEndpoints.CreateNewType, LanguageNames.CSharp)]
     public class CreateNewTypeService : IRequestHandler<CreateNewTypeRequest, CreateNewTypeResponse>
     {
-        private const string FILE_CONTENT_TEMPLATE =
-@"namespace {0};
+        private const string FileContentTemplate =
+            @"namespace {0};
 
 public {1} {2}
 {{
-
-}}
-";
+}}";
 
         private readonly OmniSharpWorkspace _workspace;
         private readonly ILogger<CreateNewTypeService> _logger;
 
         [ImportingConstructor]
         public CreateNewTypeService(
-                OmniSharpWorkspace workspace,
-                ILoggerFactory loggerFactory)
+            OmniSharpWorkspace workspace,
+            ILoggerFactory loggerFactory)
         {
             _workspace = workspace;
             _logger = loggerFactory.CreateLogger<CreateNewTypeService>();
@@ -39,17 +37,13 @@ public {1} {2}
             {
                 throw new ArgumentException("FileParentPath can not be empty");
             }
+
             if (string.IsNullOrWhiteSpace(request.SymbolName))
             {
                 throw new ArgumentException("SymbolName can not be empty");
             }
 
-            string newSymbolFileName = request.Type switch
-            {
-                TypeEnum.Interface => $"I{request.SymbolName}.cs",
-                _ => $"{request.SymbolName}.cs",
-            };
-            string newSymbolPath = Path.Combine(request.FileParentPath, newSymbolFileName);
+            string newSymbolPath = Path.Combine(request.FileParentPath, $"{request.SymbolName}.cs");
 
             if (_workspace.GetDocument(newSymbolPath) is not null)
             {
@@ -61,23 +55,26 @@ public {1} {2}
             {
                 throw new ArgumentException($"{request.FileParentPath} doesn't belong to any project");
             }
-            _logger.LogDebug($"Lang: {closestProject.Language}");
 
             string closestProjectDefaultNamespace = closestProject.DefaultNamespace;
             string symbolRelativeNamespace = new FileInfo(newSymbolPath)
                 .DirectoryName
-                .Replace(new FileInfo(closestProject.FilePath).Directory.Parent.FullName, "")
-                    .Trim('/')
-                    .Replace("/", ".");
-            string symbolNamespace = string.IsNullOrWhiteSpace(closestProjectDefaultNamespace)
-                ? $"{closestProjectDefaultNamespace}."
+                .Replace(new FileInfo(closestProject.FilePath).Directory.FullName, "")
+                .Replace('/', '\\')
+                .Trim('\\')
+                .Replace("\\", ".");
+            string symbolNamespace = !string.IsNullOrWhiteSpace(closestProjectDefaultNamespace)
+                ? $"{closestProjectDefaultNamespace}"
                 : "";
 
-            symbolNamespace = $"{symbolNamespace}{symbolRelativeNamespace}";
+            symbolNamespace = !string.IsNullOrWhiteSpace(symbolRelativeNamespace)
+                ? $"{symbolNamespace}{symbolRelativeNamespace}"
+                : symbolNamespace;
 
             _logger.LogDebug($"Creating {newSymbolPath} with namespace {symbolNamespace}");
             using StreamWriter newSymbolStream = new(newSymbolPath);
-            string fileContent = string.Format(FILE_CONTENT_TEMPLATE, symbolNamespace, request.Type.ToString().ToLower(), request.SymbolName);
+            string fileContent = string.Format(FileContentTemplate, symbolNamespace, request.Type.ToString().ToLower(),
+                request.SymbolName);
             await newSymbolStream.WriteAsync(fileContent);
             _workspace.AddDocument(closestProject, newSymbolPath);
 
@@ -85,4 +82,3 @@ public {1} {2}
         }
     }
 }
-
