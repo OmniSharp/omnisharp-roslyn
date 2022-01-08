@@ -919,51 +919,51 @@ Task("PublishNet6Builds")
         {
             if (!Platform.Current.IsWindows)
             {
-                PublishBuild(project, env, buildPlan, configuration, "linux-x64", "net6.0", includeMSBuild: false);
-                PublishBuild(project, env, buildPlan, configuration, "linux-arm64", "net6.0", includeMSBuild: false);
-                PublishBuild(project, env, buildPlan, configuration, "osx-x64", "net6.0", includeMSBuild: false);
-                PublishBuild(project, env, buildPlan, configuration, "osx-arm64", "net6.0", includeMSBuild: false);
+                PublishBuild(project, env, buildPlan, configuration, "linux-x64", "net6.0");
+                PublishBuild(project, env, buildPlan, configuration, "linux-arm64", "net6.0");
+                PublishBuild(project, env, buildPlan, configuration, "osx-x64", "net6.0");
+                PublishBuild(project, env, buildPlan, configuration, "osx-arm64", "net6.0");
             }
             else
             {
-                PublishBuild(project, env, buildPlan, configuration, "win7-x86", "net6.0", includeMSBuild: false);
-                PublishBuild(project, env, buildPlan, configuration, "win7-x64", "net6.0", includeMSBuild: false);
-                PublishBuild(project, env, buildPlan, configuration, "win10-arm64", "net6.0", includeMSBuild: false);
+                PublishBuild(project, env, buildPlan, configuration, "win7-x86", "net6.0");
+                PublishBuild(project, env, buildPlan, configuration, "win7-x64", "net6.0");
+                PublishBuild(project, env, buildPlan, configuration, "win10-arm64", "net6.0");
             }
         }
         else if (Platform.Current.IsWindows)
         {
             if (Platform.Current.IsX86)
             {
-                PublishBuild(project, env, buildPlan, configuration, "win7-x86", "net6.0", includeMSBuild: false);
+                PublishBuild(project, env, buildPlan, configuration, "win7-x86", "net6.0");
             }
             else if (Platform.Current.IsX64)
             {
-                PublishBuild(project, env, buildPlan, configuration, "win7-x64", "net6.0", includeMSBuild: false);
+                PublishBuild(project, env, buildPlan, configuration, "win7-x64", "net6.0");
             }
             else
             {
-                PublishBuild(project, env, buildPlan, configuration, "win10-arm64", "net6.0", includeMSBuild: false);
+                PublishBuild(project, env, buildPlan, configuration, "win10-arm64", "net6.0");
             }
         }
         else
         {
             if (Platform.Current.IsMacOS)
             {
-                PublishBuild(project, env, buildPlan, configuration, "osx-x64", "net6.0", includeMSBuild: false);
-                PublishBuild(project, env, buildPlan, configuration, "osx-arm64", "net6.0", includeMSBuild: false);
+                PublishBuild(project, env, buildPlan, configuration, "osx-x64", "net6.0");
+                PublishBuild(project, env, buildPlan, configuration, "osx-arm64", "net6.0");
             }
             else
             {
-                PublishBuild(project, env, buildPlan, configuration, "linux-x64", "net6.0", includeMSBuild: false);
-                PublishBuild(project, env, buildPlan, configuration, "linux-arm64", "net6.0", includeMSBuild: false);
+                PublishBuild(project, env, buildPlan, configuration, "linux-x64", "net6.0");
+                PublishBuild(project, env, buildPlan, configuration, "linux-arm64", "net6.0");
             }
         }
 
     }
 });
 
-string PublishBuild(string project, BuildEnvironment env, BuildPlan plan, string configuration, string rid, string framework, bool includeMSBuild)
+string PublishBuild(string project, BuildEnvironment env, BuildPlan plan, string configuration, string rid, string framework)
 {
     var projectName = project + ".csproj";
     var projectFileName = CombinePaths(env.Folders.Source, project, projectName);
@@ -998,7 +998,15 @@ string PublishBuild(string project, BuildEnvironment env, BuildPlan plan, string
         throw;
     }
 
-    if (includeMSBuild)
+    if (framework is "net6.0")
+    {
+        // Delete NuGet libraries so they can be loaded from SDK folder.
+        foreach (var filePath in DirectoryHelper.GetFiles(outputFolder, "NuGet.*.dll"))
+        {
+            FileHelper.Delete(filePath);
+        }
+    }
+    else
     {
         // Copy MSBuild to output
         DirectoryHelper.Copy($"{env.Folders.MSBuild}", CombinePaths(outputFolder, ".msbuild"));
@@ -1024,9 +1032,9 @@ Task("PublishWindowsBuilds")
 
         if (publishAll)
         {
-            var outputFolderX86 = PublishBuild(project, env, buildPlan, configuration, "win7-x86", "net472", includeMSBuild: true);
-            var outputFolderX64 = PublishBuild(project, env, buildPlan, configuration, "win7-x64", "net472", includeMSBuild: true);
-            var outputFolderArm64 = PublishBuild(project, env, buildPlan, configuration, "win10-arm64", "net472", includeMSBuild: true);
+            var outputFolderX86 = PublishBuild(project, env, buildPlan, configuration, "win7-x86", "net472");
+            var outputFolderX64 = PublishBuild(project, env, buildPlan, configuration, "win7-x64", "net472");
+            var outputFolderArm64 = PublishBuild(project, env, buildPlan, configuration, "win10-arm64", "net472");
 
             outputFolder = Platform.Current.IsX86
                 ? outputFolderX86
@@ -1036,15 +1044,15 @@ Task("PublishWindowsBuilds")
         }
         else if (Platform.Current.IsX86)
         {
-            outputFolder = PublishBuild(project, env, buildPlan, configuration, "win7-x86", "net472", includeMSBuild: true);
+            outputFolder = PublishBuild(project, env, buildPlan, configuration, "win7-x86", "net472");
         }
         else if (Platform.Current.IsX64)
         {
-            outputFolder = PublishBuild(project, env, buildPlan, configuration, "win7-x64", "net472", includeMSBuild: true);
+            outputFolder = PublishBuild(project, env, buildPlan, configuration, "win7-x64", "net472");
         }
         else
         {
-            outputFolder = PublishBuild(project, env, buildPlan, configuration, "win10-arm64", "net472", includeMSBuild: true);
+            outputFolder = PublishBuild(project, env, buildPlan, configuration, "win10-arm64", "net472");
         }
 
         CreateRunScript(project, outputFolder, env.Folders.ArtifactsScripts);

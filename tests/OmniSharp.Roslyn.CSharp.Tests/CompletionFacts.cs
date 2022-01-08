@@ -2220,6 +2220,36 @@ class Program
             }
         }
 
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task TestOverrideWithTrailingWhitespacePrior(string filename)
+        {
+            const string input = @"
+namespace N
+{
+    internal class C
+    {	
+// The trailing tabs on the previous line and the next line are integral to this bug
+	
+        override $$
+        public C()
+        {
+        }
+    }
+}
+";
+
+            var completions = await FindCompletionsAsync(filename, input, SharedOmniSharpTestHost);
+
+            foreach (var item in completions.Items)
+            {
+                Assert.Single(item.AdditionalTextEdits);
+                Assert.Equal("\n        // The trailing tabs on the previous line and the next line are integral to this bug\n\n", NormalizeNewlines(item.AdditionalTextEdits[0].NewText));
+                Assert.StartsWith("        public override ", item.TextEdit.NewText);
+            }
+        }
+
         private CompletionService GetCompletionService(OmniSharpTestHost host)
             => host.GetRequestHandler<CompletionService>(EndpointName);
 

@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Microsoft.Extensions.Logging;
-using NuGet.Versioning;
 
 namespace OmniSharp.MSBuild.Discovery
 {
