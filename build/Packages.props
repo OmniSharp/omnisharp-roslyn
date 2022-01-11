@@ -12,7 +12,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Update="Cake.Scripting.Transport" Version="0.8.1" />
+        <PackageReference Update="Cake.Scripting.Transport" Version="0.9.0" />
 
         <PackageReference Update="Dotnet.Script.DependencyModel" Version="1.1.0" />
         <PackageReference Update="Dotnet.Script.DependencyModel.NuGet" Version="1.1.0" />
