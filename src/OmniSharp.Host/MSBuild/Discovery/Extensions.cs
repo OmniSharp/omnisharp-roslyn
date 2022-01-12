@@ -72,7 +72,7 @@ namespace OmniSharp.MSBuild.Discovery
             }
             else
             {
-                logger.LogError("Could not locate MSBuild instance to register with OmniSharp");
+                throw new MSBuildNotFoundException("Could not locate MSBuild instance to register with OmniSharp.");
             }
         }
 
@@ -163,7 +163,7 @@ namespace OmniSharp.MSBuild.Discovery
 
             var version = dotNetInfo.SdkVersion;
             var sdksPath = dotNetInfo.SdksPath;
-            var minimumVersionPath = Path.Combine(sdksPath, version.ToNormalizedString(), "minimumMSBuildVersion");
+            var minimumVersionPath = Path.Combine(sdksPath, version.ToString(), "minimumMSBuildVersion");
 
             if (!File.Exists(minimumVersionPath))
             {

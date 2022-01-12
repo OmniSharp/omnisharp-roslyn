@@ -7,6 +7,7 @@ using OmniSharp.Roslyn.CSharp.Services.SemanticHighlight;
 using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
+using Range = OmniSharp.Models.V2.Range;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
@@ -30,7 +31,7 @@ namespace N1
 ");
 
             var line = -1;
-            var highlights = await GetSemanticHighlightsForLineAsync(testFile, line);
+            var highlights = await GetSemanticHighlightsForLineAsync(testFile, line, versionedText: null);
 
             Assert.Empty(highlights);
         }
@@ -46,7 +47,7 @@ namespace N1
 ");
 
             var line = 3;
-            var highlights = await GetSemanticHighlightsForLineAsync(testFile, line);
+            var highlights = await GetSemanticHighlightsForLineAsync(testFile, line, versionedText: null);
 
             AssertSyntax(highlights, testFile.Content.Code, line,
                 Keyword("class"),
@@ -88,6 +89,42 @@ namespace N1
                 Punctuation("}")
             );
         }
+
+        [Fact]
+        public async Task SemanticHighlightEntireFileWithVersionedText()
+        {
+            var testFile = new TestFile("a.cs", @"
+namespace N1
+{
+    class C1 { int n = true; }
+}
+");
+            var versionedText = @"
+namespace N1
+{
+    class C { int n = false; }
+}
+";
+
+            var highlights = await GetSemanticHighlightsForFileAsync(testFile, versionedText);
+
+            AssertSyntax(highlights, versionedText, 0,
+                Keyword("namespace"),
+                NamespaceName("N1"),
+                Punctuation("{"),
+                Keyword("class"),
+                ClassName("C"),
+                Punctuation("{"),
+                Keyword("int"),
+                Field("n"),
+                Operator("="),
+                Keyword("false"),
+                Punctuation(";"),
+                Punctuation("}"),
+                Punctuation("}")
+            );
+        }
+
 
         [Fact]
         public async Task SemanticHighlightStringInterpolation()
@@ -316,10 +353,15 @@ record struct R1(string S, int I);
 
         private Task<SemanticHighlightSpan[]> GetSemanticHighlightsForFileAsync(TestFile testFile)
         {
-            return GetSemanticHighlightsAsync(testFile, range: null);
+            return GetSemanticHighlightsAsync(testFile, range: null, versionedText: null);
         }
 
-        private Task<SemanticHighlightSpan[]> GetSemanticHighlightsForLineAsync(TestFile testFile, int line)
+        private Task<SemanticHighlightSpan[]> GetSemanticHighlightsForFileAsync(TestFile testFile, string versionedText)
+        {
+            return GetSemanticHighlightsAsync(testFile, range: null, versionedText);
+        }
+
+        private Task<SemanticHighlightSpan[]> GetSemanticHighlightsForLineAsync(TestFile testFile, int line, string versionedText)
         {
             var range = new Range()
             {
@@ -327,17 +369,18 @@ record struct R1(string S, int I);
                 End = new Point() { Column = 0, Line = line + 1 }
             };
 
-            return GetSemanticHighlightsAsync(testFile, range);
+            return GetSemanticHighlightsAsync(testFile, range, versionedText);
         }
 
-        private async Task<SemanticHighlightSpan[]> GetSemanticHighlightsAsync(TestFile testFile, Range range)
+        private async Task<SemanticHighlightSpan[]> GetSemanticHighlightsAsync(TestFile testFile, Range range, string versionedText)
         {
             SharedOmniSharpTestHost.AddFilesToWorkspace(testFile);
             var requestHandler = GetRequestHandler(SharedOmniSharpTestHost);
             var request = new SemanticHighlightRequest
             {
                 FileName = testFile.FileName,
-                Range = range
+                Range = range,
+                VersionedText = versionedText,
             };
 
             var response = await requestHandler.Handle(request);

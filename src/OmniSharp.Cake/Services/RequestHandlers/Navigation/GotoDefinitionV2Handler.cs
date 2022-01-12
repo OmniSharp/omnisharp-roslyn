@@ -12,6 +12,7 @@ using OmniSharp.Models.V2;
 using OmniSharp.Roslyn;
 using OmniSharp.Utilities;
 using Location = OmniSharp.Models.V2.Location;
+using Range = OmniSharp.Models.V2.Range;
 
 namespace OmniSharp.Cake.Services.RequestHandlers.Navigation
 {
@@ -59,7 +60,7 @@ namespace OmniSharp.Cake.Services.RequestHandlers.Navigation
 
                 if (!request.WantMetadata)
                 {
-                   continue;
+                    continue;
                 }
 
                 var aliasLocations = await GotoDefinitionHandlerHelper.GetAliasFromMetadataAsync(

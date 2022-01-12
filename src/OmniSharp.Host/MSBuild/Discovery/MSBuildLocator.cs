@@ -45,13 +45,21 @@ namespace OmniSharp.MSBuild.Discovery
             return new MSBuildLocator(loggerFactory, assemblyLoader,
                 ImmutableArray.Create<MSBuildInstanceProvider>(
                     new MicrosoftBuildLocatorInstanceProvider(loggerFactory),
+#if !NETCOREAPP
                     new MonoInstanceProvider(loggerFactory),
                     new StandAloneInstanceProvider(loggerFactory),
+#endif
                     new UserOverrideInstanceProvider(loggerFactory, msbuildConfiguration)));
         }
 
         public static MSBuildLocator CreateStandAlone(ILoggerFactory loggerFactory, IAssemblyLoader assemblyLoader)
-            => new MSBuildLocator(loggerFactory, assemblyLoader, ImmutableArray.Create<MSBuildInstanceProvider>(new StandAloneInstanceProvider(loggerFactory)));
+            => new MSBuildLocator(loggerFactory, assemblyLoader,
+                ImmutableArray.Create<MSBuildInstanceProvider>(
+#if NETCOREAPP
+                    new MicrosoftBuildLocatorInstanceProvider(loggerFactory)));
+#else
+                    new StandAloneInstanceProvider(loggerFactory)));
+#endif
 
         public void RegisterInstance(MSBuildInstance instance)
         {
