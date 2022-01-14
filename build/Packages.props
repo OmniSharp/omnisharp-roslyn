@@ -7,15 +7,15 @@
         <MicrosoftTestPackageVersion>17.0.0</MicrosoftTestPackageVersion>
         <MSBuildPackageVersion>17.0.0</MSBuildPackageVersion>
         <NuGetPackageVersion>6.0.0</NuGetPackageVersion>
-        <RoslynPackageVersion>4.0.0-6.21526.21</RoslynPackageVersion>
+        <RoslynPackageVersion>4.0.1-1.22053.6</RoslynPackageVersion>
         <XunitPackageVersion>2.4.1</XunitPackageVersion>
     </PropertyGroup>
 
     <ItemGroup>
         <PackageReference Update="Cake.Scripting.Transport" Version="0.9.0" />
 
-        <PackageReference Update="Dotnet.Script.DependencyModel" Version="1.1.0" />
-        <PackageReference Update="Dotnet.Script.DependencyModel.NuGet" Version="1.1.0" />
+        <PackageReference Update="Dotnet.Script.DependencyModel" Version="1.3.1" />
+        <PackageReference Update="Dotnet.Script.DependencyModel.NuGet" Version="1.3.1" />
         <PackageReference Update="ICSharpCode.Decompiler" Version="7.1.0.6543" />
 
         <PackageReference Update="McMaster.Extensions.CommandLineUtils" Version="3.1.0" />
