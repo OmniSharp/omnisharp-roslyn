@@ -11,7 +11,8 @@ namespace OmniSharp.Options
         public bool EnableAnalyzersSupport { get; set; }
         public bool EnableImportCompletion { get; set; }
         public bool EnableAsyncCompletion { get; set; }
-        public int DocumentAnalysisTimeoutMs { get; set; } = 10 * 1000;
+        public int DocumentAnalysisTimeoutMs { get; set; } = 30 * 1000;
+        public int DiagnosticWorkersThreadCount { get; set; } = Math.Max(1, (int)(Environment.ProcessorCount * 0.75)); // Use 75% of available processors by default (but at least one)
     }
 
     public class OmniSharpExtensionsOptions
