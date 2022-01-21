@@ -1107,6 +1107,24 @@ public class ProgramClass
             Assert.Equal("int n", signature.Parameters.ElementAt(0).Label);
         }
 
+        [Fact]
+        public async Task BaseObjectCreationWithoutArguments()
+        {
+            const string source =
+@"public static class Foo {
+    public static string GetClientCredentialsToken() {
+        AccessTokenRequest request = new AccessTokenRequest {
+            client$$Id = ""foo"",
+        }
+    }
+}
+";
+
+            var actual = await GetSignatureHelp("dummy.cs", source);
+
+            Assert.Null(actual);
+        }
+
         private async Task<SignatureHelpResponse> GetSignatureHelp(string filename, string source)
         {
             var testFile = new TestFile(filename, source);
