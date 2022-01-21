@@ -15,6 +15,7 @@ using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Services.Documentation;
 using OmniSharp.Roslyn.CSharp.Services.Completion;
 using CompletionService = Microsoft.CodeAnalysis.Completion.CompletionService;
+using System.Threading;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
 {
@@ -23,13 +24,17 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
     public class IntellisenseService : IRequestHandler<AutoCompleteRequest, IEnumerable<AutoCompleteResponse>>
     {
         private readonly OmniSharpWorkspace _workspace;
+
         private readonly FormattingOptions _formattingOptions;
 
+        private readonly OmniSharpOptions _omniSharpOptions;
+
         [ImportingConstructor]
-        public IntellisenseService(OmniSharpWorkspace workspace, FormattingOptions formattingOptions)
+        public IntellisenseService(OmniSharpWorkspace workspace, FormattingOptions formattingOptions, OmniSharpOptions omniSharpOptions)
         {
             _workspace = workspace;
             _formattingOptions = formattingOptions;
+            _omniSharpOptions = omniSharpOptions;
         }
 
         public async Task<IEnumerable<AutoCompleteResponse>> Handle(AutoCompleteRequest request)
@@ -43,7 +48,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
                 var sourceText = await document.GetTextAsync();
                 var position = sourceText.GetTextPosition(request);
                 var service = CompletionService.GetService(document);
-                var completionList = await service.GetCompletionsAsync(document, position);
+                var options = new OmniSharpCompletionOptions(ShowItemsFromUnimportedNamespaces: _omniSharpOptions.RoslynExtensionsOptions.EnableImportCompletion);
+                var (completionList, expandedItemsAvailable) = await OmniSharpCompletionService.GetCompletionsAsync(service, document, position, trigger: default, roles: null, options, CancellationToken.None);
 
                 if (completionList != null)
                 {
