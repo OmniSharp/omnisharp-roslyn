@@ -141,7 +141,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
         {
             if (!documentPaths.Any()) return ImmutableArray<DocumentDiagnostics>.Empty;
 
-            var results = new List<DocumentDiagnostics>();
+            var results = ImmutableList<DocumentDiagnostics>.Empty;
 
             var documents =
                 (await Task.WhenAll(
@@ -164,7 +164,8 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
                             try
                             {
                                 var diagnostics = await GetDiagnosticsForDocument(document, projectName);
-                                results.Add(new DocumentDiagnostics(document.Id, document.FilePath, document.Project.Id, document.Project.Name, diagnostics));
+                                var documentDiagnostics = new DocumentDiagnostics(document.Id, document.FilePath, document.Project.Id, document.Project.Name, diagnostics);
+                                ImmutableInterlocked.Update(ref results, currentResults => currentResults.Add(documentDiagnostics));
                             }
                             finally
                             {
