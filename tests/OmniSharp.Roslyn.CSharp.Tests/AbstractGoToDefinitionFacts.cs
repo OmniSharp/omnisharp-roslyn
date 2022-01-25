@@ -1,4 +1,5 @@
-﻿using Microsoft.CodeAnalysis.CSharp;
+﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 using OmniSharp.Mef;
@@ -466,7 +467,7 @@ class Bar {
             var compilationUnit = decompiledTree.GetCompilationUnitRoot();
 
             // second comment should indicate we have decompiled
-            var comments = compilationUnit.DescendantTrivia().Where(t => t.Kind() == SyntaxKind.SingleLineCommentTrivia).ToArray();
+            var comments = compilationUnit.DescendantTrivia().Where(t => t.IsKind(SyntaxKind.SingleLineCommentTrivia)).ToArray();
             Assert.NotNull(comments);
             Assert.Equal("// Decompiled with ICSharpCode.Decompiler 7.1.0.6543", comments[1].ToString());
 

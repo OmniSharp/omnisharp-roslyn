@@ -2,18 +2,13 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
-using Newtonsoft.Json;
 using OmniSharp.Extensions.LanguageServer.Protocol;
 using OmniSharp.Extensions.LanguageServer.Protocol.Document;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OmniSharp.Extensions.LanguageServer.Protocol.Workspace;
-using OmniSharp.Models;
 using OmniSharp.Models.V2;
-using OmniSharp.Models.V2.CodeActions;
-using OmniSharp.Roslyn.CSharp.Services.Refactoring.V2;
 using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
@@ -144,9 +139,9 @@ namespace OmniSharp.Lsp.Tests
 #else
                     "System.Console",
 #endif
-                    "Generate variable 'Console' -> Generate property 'Class1.Console'",
-                    "Generate variable 'Console' -> Generate field 'Class1.Console'",
-                    "Generate variable 'Console' -> Generate read-only field 'Class1.Console'",
+                    "Generate variable 'Console' -> Generate property 'Console'",
+                    "Generate variable 'Console' -> Generate field 'Console'",
+                    "Generate variable 'Console' -> Generate read-only field 'Console'",
                     "Generate variable 'Console' -> Generate local 'Console'",
                     "Generate variable 'Console' -> Generate parameter 'Console'",
                     "Generate type 'Console' -> Generate class 'Console' in new file",
@@ -166,9 +161,9 @@ namespace OmniSharp.Lsp.Tests
 #else
                     "System.Console",
 #endif
-                    "Generate variable 'Console' -> Generate property 'Class1.Console'",
-                    "Generate variable 'Console' -> Generate field 'Class1.Console'",
-                    "Generate variable 'Console' -> Generate read-only field 'Class1.Console'",
+                    "Generate variable 'Console' -> Generate property 'Console'",
+                    "Generate variable 'Console' -> Generate field 'Console'",
+                    "Generate variable 'Console' -> Generate read-only field 'Console'",
                     "Generate variable 'Console' -> Generate local 'Console'",
                     "Generate variable 'Console' -> Generate parameter 'Console'",
                     "Generate type 'Console' -> Generate class 'Console' in new file",
