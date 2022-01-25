@@ -50,6 +50,12 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
                         RenameInComments: _omniSharpOptions.RenameOptions.RenameInComments);
 
                     (solution, response.ErrorMessage) = await OmniSharpRenamer.RenameSymbolAsync(solution, symbol, request.RenameTo, options, nonConflictSymbols: null, CancellationToken.None);
+
+                    if (response.ErrorMessage is not null)
+                    {
+                        // An error occurred. There are no changes to report.
+                        return response;
+                    }
                 }
 
                 var changes = new Dictionary<string, ModifiedFileResponse>();
