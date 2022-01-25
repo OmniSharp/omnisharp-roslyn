@@ -70,6 +70,17 @@ namespace OmniSharp.MSBuild.Discovery
 
             RegisteredInstance = instance ?? throw new ArgumentNullException(nameof(instance));
 
+            if (instance.DiscoveryType == DiscoveryType.StandAlone)
+            {
+                // MSBuild began relying on the Microsoft.IO.Redist library which does not work
+                // on MacOS or Linux platforms. Disabling the 17.0 feature wave opts us in to the
+                // earlier behavior of using System.IO.
+
+                // This issue only affects the MSBuild tools shipped with O# as Mono does not ship
+                // with a version of MSBuild that includes this change.
+                Environment.SetEnvironmentVariable("MSBUILDDISABLEFEATURESFROMVERSION", "17.0");
+            }
+
             if (instance.SetMSBuildExePathVariable)
             {
                 var msbuildExePath = Path.Combine(instance.MSBuildPath, "MSBuild.exe");
