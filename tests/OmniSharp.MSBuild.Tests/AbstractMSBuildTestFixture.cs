@@ -4,8 +4,8 @@ using System.Composition.Hosting.Core;
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using OmniSharp.Host.Services;
 using OmniSharp.MSBuild.Discovery;
+using OmniSharp.Roslyn.Utilities;
 using OmniSharp.Services;
 using TestUtility;
 using Xunit.Abstractions;
@@ -22,7 +22,7 @@ namespace OmniSharp.MSBuild.Tests
             : base(output)
         {
             _assemblyLoader = new AssemblyLoader(this.LoggerFactory);
-            _analyzerAssemblyLoader = new DefaultAnalyzerAssemblyLoader();
+            _analyzerAssemblyLoader = ShadowCopyAnalyzerAssemblyLoader.Instance;
             _msbuildLocator = MSBuildLocator.CreateStandAlone(this.LoggerFactory, _assemblyLoader);
 
             // Some tests require MSBuild to be discovered early
