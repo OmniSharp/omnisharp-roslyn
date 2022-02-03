@@ -1,23 +1,22 @@
-﻿#if NET472_OR_GREATER
+﻿#if NET6_0_OR_GREATER
 using System;
 using System.Diagnostics;
 using System.IO;
-using System.Runtime.InteropServices;
 using Cake.Scripting.Transport.Tcp.Client;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace OmniSharp.Cake.Services
 {
-    internal sealed class MonoScriptGenerationProcess : IScriptGenerationProcess
+    internal sealed class DotnetScriptGenerationProcess : IScriptGenerationProcess
     {
         private readonly ILogger _logger;
         private readonly IOmniSharpEnvironment _environment;
         private Process _process;
 
-        public MonoScriptGenerationProcess(string serverExecutablePath, IOmniSharpEnvironment environment, ILoggerFactory loggerFactory)
+        public DotnetScriptGenerationProcess(string serverExecutablePath, IOmniSharpEnvironment environment, ILoggerFactory loggerFactory)
         {
-            _logger = loggerFactory?.CreateLogger(typeof(MonoScriptGenerationProcess)) ?? NullLogger.Instance;
+            _logger = loggerFactory?.CreateLogger(typeof(DotnetScriptGenerationProcess)) ?? NullLogger.Instance;
             _environment = environment ?? throw new ArgumentNullException(nameof(environment));
             ServerExecutablePath = serverExecutablePath;
         }
@@ -31,20 +30,8 @@ namespace OmniSharp.Cake.Services
 
         public void Start(int port, string workingDirectory)
         {
-            var (fileName, arguments) = GetMonoRuntime();
-
-            if (fileName == null)
-            {
-                // Something went wrong figurint out mono runtime,
-                // try executing exe and let mono handle it.
-                fileName = ServerExecutablePath;
-            }
-            else
-            {
-                // Else set exe as argument
-                arguments += $"\"{ServerExecutablePath}\"";
-            }
-
+            var fileName = "dotnet";
+            var arguments = $"\"{Path.ChangeExtension(ServerExecutablePath, ".dll")}\"";
             arguments += $" --port={port}";
             if (_logger.IsEnabled(LogLevel.Debug))
             {
@@ -79,31 +66,6 @@ namespace OmniSharp.Cake.Services
                 }
             };
             _process.BeginOutputReadLine();
-        }
-
-        private (string, string) GetMonoRuntime()
-        {
-            // Check using ps how process was started.
-            var startInfo = new ProcessStartInfo
-            {
-                FileName = "sh",
-                Arguments = $"-c \"ps -fp {Process.GetCurrentProcess().Id} | tail -n1 | awk '{{print $8}}'\"",
-                RedirectStandardOutput = true,
-                UseShellExecute = false,
-            };
-            var process = Process.Start(startInfo);
-            var runtime = process.StandardOutput.ReadToEnd().TrimEnd('\n');
-            process.WaitForExit();
-
-            // If OmniSharp bundled Mono runtime, use bootstrap script.
-            var script = Path.Combine(Path.GetDirectoryName(runtime), "../run");
-            if (File.Exists(script))
-            {
-                return (script, "--no-omnisharp ");
-            }
-
-            // Else use mono directly.
-            return (runtime, string.Empty);
         }
 
         public string ServerExecutablePath { get; set; }

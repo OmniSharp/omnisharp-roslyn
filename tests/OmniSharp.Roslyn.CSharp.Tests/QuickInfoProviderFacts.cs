@@ -669,7 +669,7 @@ class C
     }
 }";
             var response = await GetTypeLookUpResponse(content);
-            Assert.Equal("```csharp\nvoid C.M1<'a>('a t)\n```\n\nAnonymous Types:\n\n```csharp\n    'a is new { int X, int Y }\n```", response.Markdown);
+            Assert.Equal("```csharp\nvoid C.M1<'a>('a t)\n```\n\nTypes:\n\n```csharp\n    'a is new { int X, int Y }\n```", response.Markdown);
         }
 
         [Fact]

@@ -514,6 +514,10 @@ Task("CreateMSBuildFolder")
         source: CombinePaths(env.Folders.Tools, "SQLitePCLRaw.bundle_green", "lib", "netstandard2.0", "SQLitePCLRaw.batteries_v2.dll"),
         destination: CombinePaths(msbuildCurrentBinTargetFolder, "SQLitePCLRaw.batteries_v2.dll"),
         overwrite: true);
+
+    FileHelper.Copy(
+        source: CombinePaths(env.Folders.Tools, "Microsoft.IO.Redist", "lib", "net472", "Microsoft.IO.Redist.dll"),
+        destination: CombinePaths(msbuildCurrentBinTargetFolder, "Microsoft.IO.Redist.dll"));
 });
 
 /// <summary>
