@@ -1,7 +1,7 @@
-﻿using Microsoft.CodeAnalysis.CSharp;
+﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
-using OmniSharp.Mef;
 using OmniSharp.Models.Metadata;
 using OmniSharp.Models.v1.SourceGeneratedFile;
 using OmniSharp.Models.V2.GotoTypeDefinition;
