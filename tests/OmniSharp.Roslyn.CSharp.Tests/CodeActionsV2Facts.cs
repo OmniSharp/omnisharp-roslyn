@@ -135,9 +135,9 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 #else
                 "System.Console",
 #endif
-                "Generate variable 'Console' -> Generate property 'Class1.Console'",
-                "Generate variable 'Console' -> Generate field 'Class1.Console'",
-                "Generate variable 'Console' -> Generate read-only field 'Class1.Console'",
+                "Generate variable 'Console' -> Generate property 'Console'",
+                "Generate variable 'Console' -> Generate field 'Console'",
+                "Generate variable 'Console' -> Generate read-only field 'Console'",
                 "Generate variable 'Console' -> Generate local 'Console'",
                 "Generate variable 'Console' -> Generate parameter 'Console'",
                 "Generate type 'Console' -> Generate class 'Console' in new file",
@@ -156,9 +156,9 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 #else
                 "System.Console",
 #endif
-                "Generate variable 'Console' -> Generate property 'Class1.Console'",
-                "Generate variable 'Console' -> Generate field 'Class1.Console'",
-                "Generate variable 'Console' -> Generate read-only field 'Class1.Console'",
+                "Generate variable 'Console' -> Generate property 'Console'",
+                "Generate variable 'Console' -> Generate field 'Console'",
+                "Generate variable 'Console' -> Generate read-only field 'Console'",
                 "Generate variable 'Console' -> Generate local 'Console'",
                 "Generate variable 'Console' -> Generate parameter 'Console'",
                 "Generate type 'Console' -> Generate class 'Console' in new file",
