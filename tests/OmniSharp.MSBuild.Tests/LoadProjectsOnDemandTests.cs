@@ -17,8 +17,8 @@ namespace OmniSharp.MSBuild.Tests
 {
     public class LoadProjectsOnDemandTests : AbstractMSBuildTestFixture
     {
-        public LoadProjectsOnDemandTests(ITestOutputHelper output)
-            : base(output)
+        public LoadProjectsOnDemandTests(ITestOutputHelper output, SharedOmniSharpHostFixture sharedOmniSharpHostFixture)
+            : base(output, sharedOmniSharpHostFixture)
         {
         }
 

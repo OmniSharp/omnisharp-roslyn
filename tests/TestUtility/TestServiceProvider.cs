@@ -85,7 +85,7 @@ namespace TestUtility
             var assemblyLoader = CreateAssemblyLoader(loggerFactory);
             var dotNetCliService = CreateDotNetCliService(dotNetCliVersion, loggerFactory, environment, eventEmitter);
             var configuration = CreateConfiguration(configurationData);
-            var msbuildLocator = CreateMSBuildLocator(loggerFactory, assemblyLoader);
+            var msbuildLocator = CreateMSBuildLocator(loggerFactory, assemblyLoader, configurationData);
             var sharedTextWriter = CreateSharedTextWriter(testOutput);
             var analyzerAssemblyLoader = ShadowCopyAnalyzerAssemblyLoader.Instance;
 
@@ -166,8 +166,9 @@ namespace TestUtility
         }
 
         private static IMSBuildLocator CreateMSBuildLocator(ILoggerFactory loggerFactory,
-            IAssemblyLoader assemblyLoader)
-            => MSBuildLocator.CreateStandAlone(loggerFactory, assemblyLoader);
+            IAssemblyLoader assemblyLoader,
+            IConfiguration configurationData)
+            => MSBuildLocator.CreateDefault(loggerFactory, assemblyLoader, configurationData);
 
         private static ISharedTextWriter CreateSharedTextWriter(ITestOutputHelper testOutput)
             => new TestSharedTextWriter(testOutput);

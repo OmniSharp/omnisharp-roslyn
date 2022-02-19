@@ -17,7 +17,8 @@ namespace OmniSharp.MSBuild.Tests
         private readonly VsTfmAndFileExtHashingAlgorithm _tfmAndFileHashingAlgorithm;
         private readonly VsReferenceHashingAlgorithm _referenceHashingAlgorithm;
 
-        public ProjectLoadListenerTests(ITestOutputHelper output) : base(output)
+        public ProjectLoadListenerTests(ITestOutputHelper output, SharedOmniSharpHostFixture sharedOmniSharpHostFixture)
+            : base(output, sharedOmniSharpHostFixture)
         {
             _tfmAndFileHashingAlgorithm = new VsTfmAndFileExtHashingAlgorithm();
             _referenceHashingAlgorithm = new VsReferenceHashingAlgorithm();

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Immutable;
 using System.IO;
+using System.Reflection;
+//using System.Runtime.Loader;
 using System.Text;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -13,6 +15,16 @@ namespace OmniSharp.MSBuild.Discovery
 {
     internal class MSBuildLocator : DisposableObject, IMSBuildLocator
     {
+        private const string MSBuildPublicKeyToken = "b03f5f7f11d50a3a";
+
+        private static readonly string[] s_msBuildAssemblies =
+        {
+            "Microsoft.Build",
+            "Microsoft.Build.Framework",
+            "Microsoft.Build.Tasks.Core",
+            "Microsoft.Build.Utilities.Core",
+        };
+
         private readonly ILogger _logger;
         private readonly ImmutableArray<MSBuildInstanceProvider> _providers;
 
@@ -34,32 +46,14 @@ namespace OmniSharp.MSBuild.Discovery
 
         public static MSBuildLocator CreateDefault(ILoggerFactory loggerFactory, IAssemblyLoader assemblyLoader, IConfiguration msbuildConfiguration)
         {
-            var useBundledOnly = msbuildConfiguration.GetValue<bool>("UseBundledOnly");
-            if (useBundledOnly)
-            {
-                var logger = loggerFactory.CreateLogger<MSBuildLocator>();
-                logger.LogInformation("Because 'UseBundledOnly' is enabled in the configuration, OmniSharp will only use the bundled MSBuild.");
-                return CreateStandAlone(loggerFactory, assemblyLoader);
-            }
-
             return new MSBuildLocator(loggerFactory, assemblyLoader,
                 ImmutableArray.Create<MSBuildInstanceProvider>(
                     new MicrosoftBuildLocatorInstanceProvider(loggerFactory),
 #if !NETCOREAPP
                     new MonoInstanceProvider(loggerFactory),
-                    new StandAloneInstanceProvider(loggerFactory),
 #endif
                     new UserOverrideInstanceProvider(loggerFactory, msbuildConfiguration)));
         }
-
-        public static MSBuildLocator CreateStandAlone(ILoggerFactory loggerFactory, IAssemblyLoader assemblyLoader)
-            => new MSBuildLocator(loggerFactory, assemblyLoader,
-                ImmutableArray.Create<MSBuildInstanceProvider>(
-#if NETCOREAPP
-                    new MicrosoftBuildLocatorInstanceProvider(loggerFactory)));
-#else
-                    new StandAloneInstanceProvider(loggerFactory)));
-#endif
 
         public void RegisterInstance(MSBuildInstance instance)
         {
@@ -69,17 +63,6 @@ namespace OmniSharp.MSBuild.Discovery
             }
 
             RegisteredInstance = instance ?? throw new ArgumentNullException(nameof(instance));
-
-            if (instance.DiscoveryType == DiscoveryType.StandAlone)
-            {
-                // MSBuild began relying on the Microsoft.IO.Redist library which does not work
-                // on MacOS or Linux platforms. Disabling the 17.0 feature wave opts us in to the
-                // earlier behavior of using System.IO.
-
-                // This issue only affects the MSBuild tools shipped with O# as Mono does not ship
-                // with a version of MSBuild that includes this change.
-                Environment.SetEnvironmentVariable("MSBUILDDISABLEFEATURESFROMVERSION", "17.0");
-            }
 
             if (instance.SetMSBuildExePathVariable)
             {
@@ -117,12 +100,20 @@ namespace OmniSharp.MSBuild.Discovery
 
             _logger.LogInformation(builder.ToString());
 
-            if (!MicrosoftBuildLocator.CanRegister)
+            if (MicrosoftBuildLocator.CanRegister)
             {
-                return;
+                MicrosoftBuildLocator.RegisterMSBuildPath(instance.MSBuildPath);
             }
 
-            MicrosoftBuildLocator.RegisterMSBuildPath(instance.MSBuildPath);
+            foreach (var msBuildAssemblyName in s_msBuildAssemblies)
+            {
+                var assembly = Assembly.Load($"{msBuildAssemblyName}, Version=15.1.0.0, Culture=neutral, PublicKeyToken={MSBuildPublicKeyToken}");
+                if (assembly is null)
+                {
+                    throw new Exception($"Unable to load {msBuildAssemblyName}'");
+                }
+                _logger.LogInformation($"Loaded {msBuildAssemblyName} from '{assembly.Location}'");
+            }
         }
 
         public ImmutableArray<MSBuildInstance> GetInstances()

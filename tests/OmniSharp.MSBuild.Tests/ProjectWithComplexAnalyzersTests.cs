@@ -11,7 +11,8 @@ namespace OmniSharp.MSBuild.Tests
 {
     public class ProjectWithComplexAnalyzersTests : AbstractMSBuildTestFixture
     {
-        public ProjectWithComplexAnalyzersTests(ITestOutputHelper output) : base(output)
+        public ProjectWithComplexAnalyzersTests(ITestOutputHelper output, SharedOmniSharpHostFixture sharedOmniSharpHostFixture)
+            : base(output, sharedOmniSharpHostFixture)
         {
         }
 

@@ -14,7 +14,7 @@ namespace OmniSharp.MSBuild.Discovery.Providers
         public UserOverrideInstanceProvider(ILoggerFactory loggerFactory, IConfiguration configuration)
             : base(loggerFactory)
         {
-            _options = configuration.GetSection("msbuildoverride").Get<MSBuildOverrideOptions>();
+            _options = configuration?.GetSection("msbuildoverride").Get<MSBuildOverrideOptions>();
         }
 
         public override ImmutableArray<MSBuildInstance> GetInstances()

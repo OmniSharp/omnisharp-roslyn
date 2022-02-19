@@ -137,15 +137,12 @@ void DownloadFileAndUnzip(string url, string folder)
 public class Folders
 {
     public string DotNetSdk { get; }
-    public string Mono { get; }
-    public string MSBuild { get; }
     public string Tools { get; }
 
     public string Bin { get; }
     public string Source { get; }
     public string Tests { get; }
     public string TestAssets { get; }
-    public string MonoPackaging { get; }
 
     public string Artifacts { get; }
     public string ArtifactsPublish { get; }
@@ -154,25 +151,15 @@ public class Folders
     public string DeploymentPackage { get; }
     public string ArtifactsScripts { get; }
 
-    public string MonoRuntimeMacOS { get; }
-    public string MonoRuntimeLinuxX86 { get; }
-    public string MonoRuntimeLinuxX64 { get; }
-    public string MonoRuntimeLinuxArm64 { get; }
-    public string MonoMSBuildRuntime { get; }
-    public string MonoMSBuildLib { get; }
-
     public Folders(string workingDirectory)
     {
         this.DotNetSdk = PathHelper.Combine(workingDirectory, ".dotnet");
-        this.Mono = PathHelper.Combine(workingDirectory, ".mono");
-        this.MSBuild = PathHelper.Combine(workingDirectory, ".msbuild");
         this.Tools = PathHelper.Combine(workingDirectory, "tools");
 
         this.Bin = PathHelper.Combine(workingDirectory, "bin");
         this.Source = PathHelper.Combine(workingDirectory, "src");
         this.Tests = PathHelper.Combine(workingDirectory, "tests");
         this.TestAssets = PathHelper.Combine(workingDirectory, "test-assets");
-        this.MonoPackaging = PathHelper.Combine(workingDirectory, "mono-packaging");
 
         this.Artifacts = PathHelper.Combine(workingDirectory, "artifacts");
         this.ArtifactsPublish = PathHelper.Combine(this.Artifacts, "publish");
@@ -180,26 +167,17 @@ public class Folders
         this.ArtifactsPackage = PathHelper.Combine(this.Artifacts, "package");
         this.DeploymentPackage = PathHelper.Combine(this.Artifacts, "deployment");
         this.ArtifactsScripts = PathHelper.Combine(this.Artifacts, "scripts");
-
-        this.MonoRuntimeMacOS = PathHelper.Combine(this.Tools, "Mono.Runtime.MacOS");
-        this.MonoRuntimeLinuxX86 = PathHelper.Combine(this.Tools, "Mono.Runtime.Linux-x86");
-        this.MonoRuntimeLinuxX64 = PathHelper.Combine(this.Tools, "Mono.Runtime.Linux-x64");
-        this.MonoRuntimeLinuxArm64 = PathHelper.Combine(this.Tools, "Mono.Runtime.Linux-arm64");
-        this.MonoMSBuildRuntime = PathHelper.Combine(this.Tools, "Microsoft.Build.Runtime.Mono");
-        this.MonoMSBuildLib = PathHelper.Combine(this.Tools, "Microsoft.Build.Lib.Mono");
     }
 }
 
 public class MonoRuntime
 {
     public string PlatformName { get; }
-    public string InstallFolder { get; }
     public string RuntimeFile { get; }
 
-    public MonoRuntime(string platformName, string installFolder, string runtimeFile)
+    public MonoRuntime(string platformName, string runtimeFile)
     {
         this.PlatformName = platformName;
-        this.InstallFolder = installFolder;
         this.RuntimeFile = runtimeFile;
     }
 }
@@ -236,10 +214,10 @@ public class BuildEnvironment
         this.ShellScriptFileExtension = Platform.Current.IsWindows ? "ps1" : "sh";
         this.MonoRuntimes = new []
         {
-            new MonoRuntime("osx", this.Folders.MonoRuntimeMacOS, "mono"),
-            new MonoRuntime("linux-x86", this.Folders.MonoRuntimeLinuxX86, "mono"),
-            new MonoRuntime("linux-x64", this.Folders.MonoRuntimeLinuxX64, "mono"),
-            new MonoRuntime("linux-arm64", this.Folders.MonoRuntimeLinuxArm64, "mono")
+            new MonoRuntime("osx", "mono"),
+            new MonoRuntime("linux-x86", "mono"),
+            new MonoRuntime("linux-x64", "mono"),
+            new MonoRuntime("linux-arm64", "mono")
         };
 
         if (Platform.Current.IsMacOS)
@@ -375,12 +353,6 @@ public class BuildPlan
     public string[] DotNetVersions { get; set; }
     public string RequiredMonoVersion { get; set; }
     public string DownloadURL { get; set; }
-    public string MonoRuntimeMacOS { get; set; }
-    public string MonoRuntimeLinuxX86 { get; set; }
-    public string MonoRuntimeLinuxX64 { get; set; }
-    public string MonoRuntimeLinuxArm64 { get; set; }
-    public string MonoMSBuildRuntime { get; set; }
-    public string MonoMSBuildLib { get; set; }
     public string[] HostProjects { get; set; }
     public string[] TestProjects { get; set; }
     public string[] TestAssets { get; set; }
