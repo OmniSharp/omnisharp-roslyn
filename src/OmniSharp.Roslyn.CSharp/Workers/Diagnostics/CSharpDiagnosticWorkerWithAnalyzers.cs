@@ -21,8 +21,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 {
     public class CSharpDiagnosticWorkerWithAnalyzers : ICsDiagnosticWorker, IDisposable
     {
-        private readonly AnalyzerWorkQueue _workQueue;
-        private readonly SemaphoreSlim _throttler;
+        private readonly AsyncAnalyzerWorkQueue _workQueue;
         private readonly ILogger<CSharpDiagnosticWorkerWithAnalyzers> _logger;
 
         private readonly ConcurrentDictionary<DocumentId, DocumentDiagnostics> _currentDiagnosticResultLookup = new();
@@ -30,6 +29,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
         private readonly DiagnosticEventForwarder _forwarder;
         private readonly OmniSharpOptions _options;
         private readonly OmniSharpWorkspace _workspace;
+        private readonly ImmutableArray<Task> _workerTasks;
 
         // This is workaround.
         // Currently roslyn doesn't expose official way to use IDE analyzers during analysis.
@@ -45,8 +45,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
         {
             _logger = loggerFactory.CreateLogger<CSharpDiagnosticWorkerWithAnalyzers>();
             _providers = providers.ToImmutableArray();
-            _workQueue = new AnalyzerWorkQueue(loggerFactory, timeoutForPendingWorkMs: options.RoslynExtensionsOptions.DocumentAnalysisTimeoutMs * 3);
-            _throttler = new SemaphoreSlim(options.RoslynExtensionsOptions.DiagnosticWorkersThreadCount);
+            _workQueue = new AsyncAnalyzerWorkQueue(loggerFactory);
 
             _forwarder = forwarder;
             _options = options;
@@ -61,8 +60,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             _workspace.WorkspaceChanged += OnWorkspaceChanged;
             _workspace.OnInitialized += OnWorkspaceInitialized;
 
-            Task.Factory.StartNew(() => Worker(AnalyzerWorkType.Foreground), TaskCreationOptions.LongRunning);
-            Task.Factory.StartNew(() => Worker(AnalyzerWorkType.Background), TaskCreationOptions.LongRunning);
+            _workerTasks = Enumerable.Range(0, options.RoslynExtensionsOptions.DiagnosticWorkersThreadCount)
+                .Select(_ => Task.Run(Worker))
+                .ToImmutableArray();
 
             OnWorkspaceInitialized(_workspace.Initialized);
         }
@@ -92,7 +92,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                     _workQueue.TryPromote(documentId);
                 }
 
-                await _workQueue.WaitForegroundWorkComplete();
+                await _workQueue.WaitForegroundWorkComplete(_options.RoslynExtensionsOptions.DocumentAnalysisTimeoutMs * 3);
             }
 
             return documentIds
@@ -109,68 +109,52 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                 .ToImmutableArray();
         }
 
-        private async Task Worker(AnalyzerWorkType workType)
+        private async Task Worker()
         {
             while (true)
             {
+                AsyncAnalyzerWorkQueue.QueueItem item = null;
+
                 try
                 {
-                    var solution = _workspace.CurrentSolution;
+                    item = await _workQueue.TakeWorkAsync();
+                    var (documentId, cancellationToken, workType, documentCount, remaining) = item;
 
-                    var documents = _workQueue
-                        .TakeWork(workType)
-                        .Select(documentId => (projectId: solution.GetDocument(documentId)?.Project?.Id, documentId))
-                        .Where(x => x.projectId != null)
-                        .ToImmutableArray();
-
-                    var documentCount = documents.Length;
-                    var documentCountRemaining = documentCount;
-
-                    // event every percentage increase, or every 10th if there are fewer than 1000
-                    var eventEvery = Math.Max(10, documentCount / 100);
-
-                    var documentsGroupedByProjects = documents
-                        .GroupBy(x => x.projectId, x => x.documentId)
-                        .ToImmutableArray();
-                    var projectCount = documentsGroupedByProjects.Length;
-
-                    EventIfBackgroundWork(workType, BackgroundDiagnosticStatus.Started, projectCount, documentCount, documentCountRemaining);
-
-                    void decrementDocumentCountRemaining()
+                    if (workType == AnalyzerWorkType.Background)
                     {
-                        var remaining = Interlocked.Decrement(ref documentCountRemaining);
+                        // event every percentage increase, or every 10th if there are fewer than 1000
+                        var eventEvery = Math.Max(10, documentCount / 100);
+
+                        if (documentCount == remaining + 1)
+                            EventIfBackgroundWork(workType, BackgroundDiagnosticStatus.Started, _projectCount, documentCount, remaining);
+
                         var done = documentCount - remaining;
-                        if (done % eventEvery == 0)
-                        {
-                            EventIfBackgroundWork(workType, BackgroundDiagnosticStatus.Progress, projectCount, documentCount, remaining);
-                        }
+                        if (done % eventEvery == 0 || remaining == 0)
+                            EventIfBackgroundWork(workType, BackgroundDiagnosticStatus.Progress, _projectCount, documentCount, remaining);
                     }
+
+                    var solution = _workspace.CurrentSolution;
+                    var projectId = solution.GetDocument(documentId)?.Project?.Id;
 
                     try
                     {
-                        var projectAnalyzerTasks =
-                            documentsGroupedByProjects
-                                .Select(projectGroup => Task.Run(async () =>
-                                {
-                                    var projectPath = solution.GetProject(projectGroup.Key).FilePath;
-                                    await AnalyzeProject(solution, projectGroup, decrementDocumentCountRemaining);
-                                }))
-                                .ToImmutableArray();
-
-                        await Task.WhenAll(projectAnalyzerTasks);
+                        if (projectId != null)
+                            await AnalyzeDocument(solution, projectId, documentId);
                     }
                     finally
                     {
-                        EventIfBackgroundWork(workType, BackgroundDiagnosticStatus.Finished, projectCount, documentCount, documentCountRemaining);
+                        if (remaining == 0)
+                            EventIfBackgroundWork(workType, BackgroundDiagnosticStatus.Finished, _projectCount, documentCount, remaining);
                     }
-
-                    _workQueue.WorkComplete(workType);
-
-                    await Task.Delay(50);
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError($"Analyzer worker failed: {ex}");
+                }
+                finally
+                {
+                    if (item != null)
+                        _workQueue.WorkComplete(item);
                 }
             }
         }
@@ -181,8 +165,17 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                 _forwarder.BackgroundDiagnosticsStatus(status, numberProjects, numberFiles, numberFilesRemaining);
         }
 
+        private int _projectCount = 0;
+
         private void QueueForAnalysis(ImmutableArray<DocumentId> documentIds, AnalyzerWorkType workType)
         {
+            if (workType == AnalyzerWorkType.Background)
+            {
+                var solution = _workspace.CurrentSolution;
+
+                _projectCount = documentIds.Select(x => solution.GetDocument(x)?.Project?.Id).Distinct().Count(x => x != null);
+            }
+
             _workQueue.PutWork(documentIds, workType);
         }
 
@@ -231,72 +224,55 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             return await AnalyzeDocument(project, allAnalyzers, compilation, workspaceAnalyzerOptions, document);
         }
 
-        public async Task<IEnumerable<Diagnostic>> AnalyzeProjectsAsync(Project project, CancellationToken cancellationToken)
+        public Task<IEnumerable<Diagnostic>> AnalyzeProjectsAsync(Project project, CancellationToken cancellationToken)
         {
-            var allAnalyzers = GetAnalyzersForProject(project);
-            var compilation = await project.GetCompilationAsync(cancellationToken);
-            var workspaceAnalyzerOptions = (AnalyzerOptions)_workspaceAnalyzerOptionsConstructor.Invoke(new object[] { project.AnalyzerOptions, project.Solution });
-            var documentAnalyzerTasks = new List<Task>();
-            var diagnostics = ImmutableList<Diagnostic>.Empty;
+            throw new NotImplementedException();
+            //var allAnalyzers = GetAnalyzersForProject(project);
+            //var compilation = await project.GetCompilationAsync(cancellationToken);
+            //var workspaceAnalyzerOptions = (AnalyzerOptions)_workspaceAnalyzerOptionsConstructor.Invoke(new object[] { project.AnalyzerOptions, project.Solution });
+            //var documentAnalyzerTasks = new List<Task>();
+            //var diagnostics = ImmutableList<Diagnostic>.Empty;
 
-            foreach (var document in project.Documents)
-            {
-                await _throttler.WaitAsync(cancellationToken);
+            //foreach (var document in project.Documents)
+            //{
+            //    await _throttler.WaitAsync(cancellationToken);
 
-                documentAnalyzerTasks.Add(Task.Run(async () =>
-                {
-                    try
-                    {
-                        var documentDiagnostics = await AnalyzeDocument(project, allAnalyzers, compilation, workspaceAnalyzerOptions, document);
-                        ImmutableInterlocked.Update(ref diagnostics, currentDiagnostics => currentDiagnostics.AddRange(documentDiagnostics));
-                    }
-                    finally
-                    {
-                        _throttler.Release();
-                    }
-                }, cancellationToken));
-            }
+            //    documentAnalyzerTasks.Add(Task.Run(async () =>
+            //    {
+            //        try
+            //        {
+            //            var documentDiagnostics = await AnalyzeDocument(project, allAnalyzers, compilation, workspaceAnalyzerOptions, document);
+            //            ImmutableInterlocked.Update(ref diagnostics, currentDiagnostics => currentDiagnostics.AddRange(documentDiagnostics));
+            //        }
+            //        finally
+            //        {
+            //            _throttler.Release();
+            //        }
+            //    }, cancellationToken));
+            //}
 
-            await Task.WhenAll(documentAnalyzerTasks);
+            //await Task.WhenAll(documentAnalyzerTasks);
 
-            return diagnostics;
+            //return diagnostics;
         }
 
-        private async Task AnalyzeProject(Solution solution, IGrouping<ProjectId, DocumentId> documentsGroupedByProject, Action decrementRemaining)
+        private async Task AnalyzeDocument(Solution solution, ProjectId projectId, DocumentId documentId)
         {
             try
             {
-                var project = solution.GetProject(documentsGroupedByProject.Key);
+                var project = solution.GetProject(projectId);
                 var allAnalyzers = GetAnalyzersForProject(project);
                 var compilation = await project.GetCompilationAsync();
                 var workspaceAnalyzerOptions = (AnalyzerOptions)_workspaceAnalyzerOptionsConstructor.Invoke(new object[] { project.AnalyzerOptions, project.Solution });
-                var documentAnalyzerTasks = new List<Task>();
+                var document = project.GetDocument(documentId);
 
-                foreach (var documentId in documentsGroupedByProject)
-                {
-                    await _throttler.WaitAsync();
+                var diagnostics = await AnalyzeDocument(project, allAnalyzers, compilation, workspaceAnalyzerOptions, document);
 
-                    documentAnalyzerTasks.Add(Task.Run(async () =>
-                    {
-                        try
-                        {
-                            var document = project.GetDocument(documentId);
-                            var diagnostics = await AnalyzeDocument(project, allAnalyzers, compilation, workspaceAnalyzerOptions, document);
-                            UpdateCurrentDiagnostics(project, document, diagnostics);
-                            decrementRemaining();
-                        }
-                        finally
-                        {
-                            _throttler.Release();
-                        }
-                    }));
-                }
-
-                await Task.WhenAll(documentAnalyzerTasks);
+                UpdateCurrentDiagnostics(project, document, diagnostics);
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Analysis of project {documentsGroupedByProject.Key} failed, underlaying error: {ex}");
+                _logger.LogError($"Analysis of project {documentId} failed, underlaying error: {ex}");
             }
         }
 
@@ -415,6 +391,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
         {
             _workspace.WorkspaceChanged -= OnWorkspaceChanged;
             _workspace.OnInitialized -= OnWorkspaceInitialized;
+
+            // TODO: Clean up worker queue
+            // TODO: Clean up background threads
         }
     }
 }
