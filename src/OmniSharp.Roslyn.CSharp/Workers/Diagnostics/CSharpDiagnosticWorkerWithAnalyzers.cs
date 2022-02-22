@@ -114,11 +114,16 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             while (true)
             {
                 AsyncAnalyzerWorkQueue.QueueItem item = null;
+                DocumentId documentId;
+                CancellationToken? cancellationToken = null;
+                AnalyzerWorkType workType;
+                int documentCount;
+                int remaining;
 
                 try
                 {
                     item = await _workQueue.TakeWorkAsync();
-                    var (documentId, cancellationToken, workType, documentCount, remaining) = item;
+                    (documentId, cancellationToken, workType, documentCount, remaining) = item;
 
                     if (workType == AnalyzerWorkType.Background)
                     {
@@ -139,13 +144,17 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                     try
                     {
                         if (projectId != null)
-                            await AnalyzeDocument(solution, projectId, documentId);
+                            await AnalyzeDocument(solution, projectId, documentId, cancellationToken.Value);
                     }
                     finally
                     {
                         if (remaining == 0)
                             EventIfBackgroundWork(workType, BackgroundDiagnosticStatus.Finished, _projectCount, documentCount, remaining);
                     }
+                }
+                catch (OperationCanceledException) when (cancellationToken != null && cancellationToken.Value.IsCancellationRequested)
+                {
+                    _logger.LogInformation($"Analyzer work cancelled.");
                 }
                 catch (Exception ex)
                 {
@@ -220,8 +229,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             var compilation = await project.GetCompilationAsync(cancellationToken);
             var workspaceAnalyzerOptions = (AnalyzerOptions)_workspaceAnalyzerOptionsConstructor.Invoke(new object[] { project.AnalyzerOptions, project.Solution });
 
-            cancellationToken.ThrowIfCancellationRequested();
-            return await AnalyzeDocument(project, allAnalyzers, compilation, workspaceAnalyzerOptions, document);
+            return await AnalyzeDocument(project, allAnalyzers, compilation, workspaceAnalyzerOptions, document, cancellationToken);
         }
 
         public Task<IEnumerable<Diagnostic>> AnalyzeProjectsAsync(Project project, CancellationToken cancellationToken)
@@ -256,8 +264,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             //return diagnostics;
         }
 
-        private async Task AnalyzeDocument(Solution solution, ProjectId projectId, DocumentId documentId)
+        private async Task AnalyzeDocument(Solution solution, ProjectId projectId, DocumentId documentId, CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             try
             {
                 var project = solution.GetProject(projectId);
@@ -266,9 +276,13 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                 var workspaceAnalyzerOptions = (AnalyzerOptions)_workspaceAnalyzerOptionsConstructor.Invoke(new object[] { project.AnalyzerOptions, project.Solution });
                 var document = project.GetDocument(documentId);
 
-                var diagnostics = await AnalyzeDocument(project, allAnalyzers, compilation, workspaceAnalyzerOptions, document);
+                var diagnostics = await AnalyzeDocument(project, allAnalyzers, compilation, workspaceAnalyzerOptions, document, cancellationToken);
 
                 UpdateCurrentDiagnostics(project, document, diagnostics);
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
             }
             catch (Exception ex)
             {
@@ -276,22 +290,25 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             }
         }
 
-        private async Task<ImmutableArray<Diagnostic>> AnalyzeDocument(Project project, ImmutableArray<DiagnosticAnalyzer> allAnalyzers, Compilation compilation, AnalyzerOptions workspaceAnalyzerOptions, Document document)
+        private async Task<ImmutableArray<Diagnostic>> AnalyzeDocument(Project project, ImmutableArray<DiagnosticAnalyzer> allAnalyzers, Compilation compilation, AnalyzerOptions workspaceAnalyzerOptions, Document document, CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            // There's real possibility that bug in analyzer causes analysis hang at document.
+            using var perDocumentTimeout =
+                new CancellationTokenSource(_options.RoslynExtensionsOptions.DocumentAnalysisTimeoutMs);
+            using var combinedCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, perDocumentTimeout.Token);
+
             try
             {
-                // There's real possibility that bug in analyzer causes analysis hang at document.
-                var perDocumentTimeout =
-                    new CancellationTokenSource(_options.RoslynExtensionsOptions.DocumentAnalysisTimeoutMs);
-
-                var documentSemanticModel = await document.GetSemanticModelAsync(perDocumentTimeout.Token);
+                var documentSemanticModel = await document.GetSemanticModelAsync(combinedCancellation.Token);
 
                 // Only basic syntax check is available if file is miscellanous like orphan .cs file.
                 // Those projects are on hard coded virtual project
                 if (project.Name == $"{Configuration.OmniSharpMiscProjectName}.csproj")
                 {
-                    var syntaxTree = await document.GetSyntaxTreeAsync();
-                    return syntaxTree.GetDiagnostics().ToImmutableArray();
+                    var syntaxTree = await document.GetSyntaxTreeAsync(combinedCancellation.Token);
+                    return syntaxTree.GetDiagnostics(cancellationToken: combinedCancellation.Token).ToImmutableArray();
                 }
                 else if (allAnalyzers.Any()) // Analyzers cannot be called with empty analyzer list.
                 {
@@ -303,21 +320,25 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                         reportSuppressedDiagnostics: false));
 
                     var semanticDiagnosticsWithAnalyzers = await compilationWithAnalyzers
-                        .GetAnalyzerSemanticDiagnosticsAsync(documentSemanticModel, filterSpan: null, perDocumentTimeout.Token);
+                        .GetAnalyzerSemanticDiagnosticsAsync(documentSemanticModel, filterSpan: null, combinedCancellation.Token);
 
                     var syntaxDiagnosticsWithAnalyzers = await compilationWithAnalyzers
-                        .GetAnalyzerSyntaxDiagnosticsAsync(documentSemanticModel.SyntaxTree, perDocumentTimeout.Token);
+                        .GetAnalyzerSyntaxDiagnosticsAsync(documentSemanticModel.SyntaxTree, combinedCancellation.Token);
 
                     return semanticDiagnosticsWithAnalyzers
                         .Concat(syntaxDiagnosticsWithAnalyzers)
                         .Where(d => !d.IsSuppressed)
-                        .Concat(documentSemanticModel.GetDiagnostics())
+                        .Concat(documentSemanticModel.GetDiagnostics(cancellationToken: combinedCancellation.Token))
                         .ToImmutableArray();
                 }
                 else
                 {
-                    return documentSemanticModel.GetDiagnostics();
+                    return documentSemanticModel.GetDiagnostics(cancellationToken: combinedCancellation.Token);
                 }
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
             }
             catch (Exception ex)
             {
