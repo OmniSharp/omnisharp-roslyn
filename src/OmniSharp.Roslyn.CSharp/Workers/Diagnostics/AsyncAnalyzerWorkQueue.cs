@@ -105,7 +105,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
             {
                 if (item.AnalyzerWorkType == AnalyzerWorkType.Foreground)
                 {
-                    _forground.WorkComplete(item.DocumentId);
+                    _forground.WorkComplete(item.DocumentId, item.CancellationToken);
 
                     if (_forground.PendingCount == 0
                         && _forground.ActiveCount == 0
@@ -116,7 +116,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
                 }
                 else if (item.AnalyzerWorkType == AnalyzerWorkType.Background)
                 {
-                    _background.WorkComplete(item.DocumentId);
+                    _background.WorkComplete(item.DocumentId, item.CancellationToken);
                 }
             }
         }
@@ -175,7 +175,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
         {
             private readonly HashSet<DocumentId> _hash = new();
             private readonly Queue<DocumentId> _pending = new();
-            private readonly Dictionary<DocumentId, CancellationTokenSource> _active = new();
+            private readonly Dictionary<DocumentId, List<CancellationTokenSource>> _active = new();
 
             public int PendingCount => _pending.Count;
 
@@ -186,7 +186,10 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
             public void RequestCancellationIfActive(DocumentId documentId)
             {
                 if (_active.TryGetValue(documentId, out var active))
-                    active.Cancel();
+                {
+                    foreach (var cts in active)
+                        cts.Cancel();
+                }
             }
 
             public void Enqueue(DocumentId documentId)
@@ -232,9 +235,12 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
 
                     _hash.Remove(documentId);
 
-                    _active[documentId]
-                        = cancellationTokenSource
-                        = new CancellationTokenSource();
+                    if (!_active.TryGetValue(documentId, out var cancellationTokenSources))
+                        _active[documentId] = cancellationTokenSources = new List<CancellationTokenSource>();
+
+                    cancellationTokenSource = new CancellationTokenSource();
+
+                    cancellationTokenSources.Add(cancellationTokenSource);
 
                     return true;
                 }
@@ -245,18 +251,25 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
                 return false;
             }
 
-            public bool WorkComplete(DocumentId documentId)
+            public void WorkComplete(DocumentId documentId, CancellationToken cancellationToken)
             {
-                if (_active.TryGetValue(documentId, out var cancellationTokenSource))
+                if (_active.TryGetValue(documentId, out var cancellationTokenSources))
                 {
-                    _active.Remove(documentId);
+                    foreach (var cancellationTokenSource in cancellationTokenSources.ToList())
+                    {
+                        if (cancellationTokenSource.Token == cancellationToken)
+                        {
+                            cancellationTokenSource.Dispose();
 
-                    cancellationTokenSource.Dispose();
+                            cancellationTokenSources.Remove(cancellationTokenSource);
 
-                    return true;
+                            break;
+                        }
+                    }
+
+                    if (cancellationTokenSources.Count == 0)
+                        _active.Remove(documentId);
                 }
-
-                return false;
             }
         }
     }
