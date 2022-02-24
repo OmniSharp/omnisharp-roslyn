@@ -92,7 +92,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                     _workQueue.TryPromote(documentId);
                 }
 
-                await _workQueue.WaitForegroundWorkComplete(_options.RoslynExtensionsOptions.DocumentAnalysisTimeoutMs * 3);
+                using var cancellationTokenSource = new CancellationTokenSource(_options.RoslynExtensionsOptions.DocumentAnalysisTimeoutMs * 3);
+
+                await _workQueue.WaitForegroundWorkComplete(cancellationTokenSource.Token);
             }
 
             return documentIds
@@ -232,36 +234,15 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             return await AnalyzeDocument(project, allAnalyzers, compilation, workspaceAnalyzerOptions, document, cancellationToken);
         }
 
-        public Task<IEnumerable<Diagnostic>> AnalyzeProjectsAsync(Project project, CancellationToken cancellationToken)
+        public async Task<IEnumerable<Diagnostic>> AnalyzeProjectsAsync(Project project, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
-            //var allAnalyzers = GetAnalyzersForProject(project);
-            //var compilation = await project.GetCompilationAsync(cancellationToken);
-            //var workspaceAnalyzerOptions = (AnalyzerOptions)_workspaceAnalyzerOptionsConstructor.Invoke(new object[] { project.AnalyzerOptions, project.Solution });
-            //var documentAnalyzerTasks = new List<Task>();
-            //var diagnostics = ImmutableList<Diagnostic>.Empty;
+            QueueForAnalysis(project.DocumentIds.ToImmutableArray(), AnalyzerWorkType.Foreground);
 
-            //foreach (var document in project.Documents)
-            //{
-            //    await _throttler.WaitAsync(cancellationToken);
+            await _workQueue.WaitForegroundWorkComplete(cancellationToken);
 
-            //    documentAnalyzerTasks.Add(Task.Run(async () =>
-            //    {
-            //        try
-            //        {
-            //            var documentDiagnostics = await AnalyzeDocument(project, allAnalyzers, compilation, workspaceAnalyzerOptions, document);
-            //            ImmutableInterlocked.Update(ref diagnostics, currentDiagnostics => currentDiagnostics.AddRange(documentDiagnostics));
-            //        }
-            //        finally
-            //        {
-            //            _throttler.Release();
-            //        }
-            //    }, cancellationToken));
-            //}
-
-            //await Task.WhenAll(documentAnalyzerTasks);
-
-            //return diagnostics;
+            return _currentDiagnosticResultLookup
+                .SelectMany(X => X.Value.Diagnostics)
+                .ToImmutableArray();
         }
 
         private async Task AnalyzeDocument(Solution solution, ProjectId projectId, DocumentId documentId, CancellationToken cancellationToken)

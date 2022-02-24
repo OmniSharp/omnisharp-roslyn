@@ -121,30 +121,29 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
             }
         }
 
-        public async Task WaitForegroundWorkComplete(int? timeoutForPendingWorkMs = null)
+        public async Task WaitForegroundWorkComplete(CancellationToken cancellationToken = default)
         {
             var waitForgroundTask = _waitForgroundWaiter.Task;
 
-            if (waitForgroundTask.IsCompleted)
+            if (waitForgroundTask.IsCompleted || cancellationToken.IsCancellationRequested)
                 return;
 
-            if (timeoutForPendingWorkMs == null)
+            if (cancellationToken == default)
             {
                 await waitForgroundTask;
 
                 return;
             }
 
-            using var cancellationTokenSource = new CancellationTokenSource();
+            var taskCompletion = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
 
-            await Task.WhenAny(
-                Task.Delay(timeoutForPendingWorkMs.Value, cancellationTokenSource.Token),
-                waitForgroundTask);
+            using (cancellationToken.Register(() => taskCompletion.SetResult(null)))
+            {
+                await Task.WhenAny(taskCompletion.Task, waitForgroundTask);
 
-            cancellationTokenSource.Cancel();
-
-            if (!waitForgroundTask.IsCompleted)
-                _logger.LogWarning($"Timeout before work got ready for foreground analysis queue. This is assertion to prevent complete api hang in case of error.");
+                if (!waitForgroundTask.IsCompleted)
+                    _logger.LogWarning($"Timeout before work got ready for foreground analysis queue. This is assertion to prevent complete api hang in case of error.");
+            }
         }
 
         public bool TryPromote(DocumentId id)
