@@ -391,7 +391,8 @@ $$
 
         private async Task<(FormatRangeResponse, TestFile)> GetResponse(string text, string character, string fileName)
         {
-            // Ensure system newlines are used
+            // Ensure system newlines are used when editorconfig is used but the config does not specify new line settings.
+            // This will be removed in future once Roslyn formatting APIs allow to specify defaults for editorconfig settings explicitly.
             var options = SharedOmniSharpTestHost.Workspace.Options.WithChangedOption(FormattingOptions.NewLine, LanguageNames.CSharp, System.Environment.NewLine);
             SharedOmniSharpTestHost.Workspace.TryApplyChanges(SharedOmniSharpTestHost.Workspace.CurrentSolution.WithOptions(options));
 

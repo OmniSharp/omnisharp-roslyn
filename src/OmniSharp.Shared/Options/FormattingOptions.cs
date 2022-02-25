@@ -21,7 +21,6 @@ namespace OmniSharp.Options
             SpaceWithinCastParentheses = false;
             SpaceWithinOtherParentheses = false;
             SpaceAfterCast = false;
-            SpacesIgnoreAroundVariableDeclaration = false;
             SpaceBeforeOpenSquareBracket = false;
             SpaceBetweenEmptySquareBrackets = false;
             SpaceWithinSquareBrackets = false;
@@ -73,6 +72,8 @@ namespace OmniSharp.Options
 
         public bool SpacingAfterMethodDeclarationName { get; set; }
 
+        public bool SeparateImportDirectiveGroups { get; set; }
+
         public bool SpaceWithinMethodDeclarationParenthesis { get; set; }
 
         public bool SpaceBetweenEmptyMethodDeclarationParentheses { get; set; }
@@ -92,8 +93,6 @@ namespace OmniSharp.Options
         public bool SpaceWithinOtherParentheses { get; set; }
 
         public bool SpaceAfterCast { get; set; }
-
-        public bool SpacesIgnoreAroundVariableDeclaration { get; set; }
 
         public bool SpaceBeforeOpenSquareBracket { get; set; }
 

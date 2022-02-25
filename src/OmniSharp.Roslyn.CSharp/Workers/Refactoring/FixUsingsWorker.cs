@@ -9,8 +9,11 @@ using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.CodeActions;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
+using OmniSharp.Options;
+using OmniSharp.Roslyn.CodeActions;
 using OmniSharp.Roslyn.CSharp.Services.CodeActions;
 using OmniSharp.Services;
 
@@ -27,8 +30,9 @@ namespace OmniSharp
         private readonly IEnumerable<ICodeActionProvider> _providers;
         private readonly CodeFixProvider _addImportProvider;
         private readonly CodeFixProvider _removeUnnecessaryUsingsProvider;
+        private readonly OmniSharpOptions _options;
 
-        public FixUsingsWorker(IEnumerable<ICodeActionProvider> providers)
+        public FixUsingsWorker(IEnumerable<ICodeActionProvider> providers, OmniSharpOptions options)
         {
             _providers = providers;
 
@@ -36,6 +40,7 @@ namespace OmniSharp
 
             _addImportProvider = FindCodeFixProviderByTypeFullName(codeFixProviders, CodeActionHelper.AddImportProviderName);
             _removeUnnecessaryUsingsProvider = FindCodeFixProviderByTypeFullName(codeFixProviders, CodeActionHelper.RemoveUnnecessaryUsingsProviderName);
+            _options = options;
         }
 
         private static CodeFixProvider FindCodeFixProviderByTypeFullName(IEnumerable<CodeFixProvider> providers, string fullName)
@@ -238,9 +243,10 @@ namespace OmniSharp
             ImmutableArray<Diagnostic> diagnostics)
         {
             var codeFixes = new List<CodeAction>();
-            var context = new CodeFixContext(
+            var context = OmniSharpCodeFixContextFactory.CreateCodeFixContext(
                 document, span, diagnostics,
                 registerCodeFix: (a, d) => codeFixes.Add(a),
+                CodeActionOptionsFactory.Create(_options),
                 cancellationToken: CancellationToken.None);
 
             // Note: We're intentionally not checking CodeFixProvider.FixableDiagnosticIds here.
