@@ -26,6 +26,15 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
             _logger = loggerFactory.CreateLogger<AnalyzerWorkQueue>();
         }
 
+        public int PendingCount
+        {
+            get
+            {
+                lock (_lock)
+                    return _forground.PendingCount + _background.PendingCount;
+            }
+        }
+
         public void PutWork(IReadOnlyCollection<DocumentId> documentIds, AnalyzerWorkType workType)
         {
             lock (_lock)
@@ -58,10 +67,12 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
             }
         }
 
-        public async Task<QueueItem> TakeWorkAsync()
+        public async Task<QueueItem> TakeWorkAsync(CancellationToken cancellationToken = default)
         {
             while (true)
             {
+                cancellationToken.ThrowIfCancellationRequested();
+
                 Task awaitTask;
 
                 lock (_lock)
@@ -95,7 +106,21 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
                     awaitTask = _takeWorkWaiter.Task;
                 }
 
-                await awaitTask;
+                if (cancellationToken == default)
+                {
+                    await awaitTask.ConfigureAwait(false);
+                }
+                else
+                {
+                    var tcs = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+                    using (cancellationToken.Register(() => tcs.SetResult(null)))
+                    {
+                        await Task.WhenAny(awaitTask, tcs.Task).ConfigureAwait(false);
+                    }
+
+                }
+
             }
         }
 
@@ -130,7 +155,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
 
             if (cancellationToken == default)
             {
-                await waitForgroundTask;
+                await waitForgroundTask.ConfigureAwait(false); 
 
                 return;
             }
@@ -139,7 +164,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
 
             using (cancellationToken.Register(() => taskCompletion.SetResult(null)))
             {
-                await Task.WhenAny(taskCompletion.Task, waitForgroundTask);
+                await Task.WhenAny(taskCompletion.Task, waitForgroundTask).ConfigureAwait(false);
 
                 if (!waitForgroundTask.IsCompleted)
                     _logger.LogWarning($"Timeout before work got ready for foreground analysis queue. This is assertion to prevent complete api hang in case of error.");
@@ -152,7 +177,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
 
             lock (_lock)
             {
-                shouldEnqueue = _forground.IsEnqueued(id) || _forground.IsActive(id);
+                shouldEnqueue = _background.IsEnqueued(id) || _background.IsActive(id);
             }
 
             if (shouldEnqueue)
