@@ -262,8 +262,9 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             queue.PutWork(new[] { document }, AnalyzerWorkType.Foreground);
 
-            await Assert.ThrowsAsync<OperationCanceledException>(() =>
-                queue.WaitForegroundWorkCompleteWithTimeout(50));
+            var isCancelled = await queue.WaitForegroundWorkCompleteWithTimeout(50);
+
+            Assert.True(isCancelled);
         }
 
         [Fact]
@@ -322,11 +323,13 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             return await queue.TakeWorkAsync(cts.Token);
         }
 
-        public static async Task WaitForegroundWorkCompleteWithTimeout(this AsyncAnalyzerWorkQueue queue, int timeout)
+        public static async Task<bool> WaitForegroundWorkCompleteWithTimeout(this AsyncAnalyzerWorkQueue queue, int timeout)
         {
             using var cts = new CancellationTokenSource(timeout);
 
             await queue.WaitForegroundWorkComplete(cts.Token);
+
+            return cts.Token.IsCancellationRequested;
         }
     }
 #pragma warning restore VSTHRD103 // Call async methods when in an async method

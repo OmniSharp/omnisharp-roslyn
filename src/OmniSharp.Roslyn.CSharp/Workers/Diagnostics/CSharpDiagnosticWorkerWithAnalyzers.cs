@@ -98,8 +98,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             }
 
             return documentIds
-                .Where(x => _currentDiagnosticResultLookup.ContainsKey(x))
-                .Select(x => _currentDiagnosticResultLookup[x])
+                .Select(x => _currentDiagnosticResultLookup.TryGetValue(x, out var value) ? value : null)
+                .Where(x => x != null)
                 .ToImmutableArray();
         }
 
@@ -236,12 +236,16 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
         public async Task<IEnumerable<Diagnostic>> AnalyzeProjectsAsync(Project project, CancellationToken cancellationToken)
         {
-            QueueForAnalysis(project.DocumentIds.ToImmutableArray(), AnalyzerWorkType.Foreground);
+            var documentIds = project.DocumentIds.ToImmutableArray();
+
+            QueueForAnalysis(documentIds, AnalyzerWorkType.Foreground);
 
             await _workQueue.WaitForegroundWorkComplete(cancellationToken);
 
-            return _currentDiagnosticResultLookup
-                .SelectMany(X => X.Value.Diagnostics)
+            return documentIds
+                .Select(x => _currentDiagnosticResultLookup.TryGetValue(x, out var value) ? value : null)
+                .Where(x => x != null)
+                .SelectMany(x => x.Diagnostics)
                 .ToImmutableArray();
         }
 
