@@ -17,12 +17,9 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
         private readonly Queue _background = new();
         private readonly ILogger<AnalyzerWorkQueue> _logger;
         private TaskCompletionSource<object?> _takeWorkWaiter = new(TaskCreationOptions.RunContinuationsAsynchronously);
-        private TaskCompletionSource<object?> _waitForgroundWaiter = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
         public AsyncAnalyzerWorkQueue(ILoggerFactory loggerFactory)
         {
-            _waitForgroundWaiter.SetResult(null);
-
             _logger = loggerFactory.CreateLogger<AnalyzerWorkQueue>();
         }
 
@@ -46,9 +43,6 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
 
                     if (workType == AnalyzerWorkType.Foreground)
                     {
-                        if (_waitForgroundWaiter.Task.IsCompleted)
-                            _waitForgroundWaiter = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
-
                         _forground.Enqueue(documentId);
 
                         _background.Remove(documentId);
@@ -129,28 +123,23 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
             lock (_lock)
             {
                 if (item.AnalyzerWorkType == AnalyzerWorkType.Foreground)
-                {
                     _forground.WorkComplete(item.DocumentId, item.CancellationToken);
-
-                    if (_forground.PendingCount == 0
-                        && _forground.ActiveCount == 0
-                        && !_waitForgroundWaiter.Task.IsCompleted)
-                    {
-                        _waitForgroundWaiter.SetResult(null);
-                    }
-                }
                 else if (item.AnalyzerWorkType == AnalyzerWorkType.Background)
-                {
                     _background.WorkComplete(item.DocumentId, item.CancellationToken);
-                }
             }
         }
 
         public async Task WaitForegroundWorkComplete(CancellationToken cancellationToken = default)
         {
-            var waitForgroundTask = _waitForgroundWaiter.Task;
+            if (cancellationToken.IsCancellationRequested)
+                return;
 
-            if (waitForgroundTask.IsCompleted || cancellationToken.IsCancellationRequested)
+            Task waitForgroundTask;
+
+            lock (_lock)
+                waitForgroundTask = _forground.GetWaiter();
+
+            if (waitForgroundTask.IsCompleted)
                 return;
 
             if (cancellationToken == default)
@@ -200,6 +189,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
             private readonly HashSet<DocumentId> _hash = new();
             private readonly Queue<DocumentId> _pending = new();
             private readonly Dictionary<DocumentId, List<CancellationTokenSource>> _active = new();
+            private readonly List<(HashSet<DocumentId> DocumentIds, TaskCompletionSource<object?> TaskCompletionSource)> _waiters = new();
 
             public int PendingCount => _pending.Count;
 
@@ -293,7 +283,36 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
 
                     if (cancellationTokenSources.Count == 0)
                         _active.Remove(documentId);
+
+                    foreach (var waiter in _waiters.ToList())
+                    {
+                        if (waiter.DocumentIds.Remove(documentId) && waiter.DocumentIds.Count == 0)
+                        {
+                            waiter.TaskCompletionSource.SetResult(null);
+
+                            _waiters.Remove(waiter);
+                        }
+                    }    
                 }
+            }
+
+            public Task GetWaiter()
+            {
+                if (_active.Count == 0 && _pending.Count == 0)
+                    return Task.CompletedTask;
+
+                var documentIds = new HashSet<DocumentId>(_hash.Concat(_active.Keys));
+
+                var waiter = _waiters.FirstOrDefault(x => x.DocumentIds.SetEquals(documentIds));
+
+                if (waiter == default)
+                {
+                    waiter = (documentIds, new TaskCompletionSource<object?>());
+
+                    _waiters.Add(waiter);
+                }
+
+                return waiter.TaskCompletionSource.Task;
             }
         }
     }
