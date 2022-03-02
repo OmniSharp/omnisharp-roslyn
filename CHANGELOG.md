@@ -1,6 +1,18 @@
 # Changelog
 All changes to the project will be documented in this file.
 
+## [1.38.1] - 2022-02-18
+* Reuse Roslyn's analyzer assembly loader (PR: [#2236](https://github.com/OmniSharp/omnisharp-roslyn/pull/2236))
+* Pass Completion, Rename and Block Structure options directly instead of updating the Workspace (PR: [#2306](https://github.com/OmniSharp/omnisharp-roslyn/pull/2306))
+* Update included build tool to match the current 6.0.200 sdk (PR: [#2329](https://github.com/OmniSharp/omnisharp-roslyn/pull/2329))
+* Fix concurrency issue in CSharpDiagnosticWorker (PR: [#2333](https://github.com/OmniSharp/omnisharp-roslyn/pull/2333))
+* run analyzers on multiple threads if allowed to (PR: [#2285](https://github.com/OmniSharp/omnisharp-roslyn/pull/2285))
+* Add MSBuild project to solution and apply the change to Roslyn workspace as a unit (PR: [#2314](https://github.com/OmniSharp/omnisharp-roslyn/pull/2314))
+* Updated to Roslyn 4.0.1 (PR: [#2323](https://github.com/OmniSharp/omnisharp-roslyn/pull/2323))
+* Enable OmniSharp.Cake tests for .NET 6 (PR: [#2307](https://github.com/OmniSharp/omnisharp-roslyn/pull/2307))
+* Handle completions with trailing whitespace on previous lines (PR: [#2319](https://github.com/OmniSharp/omnisharp-roslyn/pull/2319))
+* Update build bools to match .NET SDK 6.0.200 (PR: [#2347](https://github.com/OmniSharp/omnisharp-roslyn/pull/2347))
+
 ## [1.38.0] - 2021-12-15
 * Build OmniSharp servers that run on .NET 6 SDK (PR: [2291](https://github.com/OmniSharp/omnisharp-roslyn/pull/2291))
 * Allow net6 build of O# to load newer .NET SDKs (PR: [#2308](https://github.com/OmniSharp/omnisharp-roslyn/pull/2308))
