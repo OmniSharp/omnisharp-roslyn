@@ -3,15 +3,16 @@
 using Microsoft.CodeAnalysis;
 using OmniSharp.Extensions;
 using OmniSharp.Mef;
-using OmniSharp.Models.V2.GotoTypeDefinition;
+using OmniSharp.Models.GotoTypeDefinition;
 using OmniSharp.Options;
 using System.Composition;
 using System.Linq;
 using System.Threading.Tasks;
+using OmniSharp.Models;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Navigation
 {
-    [OmniSharpHandler(OmniSharpEndpoints.V2.GotoTypeDefinition, LanguageNames.CSharp)]
+    [OmniSharpHandler(OmniSharpEndpoints.GotoTypeDefinition, LanguageNames.CSharp)]
     public class GotoTypeDefinitionService : IRequestHandler<GotoTypeDefinitionRequest, GotoTypeDefinitionResponse>
     {
         private readonly OmniSharpOptions _omnisharpOptions;

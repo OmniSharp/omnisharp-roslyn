@@ -4,7 +4,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 using OmniSharp.Models.Metadata;
 using OmniSharp.Models.v1.SourceGeneratedFile;
-using OmniSharp.Models.V2.GotoTypeDefinition;
+using OmniSharp.Models.GotoTypeDefinition;
 using OmniSharp.Roslyn.CSharp.Services.Navigation;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -22,7 +22,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
            : base(output, sharedOmniSharpHostFixture)
         {
         }
-        protected override string EndpointName => OmniSharpEndpoints.V2.GotoTypeDefinition;
+        protected override string EndpointName => OmniSharpEndpoints.GotoTypeDefinition;
 
         [Theory]
         [InlineData("foo.cs")]

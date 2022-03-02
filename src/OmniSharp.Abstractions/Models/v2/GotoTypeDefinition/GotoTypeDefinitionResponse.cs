@@ -4,7 +4,7 @@ using OmniSharp.Models.Metadata;
 using OmniSharp.Models.v1.SourceGeneratedFile;
 using System.Collections.Generic;
 
-namespace OmniSharp.Models.V2.GotoTypeDefinition
+namespace OmniSharp.Models.GotoTypeDefinition
 {
     public record GotoTypeDefinitionResponse
     {
@@ -13,7 +13,7 @@ namespace OmniSharp.Models.V2.GotoTypeDefinition
 
     public record TypeDefinition
     {
-        public Location Location { get; init; } = null!;
+        public V2.Location Location { get; init; } = null!;
         public MetadataSource? MetadataSource { get; init; }
         public SourceGeneratedFileInfo? SourceGeneratedFileInfo { get; init; }
     }

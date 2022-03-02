@@ -5,7 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using OmniSharp.Extensions;
 using OmniSharp.Mef;
-using OmniSharp.Models.V2.GotoTypeDefinition;
+using OmniSharp.Models.GotoTypeDefinition;
 using OmniSharp.Models.Metadata;
 using OmniSharp.Models.v1.SourceGeneratedFile;
 using OmniSharp.Models.V2;
@@ -13,21 +13,24 @@ using OmniSharp.Roslyn;
 using OmniSharp.Utilities;
 using Location = OmniSharp.Models.V2.Location;
 using Range = OmniSharp.Models.V2.Range;
+using OmniSharp.Roslyn.CSharp.Services;
+using OmniSharp.Options;
 
 namespace OmniSharp.Cake.Services.RequestHandlers.Navigation
 {
-    [OmniSharpHandler(OmniSharpEndpoints.V2.GotoTypeDefinition, Constants.LanguageNames.Cake), Shared]
-    public class GotoTypeDefinitionV2Handler : CakeRequestHandler<GotoTypeDefinitionRequest, GotoTypeDefinitionResponse>
+    [OmniSharpHandler(OmniSharpEndpoints.GotoTypeDefinition, Constants.LanguageNames.Cake), Shared]
+    public class GotoTypeDefinitionHandler : CakeRequestHandler<GotoTypeDefinitionRequest, GotoTypeDefinitionResponse>
     {
-        private readonly MetadataExternalSourceService _metadataExternalSourceService;
+        private readonly IExternalSourceService _externalSourceService;
 
         [ImportingConstructor]
-        public GotoTypeDefinitionV2Handler(
+        public GotoTypeDefinitionHandler(
             OmniSharpWorkspace workspace,
-            MetadataExternalSourceService metadataExternalSourceService)
+            ExternalSourceServiceFactory externalSourceServiceFactory,
+            OmniSharpOptions omniSharpOptions)
             : base(workspace)
         {
-            _metadataExternalSourceService = metadataExternalSourceService ?? throw new ArgumentNullException(nameof(metadataExternalSourceService));
+            _externalSourceService = externalSourceServiceFactory?.Create(omniSharpOptions) ?? throw new ArgumentNullException(nameof(externalSourceServiceFactory));
         }
 
         protected override async Task<GotoTypeDefinitionResponse> TranslateResponse(GotoTypeDefinitionResponse response, GotoTypeDefinitionRequest request)
@@ -63,12 +66,12 @@ namespace OmniSharp.Cake.Services.RequestHandlers.Navigation
                     continue;
                 }
 
-                var aliasLocations = await GotoTypeDefinitionHandlerHelper.GetAliasFromMetadataAsync(
+                var aliasLocations = await GotoTypeDefinitionHandlerHelper.GetAliasFromExternalSourceAsync(
                     Workspace,
                     request.FileName,
                     definition.Location.Range.End.Line,
                     request.Timeout,
-                    _metadataExternalSourceService
+                    _externalSourceService
                 );
 
                 definitions.AddRange(

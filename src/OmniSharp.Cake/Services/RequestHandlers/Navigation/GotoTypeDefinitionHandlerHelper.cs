@@ -7,6 +7,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.FindSymbols;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Roslyn;
+using OmniSharp.Roslyn.CSharp.Services;
 
 namespace OmniSharp.Cake.Services.RequestHandlers.Navigation
 {
@@ -15,12 +16,12 @@ namespace OmniSharp.Cake.Services.RequestHandlers.Navigation
         private const int MethodLineOffset = 3;
         private const int PropertyLineOffset = 7;
 
-        internal static async Task<IEnumerable<Alias>> GetAliasFromMetadataAsync(
+        internal static async Task<IEnumerable<Alias>> GetAliasFromExternalSourceAsync(
             OmniSharpWorkspace workspace,
             string fileName,
             int line,
             int timeout,
-            MetadataExternalSourceService metadataExternalSourceService)
+            IExternalSourceService externalSourceService)
         {
             var document = workspace.GetDocument(fileName);
             var lineIndex = line + MethodLineOffset;
@@ -78,6 +79,9 @@ namespace OmniSharp.Cake.Services.RequestHandlers.Navigation
                 _ => null
             };
 
+            if (typeSymbol == null)
+                return Enumerable.Empty<Alias>();
+
             var result = new List<Alias>();
             foreach (var location in typeSymbol.Locations)
             {
@@ -87,14 +91,14 @@ namespace OmniSharp.Cake.Services.RequestHandlers.Navigation
                 }
 
                 var cancellationSource = new CancellationTokenSource(TimeSpan.FromMilliseconds(timeout));
-                var (metadataDocument, _) = await metadataExternalSourceService.GetAndAddExternalSymbolDocument(document.Project, typeSymbol, cancellationSource.Token);
+                var (metadataDocument, _) = await externalSourceService.GetAndAddExternalSymbolDocument(document.Project, typeSymbol, cancellationSource.Token);
                 if (metadataDocument == null)
                 {
                     continue;
                 }
 
                 cancellationSource = new CancellationTokenSource(TimeSpan.FromMilliseconds(timeout));
-                var metadataLocation = await metadataExternalSourceService.GetExternalSymbolLocation(typeSymbol, metadataDocument, cancellationSource.Token);
+                var metadataLocation = await externalSourceService.GetExternalSymbolLocation(typeSymbol, metadataDocument, cancellationSource.Token);
                 var lineSpan = metadataLocation.GetMappedLineSpan();
 
                 result.Add(new Alias
