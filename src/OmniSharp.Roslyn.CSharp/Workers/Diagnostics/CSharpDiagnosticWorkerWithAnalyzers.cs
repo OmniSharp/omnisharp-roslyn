@@ -29,7 +29,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
         private readonly DiagnosticEventForwarder _forwarder;
         private readonly OmniSharpOptions _options;
         private readonly OmniSharpWorkspace _workspace;
-        private readonly ImmutableArray<Task> _workerTasks;
+
+        private int _projectCount = 0;
+
 
         // This is workaround.
         // Currently roslyn doesn't expose official way to use IDE analyzers during analysis.
@@ -60,9 +62,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             _workspace.WorkspaceChanged += OnWorkspaceChanged;
             _workspace.OnInitialized += OnWorkspaceInitialized;
 
-            _workerTasks = Enumerable.Range(0, options.RoslynExtensionsOptions.DiagnosticWorkersThreadCount)
-                .Select(_ => Task.Run(Worker))
-                .ToImmutableArray();
+            for (var i = 0; i < options.RoslynExtensionsOptions.DiagnosticWorkersThreadCount; i++)
+                Task.Run(Worker);
 
             OnWorkspaceInitialized(_workspace.Initialized);
         }
@@ -176,8 +177,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                 _forwarder.BackgroundDiagnosticsStatus(status, numberProjects, numberFiles, numberFilesRemaining);
         }
 
-        private int _projectCount = 0;
-
         private void QueueForAnalysis(ImmutableArray<DocumentId> documentIds, AnalyzerWorkType workType)
         {
             if (workType == AnalyzerWorkType.Background)
@@ -271,7 +270,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Analysis of project {documentId} failed, underlaying error: {ex}");
+                _logger.LogError($"Analysis of document {documentId} failed, underlying error: {ex}");
             }
         }
 
