@@ -397,9 +397,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
         {
             _workspace.WorkspaceChanged -= OnWorkspaceChanged;
             _workspace.OnInitialized -= OnWorkspaceInitialized;
-
-            // TODO: Clean up worker queue
-            // TODO: Clean up background threads
         }
     }
 }
