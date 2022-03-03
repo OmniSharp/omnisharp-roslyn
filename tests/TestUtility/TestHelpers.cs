@@ -143,13 +143,15 @@ namespace TestUtility
         public static IConfiguration GetConfigurationDataWithAnalyzerConfig(
             bool roslynAnalyzersEnabled = false,
             bool editorConfigEnabled = false,
-            Dictionary<string, string> existingConfiguration = null)
+            Dictionary<string, string> existingConfiguration = null,
+            bool analyzeOpenDocumentsOnly = false)
         {
             if (existingConfiguration == null)
             {
                 return new Dictionary<string, string>()
                 {
                     { "RoslynExtensionsOptions:EnableAnalyzersSupport", roslynAnalyzersEnabled.ToString() },
+                    { "RoslynExtensionsOptions:AnalyzeOpenDocumentsOnly", analyzeOpenDocumentsOnly.ToString() },
                     { "FormattingOptions:EnableEditorConfigSupport", editorConfigEnabled.ToString() }
                 }.ToConfiguration();
             }
