@@ -264,7 +264,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [InlineData(false, true)]
         [InlineData(true, false)]
         [InlineData(true, true)]
-        public async Task WhenDocumentIsntOpenAndAnalyzeOpenDocumentsOnlyIsSet_DontAnylizeFiles(bool analyzeOpenDocumentsOnly, bool isDocumentOpen)
+        public async Task WhenDocumentIsntOpenAndAnalyzeOpenDocumentsOnlyIsSet_DontAnalyzeFiles(bool analyzeOpenDocumentsOnly, bool isDocumentOpen)
         {
             using (var host = GetHost(analyzeOpenDocumentsOnly))
             {
