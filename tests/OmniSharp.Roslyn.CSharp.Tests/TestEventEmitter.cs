@@ -1,46 +1,72 @@
 using System;
-using System.Collections.Concurrent;
-using System.Collections.Immutable;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading;
 using System.Threading.Tasks;
 using OmniSharp.Eventing;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
     public class TestEventEmitter<T> : IEventEmitter
+    {
+        private readonly object _lock = new();
+        private readonly List<T> _messages = new();
+        private readonly List<(Predicate<T> Predicate, TaskCompletionSource<object> TaskCompletionSource)> _predicates = new();
+
+        public async Task ExpectForEmitted(Expression<Predicate<T>> predicate)
         {
-            public ImmutableArray<T> Messages { get; private set; } = ImmutableArray<T>.Empty;
+            var asCompiledPredicate = predicate.Compile();
+            var tcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
 
-            public async Task ExpectForEmitted(Expression<Predicate<T>> predicate)
+            lock (_lock)
             {
-                var asCompiledPredicate = predicate.Compile();
+                if (_messages.Any(m => asCompiledPredicate(m)))
+                    return;
 
-                // May seem hacky but nothing is more painfull to debug than infinite hanging test ...
-                for(int i = 0; i < 100; i++)
+                _predicates.Add((asCompiledPredicate, tcs));
+            }
+
+            try
+            {
+                using var cts = new CancellationTokenSource(25000);
+
+                cts.Token.Register(() => tcs.SetCanceled());
+
+                await tcs.Task;
+            }
+            catch (OperationCanceledException)
+            {
+                throw new InvalidOperationException($"Timeout reached before expected event count reached before prediction {predicate} came true, current diagnostics '{String.Join(";", _messages)}'");
+            }
+            finally
+            {
+                lock (_lock)
+                    _predicates.Remove((asCompiledPredicate, tcs));
+            }
+        }
+
+        public void Clear()
+        {
+            lock (_lock)
+                _messages.Clear();
+        }
+
+        public void Emit(string kind, object args)
+        {
+            if (args is T asT)
+            {
+                lock (_lock)
                 {
-                    if(Messages.Any(m => asCompiledPredicate(m)))
+                    _messages.Add(asT);
+
+                    foreach (var (predicate, tcs) in _predicates)
                     {
-                        return;
+                        if (predicate(asT))
+                            tcs.SetResult(null);
                     }
-
-                    await Task.Delay(250);
-                }
-
-                throw new InvalidOperationException($"Timeout reached before expected event count reached before prediction {predicate} came true, current diagnostics '{String.Join(";", Messages)}'");
-            }
-
-            public void Clear()
-            {
-                Messages = ImmutableArray<T>.Empty;
-            }
-
-            public void Emit(string kind, object args)
-            {
-                if(args is T asT)
-                {
-                    Messages = Messages.Add(asT);
                 }
             }
         }
+    }
 }
