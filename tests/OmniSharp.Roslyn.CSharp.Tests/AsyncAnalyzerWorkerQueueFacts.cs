@@ -136,7 +136,34 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         }
 
         [Fact]
-        public async Task WhenWorkIsAddedAgainWhenPreviousIsAnalysing_ThenDontWaitAnotherOneToGetReady()
+        public async Task WheNewnWorkIsAddedAgainWhenPreviousIsAnalysing_ThenDontWaitAnotherOneToGetReady()
+        {
+            var queue = new AsyncAnalyzerWorkQueue(new LoggerFactory());
+            var document1 = CreateTestDocumentId();
+            var document2 = CreateTestDocumentId();
+
+            queue.PutWork(new[] { document1 }, AnalyzerWorkType.Foreground);
+
+            var work = await queue.TakeWorkAsync();
+            var waitingCall = Task.Run(async () => await queue.WaitForegroundWorkCompleteWithTimeout(10 * 1000));
+            await Task.Delay(50);
+
+            // User updates code -> document is queued again during period when theres already api call waiting
+            // to continue.
+            queue.PutWork(new[] { document2 }, AnalyzerWorkType.Foreground);
+
+            // First iteration of work is done.
+            queue.WorkComplete(work);
+
+            // Waiting call continues because its iteration of work is done, even when theres next
+            // already waiting.
+            waitingCall.Wait(50);
+
+            Assert.True(waitingCall.IsCompleted);
+        }
+
+        [Fact]
+        public async Task WhenWorkIsAddedAgainWhenPreviousIsAnalysing_ThenContinueWaiting()
         {
             var queue = new AsyncAnalyzerWorkQueue(new LoggerFactory());
             var document = CreateTestDocumentId();
@@ -158,7 +185,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             // already waiting.
             waitingCall.Wait(50);
 
-            Assert.True(waitingCall.IsCompleted);
+            Assert.False(waitingCall.IsCompleted);
         }
 
         [Fact]

@@ -284,15 +284,21 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
                     if (cancellationTokenSources.Count == 0)
                         _active.Remove(documentId);
 
-                    foreach (var waiter in _waiters.ToList())
-                    {
-                        if (waiter.DocumentIds.Remove(documentId) && waiter.DocumentIds.Count == 0)
-                        {
-                            waiter.TaskCompletionSource.SetResult(null);
+                    var isReenqueued = cancellationToken.IsCancellationRequested
+                        && (_hash.Contains(documentId) || _active.ContainsKey(documentId));
 
-                            _waiters.Remove(waiter);
+                    if (!isReenqueued)
+                    {
+                        foreach (var waiter in _waiters.ToList())
+                        {
+                            if (waiter.DocumentIds.Remove(documentId) && waiter.DocumentIds.Count == 0)
+                            {
+                                waiter.TaskCompletionSource.SetResult(null);
+
+                                _waiters.Remove(waiter);
+                            }
                         }
-                    }    
+                    }
                 }
             }
 
