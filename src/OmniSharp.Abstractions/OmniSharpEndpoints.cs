@@ -3,6 +3,7 @@ namespace OmniSharp
     public static class OmniSharpEndpoints
     {
         public const string GotoDefinition = "/gotodefinition";
+        public const string GotoTypeDefinition = "/gototypedefinition";
         public const string FindSymbols = "/findsymbols";
         public const string UpdateBuffer = "/updatebuffer";
         public const string ChangeBuffer = "/changebuffer";
