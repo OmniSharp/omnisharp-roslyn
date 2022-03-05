@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 using OmniSharp.Eventing;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
@@ -37,7 +38,9 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             }
             catch (OperationCanceledException)
             {
-                throw new InvalidOperationException($"Timeout reached before expected event count reached before prediction {predicate} came true, current diagnostics '{String.Join(";", _messages)}'");
+                var messages = string.Join(";", _messages.Select(x => JsonConvert.SerializeObject(x)));
+
+                throw new InvalidOperationException($"Timeout reached before expected event count reached before prediction {predicate} came true, current diagnostics '{messages}'");
             }
             finally
             {

@@ -42,18 +42,9 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
                     _background.RequestCancellationIfActive(documentId);
 
                     if (workType == AnalyzerWorkType.Foreground)
-                    {
                         _forground.Enqueue(documentId);
-
-                        _background.Remove(documentId);
-                    }
                     else if (workType == AnalyzerWorkType.Background)
-                    {
-                        if (_forground.IsEnqueued(documentId))
-                            continue;
-
                         _background.Enqueue(documentId);
-                    }
                 }
 
                 if (!_takeWorkWaiter.Task.IsCompleted)
@@ -186,12 +177,12 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
 
         private class Queue
         {
-            private readonly HashSet<DocumentId> _hash = new();
-            private readonly Queue<DocumentId> _pending = new();
+            private readonly HashSet<DocumentId> _pendingHash = new();
+            private readonly Queue<DocumentId> _pendingQueue = new();
             private readonly Dictionary<DocumentId, List<CancellationTokenSource>> _active = new();
             private readonly List<(HashSet<DocumentId> DocumentIds, TaskCompletionSource<object?> TaskCompletionSource)> _waiters = new();
 
-            public int PendingCount => _pending.Count;
+            public int PendingCount => _pendingQueue.Count;
 
             public int ActiveCount => _active.Count;
 
@@ -208,46 +199,46 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
 
             public void Enqueue(DocumentId documentId)
             {
-                if (_hash.Add(documentId))
+                if (_pendingHash.Add(documentId))
                 {
-                    _pending.Enqueue(documentId);
+                    _pendingQueue.Enqueue(documentId);
 
-                    if (_pending.Count > MaximumPendingCount)
-                        MaximumPendingCount = _pending.Count;
+                    if (_pendingQueue.Count > MaximumPendingCount)
+                        MaximumPendingCount = _pendingQueue.Count;
                 }
             }
 
             public bool IsEnqueued(DocumentId documentId) =>
-                _hash.Contains(documentId);
+                _pendingHash.Contains(documentId);
 
             public bool IsActive(DocumentId documentId) =>
                 _active.ContainsKey(documentId);
 
             public void Remove(DocumentId documentId)
             {
-                if (_hash.Contains(documentId))
+                if (_pendingHash.Contains(documentId))
                 {
-                    _hash.Remove(documentId);
+                    _pendingHash.Remove(documentId);
 
-                    var backgroundQueueItems = _pending.ToList();
+                    var backgroundQueueItems = _pendingQueue.ToList();
 
-                    _pending.Clear();
+                    _pendingQueue.Clear();
 
                     foreach (var item in backgroundQueueItems)
                     {
                         if (item != documentId)
-                            _pending.Enqueue(item);
+                            _pendingQueue.Enqueue(item);
                     }
                 }
             }
             
             public bool TryDequeue([NotNullWhen(true)] out DocumentId? documentId, [NotNullWhen(true)] out CancellationTokenSource? cancellationTokenSource)
             {
-                if (_pending.Count > 0)
+                if (_pendingQueue.Count > 0)
                 {
-                    documentId = _pending.Dequeue();
+                    documentId = _pendingQueue.Dequeue();
 
-                    _hash.Remove(documentId);
+                    _pendingHash.Remove(documentId);
 
                     if (!_active.TryGetValue(documentId, out var cancellationTokenSources))
                         _active[documentId] = cancellationTokenSources = new List<CancellationTokenSource>();
@@ -285,7 +276,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
                         _active.Remove(documentId);
 
                     var isReenqueued = cancellationToken.IsCancellationRequested
-                        && (_hash.Contains(documentId) || _active.ContainsKey(documentId));
+                        && (_pendingHash.Contains(documentId) || _active.ContainsKey(documentId));
 
                     if (!isReenqueued)
                     {
@@ -304,10 +295,10 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
 
             public Task GetWaiter()
             {
-                if (_active.Count == 0 && _pending.Count == 0)
+                if (_active.Count == 0 && _pendingQueue.Count == 0)
                     return Task.CompletedTask;
 
-                var documentIds = new HashSet<DocumentId>(_hash.Concat(_active.Keys));
+                var documentIds = new HashSet<DocumentId>(_pendingHash.Concat(_active.Keys));
 
                 var waiter = _waiters.FirstOrDefault(x => x.DocumentIds.SetEquals(documentIds));
 
