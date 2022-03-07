@@ -310,6 +310,11 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
                 var documentSemanticModel = await document.GetSemanticModelAsync(perDocumentTimeout.Token);
 
+                // Analyzers cannot be called with empty analyzer list.
+                var canDoFullAnalysis = allAnalyzers.Length > 0
+                    && (!_options.RoslynExtensionsOptions.AnalyzeOpenDocumentsOnly
+                        || _workspace.IsDocumentOpen(document.Id));
+
                 // Only basic syntax check is available if file is miscellanous like orphan .cs file.
                 // Those projects are on hard coded virtual project
                 if (project.Name == $"{Configuration.OmniSharpMiscProjectName}.csproj")
@@ -317,7 +322,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                     var syntaxTree = await document.GetSyntaxTreeAsync();
                     return syntaxTree.GetDiagnostics().ToImmutableArray();
                 }
-                else if (allAnalyzers.Any()) // Analyzers cannot be called with empty analyzer list.
+                else if (canDoFullAnalysis)
                 {
                     var compilationWithAnalyzers = compilation.WithAnalyzers(allAnalyzers, new CompilationWithAnalyzersOptions(
                         workspaceAnalyzerOptions,
