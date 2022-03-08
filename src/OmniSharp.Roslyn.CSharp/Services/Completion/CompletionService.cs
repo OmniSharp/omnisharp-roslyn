@@ -52,7 +52,12 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
             _omniSharpOptions = omniSharpOptions;
         }
 
-        public async Task<CompletionResponse> Handle(CompletionRequest request)
+        public Task<CompletionResponse> Handle(CompletionRequest request)
+        {
+            return Handle(request, forceExpandedCompletionIndexCreation: false);
+        }
+
+        public async Task<CompletionResponse> Handle(CompletionRequest request, bool forceExpandedCompletionIndexCreation)
         {
             _logger.LogTrace("Completions requested");
 
@@ -76,7 +81,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                 _ => CompletionTrigger.Invoke,
             };
 
-            var options = new OmniSharpCompletionOptions(ShowItemsFromUnimportedNamespaces: _omniSharpOptions.RoslynExtensionsOptions.EnableImportCompletion);
+            var options = new OmniSharpCompletionOptions(
+                ShowItemsFromUnimportedNamespaces: _omniSharpOptions.RoslynExtensionsOptions.EnableImportCompletion,
+                ForceExpandedCompletionIndexCreation: forceExpandedCompletionIndexCreation);
 
             if (request.CompletionTrigger == CompletionTriggerKind.TriggerCharacter &&
                 !await OmniSharpCompletionService.ShouldTriggerCompletionAsync(completionService, document, position, trigger, roles: null, options, CancellationToken.None))

@@ -48,7 +48,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
                 var sourceText = await document.GetTextAsync();
                 var position = sourceText.GetTextPosition(request);
                 var service = CompletionService.GetService(document);
-                var options = new OmniSharpCompletionOptions(ShowItemsFromUnimportedNamespaces: _omniSharpOptions.RoslynExtensionsOptions.EnableImportCompletion);
+                var options = new OmniSharpCompletionOptions(
+                    ShowItemsFromUnimportedNamespaces: _omniSharpOptions.RoslynExtensionsOptions.EnableImportCompletion,
+                    ForceExpandedCompletionIndexCreation: false);
                 var completionList = await OmniSharpCompletionService.GetCompletionsAsync(service, document, position, trigger: default, roles: null, options, CancellationToken.None);
 
                 if (completionList != null)

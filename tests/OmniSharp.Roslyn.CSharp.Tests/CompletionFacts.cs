@@ -2278,7 +2278,8 @@ namespace N
 
             var requestHandler = GetCompletionService(testHost);
 
-            return await requestHandler.Handle(request);
+            // Force the completion handler to return a complete set of results.
+            return await requestHandler.Handle(request, forceExpandedCompletionIndexCreation: true);
         }
 
         private async Task<CompletionResponse> FindCompletionsWithImportedAsync(string filename, string source, OmniSharpTestHost host)
