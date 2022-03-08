@@ -12,12 +12,15 @@ using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CodeRefactorings;
 using Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.CodeActions;
+using Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.ImplementType;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Extensions;
 using OmniSharp.Mef;
 using OmniSharp.Models;
 using OmniSharp.Models.V2.CodeActions;
+using OmniSharp.Options;
+using OmniSharp.Roslyn.CodeActions;
 using OmniSharp.Roslyn.CSharp.Helpers;
 using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
 using OmniSharp.Roslyn.CSharp.Workers.Diagnostics;
@@ -35,6 +38,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
         protected readonly OmniSharpWorkspace Workspace;
         protected readonly IEnumerable<ICodeActionProvider> Providers;
         protected readonly ILogger Logger;
+        protected readonly OmniSharpOptions Options;
         private readonly ICsDiagnosticWorker _diagnostics;
         private readonly CachingCodeFixProviderForProjects _codeFixesForProject;
 
@@ -51,11 +55,13 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             IEnumerable<ICodeActionProvider> providers,
             ILogger logger,
             ICsDiagnosticWorker diagnostics,
-            CachingCodeFixProviderForProjects codeFixesForProject)
+            CachingCodeFixProviderForProjects codeFixesForProject,
+            OmniSharpOptions options)
         {
             Workspace = workspace;
             Providers = providers;
             Logger = logger;
+            Options = options;
             _diagnostics = diagnostics;
             _codeFixesForProject = codeFixesForProject;
             OrderedCodeRefactoringProviders = new Lazy<List<CodeRefactoringProvider>>(() => GetSortedCodeRefactoringProviders());
@@ -131,13 +137,21 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
         private async Task AppendFixesAsync(Document document, TextSpan span, IEnumerable<Diagnostic> diagnostics, List<CodeAction> codeActions)
         {
+            var codeActionOptions = CodeActionOptionsFactory.Create(Options);
+
             foreach (var codeFixProvider in GetSortedCodeFixProviders(document))
             {
                 var fixableDiagnostics = diagnostics.Where(d => HasFix(codeFixProvider, d.Id)).ToImmutableArray();
 
                 if (fixableDiagnostics.Length > 0)
                 {
-                    var context = new CodeFixContext(document, span, fixableDiagnostics, (a, _) => codeActions.Add(a), CancellationToken.None);
+                    var context = OmniSharpCodeFixContextFactory.CreateCodeFixContext(
+                        document,
+                        span,
+                        fixableDiagnostics,
+                        (a, _) => codeActions.Add(a),
+                        codeActionOptions,
+                        CancellationToken.None);
 
                     try
                     {

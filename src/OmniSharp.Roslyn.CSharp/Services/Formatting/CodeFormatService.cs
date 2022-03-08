@@ -14,14 +14,12 @@ namespace OmniSharp.Roslyn.CSharp.Services.Formatting
     {
         private readonly OmniSharpWorkspace _workspace;
         private readonly OmniSharpOptions _omnisharpOptions;
-        private readonly ILoggerFactory _loggerFactory;
 
         [ImportingConstructor]
-        public CodeFormatService(OmniSharpWorkspace workspace, OmniSharpOptions omnisharpOptions, ILoggerFactory loggerFactory)
+        public CodeFormatService(OmniSharpWorkspace workspace, OmniSharpOptions omnisharpOptions)
         {
             _workspace = workspace;
             _omnisharpOptions = omnisharpOptions;
-            _loggerFactory = loggerFactory;
         }
 
         public async Task<CodeFormatResponse> Handle(CodeFormatRequest request)
@@ -34,14 +32,14 @@ namespace OmniSharp.Roslyn.CSharp.Services.Formatting
 
             if (request.WantsTextChanges)
             {
-                var textChanges = await FormattingWorker.GetFormattedTextChanges(document, _omnisharpOptions, _loggerFactory);
+                var textChanges = await FormattingWorker.GetFormattedTextChanges(document, _omnisharpOptions);
                 return new CodeFormatResponse()
                 {
                     Changes = textChanges
                 };
             }
 
-            var newText = await FormattingWorker.GetFormattedText(document, _omnisharpOptions, _loggerFactory);
+            var newText = await FormattingWorker.GetFormattedText(document, _omnisharpOptions);
 
             return new CodeFormatResponse
             {

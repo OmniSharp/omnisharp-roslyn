@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using System.Composition.Hosting.Core;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using TestUtility.Logging;
 using Xunit;
@@ -13,7 +15,6 @@ namespace TestUtility
         protected readonly ILoggerFactory LoggerFactory;
 
         protected OmniSharpTestHost SharedOmniSharpTestHost { get; }
-
 
         protected AbstractTestFixture(ITestOutputHelper output)
         {
@@ -45,6 +46,7 @@ namespace TestUtility
         protected OmniSharpTestHost CreateEmptyOmniSharpHost()
         {
             var host = OmniSharpTestHost.Create(path: null, testOutput: this.TestOutput);
+
             host.AddFilesToWorkspace();
             return host;
         }
