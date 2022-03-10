@@ -9,6 +9,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
+using Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.Analyzers;
+using Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.ImplementType;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Helpers;
 using OmniSharp.Models.Diagnostics;
@@ -31,11 +33,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
         private readonly OmniSharpOptions _options;
         private readonly OmniSharpWorkspace _workspace;
 
-        // This is workaround.
-        // Currently roslyn doesn't expose official way to use IDE analyzers during analysis.
-        // This options gives certain IDE analysis access for services that are not yet publicly available.
-        private readonly ConstructorInfo _workspaceAnalyzerOptionsConstructor;
-
         public CSharpDiagnosticWorkerWithAnalyzers(
             OmniSharpWorkspace workspace,
             [ImportMany] IEnumerable<ICodeActionProvider> providers,
@@ -51,12 +48,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             _forwarder = forwarder;
             _options = options;
             _workspace = workspace;
-
-            _workspaceAnalyzerOptionsConstructor = Assembly
-                .Load("Microsoft.CodeAnalysis.Features")
-                .GetType("Microsoft.CodeAnalysis.Diagnostics.WorkspaceAnalyzerOptions")
-                .GetConstructor(new Type[] { typeof(AnalyzerOptions), typeof(Solution) })
-                ?? throw new InvalidOperationException("Could not resolve 'Microsoft.CodeAnalysis.Diagnostics.WorkspaceAnalyzerOptions' for IDE analyzers.");
 
             _workspace.WorkspaceChanged += OnWorkspaceChanged;
             _workspace.OnInitialized += OnWorkspaceInitialized;
@@ -220,22 +211,24 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             }
         }
 
+        private AnalyzerOptions CreateAnalyzerOptions(Project project)
+            => OmniSharpWorkspaceAnalyzerOptionsFactory.Create(project.Solution, project.AnalyzerOptions);
+
         public async Task<IEnumerable<Diagnostic>> AnalyzeDocumentAsync(Document document, CancellationToken cancellationToken)
         {
             Project project = document.Project;
             var allAnalyzers = GetAnalyzersForProject(project);
             var compilation = await project.GetCompilationAsync(cancellationToken);
-            var workspaceAnalyzerOptions = (AnalyzerOptions)_workspaceAnalyzerOptionsConstructor.Invoke(new object[] { project.AnalyzerOptions, project.Solution });
-
+            
             cancellationToken.ThrowIfCancellationRequested();
-            return await AnalyzeDocument(project, allAnalyzers, compilation, workspaceAnalyzerOptions, document);
+            return await AnalyzeDocument(project, allAnalyzers, compilation, CreateAnalyzerOptions(document.Project), document);
         }
 
         public async Task<IEnumerable<Diagnostic>> AnalyzeProjectsAsync(Project project, CancellationToken cancellationToken)
         {
             var allAnalyzers = GetAnalyzersForProject(project);
             var compilation = await project.GetCompilationAsync(cancellationToken);
-            var workspaceAnalyzerOptions = (AnalyzerOptions)_workspaceAnalyzerOptionsConstructor.Invoke(new object[] { project.AnalyzerOptions, project.Solution });
+            var workspaceAnalyzerOptions = CreateAnalyzerOptions(project);
             var documentAnalyzerTasks = new List<Task>();
             var diagnostics = ImmutableList<Diagnostic>.Empty;
 
@@ -269,7 +262,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                 var project = solution.GetProject(documentsGroupedByProject.Key);
                 var allAnalyzers = GetAnalyzersForProject(project);
                 var compilation = await project.GetCompilationAsync();
-                var workspaceAnalyzerOptions = (AnalyzerOptions)_workspaceAnalyzerOptionsConstructor.Invoke(new object[] { project.AnalyzerOptions, project.Solution });
+                var workspaceAnalyzerOptions = CreateAnalyzerOptions(project);
                 var documentAnalyzerTasks = new List<Task>();
 
                 foreach (var documentId in documentsGroupedByProject)

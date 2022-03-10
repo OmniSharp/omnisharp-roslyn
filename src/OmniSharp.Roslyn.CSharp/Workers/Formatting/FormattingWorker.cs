@@ -5,9 +5,12 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using ICSharpCode.Decompiler.Util;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.CSharp.Formatting;
 using Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.DocumentationComments;
+using Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.Formatting;
 using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.Extensions.Logging;
@@ -20,7 +23,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Formatting
 {
     public static class FormattingWorker
     {
-        public static async Task<IEnumerable<LinePositionSpanTextChange>> GetFormattingChangesAfterKeystroke(Document document, int position, char character, OmniSharpOptions omnisharpOptions, ILoggerFactory loggerFactory)
+        public static async Task<IEnumerable<LinePositionSpanTextChange>> GetFormattingChangesAfterKeystroke(Document document, int position, char character, OmniSharpOptions omnisharpOptions)
         {
             if (await GetDocumentationCommentChanges(document, position, character, omnisharpOptions) is LinePositionSpanTextChange change)
             {
@@ -35,7 +38,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Formatting
                 var node = FindFormatTarget(root!, position);
                 if (node != null)
                 {
-                    return await GetFormattingChanges(document, node.FullSpan.Start, node.FullSpan.End, omnisharpOptions, loggerFactory);
+                    return await GetFormattingChanges(document, node.FullSpan.Start, node.FullSpan.End, omnisharpOptions);
                 }
             }
 
@@ -79,40 +82,139 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Formatting
             return null;
         }
 
-        public static async Task<IEnumerable<LinePositionSpanTextChange>> GetFormattingChanges(Document document, int start, int end, OmniSharpOptions omnisharpOptions, ILoggerFactory loggerFactory)
+        public static async Task<IEnumerable<LinePositionSpanTextChange>> GetFormattingChanges(Document document, int start, int end, OmniSharpOptions omnisharpOptions)
         {
-            var newDocument = await FormatDocument(document, omnisharpOptions, loggerFactory, TextSpan.FromBounds(start, end));
+            var newDocument = await FormatDocument(document, omnisharpOptions, TextSpan.FromBounds(start, end));
             return await TextChanges.GetAsync(newDocument, document);
         }
 
-        public static async Task<string> GetFormattedText(Document document, OmniSharpOptions omnisharpOptions, ILoggerFactory loggerFactory)
+        public static async Task<string> GetFormattedText(Document document, OmniSharpOptions omnisharpOptions)
         {
-            var newDocument = await FormatDocument(document, omnisharpOptions, loggerFactory);
+            var newDocument = await FormatDocument(document, omnisharpOptions);
             var text = await newDocument.GetTextAsync();
             return text.ToString();
         }
 
-        public static async Task<IEnumerable<LinePositionSpanTextChange>> GetFormattedTextChanges(Document document, OmniSharpOptions omnisharpOptions, ILoggerFactory loggerFactory)
+        public static async Task<IEnumerable<LinePositionSpanTextChange>> GetFormattedTextChanges(Document document, OmniSharpOptions omnisharpOptions)
         {
-            var newDocument = await FormatDocument(document, omnisharpOptions, loggerFactory);
+            var newDocument = await FormatDocument(document, omnisharpOptions);
             return await TextChanges.GetAsync(newDocument, document);
         }
 
-        private static async Task<Document> FormatDocument(Document document, OmniSharpOptions omnisharpOptions, ILoggerFactory loggerFactory, TextSpan? textSpan = null)
+        private static async Task<Document> FormatDocument(Document document, OmniSharpOptions omnisharpOptions, TextSpan? textSpan = null)
         {
-            // If we are not using .editorconfig for formatting options then we can avoid any overhead of calculating document options.
-            var optionSet = omnisharpOptions.FormattingOptions.EnableEditorConfigSupport
-                ? await document.GetOptionsAsync()
-                : document.Project.Solution.Options;
-
-            var newDocument = textSpan != null ? await Formatter.FormatAsync(document, textSpan.Value, optionSet) : await Formatter.FormatAsync(document, optionSet);
+            var spans = (textSpan != null) ? new[] { textSpan.Value } : null;
+            var formattingOtions = await GetFormattingOptionsAsync(document, omnisharpOptions);
+            var newDocument =  await OmniSharpFormatter.FormatAsync(document, spans, formattingOtions, CancellationToken.None);
             if (omnisharpOptions.FormattingOptions.OrganizeImports)
             {
-                newDocument = await Formatter.OrganizeImportsAsync(newDocument);
+                var organizeImportsOptions = await GetOrganizeImportsOptionsAsync(document, omnisharpOptions);
+                newDocument = await OmniSharpFormatter.OrganizeImportsAsync(newDocument, organizeImportsOptions, CancellationToken.None);
             }
 
             return newDocument;
         }
+
+        // If we are not using .editorconfig for formatting options then we can avoid any overhead of calculating document options.
+        internal static async ValueTask<OmniSharpOrganizeImportsOptionsWrapper> GetOrganizeImportsOptionsAsync(Document document, OmniSharpOptions omnisharpOptions)
+            => omnisharpOptions.FormattingOptions.EnableEditorConfigSupport
+                ? await OmniSharpOrganizeImportsOptionsWrapper.FromDocumentAsync(document, CancellationToken.None)
+                : WrapOrganizeImportsOptions(omnisharpOptions.FormattingOptions);
+
+        // If we are not using .editorconfig for formatting options then we can avoid any overhead of calculating document options.
+        internal static async ValueTask<OmniSharpSyntaxFormattingOptionsWrapper> GetFormattingOptionsAsync(Document document, OmniSharpOptions omnisharpOptions)
+            => omnisharpOptions.FormattingOptions.EnableEditorConfigSupport
+                ? await OmniSharpSyntaxFormattingOptionsWrapper.FromDocumentAsync(document, CancellationToken.None)
+                : WrapFormattingOptions(omnisharpOptions.FormattingOptions);
+
+        // If we are not using .editorconfig for formatting options then we can avoid any overhead of calculating document options.
+        internal static async ValueTask<OmniSharpDocumentationCommentOptionsWrapper> GetDocumentationCommentOptionsAsync(Document document, OmniSharpOptions omnisharpOptions)
+            => omnisharpOptions.FormattingOptions.EnableEditorConfigSupport
+                ? await OmniSharpDocumentationCommentOptionsWrapper.FromDocumentAsync(document, autoXmlDocCommentGeneration: true, CancellationToken.None)
+                : WrapDocumentationCommentOptions(omnisharpOptions.FormattingOptions);
+
+        private static OmniSharpOrganizeImportsOptionsWrapper WrapOrganizeImportsOptions(OmniSharp.Options.FormattingOptions options)
+           => new(
+               placeSystemNamespaceFirst: true,
+               separateImportDirectiveGroups: false,
+               options.NewLine);
+
+        private static OmniSharpSyntaxFormattingOptionsWrapper WrapFormattingOptions(OmniSharp.Options.FormattingOptions options)
+            => OmniSharpSyntaxFormattingOptionsFactory.Create(
+                useTabs: options.UseTabs,
+                tabSize: options.TabSize,
+                indentationSize: options.IndentationSize,
+                newLine: options.NewLine,
+                separateImportDirectiveGroups: options.SeparateImportDirectiveGroups,
+                spacingAfterMethodDeclarationName: options.SpacingAfterMethodDeclarationName,
+                spaceWithinMethodDeclarationParenthesis: options.SpaceWithinMethodDeclarationParenthesis,
+                spaceBetweenEmptyMethodDeclarationParentheses: options.SpaceBetweenEmptyMethodDeclarationParentheses,
+                spaceAfterMethodCallName: options.SpaceAfterMethodCallName,
+                spaceWithinMethodCallParentheses: options.SpaceWithinMethodCallParentheses,
+                spaceBetweenEmptyMethodCallParentheses: options.SpaceBetweenEmptyMethodCallParentheses,
+                spaceAfterControlFlowStatementKeyword: options.SpaceAfterControlFlowStatementKeyword,
+                spaceWithinExpressionParentheses: options.SpaceWithinExpressionParentheses,
+                spaceWithinCastParentheses: options.SpaceWithinCastParentheses,
+                spaceWithinOtherParentheses: options.SpaceWithinOtherParentheses,
+                spaceAfterCast: options.SpaceAfterCast,
+                spaceBeforeOpenSquareBracket: options.SpaceBeforeOpenSquareBracket,
+                spaceBetweenEmptySquareBrackets: options.SpaceBetweenEmptySquareBrackets,
+                spaceWithinSquareBrackets: options.SpaceWithinSquareBrackets,
+                spaceAfterColonInBaseTypeDeclaration: options.SpaceAfterColonInBaseTypeDeclaration,
+                spaceAfterComma: options.SpaceAfterComma,
+                spaceAfterDot: options.SpaceAfterDot,
+                spaceAfterSemicolonsInForStatement: options.SpaceAfterSemicolonsInForStatement,
+                spaceBeforeColonInBaseTypeDeclaration: options.SpaceBeforeColonInBaseTypeDeclaration,
+                spaceBeforeComma: options.SpaceBeforeComma,
+                spaceBeforeDot: options.SpaceBeforeDot,
+                spaceBeforeSemicolonsInForStatement: options.SpaceBeforeSemicolonsInForStatement,
+                spacingAroundBinaryOperator: BinaryOperatorSpacingOptionForStringValue(options.SpacingAroundBinaryOperator),
+                indentBraces: options.IndentBraces,
+                indentBlock: options.IndentBlock,
+                indentSwitchSection: options.IndentSwitchSection,
+                indentSwitchCaseSection: options.IndentSwitchCaseSection,
+                indentSwitchCaseSectionWhenBlock: options.IndentSwitchCaseSectionWhenBlock,
+                labelPositioning: LabelPositionOptionForStringValue(options.LabelPositioning),
+                wrappingPreserveSingleLine: options.WrappingPreserveSingleLine,
+                wrappingKeepStatementsOnSingleLine: options.WrappingKeepStatementsOnSingleLine,
+                newLinesForBracesInTypes: options.NewLinesForBracesInTypes,
+                newLinesForBracesInMethods: options.NewLinesForBracesInMethods,
+                newLinesForBracesInProperties: options.NewLinesForBracesInProperties,
+                newLinesForBracesInAccessors: options.NewLinesForBracesInAccessors,
+                newLinesForBracesInAnonymousMethods: options.NewLinesForBracesInAnonymousMethods,
+                newLinesForBracesInControlBlocks: options.NewLinesForBracesInControlBlocks,
+                newLinesForBracesInAnonymousTypes: options.NewLinesForBracesInAnonymousTypes,
+                newLinesForBracesInObjectCollectionArrayInitializers: options.NewLinesForBracesInObjectCollectionArrayInitializers,
+                newLinesForBracesInLambdaExpressionBody: options.NewLinesForBracesInLambdaExpressionBody,
+                newLineForElse: options.NewLineForElse,
+                newLineForCatch: options.NewLineForCatch,
+                newLineForFinally: options.NewLineForFinally,
+                newLineForMembersInObjectInit: options.NewLineForMembersInObjectInit,
+                newLineForMembersInAnonymousTypes: options.NewLineForMembersInAnonymousTypes,
+                newLineForClausesInQuery: options.NewLineForClausesInQuery);
+
+        private static OmniSharpDocumentationCommentOptionsWrapper WrapDocumentationCommentOptions(OmniSharp.Options.FormattingOptions options)
+          => new(
+              autoXmlDocCommentGeneration: true,
+              tabSize: options.TabSize,
+              useTabs: options.UseTabs,
+              newLine: options.NewLine);
+
+        internal static OmniSharpLabelPositionOptions LabelPositionOptionForStringValue(string value)
+            => value.ToUpper() switch
+            {
+                "LEFTMOST" => OmniSharpLabelPositionOptions.LeftMost,
+                "NOINDENT" => OmniSharpLabelPositionOptions.NoIndent,
+                _ => OmniSharpLabelPositionOptions.OneLess,
+            };
+
+        internal static OmniSharpBinaryOperatorSpacingOptions BinaryOperatorSpacingOptionForStringValue(string value)
+            => value.ToUpper() switch
+            {
+                "IGNORE" => OmniSharpBinaryOperatorSpacingOptions.Ignore,
+                "REMOVE" => OmniSharpBinaryOperatorSpacingOptions.Remove,
+                _ => OmniSharpBinaryOperatorSpacingOptions.Single,
+            };
 
         private static async Task<LinePositionSpanTextChange?> GetDocumentationCommentChanges(Document document, int position, char character, OmniSharpOptions omnisharpOptions)
         {
@@ -124,11 +226,11 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Formatting
             var text = await document.GetTextAsync();
             var syntaxTree = await document.GetSyntaxTreeAsync();
 
-            var optionSet = await document.GetOptionsAsync();
+            var docCommentOptions = await GetDocumentationCommentOptionsAsync(document, omnisharpOptions).ConfigureAwait(false);
 
             var snippet = character == '\n' ?
-                OmniSharpDocumentationCommentsSnippetService.GetDocumentationCommentSnippetOnEnterTyped(document, syntaxTree!, text, position, optionSet, CancellationToken.None) :
-                OmniSharpDocumentationCommentsSnippetService.GetDocumentationCommentSnippetOnCharacterTyped(document, syntaxTree!, text, position, optionSet, CancellationToken.None);
+                OmniSharpDocumentationCommentsSnippetService.GetDocumentationCommentSnippetOnEnterTyped(document, syntaxTree!, text, position, docCommentOptions, CancellationToken.None) :
+                OmniSharpDocumentationCommentsSnippetService.GetDocumentationCommentSnippetOnCharacterTyped(document, syntaxTree!, text, position, docCommentOptions, CancellationToken.None);
 
             if (snippet == null)
             {
