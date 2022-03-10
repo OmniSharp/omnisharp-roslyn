@@ -11,7 +11,7 @@ In order to build OmniSharp, the [.NET 4.7.2 targeting pack](https://dotnet.micr
 ```
 brew update
 brew install mono
-brew install caskroom/cask/mono-mdk
+brew install homebrew/cask/mono-mdk
 ```
 
 ## Linux
