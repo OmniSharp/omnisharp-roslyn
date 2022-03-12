@@ -2,8 +2,8 @@
 {
     public class ImplementTypeOptions
     {
-        public ImplementTypeInsertionBehavior? InsertionBehavior { get; set; }
-        public ImplementTypePropertyGenerationBehavior? PropertyGenerationBehavior { get; set; }
+        public ImplementTypeInsertionBehavior InsertionBehavior { get; set; }
+        public ImplementTypePropertyGenerationBehavior PropertyGenerationBehavior { get; set; }
     }
 
     public enum ImplementTypeInsertionBehavior

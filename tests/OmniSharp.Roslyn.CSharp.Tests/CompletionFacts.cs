@@ -2253,7 +2253,7 @@ namespace N
         private CompletionService GetCompletionService(OmniSharpTestHost host)
             => host.GetRequestHandler<CompletionService>(EndpointName);
 
-        protected async Task<CompletionResponse> FindCompletionsAsync(string filename, string source, OmniSharpTestHost testHost, char? triggerChar = null, TestFile[] additionalFiles = null)
+        protected async Task<CompletionResponse> FindCompletionsAsync(string filename, string source, OmniSharpTestHost testHost, char? triggerChar = null, TestFile[] additionalFiles = null, bool forceExpandedCompletionIndexCreation = false)
         {
             var testFile = new TestFile(filename, source);
 
@@ -2278,32 +2278,11 @@ namespace N
 
             var requestHandler = GetCompletionService(testHost);
 
-            return await requestHandler.Handle(request);
+            return await requestHandler.Handle(request, forceExpandedCompletionIndexCreation);
         }
 
-        private async Task<CompletionResponse> FindCompletionsWithImportedAsync(string filename, string source, OmniSharpTestHost host)
-        {
-            var completions = await FindCompletionsAsync(filename, source, host);
-            if (!completions.IsIncomplete)
-            {
-                return completions;
-            }
-
-            // Populating the completion list should take no more than a few ms, don't let it take too
-            // long
-            CancellationTokenSource cts = new CancellationTokenSource(millisecondsDelay: ImportCompletionTimeout);
-            await Task.Run(async () =>
-            {
-                while (completions.IsIncomplete)
-                {
-                    completions = await FindCompletionsAsync(filename, source, host);
-                    cts.Token.ThrowIfCancellationRequested();
-                }
-            }, cts.Token);
-
-            Assert.False(completions.IsIncomplete);
-            return completions;
-        }
+        private Task<CompletionResponse> FindCompletionsWithImportedAsync(string filename, string source, OmniSharpTestHost host)
+            => FindCompletionsAsync(filename, source, host, forceExpandedCompletionIndexCreation: true);
 
         protected async Task<CompletionResolveResponse> ResolveCompletionAsync(CompletionItem completionItem, OmniSharpTestHost testHost)
             => await GetCompletionService(testHost).Handle(new CompletionResolveRequest { Item = completionItem });
