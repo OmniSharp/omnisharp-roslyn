@@ -56,6 +56,9 @@ namespace OmniSharp
         public const string UpdateSourceGeneratedFile = "/updatesourcegeneratedfile";
         public const string SourceGeneratedFileClosed = "/sourcegeneratedfileclosed";
 
+        public const string InlayHint = "/inlayHint";
+        public const string InlayHintResolve = "/inlayHint/resolve";
+
         public static class V2
         {
             public const string GetCodeActions = "/v2/getcodeactions";
