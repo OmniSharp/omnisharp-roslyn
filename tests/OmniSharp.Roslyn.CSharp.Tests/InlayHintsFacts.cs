@@ -23,11 +23,13 @@ public class InlayHintsFacts : AbstractTestFixture
     public async Task InlayHintsRetrievedForTopLevelStatements(string fileName)
     {
         var code = @"
-{|ihRegion:var testA = 1;
-var testB = 2;
+{|ihRegion:var testA = new C();
+var testB = new C();
 M(testA, testB)|};
 
-void M(int param1, int paramB) { }
+void M(C param1, C paramB) { }
+
+class C { }
 ";
 
         using var testHost = CreateOmniSharpHost(configurationData: InlayHintsOptionsToKvp(InlayHintsOptions.AllOn));
@@ -36,34 +38,34 @@ void M(int param1, int paramB) { }
             {
                 new InlayHint { Position = new Point { Line = 3, Column = 2 }, Label = "param1: ", Tooltip = null },
                 new InlayHint { Position = new Point { Line = 3, Column = 9 }, Label = "paramB: ", Tooltip = null },
-                new InlayHint { Position = new Point { Line = 1, Column = 4 }, Label = "int ", Tooltip = null },
-                new InlayHint { Position = new Point { Line = 2, Column = 4 }, Label = "int ", Tooltip = null }
+                new InlayHint { Position = new Point { Line = 1, Column = 4 }, Label = "C ", Tooltip = null },
+                new InlayHint { Position = new Point { Line = 2, Column = 4 }, Label = "C ", Tooltip = null }
             },
             response.InlayHints);
 
         var param1 = await ResolveInlayHint(response.InlayHints[0], testHost);
         AssertEx.AssertEqualToleratingWhitespaceDifferences(@"
 ```csharp
-(parameter) int param1
+(parameter) C param1
 ```", param1.Tooltip);
 
         var paramB = await ResolveInlayHint(response.InlayHints[1], testHost);
         AssertEx.AssertEqualToleratingWhitespaceDifferences(@"
 ```csharp
-(parameter) int paramB
+(parameter) C paramB
 ```", paramB.Tooltip);
 
-        var int1 = await ResolveInlayHint(response.InlayHints[2], testHost);
+        var c1 = await ResolveInlayHint(response.InlayHints[2], testHost);
         AssertEx.AssertEqualToleratingWhitespaceDifferences(@"
 ```csharp
-readonly struct System.Int32
-```", int1.Tooltip);
+class C
+```", c1.Tooltip);
 
-        var int2 = await ResolveInlayHint(response.InlayHints[3], testHost);
+        var c2 = await ResolveInlayHint(response.InlayHints[3], testHost);
         AssertEx.AssertEqualToleratingWhitespaceDifferences(@"
 ```csharp
-readonly struct System.Int32
-```", int2.Tooltip);
+class C
+```", c2.Tooltip);
     }
 
     [Theory]
