@@ -5,7 +5,6 @@ using OmniSharp.Models.V2;
 
 namespace OmniSharp.Models.v1.InlayHints;
 
-
 [OmniSharpEndpoint(OmniSharpEndpoints.InlayHint, typeof(InlayHintRequest), typeof(InlayHintResponse))]
 public record InlayHintRequest : IRequest
 {
