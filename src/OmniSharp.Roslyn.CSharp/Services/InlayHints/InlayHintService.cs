@@ -42,6 +42,7 @@ internal class InlayHintService :
         _omniSharpOptions = omniSharpOptions;
         _cache = new(_logger);
     }
+
     public async Task<InlayHintResponse> Handle(InlayHintRequest request)
     {
         var document = _workspace.GetDocument(request.Location.FileName);
