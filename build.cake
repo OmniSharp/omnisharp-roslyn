@@ -336,11 +336,6 @@ Task("Test")
         }
 });
 
-void CopyMonoBuild(BuildEnvironment env, string sourceFolder, string outputFolder, string platformName = null)
-{
-    DirectoryHelper.Copy(sourceFolder, outputFolder, copySubDirectories: false);
-}
-
 void CopyExtraDependencies(BuildEnvironment env, string outputFolder)
 {
     // copy license
@@ -412,6 +407,20 @@ string PublishMonoBuild(string project, BuildEnvironment env, BuildPlan plan, st
     CopyExtraDependencies(env, outputFolder);
     AddOmniSharpBindingRedirects(outputFolder);
 
+    // Copy dependencies of Mono build
+    FileHelper.Copy(
+        source: CombinePaths(env.Folders.Tools, "SQLitePCLRaw.core", "lib", "netstandard2.0", "SQLitePCLRaw.core.dll"),
+        destination: CombinePaths(outputFolder, "SQLitePCLRaw.core.dll"),
+        overwrite: true);
+    FileHelper.Copy(
+        source: CombinePaths(env.Folders.Tools, "SQLitePCLRaw.provider.e_sqlite3", "lib", "netstandard2.0", "SQLitePCLRaw.provider.e_sqlite3.dll"),
+        destination: CombinePaths(outputFolder, "SQLitePCLRaw.provider.e_sqlite3.dll"),
+        overwrite: true);
+    FileHelper.Copy(
+        source: CombinePaths(env.Folders.Tools, "SQLitePCLRaw.bundle_green", "lib", "netstandard2.0", "SQLitePCLRaw.batteries_v2.dll"),
+        destination: CombinePaths(outputFolder, "SQLitePCLRaw.batteries_v2.dll"),
+        overwrite: true);
+
     Package(project, "mono", outputFolder, env.Folders.ArtifactsPackage, env.Folders.DeploymentPackage);
 
     return outputFolder;
@@ -423,8 +432,13 @@ string PublishMonoBuildForPlatform(string project, MonoRuntime monoRuntime, Buil
 
     var outputFolder = CombinePaths(env.Folders.ArtifactsPublish, project, monoRuntime.PlatformName);
 
+    var sourceFolder = CombinePaths(env.Folders.ArtifactsPublish, project, "mono");
+    var omnisharpFolder = CombinePaths(outputFolder, "omnisharp");
+
+    DirectoryHelper.Copy(sourceFolder, omnisharpFolder, copySubDirectories: false);
+
     CopyExtraDependencies(env, outputFolder);
-    AddOmniSharpBindingRedirects(outputFolder);
+    AddOmniSharpBindingRedirects(omnisharpFolder);
 
     Package(project, monoRuntime.PlatformName, outputFolder, env.Folders.ArtifactsPackage, env.Folders.DeploymentPackage);
 
