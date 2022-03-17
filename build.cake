@@ -1009,6 +1009,11 @@ string PublishBuild(string project, BuildEnvironment env, BuildPlan plan, string
         {
             FileHelper.Delete(filePath);
         }
+
+        foreach (var filePath in DirectoryHelper.GetFiles(outputFolder, "System.Configuration.ConfigurationManager.dll"))
+        {
+            FileHelper.Delete(filePath);
+        }
     }
     else
     {
