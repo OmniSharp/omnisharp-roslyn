@@ -12,12 +12,12 @@ namespace TestUtility
     {
         public static string GetFolderName(this DotNetCliVersion dotNetCliVersion)
         {
-            switch (dotNetCliVersion)
+            return dotNetCliVersion switch
             {
-                case DotNetCliVersion.Current: return ".dotnet";
-                case DotNetCliVersion.Future: throw new InvalidOperationException("Test infrastructure does not support a future .NET Core SDK yet.");
-                default: throw new ArgumentException($"Unknown {nameof(dotNetCliVersion)}: {dotNetCliVersion}", nameof(dotNetCliVersion));
-            }
+                DotNetCliVersion.Current => ".dotnet",
+                DotNetCliVersion.Future => throw new InvalidOperationException("Test infrastructure does not support a future .NET Core SDK yet."),
+                _ => throw new ArgumentException($"Unknown {nameof(dotNetCliVersion)}: {dotNetCliVersion}", nameof(dotNetCliVersion)),
+            };
         }
     }
 }
