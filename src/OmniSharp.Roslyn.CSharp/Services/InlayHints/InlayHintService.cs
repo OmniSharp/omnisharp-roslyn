@@ -95,7 +95,7 @@ internal class InlayHintService :
             return request.Hint;
         }
 
-        var descriptionTags = await roslynHint.GetDescrptionAsync(document, CancellationToken.None);
+        var descriptionTags = await roslynHint.GetDescriptionAsync(document, CancellationToken.None);
         StringBuilder stringBuilder = new StringBuilder();
         MarkdownHelpers.TaggedTextToMarkdown(
             descriptionTags,
