@@ -221,7 +221,7 @@ namespace OmniSharp.MSBuild.Tests
             Assert.Equal(GetHashedFileExtension("3.1.415"), emitter.ReceivedMessages[0].SdkVersion);
         }
 
-        [Fact]
+        [ConditionalFact(typeof(NonMonoRuntimeOnly))]
         public async Task The_correct_sdk_version_is_emitted_NET5()
         {
             // Arrange
@@ -233,7 +233,7 @@ namespace OmniSharp.MSBuild.Tests
             Assert.Equal(GetHashedFileExtension("5.0.403"), emitter.ReceivedMessages[0].SdkVersion);
         }
 
-        [ConditionalFact(typeof(DesktopRuntimeOnly))]
+        [ConditionalFact(typeof(NonMonoRuntimeOnly))]
         public async Task The_correct_sdk_version_is_emitted_NET6()
         {
             // Arrange
