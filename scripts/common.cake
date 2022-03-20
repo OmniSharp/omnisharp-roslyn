@@ -46,7 +46,7 @@ public static class DirectoryHelper
         return System.IO.Directory.GetFiles(path, searchPattern);
     }
 
-    public static void Copy(string source, string destination, bool copySubDirectories = true)
+    public static void Copy(string source, string destination, bool copySubDirectories = true, bool replaceFiles = true)
     {
         var files = GetFiles(source);
         var subDirectories = System.IO.Directory.GetDirectories(source);
@@ -59,7 +59,10 @@ public static class DirectoryHelper
         foreach (var file in files)
         {
             var newFile = PathHelper.Combine(destination, PathHelper.GetFileName(file));
-            FileHelper.Copy(file, newFile, overwrite: true);
+            if (replaceFiles || !FileHelper.Exists(newFile))
+            {
+                FileHelper.Copy(file, newFile, overwrite: true);
+            }
         }
 
         if (copySubDirectories)
@@ -67,7 +70,7 @@ public static class DirectoryHelper
             foreach (var subDirectory in subDirectories)
             {
                 var newSubDirectory = PathHelper.Combine(destination, PathHelper.GetFileName(subDirectory));
-                Copy(subDirectory, newSubDirectory);
+                Copy(subDirectory, newSubDirectory, copySubDirectories, replaceFiles);
             }
         }
     }
