@@ -1,7 +1,6 @@
 ﻿using Microsoft.Build.Framework;
 using OmniSharp.MSBuild.Logging;
 using OmniSharp.Utilities;
-using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -9,8 +8,7 @@ namespace OmniSharp.MSBuild.Tests
 {
     public class MSBuildDiagnosticTests : AbstractMSBuildTestFixture
     {
-        public MSBuildDiagnosticTests(ITestOutputHelper output, SharedOmniSharpHostFixture sharedOmniSharpHostFixture)
-            : base(output, sharedOmniSharpHostFixture)
+        public MSBuildDiagnosticTests(ITestOutputHelper output) : base(output)
         {
         }
 

@@ -167,7 +167,7 @@ namespace TestUtility
 
         private static IMSBuildLocator CreateMSBuildLocator(ILoggerFactory loggerFactory,
             IAssemblyLoader assemblyLoader,
-            IConfiguration configurationData)
+            IConfiguration configurationData = null)
             => MSBuildLocator.CreateDefault(loggerFactory, assemblyLoader, configurationData);
 
         private static ISharedTextWriter CreateSharedTextWriter(ITestOutputHelper testOutput)

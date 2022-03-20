@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using OmniSharp.Models;
 using OmniSharp.Models.MembersTree;
 using OmniSharp.Models.V2.CodeActions;
-using OmniSharp.Models.V2.CodeStructure;
 using OmniSharp.MSBuild.Models;
 using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Services.Refactoring.V2;
@@ -17,8 +16,8 @@ namespace OmniSharp.MSBuild.Tests
 {
     public class LoadProjectsOnDemandTests : AbstractMSBuildTestFixture
     {
-        public LoadProjectsOnDemandTests(ITestOutputHelper output, SharedOmniSharpHostFixture sharedOmniSharpHostFixture)
-            : base(output, sharedOmniSharpHostFixture)
+        public LoadProjectsOnDemandTests(ITestOutputHelper output)
+            : base(output)
         {
         }
 

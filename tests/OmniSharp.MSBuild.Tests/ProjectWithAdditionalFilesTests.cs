@@ -9,8 +9,8 @@ namespace OmniSharp.MSBuild.Tests
 {
     public class ProjectWithAdditionalFilesTests : AbstractMSBuildTestFixture
     {
-        public ProjectWithAdditionalFilesTests(ITestOutputHelper output, SharedOmniSharpHostFixture sharedOmniSharpHostFixture)
-            : base(output, sharedOmniSharpHostFixture)
+        public ProjectWithAdditionalFilesTests(ITestOutputHelper output)
+            : base(output)
         {
         }
 

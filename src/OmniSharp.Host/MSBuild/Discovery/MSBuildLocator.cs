@@ -2,7 +2,6 @@
 using System.Collections.Immutable;
 using System.IO;
 using System.Reflection;
-//using System.Runtime.Loader;
 using System.Text;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -15,16 +14,6 @@ namespace OmniSharp.MSBuild.Discovery
 {
     internal class MSBuildLocator : DisposableObject, IMSBuildLocator
     {
-        private const string MSBuildPublicKeyToken = "b03f5f7f11d50a3a";
-
-        private static readonly string[] s_msBuildAssemblies =
-        {
-            "Microsoft.Build",
-            "Microsoft.Build.Framework",
-            "Microsoft.Build.Tasks.Core",
-            "Microsoft.Build.Utilities.Core",
-        };
-
         private readonly ILogger _logger;
         private readonly ImmutableArray<MSBuildInstanceProvider> _providers;
 
@@ -100,20 +89,12 @@ namespace OmniSharp.MSBuild.Discovery
 
             _logger.LogInformation(builder.ToString());
 
-            if (MicrosoftBuildLocator.CanRegister)
+            if (!MicrosoftBuildLocator.CanRegister)
             {
-                MicrosoftBuildLocator.RegisterMSBuildPath(instance.MSBuildPath);
+                return;
             }
 
-            foreach (var msBuildAssemblyName in s_msBuildAssemblies)
-            {
-                var assembly = Assembly.Load($"{msBuildAssemblyName}, Version=15.1.0.0, Culture=neutral, PublicKeyToken={MSBuildPublicKeyToken}");
-                if (assembly is null)
-                {
-                    throw new Exception($"Unable to load {msBuildAssemblyName}'");
-                }
-                _logger.LogInformation($"Loaded {msBuildAssemblyName} from '{assembly.Location}'");
-            }
+            MicrosoftBuildLocator.RegisterMSBuildPath(instance.MSBuildPath);
         }
 
         public ImmutableArray<MSBuildInstance> GetInstances()

@@ -19,19 +19,16 @@ namespace OmniSharp.MSBuild.Tests
         private readonly IMSBuildLocator _msbuildLocator;
         private readonly IAnalyzerAssemblyLoader _analyzerAssemblyLoader;
 
-        public AbstractMSBuildTestFixture(ITestOutputHelper output, SharedOmniSharpHostFixture sharedOmniSharpHostFixture)
-            : base(output, sharedOmniSharpHostFixture)
+        public AbstractMSBuildTestFixture(ITestOutputHelper output)
+            : base(output)
         {
             _assemblyLoader = new AssemblyLoader(this.LoggerFactory);
             _analyzerAssemblyLoader = ShadowCopyAnalyzerAssemblyLoader.Instance;
-            _msbuildLocator = this.SharedOmniSharpTestHost.ServiceProvider.GetRequiredService<IMSBuildLocator>();
+            _msbuildLocator = MSBuildLocator.CreateDefault(this.LoggerFactory, _assemblyLoader, msbuildConfiguration: null);
 
-            //if (_msbuildLocator.RegisteredInstance is null)
-            //{
             // Some tests require MSBuild to be discovered early
             // to ensure that the Microsoft.Build.* assemblies can be located
-            //    _msbuildLocator.RegisterDefaultInstance(this.LoggerFactory.CreateLogger("MSBuildTests"), dotNetInfo: null);
-            //}
+            _msbuildLocator.RegisterDefaultInstance(this.LoggerFactory.CreateLogger("MSBuildTests"), dotNetInfo: null);
         }
 
         public void Dispose()

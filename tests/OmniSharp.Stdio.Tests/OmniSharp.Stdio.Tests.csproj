@@ -21,8 +21,8 @@
     <PackageReference Include="xunit" />
     <!--
         Mono's MSBuild does not include the SQLitePCLRaw libraries.
-         We include them when packaging our non-windows .NET Framework builds.
-         Simulate that behavior for these tests.
+        We include them when packaging our non-windows .NET Framework builds.
+        Simulate that behavior for these tests.
     -->
     <PackageReference Include="SQLitePCLRaw.bundle_green" Condition="'$(TargetFramework)' == 'net472'" />
     <PackageReference Include="SQLitePCLRaw.bundle_green" PrivateAssets="all" Condition="'$(TargetFramework)' != 'net472'" />

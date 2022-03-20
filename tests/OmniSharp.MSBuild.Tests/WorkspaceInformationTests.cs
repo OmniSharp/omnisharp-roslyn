@@ -14,8 +14,8 @@ namespace OmniSharp.MSBuild.Tests
 {
     public class WorkspaceInformationTests : AbstractMSBuildTestFixture
     {
-        public WorkspaceInformationTests(ITestOutputHelper output, SharedOmniSharpHostFixture sharedOmniSharpHostFixture)
-            : base(output, sharedOmniSharpHostFixture)
+        public WorkspaceInformationTests(ITestOutputHelper output)
+            : base(output)
         {
         }
 

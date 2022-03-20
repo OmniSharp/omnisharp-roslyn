@@ -12,8 +12,8 @@ namespace OmniSharp.MSBuild.Tests
 {
     public class NotificationTests : AbstractMSBuildTestFixture
     {
-        public NotificationTests(ITestOutputHelper output, SharedOmniSharpHostFixture sharedOmniSharpHostFixture)
-            : base(output, sharedOmniSharpHostFixture)
+        public NotificationTests(ITestOutputHelper output)
+            : base(output)
         {
         }
 
