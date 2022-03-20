@@ -329,6 +329,17 @@ Task("Test")
                 }
                 else
                 {
+                    if (!Platform.Current.IsWindows)
+                    {
+                        // Copy the Mono-built Microsoft.Build.* binaries to the test folder.
+                        // This is necessary to work around a Mono bug that is exasperated by xUnit.
+                        var monoBasePath = Platform.Current.IsMacOS
+                            ? "/Library/Frameworks/Mono.framework/Versions/Current/lib/mono"
+                            : "/usr/lib/mono";
+                        var monoMSBuildPath = $"{monoBasePath}/msbuild/Current/bin";
+                        DirectoryHelper.Copy(monoMSBuildPath, instanceFolder);
+                    }
+
                     Run("mono", $"\"{xunitInstancePath}\" {arguments}", instanceFolder)
                         .ExceptionOnError($"Test {testProject} failed for net472");
                 }
