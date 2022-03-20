@@ -329,16 +329,9 @@ Task("Test")
                 }
                 else
                 {
-                    if (!Platform.Current.IsWindows)
-                    {
-                        // Copy the Mono-built Microsoft.Build.* binaries to the test folder.
-                        // This is necessary to work around a Mono bug that is exasperated by xUnit.
-                        var monoBasePath = Platform.Current.IsMacOS
-                            ? "/Library/Frameworks/Mono.framework/Versions/Current/lib/mono"
-                            : "/usr/lib/mono";
-                        var monoMSBuildPath = $"{monoBasePath}/msbuild/Current/bin";
-                        DirectoryHelper.Copy(monoMSBuildPath, instanceFolder);
-                    }
+                    // Copy the Mono-built Microsoft.Build.* binaries to the test folder.
+                    // This is necessary to work around a Mono bug that is exasperated by xUnit.
+                    CopyMonoMSBuildBinaries(instanceFolder);
 
                     Run("mono", $"\"{xunitInstancePath}\" {arguments}", instanceFolder)
                         .ExceptionOnError($"Test {testProject} failed for net472");
@@ -346,6 +339,26 @@ Task("Test")
             }
         }
 });
+
+void CopyMonoMSBuildBinaries(string outputFolder)
+{
+    var monoBasePath = Platform.Current.IsMacOS
+        ? "/Library/Frameworks/Mono.framework/Versions/Current/lib/mono"
+        : "/usr/lib/mono";
+    var monoMSBuildPath = $"{monoBasePath}/msbuild/Current/bin";
+    var msBuildAssemblies = new string[]
+    {
+        "Microsoft.Build.dll",
+        "Microsoft.Build.Framework.dll",
+        "Microsoft.Build.Tasks.Core.dll",
+        "Microsoft.Build.Utilities.Core.dll",
+        "Microsoft.NET.StringTools.dll",
+    };
+    foreach (var msBuildAssembly in msBuildAssemblies)
+    {
+        FileHelper.Copy(CombinePaths(monoMSBuildPath, msBuildAssembly), CombinePaths(outputFolder, msBuildAssembly), overwrite: true);
+    }
+}
 
 void CopyExtraDependencies(BuildEnvironment env, string outputFolder)
 {
