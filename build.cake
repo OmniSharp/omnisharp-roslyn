@@ -331,11 +331,7 @@ Task("Test")
                 {
                     // Copy the Mono-built Microsoft.Build.* binaries to the test folder.
                     // This is necessary to work around a Mono bug that is exasperated by xUnit.
-                    var monoBasePath = Platform.Current.IsMacOS
-                        ? "/Library/Frameworks/Mono.framework/Versions/Current/lib/mono"
-                        : "/usr/lib/mono";
-                    var monoMSBuildPath = $"{monoBasePath}/msbuild/Current/bin";
-                    DirectoryHelper.Copy(monoMSBuildPath, instanceFolder, replaceFiles: false);
+                    CopyMonoMSBuildBinaries(instanceFolder);
 
                     Run("mono", $"\"{xunitInstancePath}\" {arguments}", instanceFolder)
                         .ExceptionOnError($"Test {testProject} failed for net472");
@@ -343,6 +339,29 @@ Task("Test")
             }
         }
 });
+
+void CopyMonoMSBuildBinaries(string outputFolder)
+{
+    var monoBasePath = Platform.Current.IsMacOS
+        ? "/Library/Frameworks/Mono.framework/Versions/Current/lib/mono"
+        : "/usr/lib/mono";
+    var monoMSBuildPath = $"{monoBasePath}/msbuild/Current/bin";
+    DirectoryHelper.Copy(monoMSBuildPath, outputFolder, replaceFiles: false);
+
+    // Copy dependencies of Mono build
+    FileHelper.Copy(
+        source: CombinePaths(env.Folders.Tools, "SQLitePCLRaw.core", "lib", "netstandard2.0", "SQLitePCLRaw.core.dll"),
+        destination: CombinePaths(outputFolder, "SQLitePCLRaw.core.dll"),
+        overwrite: true);
+    FileHelper.Copy(
+        source: CombinePaths(env.Folders.Tools, "SQLitePCLRaw.provider.e_sqlite3", "lib", "netstandard2.0", "SQLitePCLRaw.provider.e_sqlite3.dll"),
+        destination: CombinePaths(outputFolder, "SQLitePCLRaw.provider.e_sqlite3.dll"),
+        overwrite: true);
+    FileHelper.Copy(
+        source: CombinePaths(env.Folders.Tools, "SQLitePCLRaw.bundle_green", "lib", "netstandard2.0", "SQLitePCLRaw.batteries_v2.dll"),
+        destination: CombinePaths(outputFolder, "SQLitePCLRaw.batteries_v2.dll"),
+        overwrite: true);
+}
 
 void CopyExtraDependencies(BuildEnvironment env, string outputFolder)
 {
