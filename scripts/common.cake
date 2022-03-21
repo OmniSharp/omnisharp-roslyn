@@ -146,6 +146,7 @@ public class Folders
     public string Source { get; }
     public string Tests { get; }
     public string TestAssets { get; }
+    public string MonoPackaging { get; }
 
     public string Artifacts { get; }
     public string ArtifactsPublish { get; }
@@ -163,6 +164,7 @@ public class Folders
         this.Source = PathHelper.Combine(workingDirectory, "src");
         this.Tests = PathHelper.Combine(workingDirectory, "tests");
         this.TestAssets = PathHelper.Combine(workingDirectory, "test-assets");
+        this.MonoPackaging = PathHelper.Combine(workingDirectory, "mono-packaging");
 
         this.Artifacts = PathHelper.Combine(workingDirectory, "artifacts");
         this.ArtifactsPublish = PathHelper.Combine(this.Artifacts, "publish");

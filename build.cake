@@ -464,6 +464,10 @@ string PublishMonoBuildForPlatform(string project, MonoRuntime monoRuntime, Buil
 
     DirectoryHelper.Copy(sourceFolder, omnisharpFolder, copySubDirectories: false);
 
+    var runScriptFile = CombinePaths(env.Folders.MonoPackaging, "run");
+    FileHelper.Copy(runScriptFile, CombinePaths(outputFolder, "run"), overwrite: true);
+    Run("chmod", $"+x '{CombinePaths(outputFolder, "run")}'");
+
     CopyExtraDependencies(env, outputFolder);
     AddOmniSharpBindingRedirects(omnisharpFolder);
 
