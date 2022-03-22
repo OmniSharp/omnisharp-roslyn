@@ -15,6 +15,7 @@ using Microsoft.CodeAnalysis.Text;
 using Microsoft.Extensions.Logging;
 using OmniSharp.FileSystem;
 using OmniSharp.FileWatching;
+using Microsoft.CodeAnalysis.Host;
 using OmniSharp.Roslyn;
 using OmniSharp.Roslyn.EditorConfig;
 using OmniSharp.Roslyn.Utilities;
@@ -50,7 +51,13 @@ namespace OmniSharp
 
         [ImportingConstructor]
         public OmniSharpWorkspace(HostServicesAggregator aggregator, ILoggerFactory loggerFactory, IFileSystemWatcher fileSystemWatcher)
-            : base(aggregator.CreateHostServices(), "Custom")
+            : this(aggregator.CreateHostServices(), loggerFactory, fileSystemWatcher)
+        {
+        }
+        
+        [ImportingConstructor]
+        public OmniSharpWorkspace(HostServices hostServices, ILoggerFactory loggerFactory, IFileSystemWatcher fileSystemWatcher)
+            : base(hostServices, "Custom")
         {
             BufferManager = new BufferManager(this, loggerFactory, fileSystemWatcher);
             _logger = loggerFactory.CreateLogger<OmniSharpWorkspace>();
