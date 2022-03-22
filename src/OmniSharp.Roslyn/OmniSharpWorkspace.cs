@@ -50,7 +50,13 @@ namespace OmniSharp
 
         [ImportingConstructor]
         public OmniSharpWorkspace(HostServicesAggregator aggregator, ILoggerFactory loggerFactory, IFileSystemWatcher fileSystemWatcher)
-            : base(aggregator.CreateHostServices(), "Custom")
+            : this(aggregator.CreateHostServices(), loggerFactory, fileSystemWatcher)
+        {
+        }
+        
+        [ImportingConstructor]
+        public OmniSharpWorkspace(HostServices hostServices, ILoggerFactory loggerFactory, IFileSystemWatcher fileSystemWatcher)
+            : base(hostServices, "Custom")
         {
             BufferManager = new BufferManager(this, loggerFactory, fileSystemWatcher);
             _logger = loggerFactory.CreateLogger<OmniSharpWorkspace>();
