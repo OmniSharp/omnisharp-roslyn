@@ -34,7 +34,7 @@ namespace OmniSharp.MSBuild.Discovery
 
         public static MSBuildLocator CreateDefault(ILoggerFactory loggerFactory, IAssemblyLoader assemblyLoader, IConfiguration msbuildConfiguration)
         {
-            var useBundledOnly = msbuildConfiguration.GetValue<bool>("UseBundledOnly", false);
+            var useBundledOnly = msbuildConfiguration?.GetValue<bool>("UseBundledOnly") ?? false;
             if (useBundledOnly)
             {
                 var logger = loggerFactory.CreateLogger<MSBuildLocator>();
