@@ -37,6 +37,7 @@ namespace OmniSharp.MSBuild.Discovery
             var useBundledOnly = msbuildConfiguration.GetValue<bool>("UseBundledOnly");
             if (useBundledOnly)
             {
+                var logger = loggerFactory.CreateLogger<MSBuildLocator>();
                 logger.LogWarning("The MSBuild option 'UseBundledOnly' is no longer supported. Please update your OmniSharp configuration files.");
             }
 
