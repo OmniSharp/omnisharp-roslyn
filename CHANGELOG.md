@@ -1,6 +1,17 @@
 # Changelog
 All changes to the project will be documented in this file.
 
+## [1.38.2]
+* Add analyze open documents only (PR: [#2346](https://github.com/OmniSharp/omnisharp-roslyn/pull/2346))
+* Create a new GoToTypeDefinition endpoint ([#2297](https://github.com/OmniSharp/omnisharp-roslyn/issues/2297), PR: [#2315](https://github.com/OmniSharp/omnisharp-roslyn/pull/2315))
+* Eliminate more instances of IWorkspaceOptionsProvider (PR: [#2343](https://github.com/OmniSharp/omnisharp-roslyn/pull/2343))
+* Update Build.md brew cask instructions (PR: [#2355](https://github.com/OmniSharp/omnisharp-roslyn/pull/2355))
+* Remove not used middleware extension methods and unify adding middleware (PR: [#2340](https://github.com/OmniSharp/omnisharp-roslyn/pull/2340))
+* Pass --overwrite when pushing build artifacts to azure (PR: [#2358](https://github.com/OmniSharp/omnisharp-roslyn/pull/2358))
+* Delete System.Configuration.ConfigurationManager from deployed packages ([omnisharp-vscode#5113](https://github.com/OmniSharp/omnisharp-vscode/issues/5113), PR: [#2359](https://github.com/OmniSharp/omnisharp-roslyn/pull/2359))
+* Support inlay hints (PR: [#2357](https://github.com/OmniSharp/omnisharp-roslyn/pull/2357))
+* Update build tools to match .NET SDK 6.0.201 ([#2363](https://github.com/OmniSharp/omnisharp-roslyn/pull/2363))
+
 ## [1.38.1] - 2022-02-18
 * Reuse Roslyn's analyzer assembly loader (PR: [#2236](https://github.com/OmniSharp/omnisharp-roslyn/pull/2236))
 * Pass Completion, Rename and Block Structure options directly instead of updating the Workspace (PR: [#2306](https://github.com/OmniSharp/omnisharp-roslyn/pull/2306))
