@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Composition.Hosting.Core;
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OmniSharp.MSBuild.Discovery;
 using OmniSharp.Roslyn.Utilities;
@@ -23,7 +24,7 @@ namespace OmniSharp.MSBuild.Tests
         {
             _assemblyLoader = new AssemblyLoader(this.LoggerFactory);
             _analyzerAssemblyLoader = ShadowCopyAnalyzerAssemblyLoader.Instance;
-            _msbuildLocator = MSBuildLocator.CreateStandAlone(this.LoggerFactory, _assemblyLoader);
+            _msbuildLocator = MSBuildLocator.CreateDefault(this.LoggerFactory, _assemblyLoader, msbuildConfiguration: null);
 
             // Some tests require MSBuild to be discovered early
             // to ensure that the Microsoft.Build.* assemblies can be located

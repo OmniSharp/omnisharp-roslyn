@@ -31,6 +31,8 @@ Uses the nightly builds of the Roslyn script engine.
 Uses the Mono Compiler rather than the Roslyn script engine.
 .PARAMETER SkipToolPackageRestore
 Skips restoring of packages.
+.PARAMETER UseDotNetTest
+Run tests against the .NET SDK build of OmniSharp
 .PARAMETER ScriptArgs
 Remaining arguments are added here.
 
@@ -53,6 +55,7 @@ Param(
     [switch]$Experimental,
     [switch]$Mono,
     [switch]$SkipToolPackageRestore,
+    [switch]$UseDotNetTest,
     [Parameter(Position=0,Mandatory=$false,ValueFromRemainingArguments=$true)]
     [string[]]$ScriptArgs
 )
@@ -227,6 +230,7 @@ if ($ShowDescription) { $cakeArguments += "--showdescription" }
 if ($DryRun) { $cakeArguments += "--dryrun" }
 if ($Experimental) { $cakeArguments += "--experimental" }
 if ($Mono) { $cakeArguments += "--mono" }
+if ($UseDotNetTest) { $cakeArguments += "--use-dotnet-test" }
 $cakeArguments += $ScriptArgs
 
 # Start Cake
