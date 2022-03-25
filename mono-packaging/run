@@ -5,11 +5,9 @@ bin_dir=${base_dir}/bin
 etc_dir=${base_dir}/etc
 omnisharp_dir=${base_dir}/omnisharp
 
-mono_cmd=${bin_dir}/mono
+mono_cmd=mono
 omnisharp_cmd=${omnisharp_dir}/OmniSharp.exe
 config_file=${etc_dir}/config
-
-chmod 755 "${mono_cmd}"
 
 no_omnisharp=false
 
