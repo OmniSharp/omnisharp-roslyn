@@ -3,6 +3,7 @@ namespace OmniSharp
     public static class OmniSharpEndpoints
     {
         public const string GotoDefinition = "/gotodefinition";
+        public const string GotoTypeDefinition = "/gototypedefinition";
         public const string FindSymbols = "/findsymbols";
         public const string UpdateBuffer = "/updatebuffer";
         public const string ChangeBuffer = "/changebuffer";
@@ -54,6 +55,9 @@ namespace OmniSharp
         public const string SourceGeneratedFile = "/sourcegeneratedfile";
         public const string UpdateSourceGeneratedFile = "/updatesourcegeneratedfile";
         public const string SourceGeneratedFileClosed = "/sourcegeneratedfileclosed";
+
+        public const string InlayHint = "/inlayHint";
+        public const string InlayHintResolve = "/inlayHint/resolve";
 
         public static class V2
         {

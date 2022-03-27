@@ -1,5 +1,6 @@
 ﻿#nullable enable
 
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Formatting;
@@ -364,6 +365,13 @@ $$
 }");
         }
 
+        protected override OmniSharpTestHost CreateSharedOmniSharpTestHost()
+            => CreateOmniSharpHost(configurationData: new Dictionary<string, string>()
+            {
+                ["FormattingOptions:NewLine"] = System.Environment.NewLine
+            });
+
+
         private async Task VerifyNoChange(string fileName, string typedCharacter, string originalMarkup)
         {
             var (response, _) = await GetResponse(originalMarkup, typedCharacter, fileName);
@@ -391,10 +399,6 @@ $$
 
         private async Task<(FormatRangeResponse, TestFile)> GetResponse(string text, string character, string fileName)
         {
-            // Ensure system newlines are used
-            var options = SharedOmniSharpTestHost.Workspace.Options.WithChangedOption(FormattingOptions.NewLine, LanguageNames.CSharp, System.Environment.NewLine);
-            SharedOmniSharpTestHost.Workspace.TryApplyChanges(SharedOmniSharpTestHost.Workspace.CurrentSolution.WithOptions(options));
-
             var file = new TestFile(fileName, text);
             SharedOmniSharpTestHost.AddFilesToWorkspace(file);
             var point = file.Content.GetPointFromPosition();

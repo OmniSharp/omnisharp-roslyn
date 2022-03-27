@@ -24,7 +24,8 @@ namespace OmniSharp.Models.AutoComplete
         public override bool Equals(object other)
         {
             var otherResponse = other as AutoCompleteResponse;
-            return otherResponse.DisplayText == DisplayText
+            return otherResponse != null
+                && otherResponse.DisplayText == DisplayText
                 && otherResponse.Snippet == Snippet;
         }
 

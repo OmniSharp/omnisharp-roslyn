@@ -323,7 +323,7 @@ namespace N2
 }";
 
             await EnableImportCompletion();
-            var completions = await FindCompletionsWithImportedAsync(filename, input);
+            var completions = await FindCompletionsWithImportedAsync(filename, input, items => items.Any(c => c.TextEdit.TextEdit.NewText == "Guid"));
             var resolved = await ResolveCompletionAsync(completions.Items.First(c => c.TextEdit.TextEdit.NewText == "Guid"));
 
             Assert.Single(resolved.AdditionalTextEdits);
@@ -1559,10 +1559,10 @@ class Foo
             return await Client.RequestCompletion(request);
         }
 
-        private async Task<CompletionList> FindCompletionsWithImportedAsync(string filename, string source)
+        private async Task<CompletionList> FindCompletionsWithImportedAsync(string filename, string source, Func<CompletionList, bool> isFullyComplete = null)
         {
             var completions = await FindCompletionsAsync(filename, source);
-            if (!completions.IsIncomplete)
+            if (!completions.IsIncomplete && isFullyComplete?.Invoke(completions) == true)
             {
                 return completions;
             }
@@ -1572,7 +1572,7 @@ class Foo
             CancellationTokenSource cts = new CancellationTokenSource(millisecondsDelay: ImportCompletionTimeout);
             await Task.Run(async () =>
             {
-                while (completions.IsIncomplete)
+                while (completions.IsIncomplete || isFullyComplete?.Invoke(completions) == false)
                 {
                     completions = await FindCompletionsAsync(filename, source);
                     cts.Token.ThrowIfCancellationRequested();

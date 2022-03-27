@@ -103,12 +103,4 @@ namespace OmniSharp.Http.Middleware
             await _next(httpContext);
         }
     }
-
-    public static class EndpointMiddlewareExtensions
-    {
-        public static IApplicationBuilder UseEndpointMiddleware(this IApplicationBuilder builder)
-        {
-            return builder.UseMiddleware<EndpointMiddleware>();
-        }
-    }
 }

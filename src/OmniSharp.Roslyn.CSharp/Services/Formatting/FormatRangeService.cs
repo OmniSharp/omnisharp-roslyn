@@ -16,14 +16,12 @@ namespace OmniSharp.Roslyn.CSharp.Services.Formatting
     {
         private readonly OmniSharpWorkspace _workspace;
         private readonly OmniSharpOptions _omnisharpOptions;
-        private readonly ILoggerFactory _loggerFactory;
 
         [ImportingConstructor]
-        public FormatRangeService(OmniSharpWorkspace workspace, OmniSharpOptions omnisharpOptions, ILoggerFactory loggerFactory)
+        public FormatRangeService(OmniSharpWorkspace workspace, OmniSharpOptions omnisharpOptions)
         {
             _workspace = workspace;
             _omnisharpOptions = omnisharpOptions;
-            _loggerFactory = loggerFactory;
         }
 
         public async Task<FormatRangeResponse> Handle(FormatRangeRequest request)
@@ -39,7 +37,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Formatting
             var end = text.Lines.GetPosition(new LinePosition(request.EndLine, request.EndColumn));
             var syntaxTree = await document.GetSyntaxRootAsync();
             var tokenStart = syntaxTree.FindToken(start).FullSpan.Start;
-            var changes = await FormattingWorker.GetFormattingChanges(document, tokenStart, end, _omnisharpOptions, _loggerFactory);
+            var changes = await FormattingWorker.GetFormattingChanges(document, tokenStart, end, _omnisharpOptions);
 
             return new FormatRangeResponse()
             {

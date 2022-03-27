@@ -5,6 +5,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Mef;
 using OmniSharp.Models.FixUsings;
+using OmniSharp.Options;
 using OmniSharp.Roslyn.Utilities;
 using OmniSharp.Services;
 
@@ -14,17 +15,17 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
     public class FixUsingService : IRequestHandler<FixUsingsRequest, FixUsingsResponse>
     {
         private readonly OmniSharpWorkspace _workspace;
-        private readonly ILoggerFactory _loggerFactory;
+        private readonly OmniSharpOptions _options;
         private readonly IEnumerable<ICodeActionProvider> _providers;
 
         [ImportingConstructor]
         public FixUsingService(
             OmniSharpWorkspace workspace,
-            ILoggerFactory loggerFactory,
+            OmniSharpOptions options,
             [ImportMany] IEnumerable<ICodeActionProvider> codeActionProviders)
         {
             _workspace = workspace;
-            _loggerFactory = loggerFactory;
+            _options = options;
             _providers = codeActionProviders;
         }
 
@@ -35,7 +36,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
             var oldDocument = _workspace.GetDocument(request.FileName);
             if (oldDocument != null)
             {
-                var fixUsingsResponse = await new FixUsingsWorker(_providers)
+                var fixUsingsResponse = await new FixUsingsWorker(_providers, _options)
                     .FixUsingsAsync(oldDocument);
 
                 response.AmbiguousResults = fixUsingsResponse.AmbiguousResults;
