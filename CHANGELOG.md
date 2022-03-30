@@ -4,7 +4,7 @@ All changes to the project will be documented in this file.
 ## [1.38.3]
 * Remove MSBuild and Mono from release packages ([#2339](https://github.com/OmniSharp/omnisharp-roslyn/issues/2339), PR: [#2360](https://github.com/OmniSharp/omnisharp-roslyn/pull/2360))
 
-## [1.38.2] - 2202-03-22
+## [1.38.2] - 2022-03-22
 * Add analyze open documents only (PR: [#2346](https://github.com/OmniSharp/omnisharp-roslyn/pull/2346))
 * Create a new GoToTypeDefinition endpoint ([#2297](https://github.com/OmniSharp/omnisharp-roslyn/issues/2297), PR: [#2315](https://github.com/OmniSharp/omnisharp-roslyn/pull/2315))
 * Eliminate more instances of IWorkspaceOptionsProvider (PR: [#2343](https://github.com/OmniSharp/omnisharp-roslyn/pull/2343))
