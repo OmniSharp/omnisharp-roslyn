@@ -55,7 +55,6 @@ namespace OmniSharp
         {
         }
         
-        [ImportingConstructor]
         public OmniSharpWorkspace(HostServices hostServices, ILoggerFactory loggerFactory, IFileSystemWatcher fileSystemWatcher)
             : base(hostServices, "Custom")
         {
