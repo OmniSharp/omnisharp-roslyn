@@ -87,7 +87,7 @@ namespace OmniSharp.MSBuild.Tests
             Assert.Equal("netcoreapp3.1", project.TargetFrameworks[0].ShortName);
         }
 
-        [Fact]
+        [ConditionalFact(typeof(NonMonoRuntimeOnly))]
         public async Task Net50Solution()
         {
             using var testProject = await TestAssets.Instance.GetTestProjectAsync("Net50Project");
@@ -106,7 +106,7 @@ namespace OmniSharp.MSBuild.Tests
             Assert.Contains(libProject.TargetFrameworks[0].ShortName, new[] { "net50", "net5.0" });
         }
 
-        [ConditionalFact(typeof(DesktopRuntimeOnly))]
+        [ConditionalFact(typeof(NonMonoRuntimeOnly))]
         public async Task Net60Project()
         {
             using var testProject = await TestAssets.Instance.GetTestProjectAsync("Net60Project");

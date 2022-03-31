@@ -100,14 +100,6 @@ Try installing MSBuild into Mono (e.g. 'sudo apt-get install msbuild') to enable
 
             var propertyOverrides = ImmutableDictionary.CreateBuilder<string, string>(StringComparer.OrdinalIgnoreCase);
 
-            var localMSBuildPath = FindLocalMSBuildDirectory();
-            if (localMSBuildPath != null)
-            {
-                var localRoslynPath = Path.Combine(localMSBuildPath, "Current", "Bin", "Roslyn");
-                propertyOverrides.Add("CscToolPath", localRoslynPath);
-                propertyOverrides.Add("CscToolExe", "csc.exe");
-            }
-
             var version = GetMSBuildVersion(microsoftBuildPath);
 
             return ImmutableArray.Create(
