@@ -168,10 +168,14 @@ namespace OmniSharp.Roslyn.CSharp.Services.Signatures
         private static SignatureHelpItem BuildSignature(IMethodSymbol symbol)
         {
             var signature = new SignatureHelpItem();
-            signature.Documentation = symbol.GetDocumentationCommentXml();
             signature.Name = symbol.MethodKind == MethodKind.Constructor ? symbol.ContainingType.Name : symbol.Name;
             signature.Label = symbol.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
             signature.StructuredDocumentation = DocumentationConverter.GetStructuredDocumentation(symbol);
+            signature.Documentation = signature.StructuredDocumentation.SummaryText;
+            if (string.IsNullOrEmpty(signature.Documentation))
+            {
+                signature.Documentation = symbol.GetDocumentationCommentXml();
+            }
 
             signature.Parameters = symbol.Parameters.Select(parameter =>
             {
