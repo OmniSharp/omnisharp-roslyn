@@ -153,7 +153,7 @@ namespace OmniSharp
                 MSBuildLocator.CreateDefault(
                     loggerFactory: sp.GetService<ILoggerFactory>(),
                     assemblyLoader: sp.GetService<IAssemblyLoader>(),
-                    msbuildConfiguration: configuration.GetSection("msbuild")));
+                    configuration: configuration));
 
             services.AddLogging(builder =>
             {

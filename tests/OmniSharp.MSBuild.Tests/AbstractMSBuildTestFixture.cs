@@ -24,7 +24,7 @@ namespace OmniSharp.MSBuild.Tests
         {
             _assemblyLoader = new AssemblyLoader(this.LoggerFactory);
             _analyzerAssemblyLoader = ShadowCopyAnalyzerAssemblyLoader.Instance;
-            _msbuildLocator = MSBuildLocator.CreateDefault(this.LoggerFactory, _assemblyLoader, msbuildConfiguration: null);
+            _msbuildLocator = MSBuildLocator.CreateDefault(this.LoggerFactory, _assemblyLoader, configuration: null);
 
             // Some tests require MSBuild to be discovered early
             // to ensure that the Microsoft.Build.* assemblies can be located

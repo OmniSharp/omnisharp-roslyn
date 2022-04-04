@@ -32,8 +32,9 @@ namespace OmniSharp.MSBuild.Discovery
             }
         }
 
-        public static MSBuildLocator CreateDefault(ILoggerFactory loggerFactory, IAssemblyLoader assemblyLoader, IConfiguration msbuildConfiguration)
+        public static MSBuildLocator CreateDefault(ILoggerFactory loggerFactory, IAssemblyLoader assemblyLoader, IConfiguration configuration)
         {
+            var msbuildConfiguration = configuration?.GetSection("msbuild");
             var useBundledOnly = msbuildConfiguration?.GetValue<bool>("UseBundledOnly") ?? false;
             if (useBundledOnly)
             {
@@ -41,13 +42,20 @@ namespace OmniSharp.MSBuild.Discovery
                 logger.LogWarning("The MSBuild option 'UseBundledOnly' is no longer supported. Please update your OmniSharp configuration files.");
             }
 
+#if NETCOREAPP
+            var sdkConfiguration = configuration?.GetSection("sdk");
+
+            return new MSBuildLocator(loggerFactory, assemblyLoader,
+                ImmutableArray.Create<MSBuildInstanceProvider>(
+                    new SdkInstanceProvider(loggerFactory, sdkConfiguration),
+                    new SdkOverrideInstanceProvider(loggerFactory, sdkConfiguration)));
+#else
             return new MSBuildLocator(loggerFactory, assemblyLoader,
                 ImmutableArray.Create<MSBuildInstanceProvider>(
                     new MicrosoftBuildLocatorInstanceProvider(loggerFactory),
-#if !NETCOREAPP
                     new MonoInstanceProvider(loggerFactory),
-#endif
                     new UserOverrideInstanceProvider(loggerFactory, msbuildConfiguration)));
+#endif
         }
 
         public void RegisterInstance(MSBuildInstance instance)
