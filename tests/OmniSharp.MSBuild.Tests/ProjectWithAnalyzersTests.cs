@@ -102,7 +102,7 @@ namespace OmniSharp.MSBuild.Tests
                 TestHelpers.GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled: true, editorConfigEnabled: true)))
             {
                 var initialProject = host.Workspace.CurrentSolution.Projects.Single();
-                var analyzerConfigDocument = initialProject.AnalyzerConfigDocuments.Single();
+                var analyzerConfigDocument = initialProject.AnalyzerConfigDocuments.Where(document => document.Name.Equals(".editorconfig")).Single();
 
                 File.WriteAllText(analyzerConfigDocument.FilePath, @"
 root = true
@@ -159,7 +159,7 @@ dotnet_diagnostic.IDE0005.severity = none
                 var projectFolderPath = Path.GetDirectoryName(project.FilePath);
                 var projectParentFolderPath = Path.GetDirectoryName(projectFolderPath);
 
-                var analyzerConfigDocument = project.AnalyzerConfigDocuments.Single();
+                var analyzerConfigDocument = project.AnalyzerConfigDocuments.Where(document => document.Name.Equals(".editorconfig")).Single();
                 var editorConfigFolderPath = Path.GetDirectoryName(analyzerConfigDocument.FilePath);
 
                 Assert.Equal(projectParentFolderPath, editorConfigFolderPath);
@@ -196,7 +196,7 @@ dotnet_diagnostic.IDE0005.severity = none
                 TestHelpers.GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled: true, editorConfigEnabled: true)))
             {
                 var initialProject = host.Workspace.CurrentSolution.Projects.Single();
-                var analyzerConfigDocument = initialProject.AnalyzerConfigDocuments.Single();
+                var analyzerConfigDocument = initialProject.AnalyzerConfigDocuments.Where(document => document.Name.Equals(".editorconfig")).Single();
 
                 File.WriteAllText(analyzerConfigDocument.FilePath, @"
 root = true
