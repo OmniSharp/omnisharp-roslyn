@@ -1,7 +1,7 @@
 # Changelog
 All changes to the project will be documented in this file.
 
-## [1.38.3]
+## [1.39.0]
 * Remove MSBuild and Mono from release packages ([#2339](https://github.com/OmniSharp/omnisharp-roslyn/issues/2339), PR: [#2360](https://github.com/OmniSharp/omnisharp-roslyn/pull/2360))
 
 ## [1.38.2] - 2022-03-22
