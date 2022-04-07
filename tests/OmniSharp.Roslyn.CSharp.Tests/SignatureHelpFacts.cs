@@ -1142,5 +1142,34 @@ public class ProgramClass
             var requestHandler = GetRequestHandler(SharedOmniSharpTestHost);
             return await requestHandler.Handle(request);
         }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task GetXmlDocTest(string filename)
+        {
+            const string source =
+@"class Program
+{
+    public static void Main()
+    {
+        var flag = Compare($$);
+    }
+    ///<summary>Checks if object is tagged with the tag.</summary>
+    /// <param name=""gameObject"">The game object.</param>
+    /// <param name=""tagName"">Name of the tag.</param>
+    /// <returns>Returns <c>true</c> if object is tagged with tag.</returns>
+    public static bool Compare(GameObject gameObject, string tagName)
+    {
+        return true;
+    }
+}";
+            var actual = await GetSignatureHelp(filename, source);
+            Assert.Single(actual.Signatures);
+            Assert.Equal(0, actual.ActiveParameter);
+            Assert.Equal(0, actual.ActiveSignature);
+            Assert.Equal("Compare", actual.Signatures.ElementAt(0).Name);
+            Assert.Equal("Checks if object is tagged with the tag.", actual.Signatures.ElementAt(0).Documentation);
+        }
     }
 }
