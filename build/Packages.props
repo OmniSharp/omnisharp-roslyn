@@ -6,7 +6,7 @@
         <MicrosoftExtensionPackageVersion>6.0.0</MicrosoftExtensionPackageVersion>
         <MicrosoftTestPackageVersion>17.0.0</MicrosoftTestPackageVersion>
         <MSBuildPackageVersion>17.0.0</MSBuildPackageVersion>
-        <NuGetPackageVersion>6.1.0</NuGetPackageVersion>
+        <NuGetPackageVersion>6.2.0-preview.2.80</NuGetPackageVersion>
         <RoslynPackageVersion>4.2.0-3.22169.1</RoslynPackageVersion>
         <XunitPackageVersion>2.4.1</XunitPackageVersion>
     </PropertyGroup>
