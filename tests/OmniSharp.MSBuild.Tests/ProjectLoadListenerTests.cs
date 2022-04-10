@@ -248,16 +248,11 @@ namespace OmniSharp.MSBuild.Tests
         [ConditionalFact(typeof(NonMonoRuntimeOnly))]
         public async Task The_correct_sdk_version_is_emitted_NET7()
         {
-            var configuration = new Dictionary<string, string>
-            {
-                ["sdk:IncludePrereleases"] = bool.TrueString
-            }.ToConfiguration();
-
             // Arrange
             var emitter = new ProjectLoadTestEventEmitter();
 
             using var testProject = await TestAssets.Instance.GetTestProjectAsync("Net70Project");
-            using var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory), configuration);
+            using var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory));
             Assert.Single(emitter.ReceivedMessages);
             Assert.Equal(GetHashedFileExtension("7.0.100-preview.2.22153.17"), emitter.ReceivedMessages[0].SdkVersion);
         }
