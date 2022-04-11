@@ -23,22 +23,15 @@ namespace OmniSharp.MSBuild.Discovery.Providers
             var includePrerelease = _options?.IncludePrereleases == true;
 
             SemanticVersion optionsVersion = null;
-            if (!string.IsNullOrEmpty(_options?.Version))
+            if (!string.IsNullOrEmpty(_options?.Version) &&
+                !TryParseVersion(_options.Version, out optionsVersion, out var errorMessage))
             {
-                if (!SemanticVersion.TryParse(_options.Version, out optionsVersion))
-                {
-                    Logger.LogError($"The Sdk version specified in the OmniSharp settings was not a valid semantic version. Configured version is '{optionsVersion}'. Please update your settings and restart OmniSharp.");
-                    return NoInstances;
-                }
-                else if (optionsVersion.Major < 6)
-                {
-                    Logger.LogError($"The Sdk version specified in the OmniSharp settings is not .NET 6 or higher. Configured version is '{optionsVersion}'. Please update your settings and restart OmniSharp.");
-                    return NoInstances;
-                }
+                Logger.LogError(errorMessage);
+                return NoInstances;
             }
 
             var instances = MicrosoftBuildLocator.QueryVisualStudioInstances()
-                .Where(instance => IncludeSdkInstance(instance, optionsVersion, includePrerelease))
+                .Where(instance => IncludeSdkInstance(instance.VisualStudioRootPath, optionsVersion, includePrerelease))
                 .OrderByDescending(instance => instance.Version)
                 .ToImmutableArray();
 
@@ -70,10 +63,27 @@ namespace OmniSharp.MSBuild.Discovery.Providers
             }).ToImmutableArray();
         }
 
-        public static bool IncludeSdkInstance(VisualStudioInstance instance, SemanticVersion targetVersion, bool includePrerelease)
+        public static bool TryParseVersion(string versionString, out SemanticVersion version, out string errorMessage)
+        {
+            if (!SemanticVersion.TryParse(versionString, out version))
+            {
+                errorMessage = $"The Sdk version specified in the OmniSharp settings was not a valid semantic version. Configured version is '{versionString}'. Please update your settings and restart OmniSharp.";
+                return false;
+            }
+            else if (version.Major < 6)
+            {
+                errorMessage = $"The Sdk version specified in the OmniSharp settings is not .NET 6 or higher. Configured version is '{versionString}'. Please update your settings and restart OmniSharp.";
+                return false;
+            }
+
+            errorMessage = null;
+            return true;
+        }
+
+        public static bool IncludeSdkInstance(string sdkPath, SemanticVersion targetVersion, bool includePrerelease)
         {
             // If the path does not have a `.version` file, then do not consider it a valid option.
-            if (!TryGetSdkVersion(instance.VisualStudioRootPath, out var version))
+            if (!TryGetSdkVersion(sdkPath, out var version))
             {
                 return false;
             }

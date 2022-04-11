@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Immutable;
 using System.IO;
+using System.Runtime.InteropServices;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
@@ -23,21 +24,9 @@ namespace OmniSharp.MSBuild.Discovery.Providers
                 return NoInstances;
             }
 
-            if (!File.Exists(_options.Path))
+            if (!TryGetVersion(_options.Path, out var pathVersion, out var errorMessage))
             {
-                Logger.LogError($"The Sdk path specified in the OmniSharp settings does not exist. Configured path is '{_options.Path}'. Please update your settings and restart OmniSharp.");
-                return NoInstances;
-            }
-
-            if (!SdkInstanceProvider.TryGetSdkVersion(_options.Path, out var pathVersion))
-            {
-                Logger.LogError($"The Sdk path specified in the OmniSharp settings does not appear to be a valid SDK. Configured path is '{_options.Path}'. Please update your settings and restart OmniSharp.");
-                return NoInstances;
-            }
-
-            if (pathVersion.Major < 6)
-            {
-                Logger.LogError($"The Sdk path specified in the OmniSharp settings is not .NET 6 or higher. Reported version is '{pathVersion}'. Please update your settings and restart OmniSharp.");
+                Logger.LogError(errorMessage);
                 return NoInstances;
             }
 
@@ -47,6 +36,31 @@ namespace OmniSharp.MSBuild.Discovery.Providers
                 new Version(pathVersion.Major, pathVersion.Minor, pathVersion.Patch),
                 DiscoveryType.UserOverride,
                 _options?.PropertyOverrides?.ToImmutableDictionary()));
+        }
+
+        public static bool TryGetVersion(string path, out SemanticVersion version, out string errorMessage)
+        {
+            if (!Directory.Exists(path))
+            {
+                version = null;
+                errorMessage = $"The Sdk path specified in the OmniSharp settings does not exist. Configured path is '{path}'. Please update your settings and restart OmniSharp.";
+                return false;
+            }
+
+            if (!SdkInstanceProvider.TryGetSdkVersion(path, out version))
+            {
+                errorMessage = $"The Sdk path specified in the OmniSharp settings does not appear to be a valid SDK. Configured path is '{path}'. Please update your settings and restart OmniSharp.";
+                return false;
+            }
+
+            if (version.Major < 6)
+            {
+                errorMessage = $"The Sdk path specified in the OmniSharp settings is not .NET 6 or higher. Reported version is '{version}'. Please update your settings and restart OmniSharp.";
+                return false;
+            }
+
+            errorMessage = null;
+            return true;
         }
     }
 }
