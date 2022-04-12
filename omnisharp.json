@@ -9,5 +9,8 @@
     "RoslynExtensionsOptions": {
         "enableAnalyzersSupport": true,
         "enableDecompilationSupport": true
+    },
+    "SDK": {
+        "includePrereleases": true
     }
 }
