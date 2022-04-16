@@ -83,7 +83,7 @@ public sealed record InlayHint
 public enum InlayHintKind
 {
     /// <summary>
-    /// An inlay hint that for a type annotation.
+    /// An inlay hint that is for a type annotation.
     /// </summary>
     Type = 1,
     /// <summary>
