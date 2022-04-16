@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Composition;
 using System.Diagnostics.CodeAnalysis;
@@ -12,6 +13,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using OmniSharp.Extensions;
 using OmniSharp.Mef;
+using OmniSharp.Models;
 using OmniSharp.Models.v1.InlayHints;
 using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Helpers;
@@ -139,6 +141,7 @@ internal class InlayHintService :
                     {
                         Label = string.Concat(hint.DisplayParts),
                         Position = text.GetPointFromPosition(hint.Span.End),
+                        TextEdits = ConvertToTextChanges(hint.ReplacementTextChange, text),
                         Data = (solutionVersionString, position)
                     });
 
@@ -150,6 +153,27 @@ internal class InlayHintService :
             }
 
             return resultList;
+        }
+
+        internal static LinePositionSpanTextChange[]? ConvertToTextChanges(TextChange? textChange, SourceText sourceText)
+        {
+            if (textChange.HasValue == false)
+            {
+                return Array.Empty<LinePositionSpanTextChange>();
+            }
+
+            var changeLinePositionSpan = sourceText.Lines.GetLinePositionSpan(textChange.Value.Span);
+            return new[]
+            {
+                new LinePositionSpanTextChange()
+                {
+                    NewText = textChange.Value.NewText ?? "",
+                    StartLine = changeLinePositionSpan.Start.Line,
+                    StartColumn = changeLinePositionSpan.Start.Character,
+                    EndLine = changeLinePositionSpan.End.Line,
+                    EndColumn = changeLinePositionSpan.End.Character
+                }
+            };
         }
 
         public bool TryGetFromCache(InlayHint hint, out OmniSharpInlineHint roslynHint, [NotNullWhen(true)] out Document? document)
