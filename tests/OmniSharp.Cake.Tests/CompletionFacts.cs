@@ -15,7 +15,7 @@ namespace OmniSharp.Cake.Tests
 {
     public class CompletionFacts : CakeSingleRequestHandlerTestFixture<CompletionHandler>
     {
-        private const int ImportCompletionTimeout = 1000;
+        private const int ImportCompletionTimeout = 2000;
         private readonly ILogger _logger;
 
         public CompletionFacts(ITestOutputHelper testOutput) : base(testOutput)
@@ -30,7 +30,7 @@ namespace OmniSharp.Cake.Tests
         {
             const string input = @"TaskSe$$";
 
-            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("CakeProject", shadowCopy : false))
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("CakeProject", shadowCopy: false))
             using (var host = CreateOmniSharpHost(testProject.Directory))
             {
                 var fileName = Path.Combine(testProject.Directory, "build.cake");
@@ -50,7 +50,7 @@ namespace OmniSharp.Cake.Tests
                         Inform$$
                     });";
 
-            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("CakeProject", shadowCopy : false))
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("CakeProject", shadowCopy: false))
             using (var host = CreateOmniSharpHost(testProject.Directory))
             {
                 var fileName = Path.Combine(testProject.Directory, "build.cake");
@@ -70,7 +70,7 @@ namespace OmniSharp.Cake.Tests
                         Inform$$
                     });";
 
-            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("CakeProject", shadowCopy : false))
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("CakeProject", shadowCopy: false))
             using (var host = CreateOmniSharpHost(testProject.Directory))
             {
                 var fileName = Path.Combine(testProject.Directory, "build.cake");
@@ -90,7 +90,7 @@ namespace OmniSharp.Cake.Tests
         {
             const string input = @"var regex = new Rege$$";
 
-            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("CakeProject", shadowCopy : false))
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("CakeProject", shadowCopy: false))
             using (var host = CreateOmniSharpHost(testProject.Directory,
                 new[] { new KeyValuePair<string, string>("RoslynExtensionsOptions:EnableImportCompletion", "true") }))
             {
@@ -141,7 +141,7 @@ class FooChild : Foo
 }
 ";
 
-            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("CakeProject", shadowCopy : false))
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("CakeProject", shadowCopy: false))
             using (var host = CreateOmniSharpHost(testProject.Directory))
             {
                 var fileName = Path.Combine(testProject.Directory, "build.cake");

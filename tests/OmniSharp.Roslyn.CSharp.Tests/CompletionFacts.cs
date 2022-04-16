@@ -17,7 +17,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 {
     public class CompletionFacts : AbstractTestFixture
     {
-        private const int ImportCompletionTimeout = 1000;
+        private const int ImportCompletionTimeout = 2000;
         private readonly ILogger _logger;
 
         private string EndpointName => OmniSharpEndpoints.Completion;
