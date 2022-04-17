@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Cake.Services.RequestHandlers.Completion;
@@ -103,16 +102,9 @@ namespace OmniSharp.Cake.Tests
 
                 // Populating the completion cache should take no more than a few ms, don't let it take too
                 // long
-                var cts = new CancellationTokenSource(millisecondsDelay: ImportCompletionTimeout);
-                await Task.Run(async () =>
-                {
-                    while (completions.IsIncomplete)
-                    {
-                        completions = await FindCompletionsAsync(fileName, input, host);
-                        cts.Token.ThrowIfCancellationRequested();
-                    }
-                }, cts.Token);
+                await Task.Delay(ImportCompletionTimeout);
 
+                completions = await FindCompletionsAsync(fileName, input, host);
                 Assert.False(completions.IsIncomplete);
                 Assert.Contains("Regex", completions.Items.Select(c => c.TextEdit.NewText));
 
