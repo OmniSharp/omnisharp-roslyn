@@ -18,6 +18,17 @@ namespace OmniSharp.Cake.Services.RequestHandlers.Completion
 
         protected override Task<CompletionResponse> TranslateResponse(CompletionResponse response, CompletionRequest request)
         {
+            if (response.Items is { Count: > 0 })
+            {
+                // In some instances, formatting changes to generated Cake DSL are being
+                // included in the CompletionItem as AdditionalTextEdits. The short term
+                // fix is to remove AdditionalTextEdits for now.
+                foreach (var item in response.Items)
+                {
+                    item.AdditionalTextEdits = null;
+                }
+            }
+
             return response.TranslateAsync(Workspace, request);
         }
     }

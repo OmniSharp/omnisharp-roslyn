@@ -118,7 +118,7 @@ namespace OmniSharp.Cake.Tests
         }
 
         [Fact]
-        public async Task ShouldGetAdditionalTextEditsFromOverrideCompletion()
+        public async Task ShouldNotGetAdditionalTextEditsFromOverrideCompletion()
         {
             const string source = @"
 class Foo
@@ -141,8 +141,11 @@ class FooChild : Foo
                 Assert.Equal(
                     new[]
                     {
-                        "Equals(object? obj)", "GetHashCode()", "Test(string text)",
-                        "Test(string text, string moreText)", "ToString()"
+                        "Equals(object? obj)",
+                        "GetHashCode()",
+                        "Test(string text)",
+                        "Test(string text, string moreText)",
+                        "ToString()"
                     },
                     completions.Items.Select(c => c.Label));
                 Assert.Equal(new[]
