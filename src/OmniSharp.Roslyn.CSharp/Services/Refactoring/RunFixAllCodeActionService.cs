@@ -168,8 +168,16 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
             };
 
             var fixAllContext = OmniSharpCodeFixContextFactory.CreateFixAllContext(
-                document, document.Project, codeFixProvider, roslynScope, action.EquivalenceKey, ImmutableArray.Create(diagnosticId), _fixAllDiagnosticProvider,
-                _ => codeActionOptions, cancellationToken);
+                document,
+                primaryDiagnostic.Location.SourceSpan,
+                document.Project,
+                codeFixProvider,
+                roslynScope,
+                action.EquivalenceKey,
+                ImmutableArray.Create(diagnosticId),
+                _fixAllDiagnosticProvider,
+                _ => codeActionOptions,
+                cancellationToken);
 
             _logger.LogTrace("Finding FixAll fix for {0}.", diagnosticId);
             var fixes = await fixAllProvider.GetFixAsync(fixAllContext);

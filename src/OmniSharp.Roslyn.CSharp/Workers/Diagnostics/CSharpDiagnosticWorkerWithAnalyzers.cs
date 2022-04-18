@@ -33,6 +33,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
         private readonly OmniSharpOptions _options;
         private readonly OmniSharpWorkspace _workspace;
 
+        private const int WorkerWait = 250;
+
         public CSharpDiagnosticWorkerWithAnalyzers(
             OmniSharpWorkspace workspace,
             [ImportMany] IEnumerable<ICodeActionProvider> providers,
@@ -114,6 +116,15 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                         .Where(x => x.projectId != null)
                         .ToImmutableArray();
 
+                    if (documents.IsEmpty)
+                    {
+                        _workQueue.WorkComplete(workType);
+
+                        await Task.Delay(WorkerWait);
+
+                        continue;
+                    }
+
                     var documentCount = documents.Length;
                     var documentCountRemaining = documentCount;
 
@@ -157,7 +168,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
                     _workQueue.WorkComplete(workType);
 
-                    await Task.Delay(50);
+                    await Task.Delay(WorkerWait);
                 }
                 catch (Exception ex)
                 {
@@ -219,7 +230,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             Project project = document.Project;
             var allAnalyzers = GetAnalyzersForProject(project);
             var compilation = await project.GetCompilationAsync(cancellationToken);
-            
+
             cancellationToken.ThrowIfCancellationRequested();
             return await AnalyzeDocument(project, allAnalyzers, compilation, CreateAnalyzerOptions(document.Project), document);
         }

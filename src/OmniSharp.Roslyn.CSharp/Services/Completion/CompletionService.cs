@@ -3,7 +3,6 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Composition;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -19,11 +18,12 @@ using OmniSharp.Models;
 using OmniSharp.Models.v1.Completion;
 using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Helpers;
+using OmniSharp.Roslyn.Utilities;
 using OmniSharp.Utilities;
+using Roslyn.Utilities;
 using CompletionItem = OmniSharp.Models.v1.Completion.CompletionItem;
 using CompletionTriggerKind = OmniSharp.Models.v1.Completion.CompletionTriggerKind;
 using CSharpCompletionService = Microsoft.CodeAnalysis.Completion.CompletionService;
-using Roslyn.Utilities;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Completion
 {
@@ -207,7 +207,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                             continue;
                         }
 
-                        additionalChanges.Add(CompletionListBuilder.GetChangeForTextAndSpan(textChange.NewText, textChange.Span, sourceText));
+                        additionalChanges.Add(TextChanges.Convert(sourceText, textChange));
                     }
 
                     request.Item.AdditionalTextEdits = additionalChanges;
@@ -273,7 +273,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
 
             return new CompletionAfterInsertResponse
             {
-                Changes = finalChange.TextChanges.SelectAsArray(changedText, static (c, changedText) => CompletionListBuilder.GetChangeForTextAndSpan(c.NewText, c.Span, changedText)),
+                Changes = finalChange.TextChanges.SelectAsArray(changedText, static (c, changedText) => TextChanges.Convert(changedText, c)),
                 Line = finalPosition.Line,
                 Column = finalPosition.Column,
             };
