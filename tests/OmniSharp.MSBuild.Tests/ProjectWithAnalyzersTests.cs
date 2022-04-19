@@ -286,7 +286,7 @@ dotnet_diagnostic.IDE0005.severity = none
                     csprojFileXml =>
                     {
                         var referencesGroup = csprojFileXml.Descendants("ItemGroup").FirstOrDefault();
-                        referencesGroup.Add(new XElement("PackageReference", new XAttribute("Include", "Roslynator.Analyzers"), new XAttribute("Version", "2.1.0")));
+                        referencesGroup.Add(new XElement("PackageReference", new XAttribute("Include", "Roslynator.Analyzers"), new XAttribute("Version", "4.1.0"), new XAttribute("PrivateAssets", "all"), new XAttribute("IncludeAssets", "runtime; build; native; contentfiles; analyzers")));
                     });
 
                 await NotifyFileChanged(host, csprojFile);
@@ -295,7 +295,7 @@ dotnet_diagnostic.IDE0005.severity = none
                 await host.RestoreProject(testProject);
 
                 // Todo: This can be removed and replaced with wait for event (project analyzed eg.) once they are available.
-                await Task.Delay(2000);
+                await Task.Delay(5000);
 
                 var diagnostics = await host.RequestCodeCheckAsync(Path.Combine(testProject.Directory, "Program.cs"));
 

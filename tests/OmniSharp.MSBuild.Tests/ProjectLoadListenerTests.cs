@@ -245,6 +245,18 @@ namespace OmniSharp.MSBuild.Tests
             Assert.Equal(GetHashedFileExtension("6.0.201"), emitter.ReceivedMessages[0].SdkVersion);
         }
 
+        [ConditionalFact(typeof(NonMonoRuntimeOnly))]
+        public async Task The_correct_sdk_version_is_emitted_NET7()
+        {
+            // Arrange
+            var emitter = new ProjectLoadTestEventEmitter();
+
+            using var testProject = await TestAssets.Instance.GetTestProjectAsync("Net70Project");
+            using var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory));
+            Assert.Single(emitter.ReceivedMessages);
+            Assert.Equal(GetHashedFileExtension("7.0.100-preview.2.22153.17"), emitter.ReceivedMessages[0].SdkVersion);
+        }
+
         private string GetHashedFileExtension(string fileExtension)
         {
             return _tfmAndFileHashingAlgorithm.HashInput(fileExtension).Value;

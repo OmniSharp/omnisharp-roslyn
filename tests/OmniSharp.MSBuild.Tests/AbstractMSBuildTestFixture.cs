@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Composition.Hosting.Core;
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OmniSharp.MSBuild.Discovery;
 using OmniSharp.Roslyn.Utilities;
@@ -24,7 +23,15 @@ namespace OmniSharp.MSBuild.Tests
         {
             _assemblyLoader = new AssemblyLoader(this.LoggerFactory);
             _analyzerAssemblyLoader = ShadowCopyAnalyzerAssemblyLoader.Instance;
-            _msbuildLocator = MSBuildLocator.CreateDefault(this.LoggerFactory, _assemblyLoader, msbuildConfiguration: null);
+
+            // Since we can only load MSBuild once into our process we need to include
+            // prerelease version so that our .NET 7 tests will pass.
+            var configuration = new Dictionary<string, string>
+            {
+                ["sdk:IncludePrereleases"] = bool.TrueString
+            }.ToConfiguration();
+
+            _msbuildLocator = MSBuildLocator.CreateDefault(this.LoggerFactory, _assemblyLoader, configuration);
 
             // Some tests require MSBuild to be discovered early
             // to ensure that the Microsoft.Build.* assemblies can be located

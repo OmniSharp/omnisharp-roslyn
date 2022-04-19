@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Cake.Services.RequestHandlers.Completion;
@@ -15,7 +14,7 @@ namespace OmniSharp.Cake.Tests
 {
     public class CompletionFacts : CakeSingleRequestHandlerTestFixture<CompletionHandler>
     {
-        private const int ImportCompletionTimeout = 1000;
+        private const int ImportCompletionTimeout = 2000;
         private readonly ILogger _logger;
 
         public CompletionFacts(ITestOutputHelper testOutput) : base(testOutput)
@@ -30,7 +29,7 @@ namespace OmniSharp.Cake.Tests
         {
             const string input = @"TaskSe$$";
 
-            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("CakeProject", shadowCopy : false))
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("CakeProject", shadowCopy: false))
             using (var host = CreateOmniSharpHost(testProject.Directory))
             {
                 var fileName = Path.Combine(testProject.Directory, "build.cake");
@@ -50,7 +49,7 @@ namespace OmniSharp.Cake.Tests
                         Inform$$
                     });";
 
-            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("CakeProject", shadowCopy : false))
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("CakeProject", shadowCopy: false))
             using (var host = CreateOmniSharpHost(testProject.Directory))
             {
                 var fileName = Path.Combine(testProject.Directory, "build.cake");
@@ -70,7 +69,7 @@ namespace OmniSharp.Cake.Tests
                         Inform$$
                     });";
 
-            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("CakeProject", shadowCopy : false))
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("CakeProject", shadowCopy: false))
             using (var host = CreateOmniSharpHost(testProject.Directory))
             {
                 var fileName = Path.Combine(testProject.Directory, "build.cake");
@@ -90,7 +89,7 @@ namespace OmniSharp.Cake.Tests
         {
             const string input = @"var regex = new Rege$$";
 
-            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("CakeProject", shadowCopy : false))
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("CakeProject", shadowCopy: false))
             using (var host = CreateOmniSharpHost(testProject.Directory,
                 new[] { new KeyValuePair<string, string>("RoslynExtensionsOptions:EnableImportCompletion", "true") }))
             {
@@ -103,16 +102,9 @@ namespace OmniSharp.Cake.Tests
 
                 // Populating the completion cache should take no more than a few ms, don't let it take too
                 // long
-                var cts = new CancellationTokenSource(millisecondsDelay: ImportCompletionTimeout);
-                await Task.Run(async () =>
-                {
-                    while (completions.IsIncomplete)
-                    {
-                        completions = await FindCompletionsAsync(fileName, input, host);
-                        cts.Token.ThrowIfCancellationRequested();
-                    }
-                }, cts.Token);
+                await Task.Delay(ImportCompletionTimeout);
 
+                completions = await FindCompletionsAsync(fileName, input, host);
                 Assert.False(completions.IsIncomplete);
                 Assert.Contains("Regex", completions.Items.Select(c => c.TextEdit.NewText));
 
@@ -126,7 +118,7 @@ namespace OmniSharp.Cake.Tests
         }
 
         [Fact]
-        public async Task ShouldGetAdditionalTextEditsFromOverrideCompletion()
+        public async Task ShouldNotGetAdditionalTextEditsFromOverrideCompletion()
         {
             const string source = @"
 class Foo
@@ -141,7 +133,7 @@ class FooChild : Foo
 }
 ";
 
-            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("CakeProject", shadowCopy : false))
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("CakeProject", shadowCopy: false))
             using (var host = CreateOmniSharpHost(testProject.Directory))
             {
                 var fileName = Path.Combine(testProject.Directory, "build.cake");
@@ -149,8 +141,11 @@ class FooChild : Foo
                 Assert.Equal(
                     new[]
                     {
-                        "Equals(object? obj)", "GetHashCode()", "Test(string text)",
-                        "Test(string text, string moreText)", "ToString()"
+                        "Equals(object? obj)",
+                        "GetHashCode()",
+                        "Test(string text)",
+                        "Test(string text, string moreText)",
+                        "ToString()"
                     },
                     completions.Items.Select(c => c.Label));
                 Assert.Equal(new[]
