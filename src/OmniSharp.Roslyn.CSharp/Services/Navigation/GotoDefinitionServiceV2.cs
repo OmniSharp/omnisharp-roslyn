@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 
 using Microsoft.CodeAnalysis;
 using OmniSharp.Extensions;
@@ -46,15 +46,31 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
 
             if (symbol.Locations[0].IsInSource)
             {
-                return new GotoDefinitionResponse()
-                {
-                    Definitions = symbol.Locations
-                        .Select(location => new Definition
+                var definitions = symbol.Locations
+                    .Select(location =>
+                    {
+                        var sourceGeneratedFileInfo = GoToDefinitionHelpers.GetSourceGeneratedFileInfo(_workspace, location);
+                        var metadataSource = sourceGeneratedFileInfo == null && IsDecompiledSource(location.SourceTree) ?
+                            new OmniSharp.Models.Metadata.MetadataSource()
+                            {
+                                AssemblyName = symbol.ContainingAssembly.Name,
+                                ProjectName = document.Project.Name,
+                                TypeName = symbol.GetSymbolName()
+                            } :
+                            null;
+
+                        return new Definition
                         {
                             Location = location.GetMappedLineSpan().GetLocationFromFileLinePositionSpan(),
-                            SourceGeneratedFileInfo = GoToDefinitionHelpers.GetSourceGeneratedFileInfo(_workspace, location)
-                        })
-                        .ToList()
+                            SourceGeneratedFileInfo = sourceGeneratedFileInfo,
+                            MetadataSource = metadataSource
+                        };
+                    })
+                    .ToList();
+
+                return new GotoDefinitionResponse()
+                {
+                    Definitions = definitions
                 };
             }
             else
@@ -82,6 +98,11 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
                 }
 
                 return new GotoDefinitionResponse();
+            }
+
+            bool IsDecompiledSource(SyntaxTree? syntaxTree)
+            {
+                return syntaxTree?.FilePath.StartsWith("$metadata$\\Project\\") == true;
             }
         }
     }
