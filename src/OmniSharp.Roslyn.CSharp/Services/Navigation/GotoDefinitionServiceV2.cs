@@ -3,6 +3,8 @@
 using Microsoft.CodeAnalysis;
 using OmniSharp.Extensions;
 using OmniSharp.Mef;
+using OmniSharp.Models.Metadata;
+using OmniSharp.Models.v1.SourceGeneratedFile;
 using OmniSharp.Models.V2.GotoDefinition;
 using OmniSharp.Options;
 using System.Composition;
@@ -49,21 +51,28 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
                 var definitions = symbol.Locations
                     .Select(location =>
                     {
-                        var sourceGeneratedFileInfo = GoToDefinitionHelpers.GetSourceGeneratedFileInfo(_workspace, location);
-                        var metadataSource = sourceGeneratedFileInfo == null && IsDecompiledSource(location.SourceTree) ?
-                            new OmniSharp.Models.Metadata.MetadataSource()
+                        MetadataSource? metadataSource = null;
+                        SourceGeneratedFileInfo? sourceGeneratedFileInfo = null;
+
+                        if (IsMetaDataSource(location.SourceTree))
+                        {
+                            metadataSource = new MetadataSource()
                             {
                                 AssemblyName = symbol.ContainingAssembly.Name,
                                 ProjectName = document.Project.Name,
                                 TypeName = symbol.GetSymbolName()
-                            } :
-                            null;
+                            };
+                        }
+                        else
+                        {
+                            sourceGeneratedFileInfo = GoToDefinitionHelpers.GetSourceGeneratedFileInfo(_workspace, location);
+                        }
 
                         return new Definition
                         {
                             Location = location.GetMappedLineSpan().GetLocationFromFileLinePositionSpan(),
-                            SourceGeneratedFileInfo = sourceGeneratedFileInfo,
-                            MetadataSource = metadataSource
+                            MetadataSource = metadataSource,
+                            SourceGeneratedFileInfo = sourceGeneratedFileInfo
                         };
                     })
                     .ToList();
@@ -100,7 +109,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
                 return new GotoDefinitionResponse();
             }
 
-            bool IsDecompiledSource(SyntaxTree? syntaxTree)
+            static bool IsMetaDataSource(SyntaxTree? syntaxTree)
             {
                 return syntaxTree?.FilePath.StartsWith("$metadata$\\Project\\") == true;
             }
