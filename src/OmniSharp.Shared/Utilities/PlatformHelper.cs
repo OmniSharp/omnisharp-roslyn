@@ -167,59 +167,5 @@ namespace OmniSharp.Utilities
                 ? monoMSBuildDirPath
                 : null;
         }
-
-        public static string GetMonoXBuildDirPath()
-        {
-            if (IsWindows)
-            {
-                return null;
-            }
-
-            const string DefaultMonoXBuildDirPath = "/usr/lib/mono/xbuild";
-            if (Directory.Exists(DefaultMonoXBuildDirPath))
-            {
-                return DefaultMonoXBuildDirPath;
-            }
-
-            var monoLibDirPath = GetMonoLibDirPath();
-            if (monoLibDirPath == null)
-            {
-                return null;
-            }
-
-            var monoXBuildDirPath = Path.Combine(monoLibDirPath, "xbuild");
-            monoXBuildDirPath = Path.GetFullPath(monoXBuildDirPath);
-
-            return Directory.Exists(monoXBuildDirPath)
-                ? monoXBuildDirPath
-                : null;
-        }
-
-        public static string GetMonoXBuildFrameworksDirPath()
-        {
-            if (IsWindows)
-            {
-                return null;
-            }
-
-            const string DefaultMonoXBuildFrameworksDirPath = "/usr/lib/mono/xbuild-frameworks";
-            if (Directory.Exists(DefaultMonoXBuildFrameworksDirPath))
-            {
-                return DefaultMonoXBuildFrameworksDirPath;
-            }
-
-            var monoLibDirPath = GetMonoLibDirPath();
-            if (monoLibDirPath == null)
-            {
-                return null;
-            }
-
-            var monoXBuildFrameworksDirPath = Path.Combine(monoLibDirPath, "xbuild-frameworks");
-            monoXBuildFrameworksDirPath = Path.GetFullPath(monoXBuildFrameworksDirPath);
-
-            return Directory.Exists(monoXBuildFrameworksDirPath)
-                ? monoXBuildFrameworksDirPath
-                : null;
-        }
     }
 }

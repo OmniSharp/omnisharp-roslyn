@@ -23,7 +23,15 @@ namespace OmniSharp.MSBuild.Tests
         {
             _assemblyLoader = new AssemblyLoader(this.LoggerFactory);
             _analyzerAssemblyLoader = ShadowCopyAnalyzerAssemblyLoader.Instance;
-            _msbuildLocator = MSBuildLocator.CreateStandAlone(this.LoggerFactory, _assemblyLoader);
+
+            // Since we can only load MSBuild once into our process we need to include
+            // prerelease version so that our .NET 7 tests will pass.
+            var configuration = new Dictionary<string, string>
+            {
+                ["sdk:IncludePrereleases"] = bool.TrueString
+            }.ToConfiguration();
+
+            _msbuildLocator = MSBuildLocator.CreateDefault(this.LoggerFactory, _assemblyLoader, configuration);
 
             // Some tests require MSBuild to be discovered early
             // to ensure that the Microsoft.Build.* assemblies can be located

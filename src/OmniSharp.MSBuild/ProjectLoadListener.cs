@@ -87,7 +87,7 @@ namespace OmniSharp.MSBuild
 
         private static HashedString GetSdkVersion(ProjectLoadedEventArgs args)
         {
-            return _tfmAndFileHashingAlgorithm.HashInput(args.SdkVersion.ToString());
+            return _tfmAndFileHashingAlgorithm.HashInput(args.SdkVersion?.ToString());
         }
 
         private static HashedString GetSessionId(ProjectLoadedEventArgs args)

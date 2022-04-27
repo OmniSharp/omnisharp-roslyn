@@ -186,7 +186,7 @@ class Bar:Foo { }
                     Line = point.Line,
                     Column = point.Offset,
                     FileName = testFile.FileName,
-                    Identifier = "Fix formatting",
+                    Identifier = "AbstractFormattingCodeFixProvider",
                     WantsTextChanges = false,
                     WantsAllCodeActionOperations = true,
                     Buffer = testFile.Content.Code

@@ -136,7 +136,12 @@ namespace OmniSharp.Utilities
             version = null;
 
             // Details: https://www.freedesktop.org/software/systemd/man/os-release.html
-            const string OS_Release_Path = "/etc/os-release";
+            string OS_Release_Path = "/etc/os-release";
+
+            if (!File.Exists(OS_Release_Path))
+            {
+                OS_Release_Path = "/usr/lib/os-release";
+            }
 
             if (!File.Exists(OS_Release_Path))
             {
