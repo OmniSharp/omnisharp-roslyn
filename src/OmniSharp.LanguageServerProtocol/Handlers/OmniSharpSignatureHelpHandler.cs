@@ -49,7 +49,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
 
             var containerSignatures = omnisharpResponse.Signatures.Select(x => new SignatureInformation
             {
-                Documentation = x.Documentation,
+                Documentation = x.StructuredDocumentation.SummaryText,
                 Label = x.Label,
                 Parameters = new Container<ParameterInformation>(x.Parameters.Select(param => new ParameterInformation
                 {
