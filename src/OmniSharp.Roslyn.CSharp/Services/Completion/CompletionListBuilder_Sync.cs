@@ -4,9 +4,11 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.Completion;
 using Microsoft.CodeAnalysis.Completion;
 using Microsoft.CodeAnalysis.Text;
+using OmniSharp.Extensions;
 using OmniSharp.Models;
 using OmniSharp.Models.v1.Completion;
 using OmniSharp.Roslyn.CSharp.Helpers;
+using OmniSharp.Roslyn.Utilities;
 using OmniSharp.Utilities;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -17,7 +19,6 @@ using CompletionItem = OmniSharp.Models.v1.Completion.CompletionItem;
 using CSharpCompletionItem = Microsoft.CodeAnalysis.Completion.CompletionItem;
 using CSharpCompletionList = Microsoft.CodeAnalysis.Completion.CompletionList;
 using CSharpCompletionService = Microsoft.CodeAnalysis.Completion.CompletionService;
-using OmniSharp.Extensions;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Completion
 {
@@ -270,7 +271,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
             static void handleNonInsertsectingEdit(SourceText sourceText, ref List<LinePositionSpanTextChange>? additionalTextEdits, ref int? adjustedNewPosition, TextChange textChange)
             {
                 additionalTextEdits ??= new();
-                additionalTextEdits.Add(GetChangeForTextAndSpan(textChange.NewText!, textChange.Span, sourceText));
+                additionalTextEdits.Add(TextChanges.Convert(sourceText, textChange));
 
                 if (adjustedNewPosition is int newPosition)
                 {

@@ -12,9 +12,11 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using OmniSharp.Extensions;
 using OmniSharp.Mef;
+using OmniSharp.Models;
 using OmniSharp.Models.v1.InlayHints;
 using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Helpers;
+using OmniSharp.Roslyn.Utilities;
 
 #nullable enable
 
@@ -95,7 +97,7 @@ internal class InlayHintService :
             return request.Hint;
         }
 
-        var descriptionTags = await roslynHint.GetDescrptionAsync(document, CancellationToken.None);
+        var descriptionTags = await roslynHint.GetDescriptionAsync(document, CancellationToken.None);
         StringBuilder stringBuilder = new StringBuilder();
         MarkdownHelpers.TaggedTextToMarkdown(
             descriptionTags,
@@ -139,6 +141,7 @@ internal class InlayHintService :
                     {
                         Label = string.Concat(hint.DisplayParts),
                         Position = text.GetPointFromPosition(hint.Span.End),
+                        TextEdits = ConvertToTextChanges(hint.ReplacementTextChange, text),
                         Data = (solutionVersionString, position)
                     });
 
@@ -150,6 +153,13 @@ internal class InlayHintService :
             }
 
             return resultList;
+        }
+
+        internal static LinePositionSpanTextChange[]? ConvertToTextChanges(TextChange? textChange, SourceText sourceText)
+        {
+            return textChange.HasValue
+                ? new[] { TextChanges.Convert(sourceText, textChange.Value) }
+                : null;
         }
 
         public bool TryGetFromCache(InlayHint hint, out OmniSharpInlineHint roslynHint, [NotNullWhen(true)] out Document? document)

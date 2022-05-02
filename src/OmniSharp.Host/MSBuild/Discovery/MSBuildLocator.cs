@@ -32,34 +32,31 @@ namespace OmniSharp.MSBuild.Discovery
             }
         }
 
-        public static MSBuildLocator CreateDefault(ILoggerFactory loggerFactory, IAssemblyLoader assemblyLoader, IConfiguration msbuildConfiguration)
+        public static MSBuildLocator CreateDefault(ILoggerFactory loggerFactory, IAssemblyLoader assemblyLoader, IConfiguration configuration)
         {
-            var useBundledOnly = msbuildConfiguration.GetValue<bool>("UseBundledOnly");
+            var msbuildConfiguration = configuration?.GetSection("msbuild");
+            var useBundledOnly = msbuildConfiguration?.GetValue<bool>("UseBundledOnly") ?? false;
             if (useBundledOnly)
             {
                 var logger = loggerFactory.CreateLogger<MSBuildLocator>();
-                logger.LogInformation("Because 'UseBundledOnly' is enabled in the configuration, OmniSharp will only use the bundled MSBuild.");
-                return CreateStandAlone(loggerFactory, assemblyLoader);
+                logger.LogWarning("The MSBuild option 'UseBundledOnly' is no longer supported. Please update your OmniSharp configuration files.");
             }
+
+#if NETCOREAPP
+            var sdkConfiguration = configuration?.GetSection("sdk");
 
             return new MSBuildLocator(loggerFactory, assemblyLoader,
                 ImmutableArray.Create<MSBuildInstanceProvider>(
-                    new MicrosoftBuildLocatorInstanceProvider(loggerFactory),
-#if !NETCOREAPP
-                    new MonoInstanceProvider(loggerFactory),
-                    new StandAloneInstanceProvider(loggerFactory),
-#endif
-                    new UserOverrideInstanceProvider(loggerFactory, msbuildConfiguration)));
-        }
-
-        public static MSBuildLocator CreateStandAlone(ILoggerFactory loggerFactory, IAssemblyLoader assemblyLoader)
-            => new MSBuildLocator(loggerFactory, assemblyLoader,
-                ImmutableArray.Create<MSBuildInstanceProvider>(
-#if NETCOREAPP
-                    new MicrosoftBuildLocatorInstanceProvider(loggerFactory)));
+                    new SdkInstanceProvider(loggerFactory, sdkConfiguration),
+                    new SdkOverrideInstanceProvider(loggerFactory, sdkConfiguration)));
 #else
-                    new StandAloneInstanceProvider(loggerFactory)));
+            return new MSBuildLocator(loggerFactory, assemblyLoader,
+                ImmutableArray.Create<MSBuildInstanceProvider>(
+                    new MicrosoftBuildLocatorInstanceProvider(loggerFactory),
+                    new MonoInstanceProvider(loggerFactory),
+                    new UserOverrideInstanceProvider(loggerFactory, msbuildConfiguration)));
 #endif
+        }
 
         public void RegisterInstance(MSBuildInstance instance)
         {
@@ -69,17 +66,6 @@ namespace OmniSharp.MSBuild.Discovery
             }
 
             RegisteredInstance = instance ?? throw new ArgumentNullException(nameof(instance));
-
-            if (instance.DiscoveryType == DiscoveryType.StandAlone)
-            {
-                // MSBuild began relying on the Microsoft.IO.Redist library which does not work
-                // on MacOS or Linux platforms. Disabling the 17.0 feature wave opts us in to the
-                // earlier behavior of using System.IO.
-
-                // This issue only affects the MSBuild tools shipped with O# as Mono does not ship
-                // with a version of MSBuild that includes this change.
-                Environment.SetEnvironmentVariable("MSBUILDDISABLEFEATURESFROMVERSION", "17.0");
-            }
 
             if (instance.SetMSBuildExePathVariable)
             {

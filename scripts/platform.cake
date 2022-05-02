@@ -105,10 +105,22 @@ public sealed class Platform
 
     private static void ReadDistroNameAndVersion(out string distroName, out Version version)
     {
-        var lines = System.IO.File.ReadAllLines("/etc/os-release");
-
         distroName = null;
         version = null;
+
+        string OS_Release_Path = "/etc/os-release";
+
+        if (!System.IO.File.Exists(OS_Release_Path))
+        {
+            OS_Release_Path = "/usr/lib/os-release";
+        }
+
+        if (!System.IO.File.Exists(OS_Release_Path))
+        {
+            return;
+        }
+
+        var lines = System.IO.File.ReadAllLines(OS_Release_Path);
 
         foreach (var line in lines)
         {
