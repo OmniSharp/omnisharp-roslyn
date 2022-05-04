@@ -46,6 +46,7 @@ Every merge to `master` is automatically published to this feed and individual r
     -   `win-arm64`
     -   `linux-x64`
     -   `linux-x86`
+    -   `linux-musl-x64`
     -   `linux-arm64`
     -   `osx`
     -   `mono` (Requires global mono installed)
