@@ -42,7 +42,7 @@ Note: The arguments below should prefixed with a single hyphen on Windows (Power
   `-install-path Path`: Path used for the **Install** target.
     Defaults to `(%USERPROFILE%|$HOME)/.omnisharp`
 
-  `-publish-all`: Publishes all platforms for the current OS. On Windows, specifying this argument would produce win7-x86, win7-x64, and win10-arm64 builds. On OSX/Linux, this argument causes osx, linux-x86, linux-x64, linux-musl-x64, and linux-arm64 builds to be published.
+  `-publish-all`: Publishes all platforms for the current OS. On Windows, specifying this argument would produce win7-x86, win7-x64, and win10-arm64 builds. On OSX/Linux, this argument causes osx, linux-x86, linux-x64, linux-musl-x64, linux-musl-arm64 and linux-arm64 builds to be published.
 
   `-archive`: Enable the generation of publishable archives after a build.
 
