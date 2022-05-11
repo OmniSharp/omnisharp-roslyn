@@ -32,11 +32,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
         private readonly OmniSharpOptions _options;
         private readonly OmniSharpWorkspace _workspace;
 
-<<<<<<< HEAD
         private int _projectCount = 0;
-=======
-        private const int WorkerWait = 250;
->>>>>>> master
 
         public CSharpDiagnosticWorkerWithAnalyzers(
             OmniSharpWorkspace workspace,
@@ -122,39 +118,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                     item = await _workQueue.TakeWorkAsync();
                     (documentId, cancellationToken, workType, documentCount, remaining) = item;
 
-<<<<<<< HEAD
                     if (workType == AnalyzerWorkType.Background)
-=======
-                    var documents = _workQueue
-                        .TakeWork(workType)
-                        .Select(documentId => (projectId: solution.GetDocument(documentId)?.Project?.Id, documentId))
-                        .Where(x => x.projectId != null)
-                        .ToImmutableArray();
-
-                    if (documents.IsEmpty)
-                    {
-                        _workQueue.WorkComplete(workType);
-
-                        await Task.Delay(WorkerWait);
-
-                        continue;
-                    }
-
-                    var documentCount = documents.Length;
-                    var documentCountRemaining = documentCount;
-
-                    // event every percentage increase, or every 10th if there are fewer than 1000
-                    var eventEvery = Math.Max(10, documentCount / 100);
-
-                    var documentsGroupedByProjects = documents
-                        .GroupBy(x => x.projectId, x => x.documentId)
-                        .ToImmutableArray();
-                    var projectCount = documentsGroupedByProjects.Length;
-
-                    EventIfBackgroundWork(workType, BackgroundDiagnosticStatus.Started, projectCount, documentCount, documentCountRemaining);
-
-                    void decrementDocumentCountRemaining()
->>>>>>> master
                     {
                         // event every percentage increase, or every 10th if there are fewer than 1000
                         var eventEvery = Math.Max(10, documentCount / 100);
@@ -180,17 +144,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                         if (remaining == 0)
                             EventIfBackgroundWork(workType, BackgroundDiagnosticStatus.Finished, _projectCount, documentCount, remaining);
                     }
-<<<<<<< HEAD
                 }
                 catch (OperationCanceledException) when (cancellationToken != null && cancellationToken.Value.IsCancellationRequested)
                 {
                     _logger.LogInformation($"Analyzer work cancelled.");
-=======
-
-                    _workQueue.WorkComplete(workType);
-
-                    await Task.Delay(WorkerWait);
->>>>>>> master
                 }
                 catch (Exception ex)
                 {
@@ -265,12 +222,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             var allAnalyzers = GetAnalyzersForProject(project);
             var compilation = await project.GetCompilationAsync(cancellationToken);
 
-<<<<<<< HEAD
             return await AnalyzeDocument(project, allAnalyzers, compilation, CreateAnalyzerOptions(document.Project), document, cancellationToken);
-=======
-            cancellationToken.ThrowIfCancellationRequested();
-            return await AnalyzeDocument(project, allAnalyzers, compilation, CreateAnalyzerOptions(document.Project), document);
->>>>>>> master
         }
 
         public async Task<IEnumerable<Diagnostic>> AnalyzeProjectsAsync(Project project, CancellationToken cancellationToken)
