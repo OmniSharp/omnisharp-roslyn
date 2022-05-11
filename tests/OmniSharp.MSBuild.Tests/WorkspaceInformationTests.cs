@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 using TestUtility;
 using Xunit;
@@ -118,6 +117,20 @@ namespace OmniSharp.MSBuild.Tests
             Assert.Equal("Net60Project", project.AssemblyName);
             Assert.Equal(".NETCoreApp,Version=v6.0", project.TargetFramework);
             Assert.Contains(project.TargetFrameworks[0].ShortName, new[] { "net60", "net6.0" });
+        }
+
+        [ConditionalFact(typeof(NonMonoRuntimeOnly))]
+        public async Task Net70Project()
+        {
+            using var testProject = await TestAssets.Instance.GetTestProjectAsync("Net70Project");
+            using var host = CreateMSBuildTestHost(testProject.Directory);
+            var workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
+
+            Assert.NotNull(workspaceInfo.Projects);
+            var project = Assert.Single(workspaceInfo.Projects);
+            Assert.Equal("Net70Project", project.AssemblyName);
+            Assert.Equal(".NETCoreApp,Version=v7.0", project.TargetFramework);
+            Assert.Contains(project.TargetFrameworks[0].ShortName, new[] { "net70", "net7.0" });
         }
 
         [Fact]

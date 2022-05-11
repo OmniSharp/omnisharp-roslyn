@@ -142,9 +142,9 @@ namespace TestUtility
 
         public static IConfiguration GetConfigurationDataWithAnalyzerConfig(
             bool roslynAnalyzersEnabled = false,
+            bool analyzeOpenDocumentsOnly = false,
             bool editorConfigEnabled = false,
-            Dictionary<string, string> existingConfiguration = null,
-            bool analyzeOpenDocumentsOnly = false)
+            Dictionary<string, string> existingConfiguration = null)
         {
             if (existingConfiguration == null)
             {
@@ -158,6 +158,7 @@ namespace TestUtility
 
             var copyOfExistingConfigs = existingConfiguration.ToDictionary(x => x.Key, x => x.Value);
             copyOfExistingConfigs.Add("RoslynExtensionsOptions:EnableAnalyzersSupport", roslynAnalyzersEnabled.ToString());
+            copyOfExistingConfigs.Add("RoslynExtensionsOptions:AnalyzeOpenDocumentsOnly", analyzeOpenDocumentsOnly.ToString());
             copyOfExistingConfigs.Add("FormattingOptions:EnableEditorConfigSupport", editorConfigEnabled.ToString());
 
             return copyOfExistingConfigs.ToConfiguration();

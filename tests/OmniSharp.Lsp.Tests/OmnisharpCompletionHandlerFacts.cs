@@ -323,7 +323,7 @@ namespace N2
 }";
 
             await EnableImportCompletion();
-            var completions = await FindCompletionsWithImportedAsync(filename, input, items => items.Any(c => c.TextEdit.TextEdit.NewText == "Guid"));
+            var completions = await FindCompletionsWithImportedAsync(filename, input);
             var resolved = await ResolveCompletionAsync(completions.Items.First(c => c.TextEdit.TextEdit.NewText == "Guid"));
 
             Assert.Single(resolved.AdditionalTextEdits);
@@ -1559,25 +1559,19 @@ class Foo
             return await Client.RequestCompletion(request);
         }
 
-        private async Task<CompletionList> FindCompletionsWithImportedAsync(string filename, string source, Func<CompletionList, bool> isFullyComplete = null)
+        private async Task<CompletionList> FindCompletionsWithImportedAsync(string filename, string source)
         {
             var completions = await FindCompletionsAsync(filename, source);
-            if (!completions.IsIncomplete && isFullyComplete?.Invoke(completions) == true)
+            if (!completions.IsIncomplete)
             {
                 return completions;
             }
 
             // Populating the completion list should take no more than a few ms, don't let it take too
             // long
-            CancellationTokenSource cts = new CancellationTokenSource(millisecondsDelay: ImportCompletionTimeout);
-            await Task.Run(async () =>
-            {
-                while (completions.IsIncomplete || isFullyComplete?.Invoke(completions) == false)
-                {
-                    completions = await FindCompletionsAsync(filename, source);
-                    cts.Token.ThrowIfCancellationRequested();
-                }
-            }, cts.Token);
+            await Task.Delay(ImportCompletionTimeout);
+
+            completions = await FindCompletionsAsync(filename, source);
 
             Assert.False(completions.IsIncomplete);
             return completions;

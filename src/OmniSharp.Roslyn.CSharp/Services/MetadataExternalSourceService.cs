@@ -5,6 +5,8 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.MetadataAsSource;
 using OmniSharp.Extensions;
+using OmniSharp.Options;
+using OmniSharp.Roslyn.CSharp.Workers.Formatting;
 
 namespace OmniSharp.Roslyn
 {
@@ -13,9 +15,12 @@ namespace OmniSharp.Roslyn
     {
         private const string MetadataKey = "$Metadata$";
 
+        private readonly OmniSharpOptions _omnisharpOptions;
+
         [ImportingConstructor]
-        public MetadataExternalSourceService() : base()
+        public MetadataExternalSourceService(OmniSharpOptions omnisharpOptions) : base()
         {
+            _omnisharpOptions = omnisharpOptions;
         }
 
         public async Task<(Document document, string documentPath)> GetAndAddExternalSymbolDocument(Project project, ISymbol symbol, CancellationToken cancellationToken)
@@ -47,11 +52,13 @@ namespace OmniSharp.Roslyn
                 var topLevelSymbol = symbol.GetTopLevelContainingNamedType();
 
                 var temporaryDocument = metadataProject.AddDocument(fileName, string.Empty);
+                var formattingOptions = await FormattingWorker.GetFormattingOptionsAsync(temporaryDocument, _omnisharpOptions);
 
                 document = await OmniSharpMetadataAsSourceService.AddSourceToAsync(
                     temporaryDocument,
                     await metadataProject.GetCompilationAsync(),
                     topLevelSymbol,
+                    formattingOptions,
                     cancellationToken);
 
                 _cache.TryAdd(fileName, document);

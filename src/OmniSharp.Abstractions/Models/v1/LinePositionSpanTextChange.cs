@@ -43,9 +43,9 @@ namespace OmniSharp.Models
         {
             var displayText = NewText != null
                 ? NewText.Replace("\r", @"\r").Replace("\n", @"\n").Replace("\t", @"\t")
-                : string.Empty;
+                : "null";
 
-            return $"StartLine={StartLine}, StartColumn={StartColumn}, EndLine={EndLine}, EndColumn={EndColumn}, NewText='{displayText}'";
+            return $"LinePositionSpanTextChange {{ StartLine={StartLine}, StartColumn={StartColumn}, EndLine={EndLine}, EndColumn={EndColumn}, NewText={displayText} }}";
         }
     }
 }
