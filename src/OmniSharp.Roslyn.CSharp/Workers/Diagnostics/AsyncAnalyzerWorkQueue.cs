@@ -304,7 +304,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
 
                 if (waiter == default)
                 {
-                    waiter = (documentIds, new TaskCompletionSource<object?>());
+                    waiter = (documentIds, new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously));
 
                     _waiters.Add(waiter);
                 }
