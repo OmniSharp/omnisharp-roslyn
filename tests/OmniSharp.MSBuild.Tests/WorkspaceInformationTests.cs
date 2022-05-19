@@ -87,25 +87,6 @@ namespace OmniSharp.MSBuild.Tests
         }
 
         [ConditionalFact(typeof(NonMonoRuntimeOnly))]
-        public async Task Net50Solution()
-        {
-            using var testProject = await TestAssets.Instance.GetTestProjectAsync("Net50Project");
-            using var host = CreateMSBuildTestHost(testProject.Directory);
-            var workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
-
-            Assert.NotNull(workspaceInfo.Projects);
-            Assert.Equal(2, workspaceInfo.Projects.Count);
-            var appProject = workspaceInfo.Projects.Single(proj => proj.IsExe);
-            Assert.Equal("console-app", appProject.AssemblyName);
-            Assert.Equal(".NETCoreApp,Version=v5.0", appProject.TargetFramework);
-            Assert.Contains(appProject.TargetFrameworks[0].ShortName, new[] { "net5.0", "netcoreapp5.0" });
-            var libProject = workspaceInfo.Projects.Single(proj => !proj.IsExe);
-            Assert.Equal("net50-lib", libProject.AssemblyName);
-            Assert.Equal(".NETCoreApp,Version=v5.0", libProject.TargetFramework);
-            Assert.Contains(libProject.TargetFrameworks[0].ShortName, new[] { "net50", "net5.0" });
-        }
-
-        [ConditionalFact(typeof(NonMonoRuntimeOnly))]
         public async Task Net60Project()
         {
             using var testProject = await TestAssets.Instance.GetTestProjectAsync("Net60Project");
