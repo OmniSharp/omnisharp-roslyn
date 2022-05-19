@@ -222,18 +222,6 @@ namespace OmniSharp.MSBuild.Tests
         }
 
         [ConditionalFact(typeof(NonMonoRuntimeOnly))]
-        public async Task The_correct_sdk_version_is_emitted_NET5()
-        {
-            // Arrange
-            var emitter = new ProjectLoadTestEventEmitter();
-
-            using var testProject = await TestAssets.Instance.GetTestProjectAsync("Net50Project");
-            using var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory));
-            Assert.Equal(2, emitter.ReceivedMessages.Length);
-            Assert.Equal(GetHashedFileExtension("5.0.406"), emitter.ReceivedMessages[0].SdkVersion);
-        }
-
-        [ConditionalFact(typeof(NonMonoRuntimeOnly))]
         public async Task The_correct_sdk_version_is_emitted_NET6()
         {
             // Arrange
