@@ -2,6 +2,18 @@
 All changes to the project will be documented in this file.
 
 ## [1.39.0]
+* Update Roslyn to 4.3.0-2.22267.5 (PR: [#2401](https://github.com/OmniSharp/omnisharp-roslyn/pull/2401))
+* Fixed run script for Mono ([OmniSharp/omnisharp-vscode#5181](https://github.com/OmniSharp/omnisharp-vscode/issues/5181), [OmniSharp/omnisharp-vscode#5179](https://github.com/OmniSharp/omnisharp-vscode/issues/5179), PR: [#2398](https://github.com/OmniSharp/omnisharp-roslyn/pull/2398))
+* Fall back to /usr/lib/os-release if /etc/os-release doesn't exist (PR: [#2380](https://github.com/OmniSharp/omnisharp-roslyn/pull/2380))
+* Added support for linux-musl-x64 and linux-musl-arm64 ([#2366](https://github.com/OmniSharp/omnisharp-roslyn/issues/2366), PR: [#2395](https://github.com/OmniSharp/omnisharp-roslyn/pull/2395))
+* Enable GoToDefinition for symbols in metadata documents ([OmniSharp/omnisharp-vscode#4818](https://github.com/OmniSharp/omnisharp-vscode/issues/4818), PR: [#2390](https://github.com/OmniSharp/omnisharp-roslyn/pull/2390))
+* Use human readable doc in lsp's signature help ([#2372](https://github.com/OmniSharp/omnisharp-roslyn/issues/2372), PR: [#2392](https://github.com/OmniSharp/omnisharp-roslyn/pull/2392))
+* Add TextEdits support to InlayHints (PR: [#2385](https://github.com/OmniSharp/omnisharp-roslyn/pull/2385))
+* Fix Equals of AutoCompleteResponse and simplify some code (PR: [#2362](https://github.com/OmniSharp/omnisharp-roslyn/pull/2362))
+* Support O# running on .NET 7 SDKs (PR: [#2377](https://github.com/OmniSharp/omnisharp-roslyn/pull/2377))
+* Provide constructor accepting hostServices (PR: [#2373](https://github.com/OmniSharp/omnisharp-roslyn/pull/2373))
+* Typo fix ([#2374](https://github.com/OmniSharp/omnisharp-roslyn/pull/2374))
+* Update to latest .NET SDKs (PR: [#2378](https://github.com/OmniSharp/omnisharp-roslyn/pull/2378))
 * Remove MSBuild and Mono from release packages ([#2339](https://github.com/OmniSharp/omnisharp-roslyn/issues/2339), PR: [#2360](https://github.com/OmniSharp/omnisharp-roslyn/pull/2360))
 
 ## [1.38.2] - 2022-03-22
