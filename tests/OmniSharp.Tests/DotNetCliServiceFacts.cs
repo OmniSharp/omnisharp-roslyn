@@ -30,7 +30,11 @@ namespace OmniSharp.Tests
             {
                 var dotNetCli = host.GetExport<IDotNetCliService>();
 
-                var version = dotNetCli.GetVersion();
+                var cliVersion = dotNetCli.GetVersion();
+
+                Assert.False(cliVersion.HasError);
+
+                var version = cliVersion.Version;
 
                 Assert.Equal(Major, version.Major);
                 Assert.Equal(Minor, version.Minor);

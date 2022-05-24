@@ -19,9 +19,9 @@ namespace OmniSharp.Services
 
         /// <summary>
         /// Launches "dotnet --version" in the given working directory and returns a
-        /// <see cref="SemanticVersion"/> representing the returned version text.
+        /// <see cref="DotNetVersion"/> representing the returned version text.
         /// </summary>
-        SemanticVersion GetVersion(string workingDirectory = null);
+        DotNetVersion GetVersion(string workingDirectory = null);
 
         /// <summary>
         /// Launches "dotnet --version" in the given working directory and determines
@@ -36,7 +36,7 @@ namespace OmniSharp.Services
         /// .NET CLI. If true, this .NET CLI supports project.json development;
         /// otherwise, it supports .csproj development.
         /// </summary>
-        bool IsLegacy(SemanticVersion version);
+        bool IsLegacy(DotNetVersion version);
 
         /// <summary>
         /// Launches "dotnet restore" in the given working directory.
