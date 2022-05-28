@@ -6,7 +6,6 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using OmniSharp.Eventing;
@@ -17,6 +16,8 @@ namespace OmniSharp.Services
 {
     internal class DotNetCliService : IDotNetCliService
     {
+        const string DOTNET_CLI_UI_LANGUAGE = nameof(DOTNET_CLI_UI_LANGUAGE);
+
         private readonly ILogger _logger;
         private readonly IEventEmitter _eventEmitter;
         private readonly ConcurrentDictionary<string, object> _locks;
@@ -128,17 +129,62 @@ namespace OmniSharp.Services
             return Process.Start(startInfo);
         }
 
-        public SemanticVersion GetVersion(string workingDirectory = null)
+        public DotNetVersion GetVersion(string workingDirectory = null)
         {
-            var output = ProcessHelper.RunAndCaptureOutput(DotNetPath, "--version", workingDirectory);
+            // Ensure that we set the DOTNET_CLI_UI_LANGUAGE environment variable to "en-US" before
+            // running 'dotnet --version'. Otherwise, we may get localized results.
+            var originalValue = Environment.GetEnvironmentVariable(DOTNET_CLI_UI_LANGUAGE);
+            Environment.SetEnvironmentVariable(DOTNET_CLI_UI_LANGUAGE, "en-US");
 
-            return SemanticVersion.Parse(output);
+            try
+            {
+                Process process;
+                try
+                {
+                    process = Start("--version", workingDirectory);
+                }
+                catch
+                {
+                    return DotNetVersion.FailedToStartError;
+                }
+
+                if (process.HasExited)
+                {
+                    return DotNetVersion.FailedToStartError;
+                }
+
+                var lines = new List<string>();
+                process.OutputDataReceived += (_, e) =>
+                {
+                    if (!string.IsNullOrWhiteSpace(e.Data))
+                    {
+                        lines.Add(e.Data);
+                    }
+                };
+
+                process.ErrorDataReceived += (_, e) =>
+                {
+                    if (!string.IsNullOrWhiteSpace(e.Data))
+                    {
+                        lines.Add(e.Data);
+                    }
+                };
+
+                process.BeginOutputReadLine();
+                process.BeginErrorReadLine();
+
+                process.WaitForExit();
+
+                return DotNetVersion.Parse(lines);
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable(DOTNET_CLI_UI_LANGUAGE, originalValue);
+            }
         }
 
         public DotNetInfo GetInfo(string workingDirectory = null)
         {
-            const string DOTNET_CLI_UI_LANGUAGE = nameof(DOTNET_CLI_UI_LANGUAGE);
-
             // Ensure that we set the DOTNET_CLI_UI_LANGUAGE environment variable to "en-US" before
             // running 'dotnet --info'. Otherwise, we may get localized results.
             var originalValue = Environment.GetEnvironmentVariable(DOTNET_CLI_UI_LANGUAGE);
@@ -197,8 +243,15 @@ namespace OmniSharp.Services
         /// Determines whether the specified version is from a "legacy" .NET CLI.
         /// If true, this .NET CLI supports project.json development; otherwise, it supports .csproj development.
         /// </summary>
-        public bool IsLegacy(SemanticVersion version)
+        public bool IsLegacy(DotNetVersion dotnetVersion)
         {
+            if (dotnetVersion.HasError)
+            {
+                return false;
+            }
+
+            var version = dotnetVersion.Version;
+
             if (version.Major < 1)
             {
                 return true;
