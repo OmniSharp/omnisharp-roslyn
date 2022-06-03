@@ -1,7 +1,10 @@
 # Changelog
 All changes to the project will be documented in this file.
 
-## [1.39.0]
+## [1.39.1]
+* Added support for `<WarningsAsErrors>nullable</WarningsAsErrors>` ([#2292](https://github.com/OmniSharp/omnisharp-roslyn/issues/2292), PR: [#2406](https://github.com/OmniSharp/omnisharp-roslyn/pull/2406))
+
+## [1.39.0] - 2022-05-19
 * Update Roslyn to 4.3.0-2.22267.5 (PR: [#2401](https://github.com/OmniSharp/omnisharp-roslyn/pull/2401))
 * Fixed run script for Mono ([OmniSharp/omnisharp-vscode#5181](https://github.com/OmniSharp/omnisharp-vscode/issues/5181), [OmniSharp/omnisharp-vscode#5179](https://github.com/OmniSharp/omnisharp-vscode/issues/5179), PR: [#2398](https://github.com/OmniSharp/omnisharp-roslyn/pull/2398))
 * Fall back to /usr/lib/os-release if /etc/os-release doesn't exist (PR: [#2380](https://github.com/OmniSharp/omnisharp-roslyn/pull/2380))
