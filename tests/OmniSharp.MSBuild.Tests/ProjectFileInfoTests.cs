@@ -225,6 +225,9 @@ namespace OmniSharp.MSBuild.Tests
                 Assert.Equal(ReportDiagnostic.Warn, compilationOptions.SpecificDiagnosticOptions["CS7082"]);
                 // CS7081 is both WarningsAsErrors and NoWarn, but NoWarn are higher priority
                 Assert.Equal(ReportDiagnostic.Suppress, compilationOptions.SpecificDiagnosticOptions["CS7081"]);
+
+                // nullable warning as error
+                Assert.Equal(ReportDiagnostic.Error, compilationOptions.SpecificDiagnosticOptions["CS8600"]);
             }
         }
 
