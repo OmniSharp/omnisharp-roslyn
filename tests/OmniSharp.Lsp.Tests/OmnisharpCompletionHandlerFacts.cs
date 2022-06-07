@@ -1569,15 +1569,9 @@ class Foo
 
             // Populating the completion list should take no more than a few ms, don't let it take too
             // long
-            CancellationTokenSource cts = new CancellationTokenSource(millisecondsDelay: ImportCompletionTimeout);
-            await Task.Run(async () =>
-            {
-                while (completions.IsIncomplete)
-                {
-                    completions = await FindCompletionsAsync(filename, source);
-                    cts.Token.ThrowIfCancellationRequested();
-                }
-            }, cts.Token);
+            await Task.Delay(ImportCompletionTimeout);
+
+            completions = await FindCompletionsAsync(filename, source);
 
             Assert.False(completions.IsIncomplete);
             return completions;

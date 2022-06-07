@@ -3,9 +3,9 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Composition;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.Completion;
@@ -18,7 +18,9 @@ using OmniSharp.Models;
 using OmniSharp.Models.v1.Completion;
 using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Helpers;
+using OmniSharp.Roslyn.Utilities;
 using OmniSharp.Utilities;
+using Roslyn.Utilities;
 using CompletionItem = OmniSharp.Models.v1.Completion.CompletionItem;
 using CompletionTriggerKind = OmniSharp.Models.v1.Completion.CompletionTriggerKind;
 using CSharpCompletionService = Microsoft.CodeAnalysis.Completion.CompletionService;
@@ -50,7 +52,12 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
             _omniSharpOptions = omniSharpOptions;
         }
 
-        public async Task<CompletionResponse> Handle(CompletionRequest request)
+        public Task<CompletionResponse> Handle(CompletionRequest request)
+        {
+            return Handle(request, forceExpandedCompletionIndexCreation: false);
+        }
+
+        public async Task<CompletionResponse> Handle(CompletionRequest request, bool forceExpandedCompletionIndexCreation)
         {
             _logger.LogTrace("Completions requested");
 
@@ -65,7 +72,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
             var position = sourceText.GetTextPosition(request);
 
             var completionService = CSharpCompletionService.GetService(document);
-            Debug.Assert(request.TriggerCharacter != null || request.CompletionTrigger != CompletionTriggerKind.TriggerCharacter);
+            RoslynDebug.Assert(completionService != null);
+            RoslynDebug.Assert(request.TriggerCharacter != null || request.CompletionTrigger != CompletionTriggerKind.TriggerCharacter);
 
             CompletionTrigger trigger = request.CompletionTrigger switch
             {
@@ -73,14 +81,18 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                 _ => CompletionTrigger.Invoke,
             };
 
+            var options = new OmniSharpCompletionOptions(
+                ShowItemsFromUnimportedNamespaces: _omniSharpOptions.RoslynExtensionsOptions.EnableImportCompletion,
+                ForceExpandedCompletionIndexCreation: forceExpandedCompletionIndexCreation);
+
             if (request.CompletionTrigger == CompletionTriggerKind.TriggerCharacter &&
-                !completionService.ShouldTriggerCompletion(sourceText, position, trigger))
+                !await OmniSharpCompletionService.ShouldTriggerCompletionAsync(completionService, document, position, trigger, roles: null, options, CancellationToken.None))
             {
                 _logger.LogTrace("Should not insert completions here.");
                 return new CompletionResponse { Items = ImmutableArray<CompletionItem>.Empty };
             }
 
-            var (completions, expandedItemsAvailable) = await OmniSharpCompletionService.GetCompletionsAsync(completionService, document, position, trigger);
+            var completions = await OmniSharpCompletionService.GetCompletionsAsync(completionService, document, position, trigger, roles: null, options, CancellationToken.None);
             _logger.LogTrace("Found {0} completions for {1}:{2},{3}",
                              completions?.Items.IsDefaultOrEmpty != false ? 0 : completions.Items.Length,
                              request.FileName,
@@ -114,7 +126,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
             // that completion provider is still creating the cache. We'll mark this completion list as not completed, and the
             // editor will ask again when the user types more. By then, hopefully the cache will have populated and we can mark
             // the completion as done.
-            bool expectingImportedItems = expandedItemsAvailable && _workspace.Options.GetOption(OmniSharpCompletionService.ShowItemsFromUnimportedNamespaces, LanguageNames.CSharp) == true;
+            bool expectingImportedItems = options.ShowItemsFromUnimportedNamespaces;
             var syntax = await document.GetSyntaxTreeAsync();
 
             var replacingSpanStartPosition = sourceText.Lines.GetLinePosition(typedSpan.Start);
@@ -150,7 +162,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                 return new CompletionResolveResponse { Item = request.Item };
             }
 
-            var (_, document, position, completions) = cachedList;
+            var (_, document, _, completions) = cachedList;
             var index = request.Item.Data.Index;
 
             if (request.Item is null
@@ -169,14 +181,17 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
             }
 
             var completionService = CSharpCompletionService.GetService(document);
+            RoslynDebug.Assert(completionService != null);
+
             var description = await completionService.GetDescriptionAsync(document, lastCompletionItem);
+            RoslynDebug.Assert(description != null);
 
             var textBuilder = new StringBuilder();
             MarkdownHelpers.TaggedTextToMarkdown(description.TaggedParts, textBuilder, _formattingOptions, MarkdownFormat.FirstLineAsCSharp, out _);
 
             request.Item.Documentation = textBuilder.ToString();
 
-            string providerName = lastCompletionItem.GetProviderName();
+            var providerName = lastCompletionItem.GetProviderName();
             switch (providerName)
             {
                 case CompletionListBuilder.ExtensionMethodImportCompletionProvider:
@@ -192,7 +207,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                             continue;
                         }
 
-                        additionalChanges.Add(CompletionListBuilder.GetChangeForTextAndSpan(textChange.NewText, textChange.Span, sourceText));
+                        additionalChanges.Add(TextChanges.Convert(sourceText, textChange));
                     }
 
                     request.Item.AdditionalTextEdits = additionalChanges;
@@ -243,6 +258,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
             }
 
             var completionService = CSharpCompletionService.GetService(document);
+            RoslynDebug.Assert(completionService != null);
 
             // Get a document with change from the completion inserted, so that we can resolve the completion and get the
             // final full change.
@@ -257,7 +273,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
 
             return new CompletionAfterInsertResponse
             {
-                Changes = finalChange.TextChanges.SelectAsArray(changedText, static (c, changedText) => CompletionListBuilder.GetChangeForTextAndSpan(c.NewText, c.Span, changedText)),
+                Changes = finalChange.TextChanges.SelectAsArray(changedText, static (c, changedText) => TextChanges.Convert(changedText, c)),
                 Line = finalPosition.Line,
                 Column = finalPosition.Column,
             };

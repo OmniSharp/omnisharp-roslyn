@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if NET472_OR_GREATER
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -108,3 +109,4 @@ namespace OmniSharp.Cake.Services
         public string ServerExecutablePath { get; set; }
     }
 }
+#endif

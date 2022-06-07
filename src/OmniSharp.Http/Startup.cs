@@ -82,7 +82,7 @@ namespace OmniSharp.Http
 
             logger.LogInformation($"Starting OmniSharp on {Platform.Current}");
 
-            app.UseRequestLogging();
+            app.UseMiddleware<LoggingMiddleware>();
             app.UseExceptionHandler("/error");
             app.UseMiddleware<EndpointMiddleware>(_compositionHost);
             app.UseMiddleware<StatusMiddleware>(workspace);

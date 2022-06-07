@@ -29,8 +29,8 @@ resources:
 
 variables:
   Verbosity: Diagnostic
-  DotNetVersion: "6.0.100"
-  DotNetVersion2: "3.1.415"
+  DotNetVersion: "6.0.300"
+  DotNetVersion2: "3.1.419"
   CakeVersion: "1.1.0"
   NuGetVersion: "5.7.0"
   GitVersionVersion: "5.0.1"
@@ -53,7 +53,7 @@ jobs:
 
   - job: macOS
     pool:
-      vmImage: "macOS-10.15"
+      vmImage: "macOS-11"
     dependsOn: GitVersion
     steps:
       - template: ./.pipelines/init.yml
@@ -74,7 +74,7 @@ jobs:
 
   - job: Linux
     pool:
-      vmImage: "ubuntu-18.04"
+      vmImage: "ubuntu-20.04"
     dependsOn: GitVersion
     steps:
       - template: ./.pipelines/init.yml
@@ -94,7 +94,7 @@ jobs:
 
   - job: Windows
     pool:
-      vmImage: "windows-2019"
+      vmImage: "windows-2022"
     dependsOn: GitVersion
     steps:
       - template: ./.pipelines/init.yml
@@ -165,7 +165,7 @@ jobs:
           curl -L https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
           sudo apt-get install apt-transport-https
           sudo apt-get update && sudo apt-get install azure-cli
-          az storage blob upload-batch --destination "releases" --source "$(System.ArtifactsDirectory)/deployment/" --account-name roslynomnisharp --account-key $BLOB_KEY
+          az storage blob upload-batch --destination "releases" --source "$(System.ArtifactsDirectory)/deployment/" --overwrite --account-name roslynomnisharp --account-key $BLOB_KEY
         displayName: Upload to Azure Storage
         condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
         env:

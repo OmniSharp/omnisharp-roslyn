@@ -8,6 +8,10 @@
         <PreserveCompilationContext>true</PreserveCompilationContext>
         <RuntimeIdentifiers>win7-x64;win7-x86;win10-arm64</RuntimeIdentifiers>
         <ApplicationManifest>app.manifest</ApplicationManifest>
+
+        <!-- Always run on the latest runtime installed. -->
+        <RuntimeFrameworkVersion>6.0.0-preview.7.21317.1</RuntimeFrameworkVersion>
+        <RollForward>LatestMajor</RollForward>
     </PropertyGroup>
 
     <ItemGroup>

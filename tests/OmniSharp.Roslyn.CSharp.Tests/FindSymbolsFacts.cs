@@ -161,7 +161,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             var usages = await FindSymbolsAsync(code, filename);
             var symbols = usages.QuickFixes.Cast<SymbolLocation>().Select(q => q.Kind);
-            Assert.Equal("Structure", symbols.First());
+            Assert.Contains(symbols.First(), new[] { "Struct", "Structure" });
         }
 
         [Theory]

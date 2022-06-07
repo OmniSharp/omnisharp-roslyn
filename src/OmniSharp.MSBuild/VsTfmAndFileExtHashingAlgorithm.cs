@@ -43,6 +43,11 @@ namespace OmniSharp.MSBuild
 
         public HashedString HashInput(string cleartext)
         {
+            if (cleartext is null)
+            {
+                return new HashedString(string.Empty);
+            }
+
             long lHash = 0;
 
             for (int i = 0; i < cleartext.Length; i++)

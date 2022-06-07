@@ -33,7 +33,11 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
 
             var text = await document.GetTextAsync();
 
-            var structure = await OmniSharpBlockStructureService.GetBlockStructureAsync(document, CancellationToken.None);
+            var options = new OmniSharpBlockStructureOptions(
+                ShowBlockStructureGuidesForCommentsAndPreprocessorRegions: true,
+                ShowOutliningForCommentsAndPreprocessorRegions: true);
+
+            var structure = await OmniSharpBlockStructureService.GetBlockStructureAsync(document, options, CancellationToken.None);
 
             var outliningSpans = new List<CodeFoldingBlock>();
             foreach (var span in structure.Spans)

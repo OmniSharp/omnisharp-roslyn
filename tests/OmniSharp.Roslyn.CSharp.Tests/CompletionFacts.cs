@@ -17,7 +17,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 {
     public class CompletionFacts : AbstractTestFixture
     {
-        private const int ImportCompletionTimeout = 1000;
+        private const int ImportCompletionTimeout = 2000;
         private readonly ILogger _logger;
 
         private string EndpointName => OmniSharpEndpoints.Completion;
@@ -2220,10 +2220,40 @@ class Program
             }
         }
 
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task TestOverrideWithTrailingWhitespacePrior(string filename)
+        {
+            const string input = @"
+namespace N
+{
+    internal class C
+    {	
+// The trailing tabs on the previous line and the next line are integral to this bug
+	
+        override $$
+        public C()
+        {
+        }
+    }
+}
+";
+
+            var completions = await FindCompletionsAsync(filename, input, SharedOmniSharpTestHost);
+
+            foreach (var item in completions.Items)
+            {
+                Assert.Single(item.AdditionalTextEdits);
+                Assert.Equal("\n        // The trailing tabs on the previous line and the next line are integral to this bug\n\n", NormalizeNewlines(item.AdditionalTextEdits[0].NewText));
+                Assert.StartsWith("        public override ", item.TextEdit.NewText);
+            }
+        }
+
         private CompletionService GetCompletionService(OmniSharpTestHost host)
             => host.GetRequestHandler<CompletionService>(EndpointName);
 
-        protected async Task<CompletionResponse> FindCompletionsAsync(string filename, string source, OmniSharpTestHost testHost, char? triggerChar = null, TestFile[] additionalFiles = null)
+        protected async Task<CompletionResponse> FindCompletionsAsync(string filename, string source, OmniSharpTestHost testHost, char? triggerChar = null, TestFile[] additionalFiles = null, bool forceExpandedCompletionIndexCreation = false)
         {
             var testFile = new TestFile(filename, source);
 
@@ -2248,32 +2278,11 @@ class Program
 
             var requestHandler = GetCompletionService(testHost);
 
-            return await requestHandler.Handle(request);
+            return await requestHandler.Handle(request, forceExpandedCompletionIndexCreation);
         }
 
-        private async Task<CompletionResponse> FindCompletionsWithImportedAsync(string filename, string source, OmniSharpTestHost host)
-        {
-            var completions = await FindCompletionsAsync(filename, source, host);
-            if (!completions.IsIncomplete)
-            {
-                return completions;
-            }
-
-            // Populating the completion list should take no more than a few ms, don't let it take too
-            // long
-            CancellationTokenSource cts = new CancellationTokenSource(millisecondsDelay: ImportCompletionTimeout);
-            await Task.Run(async () =>
-            {
-                while (completions.IsIncomplete)
-                {
-                    completions = await FindCompletionsAsync(filename, source, host);
-                    cts.Token.ThrowIfCancellationRequested();
-                }
-            }, cts.Token);
-
-            Assert.False(completions.IsIncomplete);
-            return completions;
-        }
+        private Task<CompletionResponse> FindCompletionsWithImportedAsync(string filename, string source, OmniSharpTestHost host)
+            => FindCompletionsAsync(filename, source, host, forceExpandedCompletionIndexCreation: true);
 
         protected async Task<CompletionResolveResponse> ResolveCompletionAsync(CompletionItem completionItem, OmniSharpTestHost testHost)
             => await GetCompletionService(testHost).Handle(new CompletionResolveRequest { Item = completionItem });

@@ -9,10 +9,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeActions;
+using Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Abstractions.Models.V1.FixAll;
 using OmniSharp.Mef;
+using OmniSharp.Options;
+using OmniSharp.Roslyn.CodeActions;
 using OmniSharp.Roslyn.CSharp.Services.Refactoring.V2;
 using OmniSharp.Roslyn.CSharp.Workers.Diagnostics;
 using OmniSharp.Services;
@@ -32,13 +35,15 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
             [ImportMany] IEnumerable<ICodeActionProvider> providers,
             CachingCodeFixProviderForProjects codeFixProvider,
             OmniSharpWorkspace workspace,
+            OmniSharpOptions options,
             ILoggerFactory loggerFactory) :
             base(
                 workspace,
                 providers,
                 loggerFactory.CreateLogger<RunFixAllCodeActionService>(),
                 diagnosticWorker,
-                codeFixProvider)
+                codeFixProvider,
+                options)
         {
             _logger = loggerFactory.CreateLogger<RunFixAllCodeActionService>();
             _fixAllDiagnosticProvider = new FixAllDiagnosticProvider(diagnosticWorker);
@@ -134,8 +139,14 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
             }
 
             _logger.LogTrace("{0} is still present in the document. Getting fixes.", diagnosticId);
+
+            var codeActionOptions = CodeActionOptionsFactory.Create(Options);
+
             CodeAction action = null;
-            var context = new CodeFixContext(document, primaryDiagnostic,
+            var context = OmniSharpCodeFixContextFactory.CreateCodeFixContext(
+                document,
+                primaryDiagnostic.Location.SourceSpan,
+                ImmutableArray.Create(primaryDiagnostic),
                 (a, _) =>
                 {
                     if (action == null)
@@ -143,6 +154,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
                         action = a;
                     }
                 },
+                codeActionOptions,
                 cancellationToken);
 
             await codeFixProvider.RegisterCodeFixesAsync(context).ConfigureAwait(false);
@@ -155,7 +167,17 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
                 _ => throw new InvalidOperationException()
             };
 
-            var fixAllContext = new FixAllContext(document, codeFixProvider, roslynScope, action.EquivalenceKey, ImmutableArray.Create(diagnosticId), _fixAllDiagnosticProvider, cancellationToken);
+            var fixAllContext = OmniSharpCodeFixContextFactory.CreateFixAllContext(
+                document,
+                primaryDiagnostic.Location.SourceSpan,
+                document.Project,
+                codeFixProvider,
+                roslynScope,
+                action.EquivalenceKey,
+                ImmutableArray.Create(diagnosticId),
+                _fixAllDiagnosticProvider,
+                _ => codeActionOptions,
+                cancellationToken);
 
             _logger.LogTrace("Finding FixAll fix for {0}.", diagnosticId);
             var fixes = await fixAllProvider.GetFixAsync(fixAllContext);

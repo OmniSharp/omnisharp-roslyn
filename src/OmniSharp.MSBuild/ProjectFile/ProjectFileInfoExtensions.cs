@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Globalization;
 using System.IO;
@@ -64,27 +65,39 @@ namespace OmniSharp.MSBuild.ProjectFile
             var specificRules = projectFileInfo.RuleSet?.SpecificDiagnosticOptions ?? ImmutableDictionary<string, ReportDiagnostic>.Empty;
 
             // suppressions capture NoWarn and they have the highest priority
-            var combinedRules = specificRules.Concat(suppressions.Where(x => !specificRules.Keys.Contains(x.Key))).ToDictionary(x => x.Key, x => x.Value);
+            var combinedRules = specificRules.Concat(suppressions.Where(x => !specificRules.ContainsKey(x.Key))).ToDictionary(x => x.Key, x => x.Value);
 
             // then handle WarningsAsErrors
             foreach (var warningAsError in projectFileInfo.WarningsAsErrors)
             {
-                if (!suppressions.ContainsKey(warningAsError))
+                if (string.Equals(warningAsError, "nullable", StringComparison.OrdinalIgnoreCase))
                 {
-                    combinedRules[warningAsError] = ReportDiagnostic.Error;
+                    foreach (var id in Errors.NullableWarnings)
+                    {
+                        AddIfNotSuppressed(id, ReportDiagnostic.Error);
+                    }
+                }
+                else 
+                {
+                    AddIfNotSuppressed(warningAsError, ReportDiagnostic.Error);
                 }
             }
 
             // WarningsNotAsErrors can overwrite WarningsAsErrors
             foreach (var warningNotAsError in projectFileInfo.WarningsNotAsErrors)
             {
-                if (!suppressions.ContainsKey(warningNotAsError))
-                {
-                    combinedRules[warningNotAsError] = ReportDiagnostic.Warn;
-                }
+                AddIfNotSuppressed(warningNotAsError, ReportDiagnostic.Warn);
             }
 
             return combinedRules.ToImmutableDictionary();
+
+            void AddIfNotSuppressed(string code, ReportDiagnostic diagnostic)
+            {
+                if (!suppressions.ContainsKey(code))
+                {
+                    combinedRules[code] = diagnostic;
+                }
+            }
         }
 
         public static ProjectInfo CreateProjectInfo(this ProjectFileInfo projectFileInfo, IAnalyzerAssemblyLoader analyzerAssemblyLoader)

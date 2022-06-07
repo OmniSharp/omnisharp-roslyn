@@ -186,7 +186,7 @@ class Bar:Foo { }
                     Line = point.Line,
                     Column = point.Offset,
                     FileName = testFile.FileName,
-                    Identifier = "Fix formatting",
+                    Identifier = "AbstractFormattingCodeFixProvider",
                     WantsTextChanges = false,
                     WantsAllCodeActionOperations = true,
                     Buffer = testFile.Content.Code
@@ -324,7 +324,7 @@ class Foo
                     Line = point.Line,
                     Column = point.Offset,
                     FileName = testFile.FileName,
-                    Identifier = "Create and assign field 'xxx_something'",
+                    Identifier = "Create_and_assign_field_0_xxx_something",
                     WantsTextChanges = false,
                     WantsAllCodeActionOperations = true,
                     Buffer = testFile.Content.Code

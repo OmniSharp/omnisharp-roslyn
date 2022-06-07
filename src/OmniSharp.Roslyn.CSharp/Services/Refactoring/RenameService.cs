@@ -2,15 +2,16 @@
 using System.Collections.Generic;
 using System.Composition;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.ExternalAccess.OmniSharp;
 using Microsoft.CodeAnalysis.FindSymbols;
-using Microsoft.CodeAnalysis.Rename;
-using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Extensions;
 using OmniSharp.Mef;
 using OmniSharp.Models;
 using OmniSharp.Models.Rename;
+using OmniSharp.Options;
 using OmniSharp.Roslyn.Utilities;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
@@ -19,11 +20,13 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
     public class RenameService : IRequestHandler<RenameRequest, RenameResponse>
     {
         private readonly OmniSharpWorkspace _workspace;
+        private readonly OmniSharpOptions _omniSharpOptions;
 
         [ImportingConstructor]
-        public RenameService(OmniSharpWorkspace workspace)
+        public RenameService(OmniSharpWorkspace workspace, OmniSharpOptions omniSharpOptions)
         {
             _workspace = workspace;
+            _omniSharpOptions = omniSharpOptions;
         }
 
         public async Task<RenameResponse> Handle(RenameRequest request)
@@ -41,13 +44,17 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
 
                 if (symbol != null)
                 {
-                    try
+                    var options = new OmniSharpRenameOptions(
+                        RenameOverloads: _omniSharpOptions.RenameOptions.RenameOverloads,
+                        RenameInStrings: _omniSharpOptions.RenameOptions.RenameInStrings,
+                        RenameInComments: _omniSharpOptions.RenameOptions.RenameInComments);
+
+                    (solution, response.ErrorMessage) = await OmniSharpRenamer.RenameSymbolAsync(solution, symbol, request.RenameTo, options, nonConflictSymbols: null, CancellationToken.None);
+
+                    if (response.ErrorMessage is not null)
                     {
-                        solution = await Renamer.RenameSymbolAsync(solution, symbol, request.RenameTo, _workspace.Options);
-                    }
-                    catch (ArgumentException e)
-                    {
-                        response.ErrorMessage = e.Message;
+                        // An error occurred. There are no changes to report.
+                        return response;
                     }
                 }
 
