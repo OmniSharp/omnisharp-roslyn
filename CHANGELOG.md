@@ -2,14 +2,18 @@
 All changes to the project will be documented in this file.
 
 ## [1.39.1]
+* Update Roslyn to 4.3.0-3.22329.4 (PR: [#2416](https://github.com/OmniSharp/omnisharp-roslyn/pull/2416))
+* Return meaningful error when pinned SDK version is not found. ([[omnisharp-vscode#5128](https://github.com/OmniSharp/omnisharp-vscode/issues/5128), PR: [#2403](https://github.com/OmniSharp/omnisharp-roslyn/pull/2403))
 * Added support for `<WarningsAsErrors>nullable</WarningsAsErrors>` ([#2292](https://github.com/OmniSharp/omnisharp-roslyn/issues/2292), PR: [#2406](https://github.com/OmniSharp/omnisharp-roslyn/pull/2406))
+* Removed nuget versioning reference from OmniSharp.Abstractions ([#2410](https://github.com/OmniSharp/omnisharp-roslyn/issues/2410), PR: [#2414](https://github.com/OmniSharp/omnisharp-roslyn/pull/2414))
+* Bump Newtonsoft.Json to 13.0.1 (PR: [#2415](https://github.com/OmniSharp/omnisharp-roslyn/pull/2415))
 
 ## [1.39.0] - 2022-05-19
 * Update Roslyn to 4.3.0-2.22267.5 (PR: [#2401](https://github.com/OmniSharp/omnisharp-roslyn/pull/2401))
-* Fixed run script for Mono ([OmniSharp/omnisharp-vscode#5181](https://github.com/OmniSharp/omnisharp-vscode/issues/5181), [OmniSharp/omnisharp-vscode#5179](https://github.com/OmniSharp/omnisharp-vscode/issues/5179), PR: [#2398](https://github.com/OmniSharp/omnisharp-roslyn/pull/2398))
+* Fixed run script for Mono ([omnisharp-vscode#5181](https://github.com/OmniSharp/omnisharp-vscode/issues/5181), [omnisharp-vscode#5179](https://github.com/OmniSharp/omnisharp-vscode/issues/5179), PR: [#2398](https://github.com/OmniSharp/omnisharp-roslyn/pull/2398))
 * Fall back to /usr/lib/os-release if /etc/os-release doesn't exist (PR: [#2380](https://github.com/OmniSharp/omnisharp-roslyn/pull/2380))
 * Added support for linux-musl-x64 and linux-musl-arm64 ([#2366](https://github.com/OmniSharp/omnisharp-roslyn/issues/2366), PR: [#2395](https://github.com/OmniSharp/omnisharp-roslyn/pull/2395))
-* Enable GoToDefinition for symbols in metadata documents ([OmniSharp/omnisharp-vscode#4818](https://github.com/OmniSharp/omnisharp-vscode/issues/4818), PR: [#2390](https://github.com/OmniSharp/omnisharp-roslyn/pull/2390))
+* Enable GoToDefinition for symbols in metadata documents ([omnisharp-vscode#4818](https://github.com/OmniSharp/omnisharp-vscode/issues/4818), PR: [#2390](https://github.com/OmniSharp/omnisharp-roslyn/pull/2390))
 * Use human readable doc in lsp's signature help ([#2372](https://github.com/OmniSharp/omnisharp-roslyn/issues/2372), PR: [#2392](https://github.com/OmniSharp/omnisharp-roslyn/pull/2392))
 * Add TextEdits support to InlayHints (PR: [#2385](https://github.com/OmniSharp/omnisharp-roslyn/pull/2385))
 * Fix Equals of AutoCompleteResponse and simplify some code (PR: [#2362](https://github.com/OmniSharp/omnisharp-roslyn/pull/2362))
