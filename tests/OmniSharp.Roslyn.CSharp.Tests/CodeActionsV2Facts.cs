@@ -236,7 +236,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
     internal class Z
     {
     }
-}".Replace("\r\n", "\n"), ((ModifiedFileResponse)changes[0]).Changes.First().NewText);
+}", ((ModifiedFileResponse)changes[0]).Changes.First().NewText);
 
                 Assert.NotNull(changes[1].FileName);
             }

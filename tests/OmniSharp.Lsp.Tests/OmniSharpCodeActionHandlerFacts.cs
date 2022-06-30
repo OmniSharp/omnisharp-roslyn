@@ -252,7 +252,7 @@ namespace OmniSharp.Lsp.Tests
     internal class Z
     {
     }
-}".Replace("\r\n", "\n"), updateDocumentText.ToString());
+}", updateDocumentText.ToString());
         }
 
         [Theory]

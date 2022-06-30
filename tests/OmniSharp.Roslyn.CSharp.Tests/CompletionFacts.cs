@@ -649,7 +649,7 @@ class FooChild : Foo
 
             var afterInsert = await AfterInsertResponse(completions.Items[0], host);
             var change = afterInsert.Changes.Single();
-            Assert.Equal("public override bool Equals(object obj)\n    {\n        return base.Equals(obj);\n    }", change.NewText);
+            Assert.Equal(NormalizeNewlines("public override bool Equals(object obj)\n    {\n        return base.Equals(obj);\n    }"), change.NewText);
             Assert.Equal(8, change.StartLine);
             Assert.Equal(4, change.StartColumn);
             Assert.Equal(8, change.EndLine);
@@ -685,13 +685,15 @@ class FooChild : Foo
                          completions.Items.Select(c => c.Label));
 #endif
 
-            Assert.Equal(new[] { "public override bool Equals(object obj)\n    {\n        return base.Equals(obj);$0\n    \\}",
-                                 "public override int GetHashCode()\n    {\n        return base.GetHashCode();$0\n    \\}",
-                                 "public override void Test(string text)\n    {\n        base.Test(text);$0\n    \\}",
-                                 "public override void Test(string text, string moreText)\n    {\n        base.Test(text, moreText);$0\n    \\}",
-                                 "public override string ToString()\n    {\n        return base.ToString();$0\n    \\}"
-                                },
-                         completions.Items.Select(c => c.TextEdit.NewText));
+            Assert.Equal(new[]
+                {
+                    NormalizeNewlines("public override bool Equals(object obj)\n    {\n        return base.Equals(obj);$0\n    \\}"),
+                    NormalizeNewlines("public override int GetHashCode()\n    {\n        return base.GetHashCode();$0\n    \\}"),
+                    NormalizeNewlines("public override void Test(string text)\n    {\n        base.Test(text);$0\n    \\}"),
+                    NormalizeNewlines("public override void Test(string text, string moreText)\n    {\n        base.Test(text, moreText);$0\n    \\}"),
+                    NormalizeNewlines("public override string ToString()\n    {\n        return base.ToString();$0\n    \\}")
+                },
+                completions.Items.Select(c => c.TextEdit.NewText));
 
             Assert.Equal(new[] { "override Equals",
                                  "override GetHashCode",
@@ -756,7 +758,7 @@ namespace N3
 
             var afterInsert = await AfterInsertResponse(completions.Items.First(i => i.Label == "GetN1()"), host);
             var change = afterInsert.Changes.Single();
-            Assert.Equal("protected override N1.CN1 GetN1()\n        {\n            throw new System.NotImplementedException();\n        }",
+            Assert.Equal(NormalizeNewlines("protected override N1.CN1 GetN1()\n        {\n            throw new System.NotImplementedException();\n        }"),
                          change.NewText);
             Assert.Equal(15, change.StartLine);
             Assert.Equal(8, change.StartColumn);
@@ -957,11 +959,13 @@ class C
                          completions.Items.Select(c => c.Label));
 #endif
 
-            Assert.Equal(new[] { "public override bool Equals(object obj)\n    {\n        return base.Equals(obj);$0\n    \\}",
-                                 "public override int GetHashCode()\n    {\n        return base.GetHashCode();$0\n    \\}",
-                                 "public override string ToString()\n    {\n        return base.ToString();$0\n    \\}"
-                               },
-                         completions.Items.Select(c => c.TextEdit.NewText));
+            Assert.Equal(new[]
+                {
+                    NormalizeNewlines("public override bool Equals(object obj)\n    {\n        return base.Equals(obj);$0\n    \\}"),
+                    NormalizeNewlines("public override int GetHashCode()\n    {\n        return base.GetHashCode();$0\n    \\}"),
+                    NormalizeNewlines("public override string ToString()\n    {\n        return base.ToString();$0\n    \\}")
+                },
+                completions.Items.Select(c => c.TextEdit.NewText));
             Assert.All(completions.Items.Select(c => c.AdditionalTextEdits), a => Assert.Null(a));
             Assert.All(completions.Items, c => Assert.Equal(InsertTextFormat.Snippet, c.InsertTextFormat));
         }
@@ -1235,7 +1239,7 @@ public class Derived : Base
 
             var afterInsert = await AfterInsertResponse(completions.Items[0], host);
             var change = afterInsert.Changes.Single();
-            Assert.Equal("public override bool Equals(object obj)\n    {\n        return base.Equals(obj);\n    }", change.NewText);
+            Assert.Equal(NormalizeNewlines("public override bool Equals(object obj)\n    {\n        return base.Equals(obj);\n    }"), change.NewText);
             Assert.Equal(9, change.StartLine);
             Assert.Equal(4, change.StartColumn);
             Assert.Equal(9, change.EndLine);
@@ -1398,7 +1402,7 @@ partial class C
 
             var afterInsert = await AfterInsertResponse(completions.Items[0], host);
             var change = afterInsert.Changes.Single();
-            Assert.Equal("void M1(string param)\n    {\n        throw new System.NotImplementedException();\n    }", change.NewText);
+            Assert.Equal(NormalizeNewlines("void M1(string param)\n    {\n        throw new System.NotImplementedException();\n    }"), change.NewText);
             Assert.Equal(7, change.StartLine);
             Assert.Equal(12, change.StartColumn);
             Assert.Equal(7, change.EndLine);
@@ -1627,11 +1631,13 @@ class C
                          completions.Items.Select(c => c.Label));
 #endif
 
-            Assert.Equal(new[] { "public override bool Equals(object obj)\n    {\n        return base.Equals(obj);$0\n    \\}",
-                                 "public override int GetHashCode()\n    {\n        return base.GetHashCode();$0\n    \\}",
-                                 "public override string ToString()\n    {\n        return base.ToString();$0\n    \\}"
-                               },
-                         completions.Items.Select(c => c.TextEdit.NewText));
+            Assert.Equal(new[]
+                {
+                    NormalizeNewlines("public override bool Equals(object obj)\n    {\n        return base.Equals(obj);$0\n    \\}"),
+                    NormalizeNewlines("public override int GetHashCode()\n    {\n        return base.GetHashCode();$0\n    \\}"),
+                    NormalizeNewlines("public override string ToString()\n    {\n        return base.ToString();$0\n    \\}")
+                },
+                completions.Items.Select(c => c.TextEdit.NewText));
 
             Assert.Equal(new[] { "override Equals",
                                  "override GetHashCode",
@@ -2229,9 +2235,9 @@ class Program
 namespace N
 {
     internal class C
-    {	
+    {
 // The trailing tabs on the previous line and the next line are integral to this bug
-	
+
         override $$
         public C()
         {
