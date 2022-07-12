@@ -7,6 +7,7 @@ namespace ConsoleApplication
     {
         public static async Task Main(string[] args)
         {
+            string bar = null;
             Console.WriteLine("Hello World!");
         }
     }
