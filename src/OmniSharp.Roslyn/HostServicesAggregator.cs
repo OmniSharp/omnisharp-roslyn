@@ -68,6 +68,8 @@ namespace OmniSharp
         public HostServices CreateHostServices()
         {
             var config = new ContainerConfiguration()
+                // We smuggle the OmniSharpOptions from the Host container into the workspace services
+                // container so that we can provide global option fallbacks for LineFormattingOptions.
                 .WithProvider(new MefValueProvider<IOptionsMonitor<OmniSharpOptions>>(_options))
                 .WithAssemblies(_assemblies.Distinct());
             return new MefHostServices(config.CreateContainer());
