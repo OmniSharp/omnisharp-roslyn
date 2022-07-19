@@ -106,9 +106,8 @@ namespace OmniSharp.Endpoint
         public async Task<object> Process(RequestPacket packet, LanguageModel model, JToken requestObject)
         {
             var request = requestObject.ToObject<TRequest>();
-            if (request is Request && _updateBufferHandler.Value != null)
+            if (request is Request realRequest && _updateBufferHandler.Value != null)
             {
-                var realRequest = request as Request;
                 if (!string.IsNullOrWhiteSpace(realRequest.FileName) && (realRequest.Buffer != null || realRequest.Changes != null))
                 {
                     await _updateBufferHandler.Value.Process(packet, model, requestObject);
