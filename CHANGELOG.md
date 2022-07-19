@@ -2,7 +2,8 @@
 All changes to the project will be documented in this file.
 
 ## [1.39.1]
-* Update Roslyn to 4.3.0-3.22329.4 (PR: [#2416](https://github.com/OmniSharp/omnisharp-roslyn/pull/2416))
+* Update Roslyn to 4.4.0 1.22369.1 (PR: [#2420](https://github.com/OmniSharp/omnisharp-roslyn/pull/2420))
+* Simplify some code (PR: [#2370](https://github.com/OmniSharp/omnisharp-roslyn/pull/2370))
 * Return meaningful error when pinned SDK version is not found. ([[omnisharp-vscode#5128](https://github.com/OmniSharp/omnisharp-vscode/issues/5128), PR: [#2403](https://github.com/OmniSharp/omnisharp-roslyn/pull/2403))
 * Added support for `<WarningsAsErrors>nullable</WarningsAsErrors>` ([#2292](https://github.com/OmniSharp/omnisharp-roslyn/issues/2292), PR: [#2406](https://github.com/OmniSharp/omnisharp-roslyn/pull/2406))
 * Removed nuget versioning reference from OmniSharp.Abstractions ([#2410](https://github.com/OmniSharp/omnisharp-roslyn/issues/2410), PR: [#2414](https://github.com/OmniSharp/omnisharp-roslyn/pull/2414))
