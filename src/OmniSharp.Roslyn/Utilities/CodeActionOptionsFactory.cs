@@ -7,8 +7,10 @@ namespace OmniSharp.Roslyn.CodeActions
     internal static class CodeActionOptionsFactory
     {
         public static OmniSharpCodeActionOptions Create(OmniSharpOptions options)
-            => new(new OmniSharpImplementTypeOptions(
-                (OmniSharpImplementTypeInsertionBehavior)options.ImplementTypeOptions.InsertionBehavior,
-                (OmniSharpImplementTypePropertyGenerationBehavior)options.ImplementTypeOptions.PropertyGenerationBehavior));
+            => new OmniSharpCodeActionOptions(
+                new OmniSharpImplementTypeOptions(
+                    (OmniSharpImplementTypeInsertionBehavior)options.ImplementTypeOptions.InsertionBehavior,
+                    (OmniSharpImplementTypePropertyGenerationBehavior)options.ImplementTypeOptions.PropertyGenerationBehavior),
+                OmniSharpLineFormattingOptionsProvider.CreateFromOptions(options));
     }
 }
