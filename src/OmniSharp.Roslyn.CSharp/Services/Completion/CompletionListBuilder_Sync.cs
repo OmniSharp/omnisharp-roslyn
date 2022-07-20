@@ -55,7 +55,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                     completionTasksAndProviderNamesBuilder.Add(((Task<CompletionChange>?)completionService.GetChangeAsync(document, completion), providerName));
                 }
             }
-            var completionTasksAndProviderNames = completionTasksAndProviderNamesBuilder.MoveToImmutable();
+            var completionTasksAndProviderNames = completionTasksAndProviderNamesBuilder.ToImmutable();
 
             for (int i = 0; i < completions.ItemsList.Count; i++)
             {
