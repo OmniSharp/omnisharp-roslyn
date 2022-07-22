@@ -2301,12 +2301,7 @@ namespace N
             {
                 var testHost = CreateOmniSharpHost(configurationData: new[] { new KeyValuePair<string, string>("RoslynExtensionsOptions:EnableImportCompletion", "true") });
                 testHost.AddFilesToWorkspace();
-                var result = Interlocked.CompareExchange(ref _completionFixture.ImportCompletionTestHost, testHost, null);
-                if (result != null)
-                {
-                    testHost.Dispose();
-                    testHost = result;
-                }
+                _completionFixture.ImportCompletionTestHost = testHost;
                 return testHost;
             }
         }
@@ -2324,12 +2319,7 @@ namespace N
                     new KeyValuePair<string, string>("RoslynExtensionsOptions:EnableAsyncCompletion", "true"),
                 });
                 testHost.AddFilesToWorkspace();
-                var result = Interlocked.CompareExchange(ref _completionFixture.ImportCompletionTestHost, testHost, null);
-                if (result != null)
-                {
-                    testHost.Dispose();
-                    testHost = result;
-                }
+                _completionFixture.ImportAndAsyncCompletionTestHost = testHost;
                 return testHost;
             }
         }
@@ -2362,8 +2352,8 @@ namespace N
 #nullable enable
     public sealed class CompletionFixture : IDisposable
     {
-        public OmniSharpTestHost? ImportCompletionTestHost;
-        public OmniSharpTestHost? ImportAndAsyncCompletionTestHost;
+        public OmniSharpTestHost? ImportCompletionTestHost { get; set; }
+        public OmniSharpTestHost? ImportAndAsyncCompletionTestHost { get; set; }
 
         public void Dispose()
         {
