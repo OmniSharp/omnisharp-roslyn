@@ -15,21 +15,17 @@ using Xunit.Abstractions;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
-    public class CompletionFacts : AbstractTestFixture, IClassFixture<CompletionFixture>
+    public class CompletionFacts : AbstractTestFixture
     {
         private const int ImportCompletionTimeout = 2000;
         private readonly ILogger _logger;
-        private readonly CompletionFixture _completionFixture;
 
         private string EndpointName => OmniSharpEndpoints.Completion;
 
-        public CompletionFacts(ITestOutputHelper output, SharedOmniSharpHostFixture sharedOmniSharpHostFixture, CompletionFixture completionFixture)
+        public CompletionFacts(ITestOutputHelper output, SharedOmniSharpHostFixture sharedOmniSharpHostFixture)
             : base(output, sharedOmniSharpHostFixture)
         {
             this._logger = this.LoggerFactory.CreateLogger<CompletionFacts>();
-            completionFixture.ImportCompletionTestHost?.ClearWorkspace();
-            completionFixture.ImportAndAsyncCompletionTestHost?.ClearWorkspace();
-            this._completionFixture = completionFixture;
         }
 
         [Theory]
@@ -149,7 +145,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             Assert.DoesNotContain("Guid", completions.Items.Select(c => c.TextEdit.NewText));
         }
 
-        [Theory(Skip = "Test needs a fresh completion host, but there's a bug with host disposal causing resources not to be correctly freed and OOMs the test runners")]
+        [Theory]
         [InlineData("dummy.cs", true)]
         [InlineData("dummy.cs", false)]
         [InlineData("dummy.csx", true)]
@@ -2293,35 +2289,19 @@ namespace N
 
         private OmniSharpTestHost GetImportCompletionHost()
         {
-            if (_completionFixture.ImportCompletionTestHost != null)
-            {
-                return _completionFixture.ImportCompletionTestHost;
-            }
-            else
-            {
-                var testHost = CreateOmniSharpHost(configurationData: new[] { new KeyValuePair<string, string>("RoslynExtensionsOptions:EnableImportCompletion", "true") });
-                testHost.AddFilesToWorkspace();
-                _completionFixture.ImportCompletionTestHost = testHost;
-                return testHost;
-            }
+            var testHost = CreateOmniSharpHost(configurationData: new[] { new KeyValuePair<string, string>("RoslynExtensionsOptions:EnableImportCompletion", "true") });
+            testHost.AddFilesToWorkspace();
+            return testHost;
         }
 
         private OmniSharpTestHost GetAsyncCompletionAndImportCompletionHost()
         {
-            if (_completionFixture.ImportAndAsyncCompletionTestHost != null)
-            {
-                return _completionFixture.ImportAndAsyncCompletionTestHost;
-            }
-            else
-            {
-                var testHost = CreateOmniSharpHost(configurationData: new[] {
-                    new KeyValuePair<string, string>("RoslynExtensionsOptions:EnableImportCompletion", "true"),
-                    new KeyValuePair<string, string>("RoslynExtensionsOptions:EnableAsyncCompletion", "true"),
-                });
-                testHost.AddFilesToWorkspace();
-                _completionFixture.ImportAndAsyncCompletionTestHost = testHost;
-                return testHost;
-            }
+            var testHost = CreateOmniSharpHost(configurationData: new[] {
+                new KeyValuePair<string, string>("RoslynExtensionsOptions:EnableImportCompletion", "true"),
+                new KeyValuePair<string, string>("RoslynExtensionsOptions:EnableAsyncCompletion", "true"),
+            });
+            testHost.AddFilesToWorkspace();
+            return testHost;
         }
 
         private Task<CompletionAfterInsertResponse> AfterInsertResponse(CompletionItem completionItem, OmniSharpTestHost testHost)
@@ -2347,18 +2327,5 @@ namespace N
     internal static class CompletionResponseExtensions
     {
         public static bool IsSuggestionMode(this CompletionItem item) => !item.CommitCharacters?.Contains(' ') ?? true;
-    }
-
-#nullable enable
-    public sealed class CompletionFixture : IDisposable
-    {
-        public OmniSharpTestHost? ImportCompletionTestHost { get; set; }
-        public OmniSharpTestHost? ImportAndAsyncCompletionTestHost { get; set; }
-
-        public void Dispose()
-        {
-            ImportCompletionTestHost?.Dispose();
-            ImportAndAsyncCompletionTestHost?.Dispose();
-        }
     }
 }
