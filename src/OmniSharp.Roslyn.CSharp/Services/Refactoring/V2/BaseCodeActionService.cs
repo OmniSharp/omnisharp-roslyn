@@ -184,13 +184,20 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
         private async Task CollectRefactoringActions(Document document, TextSpan span, List<CodeAction> codeActions)
         {
+            var codeActionOptions = CodeActionOptionsFactory.Create(Options);
             var availableRefactorings = OrderedCodeRefactoringProviders.Value;
 
             foreach (var codeRefactoringProvider in availableRefactorings)
             {
                 try
                 {
-                    var context = new CodeRefactoringContext(document, span, a => codeActions.Add(a), CancellationToken.None);
+                    var context = OmniSharpCodeFixContextFactory.CreateCodeRefactoringContext(
+                        document,
+                        span,
+                        (a, _) => codeActions.Add(a),
+                        codeActionOptions,
+                        CancellationToken.None);
+
                     await codeRefactoringProvider.ComputeRefactoringsAsync(context);
                 }
                 catch (Exception ex)
