@@ -97,8 +97,15 @@ namespace TestUtility
             return projectsIds;
         }
 
+        private static ImmutableArray<PortableExecutableReference> _references;
+
         private static IEnumerable<PortableExecutableReference> GetReferences()
         {
+            if (!_references.IsDefaultOrEmpty)
+            {
+                return _references;
+            }
+
             // This is a bit messy. Essentially, we need to add all assemblies that type forwarders might point to.
             var assemblies = new[]
             {
@@ -114,13 +121,14 @@ namespace TestUtility
 #endif
             };
 
-            var references = assemblies
+            _references = assemblies
                 .Where(a => a != null)
                 .Select(a => a.Location)
                 .Distinct()
-                .Select(l => MetadataReference.CreateFromFile(l));
+                .Select(l => MetadataReference.CreateFromFile(l))
+                .ToImmutableArray();
 
-            return references;
+            return _references;
         }
 
         public static MSBuildInstance AddDotNetCoreToFakeInstance(this MSBuildInstance instance)

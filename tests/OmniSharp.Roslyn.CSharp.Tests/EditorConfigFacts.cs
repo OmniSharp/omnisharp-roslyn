@@ -18,8 +18,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 {
     public class EditorConfigFacts : AbstractTestFixture
     {
-        public EditorConfigFacts(ITestOutputHelper output)
-            : base(output)
+        public EditorConfigFacts(ITestOutputHelper output, SharedOmniSharpHostFixture sharedOmniSharpHostFixture)
+            : base(output, sharedOmniSharpHostFixture)
         {
         }
 
