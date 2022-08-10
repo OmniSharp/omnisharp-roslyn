@@ -78,7 +78,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
                 return Array.Empty<AvailableCodeAction>();
             }
 
-            var codeActions = new List<CodeAction>();
+            var codeActions = new List<(CodeAction CodeAction, bool IsCodeFix)>();
 
             var sourceText = await document.GetTextAsync();
             var span = GetTextSpan(request, sourceText);
@@ -86,7 +86,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             await CollectCodeFixesActions(document, span, codeActions);
             await CollectRefactoringActions(document, span, codeActions);
 
-            var distinctActions = codeActions.GroupBy(x => x.Title).Select(x => x.First());
+            var distinctActions = codeActions.GroupBy(x => x.CodeAction.Title).Select(x => x.First());
 
             var availableActions = ConvertToAvailableCodeAction(distinctActions);
 
@@ -117,7 +117,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             return new TextSpan(position, length: 0);
         }
 
-        private async Task CollectCodeFixesActions(Document document, TextSpan span, List<CodeAction> codeActions)
+        private async Task CollectCodeFixesActions(Document document, TextSpan span, List<(CodeAction CodeAction, bool IsCodeFix)> codeActions)
         {
             var diagnosticsWithProjects = await _diagnostics.GetDiagnostics(ImmutableArray.Create(document.FilePath));
 
@@ -135,7 +135,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             }
         }
 
-        private async Task AppendFixesAsync(Document document, TextSpan span, IEnumerable<Diagnostic> diagnostics, List<CodeAction> codeActions)
+        private async Task AppendFixesAsync(Document document, TextSpan span, IEnumerable<Diagnostic> diagnostics, List<(CodeAction CodeAction, bool IsCodeFix)> codeActions)
         {
             var codeActionOptions = CodeActionOptionsFactory.Create(Options);
 
@@ -149,7 +149,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
                         document,
                         span,
                         fixableDiagnostics,
-                        (a, _) => codeActions.Add(a),
+                        (a, _) => codeActions.Add((a, IsCodeFix: true)),
                         codeActionOptions,
                         CancellationToken.None);
 
@@ -182,7 +182,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
                 || (customDiagVsFixMap.ContainsKey(diagnosticId) && codeFixProvider.FixableDiagnosticIds.Any(id => id == customDiagVsFixMap[diagnosticId]));
         }
 
-        private async Task CollectRefactoringActions(Document document, TextSpan span, List<CodeAction> codeActions)
+        private async Task CollectRefactoringActions(Document document, TextSpan span, List<(CodeAction CodeAction, bool IsCodeFix)> codeActions)
         {
             var codeActionOptions = CodeActionOptionsFactory.Create(Options);
             var availableRefactorings = OrderedCodeRefactoringProviders.Value;
@@ -194,7 +194,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
                     var context = OmniSharpCodeFixContextFactory.CreateCodeRefactoringContext(
                         document,
                         span,
-                        (a, _) => codeActions.Add(a),
+                        (a, _) => codeActions.Add((a, IsCodeFix: false)),
                         codeActionOptions,
                         CancellationToken.None);
 
@@ -207,17 +207,17 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             }
         }
 
-        private IEnumerable<AvailableCodeAction> ConvertToAvailableCodeAction(IEnumerable<CodeAction> actions)
+        private IEnumerable<AvailableCodeAction> ConvertToAvailableCodeAction(IEnumerable<(CodeAction CodeAction, bool IsCodeFix)> actions)
         {
             return actions.SelectMany(action =>
             {
-                var nestedActions = action.GetNestedCodeActions();
+                var nestedActions = action.CodeAction.GetNestedCodeActions();
                 if (!nestedActions.IsDefaultOrEmpty)
                 {
-                    return nestedActions.Select(nestedAction => new AvailableCodeAction(nestedAction, action));
+                    return nestedActions.Select(nestedAction => new AvailableCodeAction(nestedAction, action.IsCodeFix, action.CodeAction));
                 }
 
-                return new[] { new AvailableCodeAction(action) };
+                return new[] { new AvailableCodeAction(action.CodeAction, action.IsCodeFix) };
             });
         }
 

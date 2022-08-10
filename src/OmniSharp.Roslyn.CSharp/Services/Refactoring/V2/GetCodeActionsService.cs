@@ -41,7 +41,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
         private static OmniSharpCodeAction ConvertToOmniSharpCodeAction(AvailableCodeAction availableAction)
         {
-            return new OmniSharpCodeAction(availableAction.GetIdentifier(), availableAction.GetTitle());
+            return new OmniSharpCodeAction(availableAction.GetIdentifier(), availableAction.GetTitle(), availableAction.IsCodeFix);
         }
     }
 }

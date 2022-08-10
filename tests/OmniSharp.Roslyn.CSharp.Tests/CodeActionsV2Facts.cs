@@ -3,9 +3,9 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using OmniSharp.Models;
-using OmniSharp.Models.V2;
 using OmniSharp.Models.V2.CodeActions;
 using OmniSharp.Roslyn.CSharp.Services.Refactoring.V2;
+using Roslyn.Test.Utilities;
 using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
@@ -34,7 +34,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     }";
 
             var refactorings = await FindRefactoringNamesAsync(code, roslynAnalyzersEnabled);
-            Assert.Contains("using System;", refactorings);
+            Assert.Contains(("using System;", IsCodeFix: true), refactorings);
         }
 
         [Theory]
@@ -105,7 +105,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 }";
 
             var refactorings = await FindRefactoringNamesAsync(code, roslynAnalyzersEnabled);
-            Assert.Contains("Extract method", refactorings);
+            Assert.Contains(("Extract method", IsCodeFix: false), refactorings);
         }
 
         [Theory]
@@ -124,51 +124,51 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             var refactorings = await FindRefactoringNamesAsync(code, roslynAnalyzersEnabled);
 
-            List<string> expected = roslynAnalyzersEnabled ? new List<string>
+            var expected = roslynAnalyzersEnabled ? new List<(string Name, bool IsCodeFix)>
             {
-                "Fix formatting",
-                "using System;",
+                ("Fix formatting", IsCodeFix: true),
+                ("using System;", IsCodeFix: true),
 #if NETCOREAPP
-                "using Internal;",
-                "Fully qualify 'Console' -> Internal.Console",
-                "Fully qualify 'Console' -> System.Console",
+                ("using Internal;", IsCodeFix: true),
+                ("Fully qualify 'Console' -> Internal.Console", IsCodeFix: true),
+                ("Fully qualify 'Console' -> System.Console", IsCodeFix: true),
 #else
-                "System.Console",
+                ("System.Console", IsCodeFix: true),
 #endif
-                "Generate variable 'Console' -> Generate property 'Console'",
-                "Generate variable 'Console' -> Generate field 'Console'",
-                "Generate variable 'Console' -> Generate read-only field 'Console'",
-                "Generate variable 'Console' -> Generate local 'Console'",
-                "Generate variable 'Console' -> Generate parameter 'Console'",
-                "Generate type 'Console' -> Generate class 'Console' in new file",
-                "Generate type 'Console' -> Generate class 'Console'",
-                "Generate type 'Console' -> Generate nested class 'Console'",
-                "Extract local function",
-                "Extract method",
-                "Introduce local for 'Console.Write(\"should be using System;\")'"
-            } : new List<string>
+                ("Generate variable 'Console' -> Generate property 'Console'", IsCodeFix: true),
+                ("Generate variable 'Console' -> Generate field 'Console'", IsCodeFix: true),
+                ("Generate variable 'Console' -> Generate read-only field 'Console'", IsCodeFix: true),
+                ("Generate variable 'Console' -> Generate local 'Console'", IsCodeFix: true),
+                ("Generate variable 'Console' -> Generate parameter 'Console'", IsCodeFix: true),
+                ("Generate type 'Console' -> Generate class 'Console' in new file", IsCodeFix: true),
+                ("Generate type 'Console' -> Generate class 'Console'", IsCodeFix: true),
+                ("Generate type 'Console' -> Generate nested class 'Console'", IsCodeFix: true),
+                ("Extract local function", IsCodeFix: false),
+                ("Extract method", IsCodeFix: false),
+                ("Introduce local for 'Console.Write(\"should be using System;\")'", IsCodeFix: false)
+            } : new List<(string Name, bool IsCodeFix)>
             {
-                "using System;",
+                ("using System;", IsCodeFix: true),
 #if NETCOREAPP
-                "using Internal;",
-                "Fully qualify 'Console' -> Internal.Console",
-                "Fully qualify 'Console' -> System.Console",
+                ("using Internal;", IsCodeFix: true),
+                ("Fully qualify 'Console' -> Internal.Console", IsCodeFix: true),
+                ("Fully qualify 'Console' -> System.Console", IsCodeFix: true),
 #else
-                "System.Console",
+                ("System.Console", IsCodeFix: true),
 #endif
-                "Generate variable 'Console' -> Generate property 'Console'",
-                "Generate variable 'Console' -> Generate field 'Console'",
-                "Generate variable 'Console' -> Generate read-only field 'Console'",
-                "Generate variable 'Console' -> Generate local 'Console'",
-                "Generate variable 'Console' -> Generate parameter 'Console'",
-                "Generate type 'Console' -> Generate class 'Console' in new file",
-                "Generate type 'Console' -> Generate class 'Console'",
-                "Generate type 'Console' -> Generate nested class 'Console'",
-                "Extract local function",
-                "Extract method",
-                "Introduce local for 'Console.Write(\"should be using System;\")'"
+                ("Generate variable 'Console' -> Generate property 'Console'", IsCodeFix: true),
+                ("Generate variable 'Console' -> Generate field 'Console'", IsCodeFix: true),
+                ("Generate variable 'Console' -> Generate read-only field 'Console'", IsCodeFix: true),
+                ("Generate variable 'Console' -> Generate local 'Console'", IsCodeFix: true),
+                ("Generate variable 'Console' -> Generate parameter 'Console'", IsCodeFix: true),
+                ("Generate type 'Console' -> Generate class 'Console' in new file", IsCodeFix: true),
+                ("Generate type 'Console' -> Generate class 'Console'", IsCodeFix: true),
+                ("Generate type 'Console' -> Generate nested class 'Console'", IsCodeFix: true),
+                ("Extract local function", IsCodeFix: false),
+                ("Extract method", IsCodeFix: false),
+                ("Introduce local for 'Console.Write(\"should be using System;\")'", IsCodeFix: false)
             };
-            Assert.Equal(expected.OrderBy(x => x), refactorings.OrderBy(x => x));
+            AssertEx.Equal(expected.OrderBy(x => x.Name), refactorings.OrderBy(x => x.Name));
         }
 
         [Theory]

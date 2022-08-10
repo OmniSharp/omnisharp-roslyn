@@ -64,11 +64,11 @@ namespace TestUtility
             return await RunRefactoringsAsync(code, identifier, wantsChanges);
         }
 
-        protected async Task<IEnumerable<string>> FindRefactoringNamesAsync(string code, bool isAnalyzersEnabled = true, bool analyzeOpenDocumentsOnly = false)
+        protected async Task<IEnumerable<(string Name, bool IsCodeFix)>> FindRefactoringNamesAsync(string code, bool isAnalyzersEnabled = true, bool analyzeOpenDocumentsOnly = false)
         {
             var codeActions = await FindRefactoringsAsync(code, TestHelpers.GetConfigurationDataWithAnalyzerConfig(isAnalyzersEnabled, analyzeOpenDocumentsOnly: analyzeOpenDocumentsOnly));
 
-            return codeActions.Select(a => a.Name);
+            return codeActions.Select(a => (a.Name, a.IsCodeFix));
         }
 
         protected async Task<IEnumerable<OmniSharpCodeAction>> FindRefactoringsAsync(string code, IConfiguration configurationData = null)
