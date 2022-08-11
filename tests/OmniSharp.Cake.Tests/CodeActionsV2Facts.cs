@@ -31,7 +31,7 @@ namespace OmniSharp.Cake.Tests
             const string code = "var regex = new Reg[||]ex();";
 
             var refactorings = await FindRefactoringNamesAsync(code);
-            Assert.Contains(("using System.Text.RegularExpressions;", IsCodeFix: true), refactorings);
+            Assert.Contains(("using System.Text.RegularExpressions;", CodeActionKind.QuickFix), refactorings);
         }
 
         [Fact]
@@ -47,7 +47,7 @@ namespace OmniSharp.Cake.Tests
                 }";
 
             var refactorings = await FindRefactoringNamesAsync(code);
-            Assert.Contains(("Extract method", IsCodeFix: false), refactorings);
+            Assert.Contains(("Extract method", CodeActionKind.RefactorExtract), refactorings);
         }
 
         [Fact]
@@ -63,19 +63,19 @@ namespace OmniSharp.Cake.Tests
                 }";
 
             var refactorings = await FindRefactoringNamesAsync(code);
-            var expected = new List<(string, bool IsCodeFix)>
+            var expected = new List<(string, string CodeActionKind)>
             {
-                ("using System.Text.RegularExpressions;", IsCodeFix: true),
-                ("System.Text.RegularExpressions.Regex", IsCodeFix: true),
-                ("Extract method", IsCodeFix: false),
-                ("Extract local function", IsCodeFix: false),
-                ("Introduce local for 'Regex.Match(\"foo\", \"bar\")'", IsCodeFix: false),
-                ("Introduce parameter for 'Regex.Match(\"foo\", \"bar\")' -> and update call sites directly", IsCodeFix: false),
-                ("Introduce parameter for 'Regex.Match(\"foo\", \"bar\")' -> into extracted method to invoke at call sites", IsCodeFix: false),
-                ("Introduce parameter for 'Regex.Match(\"foo\", \"bar\")' -> into new overload", IsCodeFix: false),
-                ("Introduce parameter for all occurrences of 'Regex.Match(\"foo\", \"bar\")' -> and update call sites directly", IsCodeFix: false),
-                ("Introduce parameter for all occurrences of 'Regex.Match(\"foo\", \"bar\")' -> into extracted method to invoke at call sites", IsCodeFix: false),
-                ("Introduce parameter for all occurrences of 'Regex.Match(\"foo\", \"bar\")' -> into new overload", IsCodeFix: false)
+                ("using System.Text.RegularExpressions;", CodeActionKind.QuickFix),
+                ("System.Text.RegularExpressions.Regex", CodeActionKind.QuickFix),
+                ("Extract method", CodeActionKind.RefactorExtract),
+                ("Extract local function", CodeActionKind.RefactorExtract),
+                ("Introduce local for 'Regex.Match(\"foo\", \"bar\")'", CodeActionKind.Refactor),
+                ("Introduce parameter for 'Regex.Match(\"foo\", \"bar\")' -> and update call sites directly", CodeActionKind.Refactor),
+                ("Introduce parameter for 'Regex.Match(\"foo\", \"bar\")' -> into extracted method to invoke at call sites", CodeActionKind.Refactor),
+                ("Introduce parameter for 'Regex.Match(\"foo\", \"bar\")' -> into new overload", CodeActionKind.Refactor),
+                ("Introduce parameter for all occurrences of 'Regex.Match(\"foo\", \"bar\")' -> and update call sites directly", CodeActionKind.Refactor),
+                ("Introduce parameter for all occurrences of 'Regex.Match(\"foo\", \"bar\")' -> into extracted method to invoke at call sites", CodeActionKind.Refactor),
+                ("Introduce parameter for all occurrences of 'Regex.Match(\"foo\", \"bar\")' -> into new overload", CodeActionKind.Refactor)
             };
             AssertEx.Equal(expected, refactorings);
         }
@@ -135,11 +135,11 @@ namespace OmniSharp.Cake.Tests
             return await RunRefactoringsAsync(code, identifier);
         }
 
-        private async Task<IEnumerable<(string Name, bool IsCodeFix)>> FindRefactoringNamesAsync(string code)
+        private async Task<IEnumerable<(string Name, string CodeActionKind)>> FindRefactoringNamesAsync(string code)
         {
             var codeActions = await FindRefactoringsAsync(code);
 
-            return codeActions.Select(a => (a.Name, a.IsCodeFix));
+            return codeActions.Select(a => (a.Name, a.CodeActionKind));
         }
 
         private async Task<IEnumerable<OmniSharpCodeAction>> FindRefactoringsAsync(string code)
