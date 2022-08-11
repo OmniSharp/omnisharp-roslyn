@@ -10,6 +10,7 @@ using OmniSharp.Models;
 using OmniSharp.Models.UpdateBuffer;
 using OmniSharp.Models.V2;
 using OmniSharp.Models.V2.CodeActions;
+using Roslyn.Test.Utilities;
 using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
@@ -30,7 +31,7 @@ namespace OmniSharp.Cake.Tests
             const string code = "var regex = new Reg[||]ex();";
 
             var refactorings = await FindRefactoringNamesAsync(code);
-            Assert.Contains("using System.Text.RegularExpressions;", refactorings);
+            Assert.Contains(("using System.Text.RegularExpressions;", CodeActionKind.QuickFix), refactorings);
         }
 
         [Fact]
@@ -46,7 +47,7 @@ namespace OmniSharp.Cake.Tests
                 }";
 
             var refactorings = await FindRefactoringNamesAsync(code);
-            Assert.Contains("Extract method", refactorings);
+            Assert.Contains(("Extract method", CodeActionKind.RefactorExtract), refactorings);
         }
 
         [Fact]
@@ -62,21 +63,21 @@ namespace OmniSharp.Cake.Tests
                 }";
 
             var refactorings = await FindRefactoringNamesAsync(code);
-            var expected = new List<string>
+            var expected = new List<(string, string CodeActionKind)>
             {
-                "using System.Text.RegularExpressions;",
-                "System.Text.RegularExpressions.Regex",
-                "Extract method",
-                "Extract local function",
-                "Introduce local for 'Regex.Match(\"foo\", \"bar\")'",
-                "Introduce parameter for 'Regex.Match(\"foo\", \"bar\")' -> and update call sites directly",
-                "Introduce parameter for 'Regex.Match(\"foo\", \"bar\")' -> into extracted method to invoke at call sites",
-                "Introduce parameter for 'Regex.Match(\"foo\", \"bar\")' -> into new overload",
-                "Introduce parameter for all occurrences of 'Regex.Match(\"foo\", \"bar\")' -> and update call sites directly",
-                "Introduce parameter for all occurrences of 'Regex.Match(\"foo\", \"bar\")' -> into extracted method to invoke at call sites",
-                "Introduce parameter for all occurrences of 'Regex.Match(\"foo\", \"bar\")' -> into new overload"
+                ("using System.Text.RegularExpressions;", CodeActionKind.QuickFix),
+                ("System.Text.RegularExpressions.Regex", CodeActionKind.QuickFix),
+                ("Extract method", CodeActionKind.RefactorExtract),
+                ("Extract local function", CodeActionKind.RefactorExtract),
+                ("Introduce local for 'Regex.Match(\"foo\", \"bar\")'", CodeActionKind.Refactor),
+                ("Introduce parameter for 'Regex.Match(\"foo\", \"bar\")' -> and update call sites directly", CodeActionKind.Refactor),
+                ("Introduce parameter for 'Regex.Match(\"foo\", \"bar\")' -> into extracted method to invoke at call sites", CodeActionKind.Refactor),
+                ("Introduce parameter for 'Regex.Match(\"foo\", \"bar\")' -> into new overload", CodeActionKind.Refactor),
+                ("Introduce parameter for all occurrences of 'Regex.Match(\"foo\", \"bar\")' -> and update call sites directly", CodeActionKind.Refactor),
+                ("Introduce parameter for all occurrences of 'Regex.Match(\"foo\", \"bar\")' -> into extracted method to invoke at call sites", CodeActionKind.Refactor),
+                ("Introduce parameter for all occurrences of 'Regex.Match(\"foo\", \"bar\")' -> into new overload", CodeActionKind.Refactor)
             };
-            Assert.Equal(expected, refactorings);
+            AssertEx.Equal(expected, refactorings);
         }
 
         [Fact]
@@ -122,7 +123,7 @@ namespace OmniSharp.Cake.Tests
                 }";
 
             var refactorings = await FindRefactoringNamesAsync(code);
-            Assert.Empty(refactorings.Where(x => x.StartsWith("Rename file to")));
+            Assert.Empty(refactorings.Where(x => x.Name.StartsWith("Rename file to")));
         }
 
         private async Task<RunCodeActionResponse> RunRefactoringAsync(string code, string refactoringName)
@@ -134,11 +135,11 @@ namespace OmniSharp.Cake.Tests
             return await RunRefactoringsAsync(code, identifier);
         }
 
-        private async Task<IEnumerable<string>> FindRefactoringNamesAsync(string code)
+        private async Task<IEnumerable<(string Name, string CodeActionKind)>> FindRefactoringNamesAsync(string code)
         {
             var codeActions = await FindRefactoringsAsync(code);
 
-            return codeActions.Select(a => a.Name);
+            return codeActions.Select(a => (a.Name, a.CodeActionKind));
         }
 
         private async Task<IEnumerable<OmniSharpCodeAction>> FindRefactoringsAsync(string code)

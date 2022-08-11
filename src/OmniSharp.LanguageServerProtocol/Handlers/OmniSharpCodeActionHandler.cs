@@ -5,7 +5,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using MediatR;
 using Microsoft.CodeAnalysis;
-using Newtonsoft.Json.Linq;
 using OmniSharp.Extensions.JsonRpc;
 using OmniSharp.Extensions.LanguageServer.Protocol;
 using OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities;
@@ -14,8 +13,11 @@ using OmniSharp.Extensions.LanguageServer.Protocol.Server;
 using OmniSharp.Models.V2.CodeActions;
 using OmniSharp.Extensions.LanguageServer.Protocol.Document;
 using OmniSharp.Extensions.LanguageServer.Protocol.Workspace;
-using OmniSharp.Models;
 using Diagnostic = OmniSharp.Extensions.LanguageServer.Protocol.Models.Diagnostic;
+using CodeActionKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CodeActionKind;
+using OmniSharpCodeActionKind = OmniSharp.Models.V2.CodeActions.CodeActionKind;
+using System;
+using Range = OmniSharp.Extensions.LanguageServer.Protocol.Models.Range;
 
 namespace OmniSharp.LanguageServerProtocol.Handlers
 {
@@ -80,18 +82,12 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
 
             foreach (var ca in omnisharpResponse.CodeActions)
             {
-                CodeActionKind kind;
-                if (ca.Identifier.StartsWith("using ")) { kind = CodeActionKind.QuickFix; }
-                else if (ca.Identifier.StartsWith("Inline ")) { kind = CodeActionKind.RefactorInline; }
-                else if (ca.Identifier.StartsWith("Extract ")) { kind = CodeActionKind.RefactorExtract; }
-                else if (ca.Identifier.StartsWith("Change ")) { kind = CodeActionKind.QuickFix; }
-                else { kind = CodeActionKind.Refactor; }
 
                 codeActions.Add(
                     new CodeAction
                     {
                         Title = ca.Name,
-                        Kind = kind,
+                        Kind = OmniSharpCodeActionHandler.FromOmniSharpCodeActionKind(ca.CodeActionKind),
                         Diagnostics = new Container<Diagnostic>(),
                         Edit = new WorkspaceEdit(),
                         Command = Command.Create("omnisharp/executeCodeAction")
@@ -168,6 +164,16 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             return _executeCommandRegistrationOptions;
         }
 
+        private static CodeActionKind FromOmniSharpCodeActionKind(string omnisharpCodeAction)
+            => omnisharpCodeAction switch
+            {
+                OmniSharpCodeActionKind.QuickFix => CodeActionKind.QuickFix,
+                OmniSharpCodeActionKind.Refactor => CodeActionKind.Refactor,
+                OmniSharpCodeActionKind.RefactorInline => CodeActionKind.RefactorInline,
+                OmniSharpCodeActionKind.RefactorExtract => CodeActionKind.RefactorExtract,
+                _ => throw new InvalidOperationException($"Unexpected code action kind {omnisharpCodeAction}")
+            };
+
         protected override CodeActionRegistrationOptions CreateRegistrationOptions(CodeActionCapability capability, ClientCapabilities clientCapabilities)
         {
             return new CodeActionRegistrationOptions()
@@ -176,7 +182,8 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                 CodeActionKinds = new Container<CodeActionKind>(
                     CodeActionKind.SourceOrganizeImports,
                     CodeActionKind.Refactor,
-                    CodeActionKind.RefactorExtract),
+                    CodeActionKind.RefactorExtract,
+                    CodeActionKind.RefactorInline),
             };
         }
     }
