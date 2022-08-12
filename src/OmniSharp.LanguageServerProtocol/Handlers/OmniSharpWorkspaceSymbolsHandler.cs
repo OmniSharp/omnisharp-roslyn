@@ -60,6 +60,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                     {
                         Name = x.Text,
                         Kind = Helpers.ToSymbolKind(x.Kind),
+                        ContainerName = x.ContainingSymbolName,
                         Location = new OmniSharp.Extensions.LanguageServer.Protocol.Models.Location
                         {
                             Uri = Helpers.ToUri(x.FileName),

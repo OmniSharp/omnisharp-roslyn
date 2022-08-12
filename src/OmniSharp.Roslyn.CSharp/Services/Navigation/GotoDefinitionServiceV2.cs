@@ -65,7 +65,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
                         }
                         else
                         {
-                            sourceGeneratedFileInfo = GoToDefinitionHelpers.GetSourceGeneratedFileInfo(_workspace, location);
+                            sourceGeneratedFileInfo = SolutionExtensions.GetSourceGeneratedFileInfo(document.Project.Solution, location);
                         }
 
                         return new Definition
