@@ -7,6 +7,10 @@ using Microsoft.CodeAnalysis;
 using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
+using System.Collections.Immutable;
+using Microsoft.CodeAnalysis.Diagnostics;
+using System;
+using OmniSharp.Models.v1.SourceGeneratedFile;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
@@ -341,6 +345,78 @@ public partial class MyClass
             Assert.Contains("ProjectManager", symbols);
             Assert.Contains("CoolProjectManager", symbols);
             Assert.DoesNotContain("ProbabilityManager", symbols);
+        }
+
+        [Fact(Skip = "https://github.com/dotnet/roslyn/issues/63375")]
+        public async Task SymbolsReturnedForGeneratedTypes()
+        {
+            const string Source = @"
+public class Generated
+{
+    public int Property { get; set; }
+}
+";
+
+            TestHelpers.AddProjectToWorkspace(SharedOmniSharpTestHost.Workspace,
+                "project.csproj",
+                new[] { "netcoreapp3.1" },
+                Array.Empty<TestFile>(),
+                analyzerRefs: ImmutableArray.Create<AnalyzerReference>(new TestGeneratorReference(
+                    context => context.AddSource("GeneratedFile", Source))));
+
+            var requestHandler = GetRequestHandler(SharedOmniSharpTestHost);
+            var response = await requestHandler.Handle(new FindSymbolsRequest
+            {
+                Filter = "Property"
+            });
+
+            var result = (SymbolLocation)response.QuickFixes.Single();
+            Assert.NotNull(result);
+        }
+
+        [Fact]
+        public async Task SymbolsReturnedForGeneratedTypes_Partial()
+        {
+            const string Source = @"
+public partial class Generated
+{
+    public int Property { get; set; }
+}
+";
+            const string FileName = "real.cs";
+            var testFile = new TestFile(FileName, @"
+partial Generated
+{
+}
+");
+
+            TestHelpers.AddProjectToWorkspace(SharedOmniSharpTestHost.Workspace,
+                "project.csproj",
+                new[] { "netcoreapp3.1" },
+                new[] { testFile },
+                analyzerRefs: ImmutableArray.Create<AnalyzerReference>(new TestGeneratorReference(
+                    context => context.AddSource("GeneratedFile", Source))));
+
+            var requestHandler = GetRequestHandler(SharedOmniSharpTestHost);
+            var response = await requestHandler.Handle(new FindSymbolsRequest
+            {
+                Filter = "Generated"
+            });
+
+            var result = response.QuickFixes.Cast<SymbolLocation>().Single(s => s.GeneratedFileInfo is not null);
+            Assert.NotNull(result);
+
+            var sourceGeneratedFileHandler = SharedOmniSharpTestHost.GetRequestHandler<SourceGeneratedFileService>(OmniSharpEndpoints.SourceGeneratedFile);
+            var sourceGeneratedRequest = new SourceGeneratedFileRequest
+            {
+                DocumentGuid = result.GeneratedFileInfo.DocumentGuid,
+                ProjectGuid = result.GeneratedFileInfo.ProjectGuid
+            };
+
+            var sourceGeneratedFileResponse = await sourceGeneratedFileHandler.Handle(sourceGeneratedRequest);
+            Assert.NotNull(sourceGeneratedFileResponse);
+            Assert.Equal(Source, sourceGeneratedFileResponse.Source);
+            Assert.Equal(@"OmniSharp.Roslyn.CSharp.Tests\OmniSharp.Roslyn.CSharp.Tests.TestSourceGenerator\GeneratedFile.cs", sourceGeneratedFileResponse.SourceName.Replace("/", @"\"));
         }
 
         private async Task<QuickFixResponse> FindSymbolsAsync(string code, string filename)
