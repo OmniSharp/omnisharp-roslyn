@@ -53,7 +53,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
                         .Select(location => new TypeDefinition
                         {
                             Location = location.GetMappedLineSpan().GetLocationFromFileLinePositionSpan(),
-                            SourceGeneratedFileInfo = GoToDefinitionHelpers.GetSourceGeneratedFileInfo(_workspace, location)
+                            SourceGeneratedFileInfo = SolutionExtensions.GetSourceGeneratedFileInfo(document.Project.Solution, location)
                         })
                         .ToList()
                 };
