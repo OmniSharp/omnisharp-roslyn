@@ -16,9 +16,11 @@
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" PrivateAssets="All" />
     <PackageReference Include="Microsoft.CodeAnalysis.Common" />
     <PackageReference Include="Microsoft.CodeAnalysis.Workspaces.Common" />
-    <PackageReference Include="Microsoft.CodeAnalysis.ExternalAccess.OmniSharp" />
+    <PackageReference Include="Microsoft.CodeAnalysis.ExternalAccess.OmniSharp" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Features" PrivateAssets="All" />
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" />
     <PackageReference Include="System.ComponentModel.Composition" />
     <PackageReference Include="System.Reflection.DispatchProxy" />
+    <PackageReference Include="System.Text.Json" />
   </ItemGroup>
 </Project>

@@ -594,20 +594,6 @@ string PublishBuild(string project, BuildEnvironment env, BuildPlan plan, string
         throw;
     }
 
-    if (framework is "net6.0")
-    {
-        // Delete NuGet libraries so they can be loaded from SDK folder.
-        foreach (var filePath in DirectoryHelper.GetFiles(outputFolder, "NuGet.*.dll"))
-        {
-            FileHelper.Delete(filePath);
-        }
-
-        foreach (var filePath in DirectoryHelper.GetFiles(outputFolder, "System.Configuration.ConfigurationManager.dll"))
-        {
-            FileHelper.Delete(filePath);
-        }
-    }
-
     CopyExtraDependencies(env, outputFolder);
     AddOmniSharpBindingRedirects(outputFolder);
 
