@@ -223,6 +223,18 @@ namespace OmniSharp.DotNetTest.Tests
         }
 
         [Fact]
+        public async Task RunNunitTheoryTest()
+        {
+            var response = await RunDotNetTestAsync(
+                NUnitTestProject,
+                methodName: "Main.Test.TheorySampleTestsGeneric`1.TestGenericForArbitraryArray",
+                testFramework: "nunit",
+                shouldPass: true);
+
+            Assert.Single(response.Results);
+        }
+
+        [Fact]
         public async Task RunMSTestTest()
         {
             await RunDotNetTestAsync(
