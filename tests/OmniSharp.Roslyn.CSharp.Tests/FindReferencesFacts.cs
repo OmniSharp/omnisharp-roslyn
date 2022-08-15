@@ -1,11 +1,15 @@
 ﻿using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Diagnostics;
 using OmniSharp.Models;
 using OmniSharp.Models.FindUsages;
+using OmniSharp.Models.v1.SourceGeneratedFile;
 using OmniSharp.Roslyn.CSharp.Services.Navigation;
+using Roslyn.Test.Utilities;
 using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
@@ -543,6 +547,49 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             });
 
             Assert.Null(exception);
+        }
+
+        [Fact]
+        public async Task ReturnsGeneratedReferences()
+        {
+            const string Source = @"
+public partial class Generated
+{
+    public int Property { get; set; }
+}
+";
+            const string FileName = "real.cs";
+            var testFile = new TestFile(FileName, @"
+class C
+{
+    Generate$$d G;
+}
+");
+
+            TestHelpers.AddProjectToWorkspace(SharedOmniSharpTestHost.Workspace,
+                "project.csproj",
+                new[] { "netcoreapp3.1" },
+                new[] { testFile },
+                analyzerRefs: ImmutableArray.Create<AnalyzerReference>(new TestGeneratorReference(
+                    context => context.AddSource("GeneratedFile", Source))));
+
+            var response = await FindUsagesAsync(testFile, onlyThisFile: false, excludeDefinition: false);
+
+            var result = response.QuickFixes.Cast<SymbolLocation>().Single(s => s.GeneratedFileInfo is not null);
+            Assert.NotNull(result);
+            AssertEx.Equal(@"OmniSharp.Roslyn.CSharp.Tests\OmniSharp.Roslyn.CSharp.Tests.TestSourceGenerator\GeneratedFile.cs", result.FileName.Replace("/", @"\"));
+
+            var sourceGeneratedFileHandler = SharedOmniSharpTestHost.GetRequestHandler<SourceGeneratedFileService>(OmniSharpEndpoints.SourceGeneratedFile);
+            var sourceGeneratedRequest = new SourceGeneratedFileRequest
+            {
+                DocumentGuid = result.GeneratedFileInfo.DocumentGuid,
+                ProjectGuid = result.GeneratedFileInfo.ProjectGuid
+            };
+
+            var sourceGeneratedFileResponse = await sourceGeneratedFileHandler.Handle(sourceGeneratedRequest);
+            Assert.NotNull(sourceGeneratedFileResponse);
+            AssertEx.Equal(Source, sourceGeneratedFileResponse.Source);
+            AssertEx.Equal(@"OmniSharp.Roslyn.CSharp.Tests\OmniSharp.Roslyn.CSharp.Tests.TestSourceGenerator\GeneratedFile.cs", sourceGeneratedFileResponse.SourceName.Replace("/", @"\"));
         }
 
         private Task<QuickFixResponse> FindUsagesAsync(string code, bool excludeDefinition = false)

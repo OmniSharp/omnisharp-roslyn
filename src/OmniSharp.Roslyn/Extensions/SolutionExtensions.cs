@@ -96,7 +96,7 @@ namespace OmniSharp.Extensions
             };
         }
 
-        internal static SourceGeneratedFileInfo? GetSourceGeneratedFileInfo(Solution solution, Location location)
+        internal static SourceGeneratedFileInfo? GetSourceGeneratedFileInfo(this Solution solution, Location location)
         {
             Debug.Assert(location.IsInSource);
             var document = solution.GetDocument(location.SourceTree);
