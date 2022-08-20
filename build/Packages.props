@@ -35,7 +35,6 @@
         <PackageReference Update="Microsoft.CodeAnalysis.CSharp.Features" Version="$(RoslynPackageVersion)" />
         <PackageReference Update="Microsoft.CodeAnalysis.CSharp.Scripting" Version="$(RoslynPackageVersion)" />
         <PackageReference Update="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="$(RoslynPackageVersion)" />
-        <PackageReference Update="Microsoft.CodeAnalysis.Features" Version="$(RoslynPackageVersion)" />
         <PackageReference Update="Microsoft.CodeAnalysis.Workspaces.Common" Version="$(RoslynPackageVersion)" />
         <PackageReference Update="Microsoft.CodeAnalysis.ExternalAccess.OmniSharp" Version="$(RoslynPackageVersion)" />
         <PackageReference Update="Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.CSharp" Version="$(RoslynPackageVersion)" />
@@ -68,9 +67,15 @@
 
         <PackageReference Update="Newtonsoft.Json" Version="13.0.1" />
 
-        <PackageReference Update="NuGet.Packaging" Version="$(NuGetPackageVersion)" />
+        <PackageReference Update="NuGet.Common" Version="$(NuGetPackageVersion)" />
+        <PackageReference Update="NuGet.Configuration" Version="$(NuGetPackageVersion)" />
+        <PackageReference Update="NuGet.DependencyResolver.Core" Version="$(NuGetPackageVersion)" />
+        <PackageReference Update="NuGet.Frameworks" Version="$(NuGetPackageVersion)" />
+        <PackageReference Update="NuGet.LibraryModel" Version="$(NuGetPackageVersion)" />
         <PackageReference Update="NuGet.Packaging.Core" Version="$(NuGetPackageVersion)" />
+        <PackageReference Update="NuGet.Packaging" Version="$(NuGetPackageVersion)" />
         <PackageReference Update="NuGet.ProjectModel" Version="$(NuGetPackageVersion)" />
+        <PackageReference Update="NuGet.Protocol" Version="$(NuGetPackageVersion)" />
         <PackageReference Update="NuGet.Versioning" Version="$(NuGetPackageVersion)" />
 
         <PackageReference Update="OmniSharp.Extensions.LanguageServer" Version="0.19.0" />
@@ -80,8 +85,8 @@
         <PackageReference Update="System.Collections.Immutable" Version="6.0.0" />
         <PackageReference Update="System.ComponentModel.Composition" Version="4.5.0" />
         <PackageReference Update="System.Composition" Version="6.0.0" />
+        <PackageReference Update="System.Configuration.ConfigurationManager" Version="4.5.0" />
         <PackageReference Update="System.Reflection.Metadata" Version="6.0.0" />
-        <PackageReference Update="System.Text.Json" Version="6.0.0" />
         <PackageReference Update="System.Threading.Tasks.Dataflow" Version="6.0.0" />
         <PackageReference Update="System.ValueTuple" Version="4.5.0" />
 
@@ -96,4 +101,3 @@
         <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
     </ItemGroup>
 </Project>
-
