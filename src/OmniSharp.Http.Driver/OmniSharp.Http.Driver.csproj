@@ -11,7 +11,7 @@
         <!-- Always run on the latest runtime installed. -->
         <RuntimeFrameworkVersion>6.0.0-preview.7.21317.1</RuntimeFrameworkVersion>
         <RollForward>LatestMajor</RollForward>
-        <SkipHostDlls>true</SkipHostDlls>
+        <SkipHostDlls Condition="'$(TargetFramework)' != 'net472'">true</SkipHostDlls>
     </PropertyGroup>
 
     <ItemGroup>
