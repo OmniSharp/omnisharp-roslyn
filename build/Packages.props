@@ -4,8 +4,8 @@
     <PropertyGroup>
         <AspNetCorePackageVersion>2.2.0</AspNetCorePackageVersion>
         <MicrosoftExtensionPackageVersion>6.0.0</MicrosoftExtensionPackageVersion>
-        <MicrosoftTestPackageVersion>17.2.0</MicrosoftTestPackageVersion>
-        <MSBuildPackageVersion>17.0.0</MSBuildPackageVersion>
+        <MicrosoftTestPackageVersion>17.3.0</MicrosoftTestPackageVersion>
+        <MSBuildPackageVersion>17.3.1</MSBuildPackageVersion>
         <NuGetPackageVersion>6.3.0-rc.128</NuGetPackageVersion>
         <RoslynPackageVersion>4.4.0-1.22369.1</RoslynPackageVersion>
         <XunitPackageVersion>2.4.1</XunitPackageVersion>
