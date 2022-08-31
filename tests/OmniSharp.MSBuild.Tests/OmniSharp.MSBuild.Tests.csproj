@@ -23,6 +23,12 @@
     <PackageReference Include="xunit" />
     <PackageReference Include="Microsoft.Build.Locator" />
     <PackageReference Include="Microsoft.Build" ExcludeAssets="Runtime" PrivateAssets="all" />
+
+    <!-- An older System.Memory is an implicit dependency, so without this we won't have
+        a new enough System.Memory and we'll get method missing exceptions when we are
+        running with some newer MSBuild versions. -->
+    <PackageReference Include="System.Memory" />
+
     <!--
         Mono's MSBuild does not include the SQLitePCLRaw libraries.
         We include them when packaging our non-windows .NET Framework builds.

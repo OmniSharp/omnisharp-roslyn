@@ -4,9 +4,9 @@
     <PropertyGroup>
         <AspNetCorePackageVersion>2.2.0</AspNetCorePackageVersion>
         <MicrosoftExtensionPackageVersion>6.0.0</MicrosoftExtensionPackageVersion>
-        <MicrosoftTestPackageVersion>17.2.0</MicrosoftTestPackageVersion>
-        <MSBuildPackageVersion>17.0.0</MSBuildPackageVersion>
-        <NuGetPackageVersion>6.3.0-preview.1.32</NuGetPackageVersion>
+        <MicrosoftTestPackageVersion>17.3.0</MicrosoftTestPackageVersion>
+        <MSBuildPackageVersion>17.3.1</MSBuildPackageVersion>
+        <NuGetPackageVersion>6.3.0-rc.128</NuGetPackageVersion>
         <RoslynPackageVersion>4.4.0-1.22369.1</RoslynPackageVersion>
         <XunitPackageVersion>2.4.1</XunitPackageVersion>
     </PropertyGroup>
@@ -79,6 +79,7 @@
         <PackageReference Update="System.Collections.Immutable" Version="6.0.0" />
         <PackageReference Update="System.ComponentModel.Composition" Version="4.5.0" />
         <PackageReference Update="System.Composition" Version="6.0.0" />
+        <PackageReference Update="System.Memory" Version="4.5.5" />
         <PackageReference Update="System.Reflection.Metadata" Version="6.0.0" />
         <PackageReference Update="System.Threading.Tasks.Dataflow" Version="6.0.0" />
         <PackageReference Update="System.ValueTuple" Version="4.5.0" />

@@ -1,8 +1,8 @@
 
 name: 'Tests'
 env:
-  DotNetVersion: "7.0.100-preview.4.22252.9"
-  DotNetVersion2: "3.1.419"
+  DotNetVersion: "7.0.100-preview.7.22377.5"
+  DotNetVersion2: "3.1.422"
   NuGetVersion: "5.7.0"
   MonoVersion: "6.12.0"
   Artifacts: ${{ github.workspace }}/artifacts/
