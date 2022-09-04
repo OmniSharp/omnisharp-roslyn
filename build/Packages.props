@@ -2,7 +2,6 @@
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
     <PropertyGroup>
-        <AspNetCorePackageVersion>2.2.0</AspNetCorePackageVersion>
         <MicrosoftExtensionPackageVersion>6.0.0</MicrosoftExtensionPackageVersion>
         <MicrosoftTestPackageVersion>17.3.0</MicrosoftTestPackageVersion>
         <MSBuildPackageVersion>17.3.1</MSBuildPackageVersion>
@@ -19,11 +18,6 @@
         <PackageReference Update="ICSharpCode.Decompiler" Version="7.1.0.6543" />
 
         <PackageReference Update="McMaster.Extensions.CommandLineUtils" Version="3.1.0" />
-
-        <PackageReference Update="Microsoft.AspNetCore.Diagnostics" Version="$(AspNetCorePackageVersion)" />
-        <PackageReference Update="Microsoft.AspNetCore.Hosting" Version="$(AspNetCorePackageVersion)" />
-        <PackageReference Update="Microsoft.AspNetCore.Http.Features" Version="$(AspNetCorePackageVersion)" />
-        <PackageReference Update="Microsoft.AspNetCore.Server.Kestrel" Version="$(AspNetCorePackageVersion)" />
 
         <PackageReference Update="Microsoft.Build" Version="$(MSBuildPackageVersion)" />
         <PackageReference Update="Microsoft.Build.Framework" Version="$(MSBuildPackageVersion)" />
@@ -93,6 +87,12 @@
     </ItemGroup>
     <ItemGroup>
         <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
+    </ItemGroup>
+    <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
+        <PackageReference Update="Microsoft.AspNetCore.Diagnostics" Version="2.2.0" />
+        <PackageReference Update="Microsoft.AspNetCore.Hosting" Version="2.2.0" />
+        <PackageReference Update="Microsoft.AspNetCore.Http.Features" Version="2.2.0" />
+        <PackageReference Update="Microsoft.AspNetCore.Server.Kestrel" Version="2.2.0" />
     </ItemGroup>
 </Project>
 
