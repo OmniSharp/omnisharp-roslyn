@@ -1,7 +1,10 @@
 # Changelog
 All changes to the project will be documented in this file.
 
-## [1.39.1]
+## [1.39.2] - not yet released
+* Updated ILSpy to 7.2.1.6856 (PR: [#2447](https://github.com/OmniSharp/omnisharp-roslyn/pull/2447))
+
+## [1.39.1] - 2022-07-25
 * Update Roslyn to 4.4.0 1.22369.1 (PR: [#2420](https://github.com/OmniSharp/omnisharp-roslyn/pull/2420))
 * Simplify some code (PR: [#2370](https://github.com/OmniSharp/omnisharp-roslyn/pull/2370))
 * Return meaningful error when pinned SDK version is not found. ([[omnisharp-vscode#5128](https://github.com/OmniSharp/omnisharp-vscode/issues/5128), PR: [#2403](https://github.com/OmniSharp/omnisharp-roslyn/pull/2403))
