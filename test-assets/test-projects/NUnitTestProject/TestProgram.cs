@@ -86,4 +86,17 @@ namespace Main.Test
 
         }
     }
+
+    [TestFixture(typeof(int))]
+    public class TheorySampleTestsGeneric<T>
+    {
+        [Datapoint]
+        public int[] ArrayInt = { 0, 1, 2, 3 };
+
+        [Theory]
+        public void TestGenericForArbitraryArray(T[] array)
+        {
+            Assert.That(array.Length, Is.EqualTo(4));
+        }
+    }
 }
