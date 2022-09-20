@@ -1,8 +1,8 @@
 
 name: 'Build'
 env:
-  DotNetVersion: "5.0.302"
-  DotNetVersion2: "3.1.411"
+  DotNetVersion: "7.0.100-preview.7.22377.5"
+  DotNetVersion2: "3.1.422"
   NuGetVersion: "5.7.0"
   MonoVersion: "6.12.0"
   Artifacts: ${{ github.workspace }}/artifacts/
@@ -25,7 +25,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-18.04, windows-2019, macos-10.15]
+        os: [ubuntu-20.04, windows-2022, macos-11]
     name: 'Build'
     steps:
       - name: Checkout

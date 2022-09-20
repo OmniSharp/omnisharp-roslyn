@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net472</TargetFramework>
+    <TargetFrameworks>net7.0;net472</TargetFrameworks>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
   </PropertyGroup>
@@ -20,6 +20,11 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="xunit.runner.visualstudio" />
     <PackageReference Include="xunit" />
+
+    <!-- An older System.Memory is an implicit dependency, so without this we won't have
+        a new enough System.Memory and we'll get method missing exceptions when we are
+        running with some newer MSBuild versions. -->
+    <PackageReference Include="System.Memory" />
   </ItemGroup>
 
   <ItemGroup>

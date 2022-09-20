@@ -1,23 +1,25 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net472</TargetFramework>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-  </PropertyGroup>
+    <PropertyGroup>
+        <TargetFrameworks>net6.0;net472</TargetFrameworks>
+        <PlatformTarget>AnyCPU</PlatformTarget>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\OmniSharp.Abstractions\OmniSharp.Abstractions.csproj" />
-    <ProjectReference Include="..\OmniSharp.Roslyn\OmniSharp.Roslyn.csproj" />
-  </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\OmniSharp.Abstractions\OmniSharp.Abstractions.csproj" />
+        <ProjectReference Include="..\OmniSharp.Roslyn\OmniSharp.Roslyn.csproj" />
+    </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" PrivateAssets="All" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
-  </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" PrivateAssets="All" />
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
+    </ItemGroup>
 
-  <!-- New VSTest 'dotnet test' support -->
-  <ItemGroup>
-    <PackageReference Include="Microsoft.TestPlatform.TranslationLayer" />
-  </ItemGroup>
+    <!-- New VSTest 'dotnet test' support -->
+    <ItemGroup>
+        <PackageReference Include="Microsoft.TestPlatform.TranslationLayer" />
+        <PackageReference Condition="'$(TargetFramework)' == 'net6.0'" Include="Microsoft.TestPlatform.ObjectModel" />
+        <PackageReference Condition="'$(TargetFramework)' == 'net6.0'" Include="System.Runtime.InteropServices.RuntimeInformation" />
+    </ItemGroup>
 
 </Project>

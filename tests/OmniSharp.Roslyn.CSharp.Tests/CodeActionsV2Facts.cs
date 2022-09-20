@@ -3,9 +3,9 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using OmniSharp.Models;
-using OmniSharp.Models.V2;
 using OmniSharp.Models.V2.CodeActions;
 using OmniSharp.Roslyn.CSharp.Services.Refactoring.V2;
+using Roslyn.Test.Utilities;
 using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
@@ -34,7 +34,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     }";
 
             var refactorings = await FindRefactoringNamesAsync(code, roslynAnalyzersEnabled);
-            Assert.Contains("using System;", refactorings);
+            Assert.Contains(("using System;", CodeActionKind.QuickFix), refactorings);
         }
 
         [Theory]
@@ -105,7 +105,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 }";
 
             var refactorings = await FindRefactoringNamesAsync(code, roslynAnalyzersEnabled);
-            Assert.Contains("Extract method", refactorings);
+            Assert.Contains(("Extract method", CodeActionKind.RefactorExtract), refactorings);
         }
 
         [Theory]
@@ -124,39 +124,51 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             var refactorings = await FindRefactoringNamesAsync(code, roslynAnalyzersEnabled);
 
-            List<string> expected = roslynAnalyzersEnabled ? new List<string>
+            var expected = roslynAnalyzersEnabled ? new List<(string Name, string CodeActionKind)>
             {
-                "Fix formatting",
-                "using System;",
-                "System.Console",
-                "Generate variable 'Console' -> Generate property 'Class1.Console'",
-                "Generate variable 'Console' -> Generate field 'Class1.Console'",
-                "Generate variable 'Console' -> Generate read-only field 'Class1.Console'",
-                "Generate variable 'Console' -> Generate local 'Console'",
-                "Generate variable 'Console' -> Generate parameter 'Console'",
-                "Generate type 'Console' -> Generate class 'Console' in new file",
-                "Generate type 'Console' -> Generate class 'Console'",
-                "Generate type 'Console' -> Generate nested class 'Console'",
-                "Extract local function",
-                "Extract method",
-                "Introduce local for 'Console.Write(\"should be using System;\")'"
-            } : new List<string>
+                ("Fix formatting", CodeActionKind.QuickFix),
+                ("using System;", CodeActionKind.QuickFix),
+#if NETCOREAPP
+                ("using Internal;", CodeActionKind.QuickFix),
+                ("Fully qualify 'Console' -> Internal.Console", CodeActionKind.QuickFix),
+                ("Fully qualify 'Console' -> System.Console", CodeActionKind.QuickFix),
+#else
+                ("System.Console", CodeActionKind.QuickFix),
+#endif
+                ("Generate variable 'Console' -> Generate property 'Console'", CodeActionKind.QuickFix),
+                ("Generate variable 'Console' -> Generate field 'Console'", CodeActionKind.QuickFix),
+                ("Generate variable 'Console' -> Generate read-only field 'Console'", CodeActionKind.QuickFix),
+                ("Generate variable 'Console' -> Generate local 'Console'", CodeActionKind.QuickFix),
+                ("Generate variable 'Console' -> Generate parameter 'Console'", CodeActionKind.QuickFix),
+                ("Generate type 'Console' -> Generate class 'Console' in new file", CodeActionKind.QuickFix),
+                ("Generate type 'Console' -> Generate class 'Console'", CodeActionKind.QuickFix),
+                ("Generate type 'Console' -> Generate nested class 'Console'", CodeActionKind.QuickFix),
+                ("Extract local function", CodeActionKind.RefactorExtract),
+                ("Extract method", CodeActionKind.RefactorExtract),
+                ("Introduce local for 'Console.Write(\"should be using System;\")'", CodeActionKind.Refactor)
+            } : new List<(string Name, string CodeActionKind)>
             {
-                "using System;",
-                "System.Console",
-                "Generate variable 'Console' -> Generate property 'Class1.Console'",
-                "Generate variable 'Console' -> Generate field 'Class1.Console'",
-                "Generate variable 'Console' -> Generate read-only field 'Class1.Console'",
-                "Generate variable 'Console' -> Generate local 'Console'",
-                "Generate variable 'Console' -> Generate parameter 'Console'",
-                "Generate type 'Console' -> Generate class 'Console' in new file",
-                "Generate type 'Console' -> Generate class 'Console'",
-                "Generate type 'Console' -> Generate nested class 'Console'",
-                "Extract local function",
-                "Extract method",
-                "Introduce local for 'Console.Write(\"should be using System;\")'"
+                ("using System;", CodeActionKind.QuickFix),
+#if NETCOREAPP
+                ("using Internal;", CodeActionKind.QuickFix),
+                ("Fully qualify 'Console' -> Internal.Console", CodeActionKind.QuickFix),
+                ("Fully qualify 'Console' -> System.Console", CodeActionKind.QuickFix),
+#else
+                ("System.Console", CodeActionKind.QuickFix),
+#endif
+                ("Generate variable 'Console' -> Generate property 'Console'", CodeActionKind.QuickFix),
+                ("Generate variable 'Console' -> Generate field 'Console'", CodeActionKind.QuickFix),
+                ("Generate variable 'Console' -> Generate read-only field 'Console'", CodeActionKind.QuickFix),
+                ("Generate variable 'Console' -> Generate local 'Console'", CodeActionKind.QuickFix),
+                ("Generate variable 'Console' -> Generate parameter 'Console'", CodeActionKind.QuickFix),
+                ("Generate type 'Console' -> Generate class 'Console' in new file", CodeActionKind.QuickFix),
+                ("Generate type 'Console' -> Generate class 'Console'", CodeActionKind.QuickFix),
+                ("Generate type 'Console' -> Generate nested class 'Console'", CodeActionKind.QuickFix),
+                ("Extract local function", CodeActionKind.RefactorExtract),
+                ("Extract method", CodeActionKind.RefactorExtract),
+                ("Introduce local for 'Console.Write(\"should be using System;\")'", CodeActionKind.Refactor)
             };
-            Assert.Equal(expected.OrderBy(x => x), refactorings.OrderBy(x => x));
+            AssertEx.Equal(expected.OrderBy(x => x.Name), refactorings.OrderBy(x => x.Name));
         }
 
         [Theory]
@@ -195,7 +207,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         public async Task Can_generate_type_and_return_name_of_new_file(bool roslynAnalyzersEnabled)
         {
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithMissingType"))
-            using (var host =  OmniSharpTestHost.Create(testProject.Directory, testOutput: TestOutput, configurationData: TestHelpers.GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled)))
+            using (var host = OmniSharpTestHost.Create(testProject.Directory, testOutput: TestOutput, configurationData: TestHelpers.GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled)))
             {
                 var requestHandler = host.GetRequestHandler<RunCodeActionService>(OmniSharpEndpoints.V2.RunCodeAction);
                 var document = host.Workspace.CurrentSolution.Projects.First().Documents.First();

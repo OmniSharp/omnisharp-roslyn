@@ -1,5 +1,4 @@
-﻿using NuGet.Versioning;
-using OmniSharp.Services;
+﻿using OmniSharp.Services;
 using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
@@ -8,7 +7,7 @@ namespace OmniSharp.Tests
 {
     public class DotNetCliServiceFacts : AbstractTestFixture
     {
-        private const string DotNetVersion = "5.0.302";
+        private const string DotNetVersion = "7.0.100-preview.7.22377.5";
         private int Major { get; }
         private int Minor { get; }
         private int Patch { get; }
@@ -21,7 +20,7 @@ namespace OmniSharp.Tests
             Major = version.Major;
             Minor = version.Minor;
             Patch = version.Patch;
-            Release = version.Release;
+            Release = version.PreReleaseLabel;
         }
 
         [Fact]
@@ -31,12 +30,16 @@ namespace OmniSharp.Tests
             {
                 var dotNetCli = host.GetExport<IDotNetCliService>();
 
-                var version = dotNetCli.GetVersion();
+                var cliVersion = dotNetCli.GetVersion();
+
+                Assert.False(cliVersion.HasError);
+
+                var version = cliVersion.Version;
 
                 Assert.Equal(Major, version.Major);
                 Assert.Equal(Minor, version.Minor);
                 Assert.Equal(Patch, version.Patch);
-                Assert.Equal(Release, version.Release);
+                Assert.Equal(Release, version.PreReleaseLabel);
             }
         }
 
@@ -52,7 +55,7 @@ namespace OmniSharp.Tests
                 Assert.Equal(Major, info.Version.Major);
                 Assert.Equal(Minor, info.Version.Minor);
                 Assert.Equal(Patch, info.Version.Patch);
-                Assert.Equal(Release, info.Version.Release);
+                Assert.Equal(Release, info.Version.PreReleaseLabel);
             }
         }
     }

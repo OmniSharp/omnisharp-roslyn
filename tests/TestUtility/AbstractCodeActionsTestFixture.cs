@@ -14,6 +14,7 @@ using OmniSharp.Roslyn.CSharp.Services.Refactoring.V2;
 using TestUtility.Logging;
 using Xunit;
 using Xunit.Abstractions;
+using Range = OmniSharp.Models.V2.Range;
 
 namespace TestUtility
 {
@@ -63,11 +64,11 @@ namespace TestUtility
             return await RunRefactoringsAsync(code, identifier, wantsChanges);
         }
 
-        protected async Task<IEnumerable<string>> FindRefactoringNamesAsync(string code, bool isAnalyzersEnabled = true)
+        protected async Task<IEnumerable<(string Name, string CodeActionKind)>> FindRefactoringNamesAsync(string code, bool isAnalyzersEnabled = true, bool analyzeOpenDocumentsOnly = false)
         {
-            var codeActions = await FindRefactoringsAsync(code, TestHelpers.GetConfigurationDataWithAnalyzerConfig(isAnalyzersEnabled));
+            var codeActions = await FindRefactoringsAsync(code, TestHelpers.GetConfigurationDataWithAnalyzerConfig(isAnalyzersEnabled, analyzeOpenDocumentsOnly: analyzeOpenDocumentsOnly));
 
-            return codeActions.Select(a => a.Name);
+            return codeActions.Select(a => (a.Name, a.CodeActionKind));
         }
 
         protected async Task<IEnumerable<OmniSharpCodeAction>> FindRefactoringsAsync(string code, IConfiguration configurationData = null)

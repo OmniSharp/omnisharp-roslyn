@@ -1,10 +1,14 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.FindSymbols;
 using OmniSharp.Models;
+using OmniSharp.Models.v1.SourceGeneratedFile;
+
+#nullable enable
 
 namespace OmniSharp.Extensions
 {
@@ -67,7 +71,7 @@ namespace OmniSharp.Extensions
             var lineSpan = location.GetLineSpan();
             var path = lineSpan.Path;
             var projects = solution.GetDocumentIdsWithFilePath(path)
-                                    .Select(documentId => solution.GetProject(documentId.ProjectId).Name)
+                                    .Select(documentId => solution.GetProject(documentId.ProjectId)!.Name)
                                     .ToArray();
 
             var format = SymbolDisplayFormat.MinimallyQualifiedFormat;
@@ -86,7 +90,25 @@ namespace OmniSharp.Extensions
                 Column = lineSpan.StartLinePosition.Character,
                 EndLine = lineSpan.EndLinePosition.Line,
                 EndColumn = lineSpan.EndLinePosition.Character,
-                Projects = projects
+                Projects = projects,
+                ContainingSymbolName = symbol.ContainingSymbol?.Name ?? "",
+                GeneratedFileInfo = GetSourceGeneratedFileInfo(solution, location),
+            };
+        }
+
+        internal static SourceGeneratedFileInfo? GetSourceGeneratedFileInfo(this Solution solution, Location location)
+        {
+            Debug.Assert(location.IsInSource);
+            var document = solution.GetDocument(location.SourceTree);
+            if (document is not SourceGeneratedDocument)
+            {
+                return null;
+            }
+
+            return new SourceGeneratedFileInfo
+            {
+                ProjectGuid = document.Project.Id.Id,
+                DocumentGuid = document.Id.Id
             };
         }
     }

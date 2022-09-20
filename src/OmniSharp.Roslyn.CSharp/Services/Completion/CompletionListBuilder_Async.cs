@@ -28,14 +28,14 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
             TextSpan typedSpan,
             bool expectingImportedItems, bool isSuggestionMode)
         {
-            var completionsBuilder = new List<CompletionItem>(completions.Items.Length);
+            var completionsBuilder = new List<CompletionItem>(completions.ItemsList.Count);
             var seenUnimportedCompletions = false;
             var commitCharacterRuleCache = new Dictionary<ImmutableArray<CharacterSetModificationRule>, IReadOnlyList<char>>();
             var commitCharacterRuleBuilder = new HashSet<char>();
 
-            for (int i = 0; i < completions.Items.Length; i++)
+            for (int i = 0; i < completions.ItemsList.Count; i++)
             {
-                var completion = completions.Items[i];
+                var completion = completions.ItemsList[i];
                 string labelText = completion.DisplayTextPrefix + completion.DisplayText + completion.DisplayTextSuffix;
                 string? insertText;
                 string? filterText = null;

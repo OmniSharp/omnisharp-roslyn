@@ -44,6 +44,7 @@
         public const string TargetFrameworks = nameof(TargetFrameworks);
         public const string TargetPath = nameof(TargetPath);
         public const string TreatWarningsAsErrors = nameof(TreatWarningsAsErrors);
+        public const string UseAppHost = nameof(UseAppHost);
         public const string VisualStudioVersion = nameof(VisualStudioVersion);
         public const string VsInstallRoot = nameof(VsInstallRoot);
         public const string WarningsAsErrors = nameof(WarningsAsErrors);

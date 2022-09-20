@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net472;netcoreapp3.1;netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>net6.0;net472;netstandard2.0</TargetFrameworks>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <RootNamespace>OmniSharp</RootNamespace>
     <IsPackable>true</IsPackable>
@@ -13,7 +13,6 @@
     <PackageReference Include="Microsoft.Extensions.Configuration" />
     <PackageReference Include="Microsoft.Extensions.Logging" />
     <PackageReference Include="Newtonsoft.Json" />
-    <PackageReference Include="NuGet.Versioning" />
     <PackageReference Include="System.Collections.Immutable" />
     <PackageReference Include="System.Composition" />
     <PackageReference Include="System.ValueTuple" />

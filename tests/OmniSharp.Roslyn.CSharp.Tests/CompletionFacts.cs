@@ -17,7 +17,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 {
     public class CompletionFacts : AbstractTestFixture
     {
-        private const int ImportCompletionTimeout = 1000;
+        private const int ImportCompletionTimeout = 2000;
         private readonly ILogger _logger;
 
         private string EndpointName => OmniSharpEndpoints.Completion;
@@ -299,7 +299,7 @@ namespace N2
 
             using var host = useAsyncCompletion ? GetAsyncCompletionAndImportCompletionHost() : GetImportCompletionHost();
             var completions = await FindCompletionsWithImportedAsync(filename, input, host);
-            var resolved = await ResolveCompletionAsync(completions.Items.First(c => c.TextEdit.NewText == "Console"), host);
+            var resolved = await ResolveCompletionAsync(completions.Items.Last(c => c.TextEdit.NewText == "Console"), host);
 
             Assert.Single(resolved.Item.AdditionalTextEdits);
             var additionalEdit = resolved.Item.AdditionalTextEdits[0];
@@ -634,8 +634,13 @@ class FooChild : Foo
 
             using var host = GetAsyncCompletionAndImportCompletionHost();
             var completions = await FindCompletionsAsync(filename, source, host);
+#if NETCOREAPP
+            Assert.Equal(new[] { "Equals(object? obj)", "GetHashCode()", "Test(string text)", "Test(string text, string moreText)", "ToString()" },
+                         completions.Items.Select(c => c.Label));
+#else
             Assert.Equal(new[] { "Equals(object obj)", "GetHashCode()", "Test(string text)", "Test(string text, string moreText)", "ToString()" },
                          completions.Items.Select(c => c.Label));
+#endif
             Assert.Equal(new[] { "Equals", "GetHashCode", "Test", "Test", "ToString" },
                          completions.Items.Select(c => c.TextEdit.NewText));
 
@@ -672,8 +677,13 @@ class FooChild : Foo
 ";
 
             var completions = await FindCompletionsAsync(filename, source, SharedOmniSharpTestHost);
+#if NETCOREAPP
+            Assert.Equal(new[] { "Equals(object? obj)", "GetHashCode()", "Test(string text)", "Test(string text, string moreText)", "ToString()" },
+                         completions.Items.Select(c => c.Label));
+#else
             Assert.Equal(new[] { "Equals(object obj)", "GetHashCode()", "Test(string text)", "Test(string text, string moreText)", "ToString()" },
                          completions.Items.Select(c => c.Label));
+#endif
 
             Assert.Equal(new[] { "public override bool Equals(object obj)\n    {\n        return base.Equals(obj);$0\n    \\}",
                                  "public override int GetHashCode()\n    {\n        return base.GetHashCode();$0\n    \\}",
@@ -731,9 +741,13 @@ namespace N3
 
             using var host = GetAsyncCompletionAndImportCompletionHost();
             var completions = await FindCompletionsAsync(filename, source, host);
+#if NETCOREAPP
+            Assert.Equal(new[] { "Equals(object? obj)", "GetHashCode()", "GetN1()", "ToString()" },
+                         completions.Items.Select(c => c.Label));
+#else
             Assert.Equal(new[] { "Equals(object obj)", "GetHashCode()", "GetN1()", "ToString()" },
                          completions.Items.Select(c => c.Label));
-
+#endif
             Assert.Equal(new[] { "Equals", "GetHashCode", "GetN1", "ToString" },
                          completions.Items.Select(c => c.TextEdit.NewText));
 
@@ -777,8 +791,13 @@ namespace N3
 }";
 
             var completions = await FindCompletionsAsync(filename, source, SharedOmniSharpTestHost);
+#if NETCOREAPP
+            Assert.Equal(new[] { "Equals(object? obj)", "GetHashCode()", "GetN1()", "ToString()" },
+                         completions.Items.Select(c => c.Label));
+#else
             Assert.Equal(new[] { "Equals(object obj)", "GetHashCode()", "GetN1()", "ToString()" },
                          completions.Items.Select(c => c.Label));
+#endif
 
             Assert.Equal(new[] { "public override bool Equals(object obj)\n        {\n            return base.Equals(obj);$0\n        \\}",
                                  "public override int GetHashCode()\n        {\n            return base.GetHashCode();$0\n        \\}",
@@ -821,9 +840,13 @@ class C
 
             using var host = GetAsyncCompletionAndImportCompletionHost();
             var completions = await FindCompletionsAsync(filename, source, host);
+#if NETCOREAPP
+            Assert.Equal(new[] { "Equals(object? obj)", "GetHashCode()", "ToString()" },
+                         completions.Items.Select(c => c.Label));
+#else
             Assert.Equal(new[] { "Equals(object obj)", "GetHashCode()", "ToString()" },
                          completions.Items.Select(c => c.Label));
-
+#endif
             Assert.Equal(new[] { "Equals", "GetHashCode", "ToString" },
                          completions.Items.Select(c => c.TextEdit.NewText));
 
@@ -853,8 +876,13 @@ class C
 }";
 
             var completions = await FindCompletionsAsync(filename, source, SharedOmniSharpTestHost);
+#if NETCOREAPP
+            Assert.Equal(new[] { "Equals(object? obj)", "GetHashCode()", "ToString()" },
+                         completions.Items.Select(c => c.Label));
+#else
             Assert.Equal(new[] { "Equals(object obj)", "GetHashCode()", "ToString()" },
                          completions.Items.Select(c => c.Label));
+#endif
 
             Assert.Equal(new[] { "bool Equals(object obj)\n    {\n        return base.Equals(obj);$0\n    \\}",
                                  "int GetHashCode()\n    {\n        return base.GetHashCode();$0\n    \\}",
@@ -885,8 +913,13 @@ class C
 
             using var host = GetAsyncCompletionAndImportCompletionHost();
             var completions = await FindCompletionsAsync(filename, source, host);
+#if NETCOREAPP
+            Assert.Equal(new[] { "Equals(object? obj)", "GetHashCode()", "ToString()" },
+                         completions.Items.Select(c => c.Label));
+#else
             Assert.Equal(new[] { "Equals(object obj)", "GetHashCode()", "ToString()" },
                          completions.Items.Select(c => c.Label));
+#endif
 
             Assert.Equal(new[] { "Equals", "GetHashCode", "ToString" },
                          completions.Items.Select(c => c.TextEdit.NewText));
@@ -916,8 +949,13 @@ class C
 }";
 
             var completions = await FindCompletionsAsync(filename, source, SharedOmniSharpTestHost);
+#if NETCOREAPP
+            Assert.Equal(new[] { "Equals(object? obj)", "GetHashCode()", "ToString()" },
+                         completions.Items.Select(c => c.Label));
+#else
             Assert.Equal(new[] { "Equals(object obj)", "GetHashCode()", "ToString()" },
                          completions.Items.Select(c => c.Label));
+#endif
 
             Assert.Equal(new[] { "public override bool Equals(object obj)\n    {\n        return base.Equals(obj);$0\n    \\}",
                                  "public override int GetHashCode()\n    {\n        return base.GetHashCode();$0\n    \\}",
@@ -941,8 +979,13 @@ class C
 
             using var host = GetAsyncCompletionAndImportCompletionHost();
             var completions = await FindCompletionsAsync(filename, source, host);
+#if NETCOREAPP
+            Assert.Equal(new[] { "Equals(object? obj)" },
+                         completions.Items.Select(c => c.Label));
+#else
             Assert.Equal(new[] { "Equals(object obj)" },
                          completions.Items.Select(c => c.Label));
+#endif
 
             Assert.Equal(new[] { "Equals" },
                          completions.Items.Select(c => c.TextEdit.NewText));
@@ -973,8 +1016,13 @@ class C
 }";
 
             var completions = await FindCompletionsAsync(filename, source, SharedOmniSharpTestHost);
+#if NETCOREAPP
+            Assert.Equal(new[] { "Equals(object? obj)" },
+                         completions.Items.Select(c => c.Label));
+#else
             Assert.Equal(new[] { "Equals(object obj)" },
                          completions.Items.Select(c => c.Label));
+#endif
 
             Assert.Equal(new[] { "Equals(object obj)\n    {\n        return base.Equals(obj);$0\n    \\}" },
                          completions.Items.Select(c => c.TextEdit.NewText));
@@ -1004,8 +1052,13 @@ class Derived : Base
 
             using var host = GetAsyncCompletionAndImportCompletionHost();
             var completions = await FindCompletionsAsync(filename, source, host);
+#if NETCOREAPP
+            Assert.Equal(new[] { "Equals(object? obj)", "GetHashCode()", "Test()", "ToString()" },
+                         completions.Items.Select(c => c.Label));
+#else
             Assert.Equal(new[] { "Equals(object obj)", "GetHashCode()", "Test()", "ToString()" },
                          completions.Items.Select(c => c.Label));
+#endif
 
             Assert.Equal(new[] { "Equals", "GetHashCode", "Test", "ToString" },
                          completions.Items.Select(c => c.TextEdit.NewText));
@@ -1041,8 +1094,13 @@ class Derived : Base
 }";
 
             var completions = await FindCompletionsAsync(filename, source, SharedOmniSharpTestHost);
+#if NETCOREAPP
+            Assert.Equal(new[] { "Equals(object? obj)", "GetHashCode()", "Test()", "ToString()" },
+                         completions.Items.Select(c => c.Label));
+#else
             Assert.Equal(new[] { "Equals(object obj)", "GetHashCode()", "Test()", "ToString()" },
                          completions.Items.Select(c => c.Label));
+#endif
 
             Assert.Equal(new[] { "public override bool Equals(object obj)\n    {\n        return base.Equals(obj);$0\n    \\}",
                                  "public override int GetHashCode()\n    {\n        return base.GetHashCode();$0\n    \\}",
@@ -1524,8 +1582,13 @@ class C
 
             using var host = GetAsyncCompletionAndImportCompletionHost();
             var completions = await FindCompletionsAsync(filename, source, host);
+#if NETCOREAPP
+            Assert.Equal(new[] { "Equals(object? obj)", "GetHashCode()", "ToString()" },
+                         completions.Items.Select(c => c.Label));
+#else
             Assert.Equal(new[] { "Equals(object obj)", "GetHashCode()", "ToString()" },
                          completions.Items.Select(c => c.Label));
+#endif
 
             Assert.Equal(new[] { "Equals", "GetHashCode", "ToString" },
                          completions.Items.Select(c => c.TextEdit.NewText));
@@ -1556,8 +1619,13 @@ class C
 }";
 
             var completions = await FindCompletionsAsync(filename, source, SharedOmniSharpTestHost);
+#if NETCOREAPP
+            Assert.Equal(new[] { "Equals(object? obj)", "GetHashCode()", "ToString()" },
+                         completions.Items.Select(c => c.Label));
+#else
             Assert.Equal(new[] { "Equals(object obj)", "GetHashCode()", "ToString()" },
                          completions.Items.Select(c => c.Label));
+#endif
 
             Assert.Equal(new[] { "public override bool Equals(object obj)\n    {\n        return base.Equals(obj);$0\n    \\}",
                                  "public override int GetHashCode()\n    {\n        return base.GetHashCode();$0\n    \\}",
@@ -2087,7 +2155,7 @@ public class Derived : Base
             Assert.Equal("OnEnable()\n    {\n        base.OnEnable();$0\n    \\}", onEnable.TextEdit.NewText);
         }
 
-        [ConditionalTheory(typeof(WindowsOnly))]
+        [ConditionalTheory(typeof(WindowsOnly), typeof(DesktopRuntimeOnly))]
         [InlineData("dummy.cs")]
         [InlineData("dummy.csx")]
         public async Task RegexCompletionInNormalString(string filename)
@@ -2108,7 +2176,7 @@ class Foo
             Assert.Equal(@"\\A", aCompletion.TextEdit.NewText);
         }
 
-        [ConditionalTheory(typeof(WindowsOnly))]
+        [ConditionalTheory(typeof(WindowsOnly), typeof(DesktopRuntimeOnly))]
         [InlineData("dummy.cs")]
         [InlineData("dummy.csx")]
         public async Task RegexCompletionInVerbatimString(string filename)
@@ -2152,10 +2220,40 @@ class Program
             }
         }
 
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task TestOverrideWithTrailingWhitespacePrior(string filename)
+        {
+            const string input = @"
+namespace N
+{
+    internal class C
+    {	
+// The trailing tabs on the previous line and the next line are integral to this bug
+	
+        override $$
+        public C()
+        {
+        }
+    }
+}
+";
+
+            var completions = await FindCompletionsAsync(filename, input, SharedOmniSharpTestHost);
+
+            foreach (var item in completions.Items)
+            {
+                Assert.Single(item.AdditionalTextEdits);
+                Assert.Equal("\n        // The trailing tabs on the previous line and the next line are integral to this bug\n\n", NormalizeNewlines(item.AdditionalTextEdits[0].NewText));
+                Assert.StartsWith("        public override ", item.TextEdit.NewText);
+            }
+        }
+
         private CompletionService GetCompletionService(OmniSharpTestHost host)
             => host.GetRequestHandler<CompletionService>(EndpointName);
 
-        protected async Task<CompletionResponse> FindCompletionsAsync(string filename, string source, OmniSharpTestHost testHost, char? triggerChar = null, TestFile[] additionalFiles = null)
+        protected async Task<CompletionResponse> FindCompletionsAsync(string filename, string source, OmniSharpTestHost testHost, char? triggerChar = null, TestFile[] additionalFiles = null, bool forceExpandedCompletionIndexCreation = false)
         {
             var testFile = new TestFile(filename, source);
 
@@ -2180,32 +2278,11 @@ class Program
 
             var requestHandler = GetCompletionService(testHost);
 
-            return await requestHandler.Handle(request);
+            return await requestHandler.Handle(request, forceExpandedCompletionIndexCreation);
         }
 
-        private async Task<CompletionResponse> FindCompletionsWithImportedAsync(string filename, string source, OmniSharpTestHost host)
-        {
-            var completions = await FindCompletionsAsync(filename, source, host);
-            if (!completions.IsIncomplete)
-            {
-                return completions;
-            }
-
-            // Populating the completion list should take no more than a few ms, don't let it take too
-            // long
-            CancellationTokenSource cts = new CancellationTokenSource(millisecondsDelay: ImportCompletionTimeout);
-            await Task.Run(async () =>
-            {
-                while (completions.IsIncomplete)
-                {
-                    completions = await FindCompletionsAsync(filename, source, host);
-                    cts.Token.ThrowIfCancellationRequested();
-                }
-            }, cts.Token);
-
-            Assert.False(completions.IsIncomplete);
-            return completions;
-        }
+        private Task<CompletionResponse> FindCompletionsWithImportedAsync(string filename, string source, OmniSharpTestHost host)
+            => FindCompletionsAsync(filename, source, host, forceExpandedCompletionIndexCreation: true);
 
         protected async Task<CompletionResolveResponse> ResolveCompletionAsync(CompletionItem completionItem, OmniSharpTestHost testHost)
             => await GetCompletionService(testHost).Handle(new CompletionResolveRequest { Item = completionItem });

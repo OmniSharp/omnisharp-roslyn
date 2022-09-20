@@ -19,18 +19,23 @@ using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Extensions;
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
+using Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.Formatting;
 using Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.MetadataAsSource;
 using Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.CSharp.DocumentationComments;
+using OmniSharp.Options;
+using OmniSharp.Roslyn.CSharp.Workers.Formatting;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Decompilation
 {
     public class OmniSharpCSharpDecompiledSourceService
     {
+        private readonly OmniSharpOptions _omnisharpOptions;
         private readonly ILoggerFactory _loggerFactory;
         private static readonly FileVersionInfo decompilerVersion = FileVersionInfo.GetVersionInfo(typeof(CSharpDecompiler).Assembly.Location);
 
-        public OmniSharpCSharpDecompiledSourceService(ILoggerFactory loggerFactory)
+        public OmniSharpCSharpDecompiledSourceService(OmniSharpOptions omnisharpOptions, ILoggerFactory loggerFactory)
         {
+            _omnisharpOptions = omnisharpOptions;
             _loggerFactory = loggerFactory;
         }
 
@@ -58,9 +63,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Decompilation
             var node = await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
 
             // Apply formatting rules
-            document = await Formatter.FormatAsync(
-                  document, new[] { node.FullSpan },
-                  options: null, cancellationToken).ConfigureAwait(false);
+
+            var options = await FormattingWorker.GetFormattingOptionsAsync(document, _omnisharpOptions).ConfigureAwait(false);
+            document = await OmniSharpFormatter.FormatAsync(document, new[] { node.FullSpan }, options, cancellationToken).ConfigureAwait(false);
 
             return document;
         }
@@ -99,7 +104,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Decompilation
                     SyntaxFactory.CarriageReturnLineFeed,
                     SyntaxFactory.Comment("// " + assemblyPath),
                     SyntaxFactory.CarriageReturnLineFeed,
-                    SyntaxFactory.Comment($"// Decompiled with ICSharpCode.Decompiler {decompilerVersion.FileVersion}"),
+                    SyntaxFactory.Comment($"// Decompiled with ICSharpCode.Decompiler {GetVersion(decompilerVersion)}"),
                     SyntaxFactory.CarriageReturnLineFeed,
                     SyntaxFactory.Trivia(SyntaxFactory.EndRegionDirectiveTrivia(true)),
                     SyntaxFactory.CarriageReturnLineFeed,
@@ -107,6 +112,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Decompilation
                 });
 
             return document.WithSyntaxRoot(newRoot);
+
+            static string GetVersion(FileVersionInfo versionInfo) => versionInfo.ProductVersion.Split('-')[0];
         }
 
         private async Task<Document> ConvertDocCommentsToRegularCommentsAsync(Document document, CancellationToken cancellationToken)

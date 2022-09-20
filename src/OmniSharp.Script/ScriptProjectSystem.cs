@@ -67,7 +67,7 @@ namespace OmniSharp.Script
 
             if (allCsxFiles.Length == 0)
             {
-                _logger.LogInformation("Could not find any CSX files");
+                _logger.LogInformation("Did not find any CSX files");
                 Initialized = true;
 
                 // Watch CSX files in order to add/remove them in workspace

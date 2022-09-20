@@ -18,34 +18,9 @@ namespace OmniSharp.MSBuild.Discovery
 
             if (bestInstanceFound != null)
             {
-                // Did we end up choosing the standalone MSBuild because there was an invalid Visual Studio?
-                // If so, provide a helpful message to the user.
-                if (invalidVSFound && bestInstanceFound.DiscoveryType == DiscoveryType.StandAlone)
-                {
-                    logger.LogWarning(
-                        $@"It looks like you have Visual Studio lower than VS 2019 {s_minimumMSBuildVersion} installed.
- Try updating Visual Studio to the most recent release to enable better MSBuild support."
-                    );
-                }
-
-                if (vsWithoutSdkResolver && bestInstanceFound.DiscoveryType == DiscoveryType.StandAlone)
-                {
-                    logger.LogWarning(
-                        @"It looks like you have Visual Studio 2019 installed without .NET Core SDK support which is required by OmniSharp.
- Try updating Visual Studio 2019 installation with .NET Core SDK to enable better MSBuild support."
-                    );
-                }
-
                 if (bestInstanceFound.Version < minimumMSBuildVersion)
                 {
-                    if (bestInstanceFound.DiscoveryType == DiscoveryType.StandAlone)
-                    {
-                        logger.LogWarning(
-                            $@"It looks like the included version of MSBuild is lower than {minimumMSBuildVersion} which is the minimum supported by the configured .NET Core Sdk.
- Try installing MSBuild version {minimumMSBuildVersion} or higher to enable better .NET Core Sdk support."
-                        );
-                    }
-                    else if (bestInstanceFound.DiscoveryType == DiscoveryType.Mono)
+                    if (bestInstanceFound.DiscoveryType == DiscoveryType.Mono)
                     {
                         logger.LogWarning(
                             $@"It looks like you have Mono installed which contains a MSBuild lower than {minimumMSBuildVersion} which is the minimum supported by the configured .NET Core Sdk.
@@ -72,7 +47,7 @@ namespace OmniSharp.MSBuild.Discovery
             }
             else
             {
-                logger.LogError("Could not locate MSBuild instance to register with OmniSharp");
+                throw new MSBuildNotFoundException("Could not locate MSBuild instance to register with OmniSharp.");
             }
         }
 
@@ -146,9 +121,6 @@ namespace OmniSharp.MSBuild.Discovery
             else
                 return int.MinValue;
 
-            if (i.DiscoveryType == DiscoveryType.StandAlone)
-                score--;
-
             return score;
         }
 
@@ -163,7 +135,7 @@ namespace OmniSharp.MSBuild.Discovery
 
             var version = dotNetInfo.SdkVersion;
             var sdksPath = dotNetInfo.SdksPath;
-            var minimumVersionPath = Path.Combine(sdksPath, version.ToNormalizedString(), "minimumMSBuildVersion");
+            var minimumVersionPath = Path.Combine(sdksPath, version.ToString(), "minimumMSBuildVersion");
 
             if (!File.Exists(minimumVersionPath))
             {

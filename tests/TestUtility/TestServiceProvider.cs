@@ -14,9 +14,9 @@ using Microsoft.VisualStudio.TestPlatform.PlatformAbstractions.Interfaces;
 using OmniSharp;
 using OmniSharp.Eventing;
 using OmniSharp.FileWatching;
-using OmniSharp.Host.Services;
 using OmniSharp.MSBuild.Discovery;
 using OmniSharp.Options;
+using OmniSharp.Roslyn.Utilities;
 using OmniSharp.Services;
 using OmniSharp.Utilities;
 using TestUtility.Logging;
@@ -85,9 +85,9 @@ namespace TestUtility
             var assemblyLoader = CreateAssemblyLoader(loggerFactory);
             var dotNetCliService = CreateDotNetCliService(dotNetCliVersion, loggerFactory, environment, eventEmitter);
             var configuration = CreateConfiguration(configurationData);
-            var msbuildLocator = CreateMSBuildLocator(loggerFactory, assemblyLoader);
+            var msbuildLocator = CreateMSBuildLocator(loggerFactory, assemblyLoader, configurationData);
             var sharedTextWriter = CreateSharedTextWriter(testOutput);
-            var analyzerAssemblyLoader = new AnalyzerAssemblyLoader();
+            var analyzerAssemblyLoader = ShadowCopyAnalyzerAssemblyLoader.Instance;
 
             return new TestServiceProvider(
                 environment, loggerFactory, assemblyLoader, analyzerAssemblyLoader, sharedTextWriter,
@@ -166,8 +166,9 @@ namespace TestUtility
         }
 
         private static IMSBuildLocator CreateMSBuildLocator(ILoggerFactory loggerFactory,
-            IAssemblyLoader assemblyLoader)
-            => MSBuildLocator.CreateStandAlone(loggerFactory, assemblyLoader);
+            IAssemblyLoader assemblyLoader,
+            IConfiguration configurationData = null)
+            => MSBuildLocator.CreateDefault(loggerFactory, assemblyLoader, configurationData);
 
         private static ISharedTextWriter CreateSharedTextWriter(ITestOutputHelper testOutput)
             => new TestSharedTextWriter(testOutput);

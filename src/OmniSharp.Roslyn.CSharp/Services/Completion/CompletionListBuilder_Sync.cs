@@ -4,9 +4,11 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.Completion;
 using Microsoft.CodeAnalysis.Completion;
 using Microsoft.CodeAnalysis.Text;
+using OmniSharp.Extensions;
 using OmniSharp.Models;
 using OmniSharp.Models.v1.Completion;
 using OmniSharp.Roslyn.CSharp.Helpers;
+using OmniSharp.Roslyn.Utilities;
 using OmniSharp.Utilities;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -33,29 +35,32 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
             bool expectingImportedItems,
             bool isSuggestionMode)
         {
-            var completionsBuilder = new List<CompletionItem>(completions.Items.Length);
+            var completionsBuilder = new List<CompletionItem>(completions.ItemsList.Count);
             var seenUnimportedCompletions = false;
             var commitCharacterRuleCache = new Dictionary<ImmutableArray<CharacterSetModificationRule>, IReadOnlyList<char>>();
             var commitCharacterRuleBuilder = new HashSet<char>();
 
-            var completionTasksAndProviderNames = completions.Items.SelectAsArray((document, completionService), (completion, arg) =>
+            var completionTasksAndProviderNamesBuilder = ImmutableArray.CreateBuilder<(Task<CompletionChange>?, string? providerName)>();
+            for (int i = 0; i < completions.ItemsList.Count; i++)
             {
+                var completion = completions.ItemsList[i];
                 var providerName = completion.GetProviderName();
                 if (providerName is TypeImportCompletionProvider or
                                     ExtensionMethodImportCompletionProvider)
                 {
-                    return (null, providerName);
+                    completionTasksAndProviderNamesBuilder.Add((null, providerName));
                 }
                 else
                 {
-                    return ((Task<CompletionChange>?)arg.completionService.GetChangeAsync(arg.document, completion), providerName);
+                    completionTasksAndProviderNamesBuilder.Add(((Task<CompletionChange>?)completionService.GetChangeAsync(document, completion), providerName));
                 }
-            });
+            }
+            var completionTasksAndProviderNames = completionTasksAndProviderNamesBuilder.ToImmutable();
 
-            for (int i = 0; i < completions.Items.Length; i++)
+            for (int i = 0; i < completions.ItemsList.Count; i++)
             {
                 TextSpan changeSpan = typedSpan;
-                var completion = completions.Items[i];
+                var completion = completions.ItemsList[i];
                 var insertTextFormat = InsertTextFormat.PlainText;
                 string labelText = completion.DisplayTextPrefix + completion.DisplayText + completion.DisplayTextSuffix;
                 List<LinePositionSpanTextChange>? additionalTextEdits = null;
@@ -148,6 +153,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
             // span.
             var adjustedNewPosition = change!.NewPosition;
 
+            var cursorPoint = sourceText.GetPointFromPosition(position);
+            var lineStartPosition = sourceText.GetPositionFromLineAndOffset(cursorPoint.Line, offset: 0);
+
             // There must be at least one change that affects the current location, or something is seriously wrong
             Debug.Assert(change.TextChanges.Any(change => change.Span.IntersectsWith(position)));
 
@@ -155,31 +163,57 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
             {
                 if (!textChange.Span.IntersectsWith(position))
                 {
-                    additionalTextEdits ??= new();
-                    additionalTextEdits.Add(GetChangeForTextAndSpan(textChange.NewText!, textChange.Span, sourceText));
-
-                    if (adjustedNewPosition is int newPosition)
-                    {
-                        // Find the diff between the original text length and the new text length.
-                        var diff = (textChange.NewText?.Length ?? 0) - textChange.Span.Length;
-
-                        // If the new text is longer than the replaced text, we want to subtract that
-                        // length from the current new position to find the adjusted position in the old
-                        // document. If the new text was shorter, diff will be negative, and subtracting
-                        // will result in increasing the adjusted position as expected
-                        adjustedNewPosition = newPosition - diff;
-                    }
+                    handleNonInsertsectingEdit(sourceText, ref additionalTextEdits, ref adjustedNewPosition, textChange);
                 }
                 else
                 {
                     // Either there should be no new position, or it should be within the text that is being added
                     // by this change.
+                    int changeSpanStart = textChange.Span.Start;
                     Debug.Assert(adjustedNewPosition is null ||
-                        (adjustedNewPosition.Value <= textChange.Span.Start + textChange.NewText!.Length) &&
-                        (adjustedNewPosition.Value >= textChange.Span.Start));
+                        (adjustedNewPosition.Value <= changeSpanStart + textChange.NewText!.Length) &&
+                        (adjustedNewPosition.Value >= changeSpanStart));
 
-                    changeSpan = textChange.Span;
-                    (insertText, insertTextFormat) = getPossiblySnippetizedInsertText(textChange, adjustedNewPosition);
+                    // Filtering needs a range that is a _single_ line. Consider a case like this (whitespace documented with escapes):
+                    //
+                    // 1: class C
+                    // 2: {\t\r\n
+                    // 3:    override $$
+                    //
+                    // Roslyn will see the trailing \t on line 2 and remove it when creating the _main_ text change. However, that will
+                    // break filtering because filtering expects a single line as part of the range. So what we want to do is break the
+                    // the text change up into two: one to cover the previous line, as an additional edit, and then one to cover the
+                    // rest of the change.
+
+                    var updatedChange = textChange;
+
+                    if (changeSpanStart < lineStartPosition)
+                    {
+                        // We know we're in the special case. In order to correctly determine the amount of leading newlines to trim, we want
+                        // to calculate the number of lines before the cursor we're editing
+                        var editStartPoint = sourceText.GetPointFromPosition(changeSpanStart);
+                        var numLinesEdited = cursorPoint.Line - editStartPoint.Line;
+
+                        Debug.Assert(textChange.NewText != null);
+
+                        // Now count that many newlines forward in the edited text
+                        int cutoffPosition = 0;
+                        for (int numNewlinesFound = 0; numNewlinesFound < numLinesEdited; cutoffPosition++)
+                        {
+                            if (textChange.NewText![cutoffPosition] == '\n')
+                            {
+                                numNewlinesFound++;
+                            }
+                        }
+
+                        // Now that we've found the cuttoff, we can build our two subchanges
+                        var prefixChange = new TextChange(new TextSpan(changeSpanStart, length: lineStartPosition - changeSpanStart), textChange.NewText!.Substring(0, cutoffPosition));
+                        handleNonInsertsectingEdit(sourceText, ref additionalTextEdits, ref adjustedNewPosition, prefixChange);
+                        updatedChange = new TextChange(new TextSpan(lineStartPosition, length: textChange.Span.End - lineStartPosition), textChange.NewText.Substring(cutoffPosition));
+                    }
+
+                    changeSpan = updatedChange.Span;
+                    (insertText, insertTextFormat) = getPossiblySnippetizedInsertText(updatedChange, adjustedNewPosition);
 
                     // If we're expecting there to be unimported types, put in an explicit sort text to put things already in scope first.
                     // Otherwise, omit the sort text if it's the same as the label to save on space.
@@ -235,6 +269,24 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                 var afterText = LspSnippetHelpers.Escape(change.NewText.Substring(midpoint));
 
                 return ($"{beforeText}$0{afterText}", InsertTextFormat.Snippet);
+            }
+
+            static void handleNonInsertsectingEdit(SourceText sourceText, ref List<LinePositionSpanTextChange>? additionalTextEdits, ref int? adjustedNewPosition, TextChange textChange)
+            {
+                additionalTextEdits ??= new();
+                additionalTextEdits.Add(TextChanges.Convert(sourceText, textChange));
+
+                if (adjustedNewPosition is int newPosition)
+                {
+                    // Find the diff between the original text length and the new text length.
+                    var diff = (textChange.NewText?.Length ?? 0) - textChange.Span.Length;
+
+                    // If the new text is longer than the replaced text, we want to subtract that
+                    // length from the current new position to find the adjusted position in the old
+                    // document. If the new text was shorter, diff will be negative, and subtracting
+                    // will result in increasing the adjusted position as expected
+                    adjustedNewPosition = newPosition - diff;
+                }
             }
         }
 

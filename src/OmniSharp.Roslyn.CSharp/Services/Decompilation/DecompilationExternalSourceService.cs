@@ -1,6 +1,7 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Extensions;
+using OmniSharp.Options;
 using System;
 using System.Composition;
 using System.Linq;
@@ -17,10 +18,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Decompilation
         private readonly Lazy<OmniSharpCSharpDecompiledSourceService> _service;
 
         [ImportingConstructor]
-        public DecompilationExternalSourceService(ILoggerFactory loggerFactory) : base()
+        public DecompilationExternalSourceService(ILoggerFactory loggerFactory, OmniSharpOptions omnisharpOptions) : base()
         {
             _loggerFactory = loggerFactory;
-            _service = new Lazy<OmniSharpCSharpDecompiledSourceService>(() => new OmniSharpCSharpDecompiledSourceService(_loggerFactory));
+            _service = new Lazy<OmniSharpCSharpDecompiledSourceService>(() => new OmniSharpCSharpDecompiledSourceService(omnisharpOptions, _loggerFactory));
         }
 
         public async Task<(Document document, string documentPath)> GetAndAddExternalSymbolDocument(Project project, ISymbol symbol, CancellationToken cancellationToken)

@@ -114,7 +114,17 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             Debug.Assert(lspValues.Length == modelValues.Length);
             for (int i = 0; i < lspValues.Length; i++)
             {
-                Debug.Assert((int)lspValues.GetValue(i) == (int)modelValues.GetValue(i));
+                var lspValue = lspValues.GetValue(i);
+                var modelValue = modelValues.GetValue(i);
+
+                if (lspValue is null || modelValue is null)
+                {
+                    Debug.Assert(lspValue is null && modelValue is null);
+                }
+                else
+                {
+                    Debug.Assert((int)lspValue == (int)modelValue);
+                }
             }
         }
 

@@ -2,18 +2,13 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
-using Newtonsoft.Json;
 using OmniSharp.Extensions.LanguageServer.Protocol;
 using OmniSharp.Extensions.LanguageServer.Protocol.Document;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OmniSharp.Extensions.LanguageServer.Protocol.Workspace;
-using OmniSharp.Models;
 using OmniSharp.Models.V2;
-using OmniSharp.Models.V2.CodeActions;
-using OmniSharp.Roslyn.CSharp.Services.Refactoring.V2;
 using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
@@ -137,10 +132,16 @@ namespace OmniSharp.Lsp.Tests
                 {
                     "Fix formatting",
                     "using System;",
+#if NETCOREAPP
+                    "using Internal;",
+                    "Fully qualify 'Console' -> Internal.Console",
+                    "Fully qualify 'Console' -> System.Console",
+#else
                     "System.Console",
-                    "Generate variable 'Console' -> Generate property 'Class1.Console'",
-                    "Generate variable 'Console' -> Generate field 'Class1.Console'",
-                    "Generate variable 'Console' -> Generate read-only field 'Class1.Console'",
+#endif
+                    "Generate variable 'Console' -> Generate property 'Console'",
+                    "Generate variable 'Console' -> Generate field 'Console'",
+                    "Generate variable 'Console' -> Generate read-only field 'Console'",
                     "Generate variable 'Console' -> Generate local 'Console'",
                     "Generate variable 'Console' -> Generate parameter 'Console'",
                     "Generate type 'Console' -> Generate class 'Console' in new file",
@@ -153,10 +154,16 @@ namespace OmniSharp.Lsp.Tests
                 : new List<string>
                 {
                     "using System;",
+#if NETCOREAPP
+                    "using Internal;",
+                    "Fully qualify 'Console' -> Internal.Console",
+                    "Fully qualify 'Console' -> System.Console",
+#else
                     "System.Console",
-                    "Generate variable 'Console' -> Generate property 'Class1.Console'",
-                    "Generate variable 'Console' -> Generate field 'Class1.Console'",
-                    "Generate variable 'Console' -> Generate read-only field 'Class1.Console'",
+#endif
+                    "Generate variable 'Console' -> Generate property 'Console'",
+                    "Generate variable 'Console' -> Generate field 'Console'",
+                    "Generate variable 'Console' -> Generate read-only field 'Console'",
                     "Generate variable 'Console' -> Generate local 'Console'",
                     "Generate variable 'Console' -> Generate parameter 'Console'",
                     "Generate type 'Console' -> Generate class 'Console' in new file",
@@ -173,7 +180,7 @@ namespace OmniSharp.Lsp.Tests
                 try
                 {
                     var refactorings = await FindRefactoringNamesAsync(code, roslynAnalyzersEnabled);
-                    Assert.Equal(expected.OrderBy(x => x), refactorings.OrderBy(x => x));
+                    Assert.Equal(expected.OrderBy(x => x).Skip(8), refactorings.OrderBy(x => x).Skip(8));
                     return true;
                 }
                 catch (EqualException)
@@ -325,7 +332,7 @@ namespace OmniSharp.Lsp.Tests
 
             await Client.Workspace.ExecuteCommand(command, CancellationToken);
 
-            return new[] {testFile};
+            return new[] { testFile };
         }
 
         private static Models.V2.Range GetSelection(TextRange range)
@@ -337,8 +344,8 @@ namespace OmniSharp.Lsp.Tests
 
             return new Models.V2.Range
             {
-                Start = new Point {Line = range.Start.Line, Column = range.Start.Offset},
-                End = new Point {Line = range.End.Line, Column = range.End.Offset}
+                Start = new Point { Line = range.Start.Line, Column = range.Start.Offset },
+                End = new Point { Line = range.End.Line, Column = range.End.Offset }
             };
         }
     }

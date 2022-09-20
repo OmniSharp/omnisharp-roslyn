@@ -11,7 +11,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities;
 using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
-using NuGet.Versioning;
 using OmniSharp.DotNetTest.Models;
 using OmniSharp.DotNetTest.Models.Events;
 using OmniSharp.Eventing;
@@ -63,12 +62,18 @@ namespace OmniSharp.DotNetTest
 
             var version = dotNetCli.GetVersion(workingDirectory);
 
+            if (version.HasError)
+            {
+                EmitTestMessage(eventEmitter, TestMessageLevel.Error, version.ErrorMessage);
+                throw new Exception(version.ErrorMessage);
+            }
+
             if (dotNetCli.IsLegacy(version))
             {
                 throw new NotSupportedException("Legacy .NET SDK is not supported");
             }
 
-            return (TestManager)new VSTestManager(project, workingDirectory, dotNetCli, version, eventEmitter, loggerFactory);
+            return (TestManager)new VSTestManager(project, workingDirectory, dotNetCli, version.Version, eventEmitter, loggerFactory);
         }
 
         protected abstract string GetCliTestArguments(int port, int parentProcessId);
@@ -83,7 +88,7 @@ namespace OmniSharp.DotNetTest
         public abstract Task<RunTestResponse> RunTestAsync(string[] methodNames, string runSettings, string testFrameworkName, string targetFrameworkVersion, CancellationToken cancellationToken);
 
         public abstract Task<DiscoverTestsResponse> DiscoverTestsAsync(string runSettings, string testFrameworkName, string targetFrameworkVersion, CancellationToken cancellationToken);
-        
+
         public abstract Task<GetTestStartInfoResponse> GetTestStartInfoAsync(string methodName, string runSettings, string testFrameworkName, string targetFrameworkVersion, CancellationToken cancellationToken);
 
         public abstract Task<DebugTestGetStartInfoResponse> DebugGetStartInfoAsync(string methodName, string runSettings, string testFrameworkName, string targetFrameworkVersion, CancellationToken cancellationToken);
@@ -205,14 +210,19 @@ namespace OmniSharp.DotNetTest
             EventEmitter.Emit("TestCompleted", result);
         }
 
-        protected void EmitTestMessage(TestMessageLevel messageLevel, string message)
+        private static void EmitTestMessage(IEventEmitter eventEmitter, TestMessageLevel messageLevel, string message)
         {
-            EventEmitter.Emit(TestMessageEvent.Id,
+            eventEmitter.Emit(TestMessageEvent.Id,
                 new TestMessageEvent
                 {
                     MessageLevel = messageLevel.ToString().ToLowerInvariant(),
                     Message = message
                 });
+        }
+
+        protected void EmitTestMessage(TestMessageLevel messageLevel, string message)
+        {
+            EmitTestMessage(EventEmitter, messageLevel, message);
         }
 
         protected void EmitTestMessage(TestMessagePayload testMessage)

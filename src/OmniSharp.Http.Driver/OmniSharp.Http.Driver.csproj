@@ -1,12 +1,16 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net472</TargetFramework>
+        <TargetFrameworks>net6.0;net472</TargetFrameworks>
         <PlatformTarget>AnyCPU</PlatformTarget>
         <AssemblyName>OmniSharp</AssemblyName>
         <OutputType>Exe</OutputType>
         <PreserveCompilationContext>true</PreserveCompilationContext>
         <RuntimeIdentifiers>win7-x64;win7-x86;win10-arm64</RuntimeIdentifiers>
+
+        <!-- Always run on the latest runtime installed. -->
+        <RuntimeFrameworkVersion>6.0.0-preview.7.21317.1</RuntimeFrameworkVersion>
+        <RollForward>LatestMajor</RollForward>
     </PropertyGroup>
 
     <ItemGroup>
@@ -15,5 +19,10 @@
 
     <ItemGroup>
         <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" PrivateAssets="All" />
+
+        <!-- An older System.Memory is an implicit dependency, so without this we won't have
+             a new enough System.Memory and we'll get method missing exceptions when we are
+             running with some newer MSBuild versions. -->
+        <PackageReference Include="System.Memory" />
     </ItemGroup>
 </Project>

@@ -22,6 +22,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
         private readonly IEnumerable<ICodeActionProvider> _providers;
         private readonly ILoggerFactory _loggerFactory;
         private readonly DiagnosticEventForwarder _forwarder;
+        private readonly IOptionsMonitor<OmniSharpOptions> _options;
         private ICsDiagnosticWorker _implementation;
         private readonly IDisposable _onChange;
 
@@ -37,6 +38,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
             _providers = providers;
             _loggerFactory = loggerFactory;
             _forwarder = forwarder;
+            _options = options;
             _onChange = options.OnChange(UpdateImplementation);
             UpdateImplementation(options.CurrentValue);
         }
@@ -54,7 +56,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
             }
             else if (!options.RoslynExtensionsOptions.EnableAnalyzersSupport && (firstRun || _implementation is CSharpDiagnosticWorkerWithAnalyzers))
             {
-                var old = Interlocked.Exchange(ref _implementation, new CSharpDiagnosticWorker(_workspace, _forwarder, _loggerFactory));
+                var old = Interlocked.Exchange(ref _implementation, new CSharpDiagnosticWorker(_workspace, _forwarder, _loggerFactory, _options.CurrentValue));
                 if (old is IDisposable disposable)
                 {
                     disposable.Dispose();

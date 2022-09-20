@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 using TestUtility;
 using Xunit;
@@ -87,26 +86,7 @@ namespace OmniSharp.MSBuild.Tests
             Assert.Equal("netcoreapp3.1", project.TargetFrameworks[0].ShortName);
         }
 
-        [Fact]
-        public async Task Net50Solution()
-        {
-            using var testProject = await TestAssets.Instance.GetTestProjectAsync("Net50Project");
-            using var host = CreateMSBuildTestHost(testProject.Directory);
-            var workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
-
-            Assert.NotNull(workspaceInfo.Projects);
-            Assert.Equal(2, workspaceInfo.Projects.Count);
-            var appProject = workspaceInfo.Projects.Single(proj => proj.IsExe);
-            Assert.Equal("console-app", appProject.AssemblyName);
-            Assert.Equal(".NETCoreApp,Version=v5.0", appProject.TargetFramework);
-            Assert.Contains(appProject.TargetFrameworks[0].ShortName, new[] { "net5.0", "netcoreapp5.0" });
-            var libProject = workspaceInfo.Projects.Single(proj => !proj.IsExe);
-            Assert.Equal("net50-lib", libProject.AssemblyName);
-            Assert.Equal(".NETCoreApp,Version=v5.0", libProject.TargetFramework);
-            Assert.Contains(libProject.TargetFrameworks[0].ShortName, new[] { "net50", "net5.0" });
-        }
-
-        [Fact]
+        [ConditionalFact(typeof(NonMonoRuntimeOnly))]
         public async Task Net60Project()
         {
             using var testProject = await TestAssets.Instance.GetTestProjectAsync("Net60Project");
@@ -118,6 +98,20 @@ namespace OmniSharp.MSBuild.Tests
             Assert.Equal("Net60Project", project.AssemblyName);
             Assert.Equal(".NETCoreApp,Version=v6.0", project.TargetFramework);
             Assert.Contains(project.TargetFrameworks[0].ShortName, new[] { "net60", "net6.0" });
+        }
+
+        [ConditionalFact(typeof(NonMonoRuntimeOnly))]
+        public async Task Net70Project()
+        {
+            using var testProject = await TestAssets.Instance.GetTestProjectAsync("Net70Project");
+            using var host = CreateMSBuildTestHost(testProject.Directory);
+            var workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
+
+            Assert.NotNull(workspaceInfo.Projects);
+            var project = Assert.Single(workspaceInfo.Projects);
+            Assert.Equal("Net70Project", project.AssemblyName);
+            Assert.Equal(".NETCoreApp,Version=v7.0", project.TargetFramework);
+            Assert.Contains(project.TargetFrameworks[0].ShortName, new[] { "net70", "net7.0" });
         }
 
         [Fact]
@@ -142,7 +136,7 @@ namespace OmniSharp.MSBuild.Tests
             Assert.Equal("netstandard1.3", secondProject.TargetFrameworks[0].ShortName);
         }
 
-        [Fact]
+        [Fact(Skip = "https://github.com/dotnet/msbuild/pull/7642")]
         public async Task TwoProjectsWithSolutionAndCustomConfigurations()
         {
             var configData = new Dictionary<string, string> { [$"MsBuild:{nameof(Options.MSBuildOptions.Configuration)}"] = "ReleaseSln" };

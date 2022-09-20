@@ -1,8 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using System;
 using System.Collections.Immutable;
-using System.Diagnostics;
 using System.IO;
 
 namespace OmniSharp.MSBuild.Discovery.Providers
@@ -11,10 +9,10 @@ namespace OmniSharp.MSBuild.Discovery.Providers
     {
         private readonly MSBuildOverrideOptions _options;
 
-        public UserOverrideInstanceProvider(ILoggerFactory loggerFactory, IConfiguration configuration)
+        public UserOverrideInstanceProvider(ILoggerFactory loggerFactory, IConfiguration msbuildConfiguration)
             : base(loggerFactory)
         {
-            _options = configuration.GetSection("msbuildoverride").Get<MSBuildOverrideOptions>();
+            _options = msbuildConfiguration?.GetSection("msbuildoverride").Get<MSBuildOverrideOptions>();
         }
 
         public override ImmutableArray<MSBuildInstance> GetInstances()
@@ -35,7 +33,6 @@ namespace OmniSharp.MSBuild.Discovery.Providers
                     DiscoveryType.UserOverride,
                     _options.PropertyOverrides?.ToImmutableDictionary()));
             return builder.ToImmutable();
-
         }
     }
 }

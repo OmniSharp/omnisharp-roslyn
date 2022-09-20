@@ -3,9 +3,9 @@ using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using Microsoft.Extensions.Logging;
-using OmniSharp.Utilities;
 using MicrosoftBuildLocator = Microsoft.Build.Locator.MSBuildLocator;
 using MicrosoftDiscoveryType = Microsoft.Build.Locator.DiscoveryType;
+using OmniSharp.Utilities;
 
 namespace OmniSharp.MSBuild.Discovery.Providers
 {
@@ -23,19 +23,18 @@ namespace OmniSharp.MSBuild.Discovery.Providers
                 return NoInstances;
             }
 
-            var instances = MicrosoftBuildLocator.QueryVisualStudioInstances();
+            return MicrosoftBuildLocator.QueryVisualStudioInstances()
+                .Select(instance =>
+                {
+                    var microsoftBuildPath = Path.Combine(instance.MSBuildPath, "Microsoft.Build.dll");
+                    var version = GetMSBuildVersion(microsoftBuildPath);
 
-            return instances.Select(instance =>
-            {
-                var microsoftBuildPath = Path.Combine(instance.MSBuildPath, "Microsoft.Build.dll");
-                var version = GetMSBuildVersion(microsoftBuildPath);
-
-                return new MSBuildInstance(
-                    $"{instance.Name} {instance.Version}",
-                    instance.MSBuildPath,
-                    version,
-                    GetDiscoveryType(instance.DiscoveryType));
-            }).ToImmutableArray();
+                    return new MSBuildInstance(
+                        $"{instance.Name} {instance.Version}",
+                        instance.MSBuildPath,
+                        version,
+                        GetDiscoveryType(instance.DiscoveryType));
+                }).ToImmutableArray();
 
             static DiscoveryType GetDiscoveryType(MicrosoftDiscoveryType discoveryType)
             {
