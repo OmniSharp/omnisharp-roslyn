@@ -4,6 +4,8 @@ All changes to the project will be documented in this file.
 ## [1.39.2] - not yet released
 * Updated ILSpy to 7.2.1.6856 (PR: [#2447](https://github.com/OmniSharp/omnisharp-roslyn/pull/2447))
 * Include OmniSharp.Cake in .NET 6 builds (PR: [#2455](https://github.com/OmniSharp/omnisharp-roslyn/pull/2455))
+* Implement /v2/highlight for Cake (PR: [#2456](https://github.com/OmniSharp/omnisharp-roslyn/pull/2456))
+
 
 ## [1.39.1] - 2022-07-25
 * Update Roslyn to 4.4.0 1.22369.1 (PR: [#2420](https://github.com/OmniSharp/omnisharp-roslyn/pull/2420))
