@@ -41,7 +41,7 @@ namespace OmniSharp.Cake.Extensions
         {
             var quickFixes = new List<QuickFix>();
 
-            foreach (var quickFix in response.QuickFixes)
+            foreach (var quickFix in response.QuickFixes ?? Enumerable.Empty<QuickFix>())
             {
                 await quickFix.TranslateAsync(workspace, request);
 
