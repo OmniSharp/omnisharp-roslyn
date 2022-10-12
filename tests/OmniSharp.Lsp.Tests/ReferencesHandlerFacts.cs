@@ -134,7 +134,7 @@ namespace OmniSharp.Lsp.Tests
         [Theory]
         [InlineData(9)]
         [InlineData(100)]
-        public async Task CanFindReferencesWithLineMapping(int mappingLine)
+        public async Task FindReferencesWithLineMappingReturnsRegularPosition(int mappingLine)
         {
             var code = @"
                 public class Foo
@@ -162,17 +162,13 @@ namespace OmniSharp.Lsp.Tests
             Assert.Equal("dummy.cs", regularResult.Uri);
             Assert.Equal("dummy.cs", mappedResult.Uri);
 
-            // Assert.Equal("public void bar() { }", regularResult.Text);
-            // Assert.Equal(expectedMappingText, mappedResult.Text);
-
             Assert.Equal(3, regularResult.Range.Start.Line);
-            Assert.Equal(mappingLine - 1, mappedResult.Range.Start.Line);
+            Assert.Equal(11, mappedResult.Range.Start.Line);
 
-            // regular result has regular postition
+            // regular + mapped results have regular postition
             Assert.Equal(32, regularResult.Range.Start.Character);
             Assert.Equal(35, regularResult.Range.End.Character);
 
-            // mapped result has column 0,0
             Assert.Equal(34, mappedResult.Range.Start.Character);
             Assert.Equal(37, mappedResult.Range.End.Character);
         }
@@ -181,7 +177,7 @@ namespace OmniSharp.Lsp.Tests
         [InlineData(1, true)] // everything correct
         [InlineData(100, true)] // file exists in workspace but mapping incorrect
         [InlineData(1, false)] // file doesn't exist in workspace but mapping correct
-        public async Task CanFindReferencesWithLineMappingAcrossFiles(int mappingLine,
+        public async Task FindReferencesWithLineMappingAcrossFilesReturnsRegularPosition(int mappingLine,
             bool mappedFileExistsInWorkspace)
         {
             var testFiles = new List<TestFile>()
@@ -216,21 +212,17 @@ namespace OmniSharp.Lsp.Tests
             var mappedResult = usages.ElementAt(1);
 
             Assert.EndsWith("a.cs", regularResult.Uri.Path);
-            Assert.EndsWith("b.cs", mappedResult.Uri.Path);
+            Assert.EndsWith("a.cs", mappedResult.Uri.Path);
 
             Assert.Equal(3, regularResult.Range.Start.Line);
-            Assert.Equal(mappingLine - 1, mappedResult.Range.Start.Line);
+            Assert.Equal(11, mappedResult.Range.Start.Line);
 
-            // Assert.Equal("public void bar() { }", regularResult.Text);
-            // Assert.Equal(expectedMappingText, mappedResult.Text);
-
-            // regular result has regular postition
+            // regular + mapped results have regular postition
             Assert.Equal(32, regularResult.Range.Start.Character);
             Assert.Equal(35, regularResult.Range.End.Character);
 
-            // mapped result has column 0,0
-            Assert.Equal(0, mappedResult.Range.Start.Character);
-            Assert.Equal(0, mappedResult.Range.End.Character);
+            Assert.Equal(34, mappedResult.Range.Start.Character);
+            Assert.Equal(37, mappedResult.Range.End.Character);
         }
 
         [Fact]
