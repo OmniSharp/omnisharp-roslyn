@@ -16,7 +16,12 @@ namespace OmniSharp.Helpers
             if (!location.IsInSource)
                 throw new Exception("Location is not in the source tree");
 
-            var lineSpan = location.GetLineSpan();
+            string filePath = location.SourceTree.FilePath;
+            var lineSpan = Path.GetExtension(filePath).Equals(".cake", StringComparison.OrdinalIgnoreCase) ||
+                filePath.EndsWith("razor__virtual.cs") ||
+                filePath.EndsWith("cshtml__virtual.cs")
+                ? location.GetLineSpan()
+                : location.GetMappedLineSpan();
 
             var documents = workspace.GetDocuments(lineSpan.Path);
             var sourceText = GetSourceText(location, documents, lineSpan.HasMappedPath);
@@ -29,7 +34,7 @@ namespace OmniSharp.Helpers
                 // exist on disk
                 ? lineSpan.Path
                 // when a #line directive maps into a separate file using a relative path, get the full path relative to the folder containing the source tree
-                : Path.GetFullPath(Path.Combine(Path.GetDirectoryName(location.SourceTree.FilePath), lineSpan.Path));
+                : Path.GetFullPath(Path.Combine(Path.GetDirectoryName(filePath), lineSpan.Path));
 
 
             return new SymbolLocation
@@ -37,9 +42,9 @@ namespace OmniSharp.Helpers
                 Text = text.Trim(),
                 FileName = fileName,
                 Line = lineSpan.StartLinePosition.Line,
-                Column = lineSpan.StartLinePosition.Character,
+                Column = lineSpan.HasMappedPath ? 0 : lineSpan.StartLinePosition.Character, // when a #line directive maps into a separate file, assume columns (0,0)
                 EndLine = lineSpan.EndLinePosition.Line,
-                EndColumn = lineSpan.EndLinePosition.Character,
+                EndColumn = lineSpan.HasMappedPath ? 0 : lineSpan.EndLinePosition.Character,
                 Projects = documents.Select(document => document.Project.Name).ToArray(),
                 GeneratedFileInfo = generatedInfo
             };

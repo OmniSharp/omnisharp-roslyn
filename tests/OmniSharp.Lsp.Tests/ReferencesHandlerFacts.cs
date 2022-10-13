@@ -2,13 +2,16 @@
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+
 using OmniSharp.Extensions.LanguageServer.Protocol;
 using OmniSharp.Extensions.LanguageServer.Protocol.Document;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OmniSharp.Models;
 using OmniSharp.Models.FindUsages;
 using OmniSharp.Roslyn.CSharp.Services.Navigation;
+
 using TestUtility;
+
 using Xunit;
 using Xunit.Abstractions;
 
@@ -134,7 +137,7 @@ namespace OmniSharp.Lsp.Tests
         [Theory]
         [InlineData(9)]
         [InlineData(100)]
-        public async Task FindReferencesWithLineMappingReturnsRegularPosition(int mappingLine)
+        public async Task CanFindReferencesWithLineMapping(int mappingLine)
         {
             var code = @"
                 public class Foo
@@ -162,13 +165,17 @@ namespace OmniSharp.Lsp.Tests
             Assert.Equal("dummy.cs", regularResult.Uri);
             Assert.Equal("dummy.cs", mappedResult.Uri);
 
-            Assert.Equal(3, regularResult.Range.Start.Line);
-            Assert.Equal(11, mappedResult.Range.Start.Line);
+            // Assert.Equal("public void bar() { }", regularResult.Text);
+            // Assert.Equal(expectedMappingText, mappedResult.Text);
 
-            // regular + mapped results have regular postition
+            Assert.Equal(3, regularResult.Range.Start.Line);
+            Assert.Equal(mappingLine - 1, mappedResult.Range.Start.Line);
+
+            // regular result has regular postition
             Assert.Equal(32, regularResult.Range.Start.Character);
             Assert.Equal(35, regularResult.Range.End.Character);
 
+            // mapped result has column 0,0
             Assert.Equal(34, mappedResult.Range.Start.Character);
             Assert.Equal(37, mappedResult.Range.End.Character);
         }
@@ -177,7 +184,7 @@ namespace OmniSharp.Lsp.Tests
         [InlineData(1, true)] // everything correct
         [InlineData(100, true)] // file exists in workspace but mapping incorrect
         [InlineData(1, false)] // file doesn't exist in workspace but mapping correct
-        public async Task FindReferencesWithLineMappingAcrossFilesReturnsRegularPosition(int mappingLine,
+        public async Task CanFindReferencesWithLineMappingAcrossFiles(int mappingLine,
             bool mappedFileExistsInWorkspace)
         {
             var testFiles = new List<TestFile>()
@@ -212,10 +219,106 @@ namespace OmniSharp.Lsp.Tests
             var mappedResult = usages.ElementAt(1);
 
             Assert.EndsWith("a.cs", regularResult.Uri.Path);
-            Assert.EndsWith("a.cs", mappedResult.Uri.Path);
+            Assert.EndsWith("b.cs", mappedResult.Uri.Path);
 
             Assert.Equal(3, regularResult.Range.Start.Line);
-            Assert.Equal(11, mappedResult.Range.Start.Line);
+            Assert.Equal(mappingLine - 1, mappedResult.Range.Start.Line);
+
+            // Assert.Equal("public void bar() { }", regularResult.Text);
+            // Assert.Equal(expectedMappingText, mappedResult.Text);
+
+            // regular result has regular postition
+            Assert.Equal(32, regularResult.Range.Start.Character);
+            Assert.Equal(35, regularResult.Range.End.Character);
+
+            // mapped result has column 0,0
+            Assert.Equal(0, mappedResult.Range.Start.Character);
+            Assert.Equal(0, mappedResult.Range.End.Character);
+        }
+
+        [Theory]
+        [InlineData(9)]
+        [InlineData(100)]
+        public async Task FindReferencesWithLineMappingReturnsRegularPosition_Razor(int mappingLine)
+        {
+            var code = @"
+                public class Foo
+                {
+                    public void b$$ar() { }
+                }
+                public class FooConsumer
+                {
+                    public FooConsumer()
+                    {
+#line " + mappingLine + @"
+                        new Foo().bar();
+#line default
+                    }
+                }";
+
+            var usages = await FindUsagesAsync(new[] { new TestFile("dummy.razor__virtual.cs", code) }, excludeDefinition: false);
+            Assert.Equal(2, usages.Count());
+
+            var quickFixes = usages.OrderBy(x => x.Range.Start.Line);
+            var regularResult = quickFixes.ElementAt(0);
+            var mappedResult = quickFixes.ElementAt(1);
+
+            Assert.Equal("dummy.razor__virtual.cs", regularResult.Uri);
+            Assert.Equal("dummy.razor__virtual.cs", mappedResult.Uri);
+
+            Assert.Equal(3, regularResult.Range.Start.Line);
+            Assert.Equal(10, mappedResult.Range.Start.Line);
+
+            // regular + mapped results have regular postition
+            Assert.Equal(32, regularResult.Range.Start.Character);
+            Assert.Equal(35, regularResult.Range.End.Character);
+
+            Assert.Equal(34, mappedResult.Range.Start.Character);
+            Assert.Equal(37, mappedResult.Range.End.Character);
+        }
+
+        [Theory]
+        [InlineData(1, true)] // everything correct
+        [InlineData(100, true)] // file exists in workspace but mapping incorrect
+        [InlineData(1, false)] // file doesn't exist in workspace but mapping correct
+        public async Task FindReferencesWithLineMappingAcrossFilesReturnsRegularPosition_Razor(int mappingLine,
+            bool mappedFileExistsInWorkspace)
+        {
+            var testFiles = new List<TestFile>()
+            {
+                new TestFile("a.cshtml__virtual.cs", @"
+                public class Foo
+                {
+                    public void b$$ar() { }
+                }
+                public class FooConsumer
+                {
+                    public FooConsumer()
+                    {
+#line " + mappingLine + @" ""b.cs""
+                        new Foo().bar();
+#line default
+                    }
+                }"),
+            };
+
+            if (mappedFileExistsInWorkspace)
+            {
+                testFiles.Add(new TestFile("b.cs",
+                    @"// hello"));
+            }
+
+            var usages = await FindUsagesAsync(testFiles.ToArray());
+            Assert.Equal(2, usages.Count());
+
+            var regularResult = usages.ElementAt(0);
+            var mappedResult = usages.ElementAt(1);
+
+            Assert.EndsWith("a.cshtml__virtual.cs", regularResult.Uri.Path);
+            Assert.EndsWith("a.cshtml__virtual.cs", mappedResult.Uri.Path);
+
+            Assert.Equal(3, regularResult.Range.Start.Line);
+            Assert.Equal(10, mappedResult.Range.Start.Line);
 
             // regular + mapped results have regular postition
             Assert.Equal(32, regularResult.Range.Start.Character);
