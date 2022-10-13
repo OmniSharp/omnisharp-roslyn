@@ -2,16 +2,13 @@
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-
 using OmniSharp.Extensions.LanguageServer.Protocol;
 using OmniSharp.Extensions.LanguageServer.Protocol.Document;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OmniSharp.Models;
 using OmniSharp.Models.FindUsages;
 using OmniSharp.Roslyn.CSharp.Services.Navigation;
-
 using TestUtility;
-
 using Xunit;
 using Xunit.Abstractions;
 
