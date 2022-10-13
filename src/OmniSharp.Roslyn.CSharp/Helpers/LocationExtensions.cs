@@ -16,10 +16,9 @@ namespace OmniSharp.Helpers
             if (!location.IsInSource)
                 throw new Exception("Location is not in the source tree");
 
-            string filePath = location.SourceTree.FilePath;
-            var lineSpan = Path.GetExtension(filePath).Equals(".cake", StringComparison.OrdinalIgnoreCase) ||
-                filePath.EndsWith("razor__virtual.cs") ||
-                filePath.EndsWith("cshtml__virtual.cs")
+            var lineSpan = Path.GetExtension(location.SourceTree.FilePath).Equals(".cake", StringComparison.OrdinalIgnoreCase) ||
+                location.SourceTree.FilePath.EndsWith("razor__virtual.cs") ||
+                location.SourceTree.FilePath.EndsWith("cshtml__virtual.cs")
                 ? location.GetLineSpan()
                 : location.GetMappedLineSpan();
 
@@ -34,7 +33,7 @@ namespace OmniSharp.Helpers
                 // exist on disk
                 ? lineSpan.Path
                 // when a #line directive maps into a separate file using a relative path, get the full path relative to the folder containing the source tree
-                : Path.GetFullPath(Path.Combine(Path.GetDirectoryName(filePath), lineSpan.Path));
+                : Path.GetFullPath(Path.Combine(Path.GetDirectoryName(location.SourceTree.FilePath), lineSpan.Path));
 
 
             return new SymbolLocation
