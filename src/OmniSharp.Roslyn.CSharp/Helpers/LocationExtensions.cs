@@ -16,7 +16,9 @@ namespace OmniSharp.Helpers
             if (!location.IsInSource)
                 throw new Exception("Location is not in the source tree");
 
-            var lineSpan = Path.GetExtension(location.SourceTree.FilePath).Equals(".cake", StringComparison.OrdinalIgnoreCase)
+            var lineSpan = Path.GetExtension(location.SourceTree.FilePath).Equals(".cake", StringComparison.OrdinalIgnoreCase) ||
+                location.SourceTree.FilePath.EndsWith("razor__virtual.cs") ||
+                location.SourceTree.FilePath.EndsWith("cshtml__virtual.cs")
                 ? location.GetLineSpan()
                 : location.GetMappedLineSpan();
 
