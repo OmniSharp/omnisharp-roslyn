@@ -46,7 +46,7 @@ namespace OmniSharp.Tests
                 "6.0.105 [/usr/local/share/dotnet/sdk]",
                 "6.0.202 [/usr/local/share/dotnet/sdk]",
                 "6.0.400 [/usr/local/share/dotnet/sdk]",
-                "7.0.100-preview.7.22377.5 [/usr/local/share/dotnet/sdk]",
+                "7.0.100-rc.1.22431.12 [/usr/local/share/dotnet/sdk]",
                 "",
                 $"Install the [{RequestedSdkVersion}] .NET SDK or update [{GlobalJsonFile}] to match an installed SDK.",
                 "",
