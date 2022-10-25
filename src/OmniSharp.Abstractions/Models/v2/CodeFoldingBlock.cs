@@ -22,8 +22,8 @@
 
     public class CodeFoldingBlockKinds
     {
-        public static readonly string Comment = nameof(Comment);
-        public static readonly string Imports = nameof(Imports);
-        public static readonly string Region = nameof(Region);
+        public const string Comment = nameof(Comment);
+        public const string Imports = nameof(Imports);
+        public const string Region = nameof(Region);
     }
 }
