@@ -106,12 +106,6 @@ OmniSharp provides a rich set of hierarchical configuration options, controlled 
 
 We have slack room as well. [Get yourself invited](https://omnisharp.herokuapp.com/): [here](https://omnisharp.herokuapp.com/)
 
-## License
-
-Copyright © .NET Foundation, and contributors.
-
-OmniSharp is provided as-is under the MIT license. For more information see [LICENSE](https://github.com/OmniSharp/omnisharp-roslyn/blob/master/license.md).
-
 ## Code of Conduct
 
 This project has adopted the code of conduct defined by the [Contributor Covenant](http://contributor-covenant.org/)
@@ -125,3 +119,9 @@ By signing the [CLA](https://cla.dotnetfoundation.org/OmniSharp/omnisharp-roslyn
 ## .NET Foundation
 
 This project is supported by the [.NET Foundation](http://www.dotnetfoundation.org).
+
+## License
+
+Copyright © .NET Foundation, and contributors.
+
+OmniSharp is provided as-is under the MIT license. For more information see [LICENSE](https://github.com/OmniSharp/omnisharp-roslyn/blob/master/license.md).
