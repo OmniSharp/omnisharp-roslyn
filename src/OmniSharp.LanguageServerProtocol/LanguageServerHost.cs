@@ -370,22 +370,22 @@ namespace OmniSharp.LanguageServerProtocol
             var serializer = server.Services.GetRequiredService<ISerializer>();
             server.Register(s =>
             {
-                foreach (var handler in OmniSharpTextDocumentSyncHandler.Enumerate(handlers, workspace, documentVersions)
-                    .Concat(OmniSharpTypeDefinitionHandler.Enumerate(handlers))
-                    .Concat(OmniSharpDefinitionHandler.Enumerate(handlers))
-                    .Concat(OmniSharpHoverHandler.Enumerate(handlers))
-                    .Concat(OmniSharpCompletionHandler.Enumerate(handlers))
-                    .Concat(OmniSharpSignatureHelpHandler.Enumerate(handlers))
-                    .Concat(OmniSharpRenameHandler.Enumerate(handlers))
-                    .Concat(OmniSharpWorkspaceSymbolsHandler.Enumerate(handlers))
-                    .Concat(OmniSharpDocumentSymbolHandler.Enumerate(handlers))
-                    .Concat(OmniSharpReferencesHandler.Enumerate(handlers))
-                    .Concat(OmniSharpImplementationHandler.Enumerate(handlers))
+                foreach (var handler in OmniSharpCodeActionHandler.Enumerate(handlers, serializer, server, documentVersions)
                     .Concat(OmniSharpCodeLensHandler.Enumerate(handlers))
-                    .Concat(OmniSharpCodeActionHandler.Enumerate(handlers, serializer, server, documentVersions))
+                    .Concat(OmniSharpCompletionHandler.Enumerate(handlers))
+                    .Concat(OmniSharpDefinitionHandler.Enumerate(handlers))
                     .Concat(OmniSharpDocumentFormattingHandler.Enumerate(handlers))
                     .Concat(OmniSharpDocumentFormatRangeHandler.Enumerate(handlers))
-                    .Concat(OmniSharpDocumentOnTypeFormattingHandler.Enumerate(handlers)))
+                    .Concat(OmniSharpDocumentOnTypeFormattingHandler.Enumerate(handlers))
+                    .Concat(OmniSharpDocumentSymbolHandler.Enumerate(handlers))
+                    .Concat(OmniSharpHoverHandler.Enumerate(handlers))
+                    .Concat(OmniSharpImplementationHandler.Enumerate(handlers))
+                    .Concat(OmniSharpReferencesHandler.Enumerate(handlers))
+                    .Concat(OmniSharpRenameHandler.Enumerate(handlers))
+                    .Concat(OmniSharpSignatureHelpHandler.Enumerate(handlers))
+                    .Concat(OmniSharpTextDocumentSyncHandler.Enumerate(handlers, workspace, documentVersions))
+                    .Concat(OmniSharpTypeDefinitionHandler.Enumerate(handlers))
+                    .Concat(OmniSharpWorkspaceSymbolsHandler.Enumerate(handlers)))
                 {
                     s.AddHandlers(handler);
                 }
