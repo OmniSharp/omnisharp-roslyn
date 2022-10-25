@@ -110,7 +110,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.SemanticHighlight
             public TextLineCollection Lines { get; set; }
         }
 
-        private static readonly Dictionary<string, SemanticHighlightClassification> _classificationMap =
+        public static readonly Dictionary<string, SemanticHighlightClassification> _classificationMap =
             new()
             {
                 [ClassificationTypeNames.Comment] = SemanticHighlightClassification.Comment,
@@ -182,7 +182,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.SemanticHighlight
                 [ClassificationTypeNames.RegexOtherEscape] = SemanticHighlightClassification.RegexOtherEscape,
             };
 
-        private static readonly Dictionary<string, SemanticHighlightModifier> _modifierMap =
+        public static readonly Dictionary<string, SemanticHighlightModifier> _modifierMap =
             new()
             {
                 [ClassificationTypeNames.StaticSymbol] = SemanticHighlightModifier.Static,
