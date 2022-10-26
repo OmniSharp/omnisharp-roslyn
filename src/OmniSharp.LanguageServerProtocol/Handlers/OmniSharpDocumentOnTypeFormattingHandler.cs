@@ -56,9 +56,9 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             return new DocumentOnTypeFormattingRegistrationOptions()
             {
                 DocumentSelector = _documentSelector,
-                FirstTriggerCharacter = ";",
-                // TODO: What should these be?
-                MoreTriggerCharacter = new[] {"}", ")"}
+                // Chose these triggers based on Roslyn's implementation https://github.com/dotnet/roslyn/blob/9e06c76c5ce94dc49821c5bd211c8292b3a984f0/src/Features/LanguageServer/Protocol/DefaultCapabilitiesProvider.cs#L71
+                FirstTriggerCharacter = "}",
+                MoreTriggerCharacter = new[] { ";", "\n" }
             };
         }
     }
