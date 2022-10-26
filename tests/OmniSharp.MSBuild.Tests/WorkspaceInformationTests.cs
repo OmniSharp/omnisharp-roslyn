@@ -136,7 +136,7 @@ namespace OmniSharp.MSBuild.Tests
             Assert.Equal("netstandard1.3", secondProject.TargetFrameworks[0].ShortName);
         }
 
-        [Fact]
+        [Fact(Skip = "https://github.com/dotnet/msbuild/pull/7642")]
         public async Task TwoProjectsWithSolutionAndCustomConfigurations()
         {
             var configData = new Dictionary<string, string> { [$"MsBuild:{nameof(Options.MSBuildOptions.Configuration)}"] = "ReleaseSln" };

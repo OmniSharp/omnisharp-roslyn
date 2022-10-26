@@ -35,29 +35,32 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
             bool expectingImportedItems,
             bool isSuggestionMode)
         {
-            var completionsBuilder = new List<CompletionItem>(completions.Items.Length);
+            var completionsBuilder = new List<CompletionItem>(completions.ItemsList.Count);
             var seenUnimportedCompletions = false;
             var commitCharacterRuleCache = new Dictionary<ImmutableArray<CharacterSetModificationRule>, IReadOnlyList<char>>();
             var commitCharacterRuleBuilder = new HashSet<char>();
 
-            var completionTasksAndProviderNames = completions.Items.SelectAsArray((document, completionService), (completion, arg) =>
+            var completionTasksAndProviderNamesBuilder = ImmutableArray.CreateBuilder<(Task<CompletionChange>?, string? providerName)>();
+            for (int i = 0; i < completions.ItemsList.Count; i++)
             {
+                var completion = completions.ItemsList[i];
                 var providerName = completion.GetProviderName();
                 if (providerName is TypeImportCompletionProvider or
                                     ExtensionMethodImportCompletionProvider)
                 {
-                    return (null, providerName);
+                    completionTasksAndProviderNamesBuilder.Add((null, providerName));
                 }
                 else
                 {
-                    return ((Task<CompletionChange>?)arg.completionService.GetChangeAsync(arg.document, completion), providerName);
+                    completionTasksAndProviderNamesBuilder.Add(((Task<CompletionChange>?)completionService.GetChangeAsync(document, completion), providerName));
                 }
-            });
+            }
+            var completionTasksAndProviderNames = completionTasksAndProviderNamesBuilder.ToImmutable();
 
-            for (int i = 0; i < completions.Items.Length; i++)
+            for (int i = 0; i < completions.ItemsList.Count; i++)
             {
                 TextSpan changeSpan = typedSpan;
-                var completion = completions.Items[i];
+                var completion = completions.ItemsList[i];
                 var insertTextFormat = InsertTextFormat.PlainText;
                 string labelText = completion.DisplayTextPrefix + completion.DisplayText + completion.DisplayTextSuffix;
                 List<LinePositionSpanTextChange>? additionalTextEdits = null;

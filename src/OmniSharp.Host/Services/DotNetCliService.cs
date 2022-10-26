@@ -40,6 +40,7 @@ namespace OmniSharp.Services
                 {
                     // We'll take the first path that has a dotnet executable.
                     DotNetPath = Path.Combine(path, "dotnet");
+                    break;
                 }
                 else
                 {

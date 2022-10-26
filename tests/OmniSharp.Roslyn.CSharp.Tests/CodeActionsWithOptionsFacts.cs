@@ -2,6 +2,7 @@
 using System.Reflection;
 using System.Threading.Tasks;
 using OmniSharp.Models;
+using OmniSharp.Models.V2.CodeActions;
 using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
@@ -174,7 +175,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             var response = await FindRefactoringNamesAsync(code);
 
-            Assert.DoesNotContain("Change signature...", response);
+            Assert.DoesNotContain(("Change signature...", CodeActionKind.Refactor), response);
         }
 
         [Fact]
@@ -188,7 +189,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             var response = await FindRefactoringNamesAsync(code);
 
-            Assert.DoesNotContain("Generate type 'NonExistentBaseType' -> Generate new type...", response);
+            Assert.DoesNotContain(("Generate type 'NonExistentBaseType' -> Generate new type...", CodeActionKind.Refactor), response);
         }
 
         [Fact]
@@ -206,7 +207,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             var response = await FindRefactoringNamesAsync(code);
 
-            Assert.DoesNotContain("Pull 'Foo' up -> Pull members up to base type...", response);
+            Assert.DoesNotContain(("Pull 'Foo' up -> Pull members up to base type...", CodeActionKind.Refactor), response);
         }
 
         [Fact]

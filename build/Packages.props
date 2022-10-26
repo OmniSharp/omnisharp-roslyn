@@ -2,12 +2,11 @@
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
     <PropertyGroup>
-        <AspNetCorePackageVersion>2.2.0</AspNetCorePackageVersion>
         <MicrosoftExtensionPackageVersion>6.0.0</MicrosoftExtensionPackageVersion>
-        <MicrosoftTestPackageVersion>17.2.0</MicrosoftTestPackageVersion>
-        <MSBuildPackageVersion>17.0.0</MSBuildPackageVersion>
-        <NuGetPackageVersion>6.3.0-preview.1.32</NuGetPackageVersion>
-        <RoslynPackageVersion>4.3.0-2.22267.5</RoslynPackageVersion>
+        <MicrosoftTestPackageVersion>17.3.0</MicrosoftTestPackageVersion>
+        <MSBuildPackageVersion>17.3.1</MSBuildPackageVersion>
+        <NuGetPackageVersion>6.4.0-preview.1.53</NuGetPackageVersion>
+        <RoslynPackageVersion>4.4.0-3.22429.3</RoslynPackageVersion>
         <XunitPackageVersion>2.4.1</XunitPackageVersion>
     </PropertyGroup>
 
@@ -16,14 +15,9 @@
 
         <PackageReference Update="Dotnet.Script.DependencyModel" Version="1.3.1" />
         <PackageReference Update="Dotnet.Script.DependencyModel.NuGet" Version="1.3.1" />
-        <PackageReference Update="ICSharpCode.Decompiler" Version="7.1.0.6543" />
+        <PackageReference Update="ICSharpCode.Decompiler" Version="7.2.1.6856" />
 
         <PackageReference Update="McMaster.Extensions.CommandLineUtils" Version="3.1.0" />
-
-        <PackageReference Update="Microsoft.AspNetCore.Diagnostics" Version="$(AspNetCorePackageVersion)" />
-        <PackageReference Update="Microsoft.AspNetCore.Hosting" Version="$(AspNetCorePackageVersion)" />
-        <PackageReference Update="Microsoft.AspNetCore.Http.Features" Version="$(AspNetCorePackageVersion)" />
-        <PackageReference Update="Microsoft.AspNetCore.Server.Kestrel" Version="$(AspNetCorePackageVersion)" />
 
         <PackageReference Update="Microsoft.Build" Version="$(MSBuildPackageVersion)" />
         <PackageReference Update="Microsoft.Build.Framework" Version="$(MSBuildPackageVersion)" />
@@ -67,9 +61,15 @@
 
         <PackageReference Update="Newtonsoft.Json" Version="13.0.1" />
 
-        <PackageReference Update="NuGet.Packaging" Version="$(NuGetPackageVersion)" />
+        <PackageReference Update="NuGet.Common" Version="$(NuGetPackageVersion)" />
+        <PackageReference Update="NuGet.Configuration" Version="$(NuGetPackageVersion)" />
+        <PackageReference Update="NuGet.DependencyResolver.Core" Version="$(NuGetPackageVersion)" />
+        <PackageReference Update="NuGet.Frameworks" Version="$(NuGetPackageVersion)" />
+        <PackageReference Update="NuGet.LibraryModel" Version="$(NuGetPackageVersion)" />
         <PackageReference Update="NuGet.Packaging.Core" Version="$(NuGetPackageVersion)" />
+        <PackageReference Update="NuGet.Packaging" Version="$(NuGetPackageVersion)" />
         <PackageReference Update="NuGet.ProjectModel" Version="$(NuGetPackageVersion)" />
+        <PackageReference Update="NuGet.Protocol" Version="$(NuGetPackageVersion)" />
         <PackageReference Update="NuGet.Versioning" Version="$(NuGetPackageVersion)" />
 
         <PackageReference Update="OmniSharp.Extensions.LanguageServer" Version="0.19.0" />
@@ -79,6 +79,8 @@
         <PackageReference Update="System.Collections.Immutable" Version="6.0.0" />
         <PackageReference Update="System.ComponentModel.Composition" Version="4.5.0" />
         <PackageReference Update="System.Composition" Version="6.0.0" />
+        <PackageReference Update="System.Configuration.ConfigurationManager" Version="4.5.0" />
+        <PackageReference Update="System.Memory" Version="4.5.5" />
         <PackageReference Update="System.Reflection.Metadata" Version="6.0.0" />
         <PackageReference Update="System.Threading.Tasks.Dataflow" Version="6.0.0" />
         <PackageReference Update="System.ValueTuple" Version="4.5.0" />
@@ -93,5 +95,10 @@
     <ItemGroup>
         <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
     </ItemGroup>
+    <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
+        <PackageReference Update="Microsoft.AspNetCore.Diagnostics" Version="2.2.0" />
+        <PackageReference Update="Microsoft.AspNetCore.Hosting" Version="2.2.0" />
+        <PackageReference Update="Microsoft.AspNetCore.Http.Features" Version="2.2.0" />
+        <PackageReference Update="Microsoft.AspNetCore.Server.Kestrel" Version="2.2.0" />
+    </ItemGroup>
 </Project>
-

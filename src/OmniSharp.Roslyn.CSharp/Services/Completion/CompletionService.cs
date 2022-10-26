@@ -94,17 +94,17 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
 
             var completions = await OmniSharpCompletionService.GetCompletionsAsync(completionService, document, position, trigger, roles: null, options, CancellationToken.None);
             _logger.LogTrace("Found {0} completions for {1}:{2},{3}",
-                             completions?.Items.IsDefaultOrEmpty != false ? 0 : completions.Items.Length,
+                             completions.ItemsList.Count,
                              request.FileName,
                              request.Line,
                              request.Column);
 
-            if (completions is null || completions.Items.Length == 0)
+            if (completions is null || completions.ItemsList.Count == 0)
             {
                 return new CompletionResponse { Items = ImmutableArray<CompletionItem>.Empty };
             }
 
-            if (request.TriggerCharacter == ' ' && !completions.Items.Any(c =>
+            if (request.TriggerCharacter == ' ' && !completions.ItemsList.Any(c =>
             {
                 var providerName = c.GetProviderName();
                 return providerName is CompletionListBuilder.OverrideCompletionProvider or
@@ -166,14 +166,14 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
             var index = request.Item.Data.Index;
 
             if (request.Item is null
-                || index >= completions.Items.Length
+                || index >= completions.ItemsList.Count
                 || index < 0)
             {
                 _logger.LogError("Received invalid completion resolve!");
                 return new CompletionResolveResponse { Item = request.Item };
             }
 
-            var lastCompletionItem = completions.Items[index];
+            var lastCompletionItem = completions.ItemsList[index];
             if (lastCompletionItem.DisplayTextPrefix + lastCompletionItem.DisplayText + lastCompletionItem.DisplayTextSuffix != request.Item.Label)
             {
                 _logger.LogError("Inconsistent completion data. Requested data on {0}, but found completion item {1}", request.Item.Label, lastCompletionItem.DisplayText);
@@ -234,7 +234,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
             var index = request.Item.Data.Index;
 
             if (request.Item is null
-                || index >= completions.Items.Length
+                || index >= completions.ItemsList.Count
                 || index < 0
                 || request.Item.TextEdit is null)
             {
@@ -242,7 +242,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                 return new CompletionAfterInsertResponse();
             }
 
-            var lastCompletionItem = completions.Items[index];
+            var lastCompletionItem = completions.ItemsList[index];
             if (lastCompletionItem.DisplayTextPrefix + lastCompletionItem.DisplayText + lastCompletionItem.DisplayTextSuffix != request.Item.Label)
             {
                 _logger.LogError("Inconsistent completion data. Requested data on {0}, but found completion item {1}", request.Item.Label, lastCompletionItem.DisplayText);

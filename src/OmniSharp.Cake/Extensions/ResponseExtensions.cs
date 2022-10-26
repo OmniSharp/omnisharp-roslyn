@@ -8,6 +8,7 @@ using OmniSharp.Models;
 using OmniSharp.Models.Navigate;
 using OmniSharp.Models.MembersTree;
 using OmniSharp.Models.Rename;
+using OmniSharp.Models.SemanticHighlight;
 using OmniSharp.Models.v1.Completion;
 using OmniSharp.Models.V2;
 using OmniSharp.Models.V2.CodeActions;
@@ -40,7 +41,7 @@ namespace OmniSharp.Cake.Extensions
         {
             var quickFixes = new List<QuickFix>();
 
-            foreach (var quickFix in response.QuickFixes)
+            foreach (var quickFix in response.QuickFixes ?? Enumerable.Empty<QuickFix>())
             {
                 await quickFix.TranslateAsync(workspace, request);
 
@@ -229,6 +230,40 @@ namespace OmniSharp.Cake.Extensions
                 item.AdditionalTextEdits = additionalTextEdits;
             }
 
+            return response;
+        }
+
+        public static async Task<SemanticHighlightResponse> TranslateAsync(this SemanticHighlightResponse response,
+            OmniSharpWorkspace workspace, SemanticHighlightRequest request)
+        {
+            var zeroIndex = await LineIndexHelper.TranslateToGenerated(request.FileName, 0, workspace);
+            var spans = new List<SemanticHighlightSpan>();
+
+            foreach (var span in response.Spans)
+            {
+                if (span.StartLine < zeroIndex)
+                {
+                    continue;
+                }
+
+                var (startLine, _) = await LineIndexHelper.TranslateFromGenerated(request.FileName, span.StartLine, workspace, true);
+
+                if (startLine < 0)
+                {
+                    continue;
+                }
+
+                var (endLine, _) = span.StartLine != span.EndLine
+                    ? await LineIndexHelper.TranslateFromGenerated(request.FileName, span.EndLine, workspace, true)
+                    : (startLine, null);
+
+                span.StartLine = startLine;
+                span.EndLine = endLine;
+
+                spans.Add(span);
+            }
+
+            response.Spans = spans.ToArray();
             return response;
         }
 

@@ -218,7 +218,7 @@ namespace OmniSharp.MSBuild.Tests
             using var testProject = await TestAssets.Instance.GetTestProjectAsync("NetCore31Project");
             using var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory));
             Assert.Single(emitter.ReceivedMessages);
-            Assert.Equal(GetHashedFileExtension("3.1.419"), emitter.ReceivedMessages[0].SdkVersion);
+            Assert.Equal(GetHashedFileExtension("3.1.422"), emitter.ReceivedMessages[0].SdkVersion);
         }
 
         [ConditionalFact(typeof(NonMonoRuntimeOnly))]
@@ -230,7 +230,7 @@ namespace OmniSharp.MSBuild.Tests
             using var testProject = await TestAssets.Instance.GetTestProjectAsync("Net60Project");
             using var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory));
             Assert.Single(emitter.ReceivedMessages);
-            Assert.Equal(GetHashedFileExtension("6.0.300"), emitter.ReceivedMessages[0].SdkVersion);
+            Assert.Equal(GetHashedFileExtension("6.0.400"), emitter.ReceivedMessages[0].SdkVersion);
         }
 
         [ConditionalFact(typeof(NonMonoRuntimeOnly))]
@@ -242,7 +242,7 @@ namespace OmniSharp.MSBuild.Tests
             using var testProject = await TestAssets.Instance.GetTestProjectAsync("Net70Project");
             using var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory));
             Assert.Single(emitter.ReceivedMessages);
-            Assert.Equal(GetHashedFileExtension("7.0.100-preview.4.22252.9"), emitter.ReceivedMessages[0].SdkVersion);
+            Assert.Equal(GetHashedFileExtension("7.0.100-rc.1.22431.12"), emitter.ReceivedMessages[0].SdkVersion);
         }
 
         private string GetHashedFileExtension(string fileExtension)

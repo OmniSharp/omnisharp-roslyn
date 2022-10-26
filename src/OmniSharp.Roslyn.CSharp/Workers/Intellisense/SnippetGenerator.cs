@@ -27,12 +27,10 @@ namespace OmniSharp
                 // only the containing type contains the type parameters
                 var parts = symbol.ContainingType.ToDisplayParts(_format);
                 RenderDisplayParts(symbol, parts);
-                parts = symbol.ToDisplayParts(_format);
                 RenderParameters(symbol as IMethodSymbol);
             }
             else
             {
-                var symbolKind = symbol.Kind;
                 if (symbol.Kind == SymbolKind.Method)
                 {
                     RenderMethodSymbol(symbol as IMethodSymbol);
@@ -154,8 +152,7 @@ namespace OmniSharp
 
         private IEnumerable<ISymbol> ExplodeTypes(ISymbol symbol)
         {
-            var typeSymbol = symbol as INamedTypeSymbol;
-            if (typeSymbol != null)
+            if (symbol is INamedTypeSymbol typeSymbol)
             {
                 var typeParams = typeSymbol.TypeArguments;
 

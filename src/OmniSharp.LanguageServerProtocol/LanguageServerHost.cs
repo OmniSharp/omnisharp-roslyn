@@ -371,6 +371,7 @@ namespace OmniSharp.LanguageServerProtocol
             server.Register(s =>
             {
                 foreach (var handler in OmniSharpTextDocumentSyncHandler.Enumerate(handlers, workspace, documentVersions)
+                    .Concat(OmniSharpTypeDefinitionHandler.Enumerate(handlers))
                     .Concat(OmniSharpDefinitionHandler.Enumerate(handlers))
                     .Concat(OmniSharpHoverHandler.Enumerate(handlers))
                     .Concat(OmniSharpCompletionHandler.Enumerate(handlers))

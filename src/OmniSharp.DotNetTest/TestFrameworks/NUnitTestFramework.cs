@@ -10,7 +10,8 @@
         {
             return typeName == "NUnit.Framework.TestAttribute"
                 || typeName == "NUnit.Framework.TestCaseAttribute"
-                || typeName == "NUnit.Framework.TestCaseSourceAttribute";
+                || typeName == "NUnit.Framework.TestCaseSourceAttribute"
+                || typeName == "NUnit.Framework.Theory";
         }
     }
 }

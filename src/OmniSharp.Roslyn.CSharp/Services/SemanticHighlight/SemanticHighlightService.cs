@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Composition;
 using System.Linq;
@@ -26,47 +27,49 @@ namespace OmniSharp.Roslyn.CSharp.Services.SemanticHighlight
 
         public async Task<SemanticHighlightResponse> Handle(SemanticHighlightRequest request)
         {
-            var documents = _workspace.GetDocuments(request.FileName);
+            var document = _workspace.GetDocuments(request.FileName).FirstOrDefault();
+
+            if (document == null)
+            {
+                return new SemanticHighlightResponse() { Spans = Array.Empty<SemanticHighlightSpan>() };
+            }
 
             var results = new List<ClassifiedResult>();
 
-            foreach (var document in documents)
+            var project = document.Project.Name;
+
+            var highlightDocument = request.VersionedText != null
+                ? document.WithText(SourceText.From(request.VersionedText))
+                : document;
+
+            var text = await highlightDocument.GetTextAsync();
+
+            TextSpan textSpan;
+            if (request.Range is object)
             {
-                var project = document.Project.Name;
-
-                var highlightDocument = request.VersionedText != null
-                    ? document.WithText(SourceText.From(request.VersionedText))
-                    : document;
-
-                var text = await highlightDocument.GetTextAsync();
-
-                TextSpan textSpan;
-                if (request.Range is object)
+                if (request.Range.IsValid())
                 {
-                    if (request.Range.IsValid())
-                    {
-                        var start = text.Lines.GetPosition(new LinePosition(request.Range.Start.Line, request.Range.Start.Column));
-                        var end = text.Lines.GetPosition(new LinePosition(request.Range.End.Line, request.Range.End.Column));
-                        textSpan = new TextSpan(start, end - start);
-                    }
-                    else
-                    {
-                        _logger.LogWarning($"Supplied highlight range {request.Range} in document {document.FilePath} is not valid.");
-                        continue;
-                    }
+                    var start = text.Lines.GetPosition(new LinePosition(request.Range.Start.Line, request.Range.Start.Column));
+                    var end = text.Lines.GetPosition(new LinePosition(request.Range.End.Line, request.Range.End.Column));
+                    textSpan = new TextSpan(start, end - start);
                 }
                 else
                 {
-                    textSpan = new TextSpan(0, text.Length);
+                    _logger.LogWarning($"Supplied highlight range {request.Range} in document {document.FilePath} is not valid.");
+                    return new SemanticHighlightResponse() { Spans = Array.Empty<SemanticHighlightSpan>() };
                 }
-
-                results.AddRange((await Classifier.GetClassifiedSpansAsync(highlightDocument, textSpan))
-                    .Select(span => new ClassifiedResult()
-                    {
-                        Span = span,
-                        Lines = text.Lines,
-                    }));
             }
+            else
+            {
+                textSpan = new TextSpan(0, text.Length);
+            }
+
+            results.AddRange((await Classifier.GetClassifiedSpansAsync(highlightDocument, textSpan))
+                .Select(span => new ClassifiedResult()
+                {
+                    Span = span,
+                    Lines = text.Lines,
+                }));
 
             return new SemanticHighlightResponse()
             {
