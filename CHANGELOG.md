@@ -1,11 +1,26 @@
 # Changelog
 All changes to the project will be documented in this file.
 
-## [1.39.2] - not yet released
-* Updated ILSpy to 7.2.1.6856 (PR: [#2447](https://github.com/OmniSharp/omnisharp-roslyn/pull/2447))
-* Include OmniSharp.Cake in .NET 6 builds (PR: [#2455](https://github.com/OmniSharp/omnisharp-roslyn/pull/2455))
-* Implement /v2/highlight for Cake (PR: [#2456](https://github.com/OmniSharp/omnisharp-roslyn/pull/2456))
-* Implement /open for Cake (PR: [#2457](https://github.com/OmniSharp/omnisharp-roslyn/pull/2457))
+## [1.39.2] - 2022-10-26
+* Add missing LSP Handlers (PR: [#2463](https://github.com/OmniSharp/omnisharp-roslyn/pull/2463))
+* Add the TypeDefinitionHandler to the LSP (PR: [#2461](https://github.com/OmniSharp/omnisharp-roslyn/pull/2461))
+* Update .NET SDK and Roslyn (PR: [#2458](https://github.com/OmniSharp/omnisharp-roslyn/pull/2458))
+* Don't remap line mappings in Razor files (PR: [#2460](https://github.com/OmniSharp/omnisharp-roslyn/pull/2460))
+* Adds missing /open endpoint to Cake (PR: [#2457](https://github.com/OmniSharp/omnisharp-roslyn/pull/2457))
+* Adds V2 Highlight support to Cake (PR: [#2456](https://github.com/OmniSharp/omnisharp-roslyn/pull/2456))
+* Include Cake bits in .NET 6 builds (PR: [#2455](https://github.com/OmniSharp/omnisharp-roslyn/pull/2455))
+* Host dependency cleanup (PR: [#2436](https://github.com/OmniSharp/omnisharp-roslyn/pull/2436))
+* Upgrade http driver to latest ASP.NET Core version when running in .NET 6 (PR: [#2446](https://github.com/OmniSharp/omnisharp-roslyn/pull/2446))
+* updated IL Spy to 7.2.1.6856 (PR: [#2447](https://github.com/OmniSharp/omnisharp-roslyn/pull/2447))
+* Add comment to app.config explaining System.Memory versioning (PR: [#2444](https://github.com/OmniSharp/omnisharp-roslyn/pull/2444))
+* Add explicit System.Memory dependency to Hosts (PR: [#2443](https://github.com/OmniSharp/omnisharp-roslyn/pull/2443))
+* Return generated file info for find references (PR: [#2434](https://github.com/OmniSharp/omnisharp-roslyn/pull/2434))
+* Support NUnit TheoryAttribute (PR: [#2435](https://github.com/OmniSharp/omnisharp-roslyn/pull/2435))
+* Provide SourceGeneratedFileInfo for workspace symbolls requests (PR: [#2431](https://github.com/OmniSharp/omnisharp-roslyn/pull/2431))
+* Take the first dotnet cli we find instead of the last one we find (match the comment) (PR: [#2427](https://github.com/OmniSharp/omnisharp-roslyn/pull/2427)]
+* Record whether a CodeAction is a fix or not (PR: [#2430](https://github.com/OmniSharp/omnisharp-roslyn/pull/2430))
+* Update VMs used in build CI. (PR: [#2425](https://github.com/OmniSharp/omnisharp-roslyn/pull/2425))
+* Only get first document's highlights (PR: [#2424](https://github.com/OmniSharp/omnisharp-roslyn/pull/2424))
 
 ## [1.39.1] - 2022-07-25
 * Update Roslyn to 4.4.0 1.22369.1 (PR: [#2420](https://github.com/OmniSharp/omnisharp-roslyn/pull/2420))
