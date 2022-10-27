@@ -18,6 +18,9 @@ pr:
     include:
       - master
       - feature/*
+  paths:
+    exclude:
+      - 'CHANGELOG.md'
 
 resources:
   repositories:

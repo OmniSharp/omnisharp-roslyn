@@ -13,6 +13,8 @@ defaults:
     shell: pwsh
 on:
   pull_request:
+    paths-ignore:
+      - 'CHANGELOG.md'
     branches:
       - master
       - demo/*
