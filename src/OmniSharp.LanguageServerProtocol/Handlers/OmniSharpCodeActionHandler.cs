@@ -18,10 +18,7 @@ using CodeActionKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CodeA
 using OmniSharpCodeActionKind = OmniSharp.Models.V2.CodeActions.CodeActionKind;
 using System;
 using Range = OmniSharp.Extensions.LanguageServer.Protocol.Models.Range;
-using Newtonsoft.Json.Linq;
-using System.Text.Json.Nodes;
 using NuGet.Protocol;
-using MediatR.Pipeline;
 
 namespace OmniSharp.LanguageServerProtocol.Handlers
 {
