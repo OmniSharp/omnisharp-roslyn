@@ -7,7 +7,6 @@ using Microsoft.Extensions.Configuration;
 using OmniSharp.Extensions.LanguageServer.Protocol;
 using OmniSharp.Extensions.LanguageServer.Protocol.Document;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
-using OmniSharp.Extensions.LanguageServer.Protocol.Workspace;
 using OmniSharp.Models.V2;
 using TestUtility;
 using Xunit;
@@ -80,11 +79,17 @@ namespace OmniSharp.Lsp.Tests
                 using MyNamespace2;
                 using System;
                 u[||]sing MyNamespace1;
-
                 public class c {public c() {Guid.NewGuid();}}";
 
-            var refactorings = await FindRefactoringNamesAsync(code, roslynAnalyzersEnabled);
-            Assert.Contains("Remove Unnecessary Usings", refactorings);
+            const string expected =
+                @"using System;
+                public class c {public c() {Guid.NewGuid();}}";
+
+            var response =
+                (await RunRefactoringAsync(code, "Remove Unnecessary Usings",
+                    isAnalyzersEnabled: roslynAnalyzersEnabled)).Single();
+            var updatedText = await OmniSharpTestHost.Workspace.GetDocument(response.FileName).GetTextAsync(CancellationToken);
+            AssertUtils.AssertIgnoringIndent(expected, updatedText.ToString());
         }
 
         [Theory]
@@ -196,50 +201,24 @@ namespace OmniSharp.Lsp.Tests
                         [|Console.Write(""should be using System;"");|]
                     }
                 }";
+            const string expected =
+                @"public class Class1
+                {
+                    public void Whatever()
+                    {
+                        NewMethod();
+                    }
 
-            var bufferPath =
-                $"{Directory.GetCurrentDirectory()}{Path.DirectorySeparatorChar}somepath{Path.DirectorySeparatorChar}buffer.cs";
-            var testFile = new TestFile(bufferPath, code);
-            OmniSharpTestHost.AddFilesToWorkspace(testFile);
-            await Configuration.Update("csharp", TestHelpers.GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled));
-
-            var project = OmniSharpTestHost.Workspace.CurrentSolution.Projects.Single();
-            var document = project.Documents.First();
-
-            var span = testFile.Content.GetSpans().Single();
-            var range = GetSelection(testFile.Content.GetRangeFromSpan(span));
-
-            var codeActions = await Client.RequestCodeAction(new CodeActionParams()
-            {
-                Context = new CodeActionContext(),
-                TextDocument = new TextDocumentIdentifier(DocumentUri.FromFileSystemPath(document.FilePath)),
-                Range = LanguageServerProtocol.Helpers.ToRange(range),
-            }, CancellationToken);
-
-            var codeActionOrCommand = codeActions
-                .SingleOrDefault(ca => ca.CodeAction.Title == "Extract method");
-
-            Assert.NotNull(codeActionOrCommand);
-            Assert.True(codeActionOrCommand.IsCodeAction);
-
-            var codeAction = codeActionOrCommand.CodeAction;
-            var resolvedCodeAction = await Client.ResolveCodeAction(codeAction, CancellationToken);
-
-            var change = resolvedCodeAction.Edit.DocumentChanges.SingleOrDefault();
-            Assert.True(change.IsTextDocumentEdit);
-
-            var textEdit = change.TextDocumentEdit.Edits.SingleOrDefault();
-
-            const string expected = @"{
-        NewMethod();
-    }
-
-    private static void NewMethod()
-    {
-        Console.Write(""should be using System;"");
-    }
-";
-            Assert.Equal(expected.Replace("\r\n", "\n"), textEdit.NewText);
+                    private static void NewMethod()
+                    {
+                        Console.Write(""should be using System;"");
+                    }
+                }";
+            var response =
+                (await RunRefactoringAsync(code, "Extract Method", isAnalyzersEnabled: roslynAnalyzersEnabled))
+                .Single();
+            var updatedText = await OmniSharpTestHost.Workspace.GetDocument(response.FileName).GetTextAsync(CancellationToken);
+            AssertUtils.AssertIgnoringIndent(expected, updatedText.ToString());
         }
 
         [Theory]
@@ -315,19 +294,50 @@ namespace OmniSharp.Lsp.Tests
 
             Assert.True(change.IsRenameFile);
 
-            Assert.Equal(Path.Combine(Path.GetDirectoryName(document.FilePath), "Class1.cs"), change.RenameFile.NewUri.Path);
+            var expected = DocumentUri.FromFileSystemPath(Path.Combine(Path.GetDirectoryName(document.FilePath), "Class1.cs"));
+            Assert.Equal(expected.GetFileSystemPath(), change.RenameFile.NewUri.GetFileSystemPath());
         }
 
-        private async Task<IEnumerable<TestFile>> RunRefactoringAsync(string code, string refactoringName,
-            bool isAnalyzersEnabled = true)
+        private async Task<IEnumerable<TestFile>> RunRefactoringAsync(string code, string refactoringName, bool isAnalyzersEnabled = true)
         {
-            var refactorings = await FindRefactoringsAsync(code,
-                configurationData: TestHelpers.GetConfigurationDataWithAnalyzerConfig(isAnalyzersEnabled));
-            Assert.Contains(refactoringName, refactorings.Select(x => x.Title), StringComparer.OrdinalIgnoreCase);
+            await Restart(TestHelpers.GetConfigurationDataWithAnalyzerConfig(isAnalyzersEnabled));
 
-            var command = refactorings
-                .First(action => action.Title.Equals(refactoringName, StringComparison.OrdinalIgnoreCase)).Command;
-            return await RunRefactoringsAsync(code, command);
+            var bufferPath =
+                $"{Directory.GetCurrentDirectory()}{Path.DirectorySeparatorChar}somepath{Path.DirectorySeparatorChar}buffer.cs";
+            var testFile = new TestFile(bufferPath, code);
+            OmniSharpTestHost.AddFilesToWorkspace(testFile);
+
+            var project = OmniSharpTestHost.Workspace.CurrentSolution.Projects.Single();
+            var document = project.Documents.First();
+
+            var span = testFile.Content.GetSpans().Single();
+            var range = GetSelection(testFile.Content.GetRangeFromSpan(span));
+
+            // Request CodeAction
+            var codeActions = await Client.RequestCodeAction(new CodeActionParams()
+            {
+                Context = new CodeActionContext(),
+                TextDocument = new TextDocumentIdentifier(DocumentUri.FromFileSystemPath(document.FilePath)),
+                Range = LanguageServerProtocol.Helpers.ToRange(range),
+            }, CancellationToken);
+
+            // Locate CodeAction
+            var codeAction = codeActions
+                .Where(ca => ca.IsCodeAction)
+                .Select(ca => ca.CodeAction)
+                .SingleOrDefault(ca => ca.Title.Equals(refactoringName, StringComparison.OrdinalIgnoreCase));
+
+            // Resolve CodeAction
+            var resolvedCodeAction = await Client.ResolveCodeAction(codeAction, CancellationToken);
+
+            // Apply CodeAction
+            await Server.SendRequest(new ApplyWorkspaceEditParams()
+            {
+                Label = codeAction.Title,
+                Edit = resolvedCodeAction.Edit
+            }, CancellationToken);
+
+            return new[] { testFile };
         }
 
         private async Task<IEnumerable<string>> FindRefactoringNamesAsync(string code, bool isAnalyzersEnabled = true)
@@ -357,19 +367,6 @@ namespace OmniSharp.Lsp.Tests
             }, CancellationToken);
 
             return response.Where(z => z.IsCodeAction).Select(z => z.CodeAction);
-        }
-
-        private async Task<IEnumerable<TestFile>> RunRefactoringsAsync(string code, Command command)
-        {
-            var bufferPath =
-                $"{Directory.GetCurrentDirectory()}{Path.DirectorySeparatorChar}somepath{Path.DirectorySeparatorChar}buffer.cs";
-            var testFile = new TestFile(bufferPath, code);
-
-            OmniSharpTestHost.AddFilesToWorkspace(testFile);
-
-            await Client.Workspace.ExecuteCommand(command, CancellationToken);
-
-            return new[] { testFile };
         }
 
         private static Models.V2.Range GetSelection(TextRange range)
