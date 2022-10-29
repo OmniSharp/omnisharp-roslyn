@@ -83,16 +83,8 @@ namespace OmniSharp.Lsp.Tests
 
                 public class c {public c() {Guid.NewGuid();}}";
 
-            const string expected =
-                @"using System;
-
-                public class c {public c() {Guid.NewGuid();}}";
-
-            var response =
-                (await RunRefactoringAsync(code, "Remove Unnecessary Usings",
-                    isAnalyzersEnabled: roslynAnalyzersEnabled)).Single();
-            var updatedText = await OmniSharpTestHost.Workspace.GetDocument(response.FileName).GetTextAsync(CancellationToken);
-            AssertUtils.AssertIgnoringIndent(expected, updatedText.ToString());
+            var refactorings = await FindRefactoringNamesAsync(code, roslynAnalyzersEnabled);
+            Assert.Contains("Remove Unnecessary Usings", refactorings);
         }
 
         [Theory]
@@ -204,24 +196,50 @@ namespace OmniSharp.Lsp.Tests
                         [|Console.Write(""should be using System;"");|]
                     }
                 }";
-            const string expected =
-                @"public class Class1
-                {
-                    public void Whatever()
-                    {
-                        NewMethod();
-                    }
 
-                    private static void NewMethod()
-                    {
-                        Console.Write(""should be using System;"");
-                    }
-                }";
-            var response =
-                (await RunRefactoringAsync(code, "Extract Method", isAnalyzersEnabled: roslynAnalyzersEnabled))
-                .Single();
-            var updatedText = await OmniSharpTestHost.Workspace.GetDocument(response.FileName).GetTextAsync(CancellationToken);
-            AssertUtils.AssertIgnoringIndent(expected, updatedText.ToString());
+            var bufferPath =
+                $"{Directory.GetCurrentDirectory()}{Path.DirectorySeparatorChar}somepath{Path.DirectorySeparatorChar}buffer.cs";
+            var testFile = new TestFile(bufferPath, code);
+            OmniSharpTestHost.AddFilesToWorkspace(testFile);
+            await Configuration.Update("csharp", TestHelpers.GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled));
+
+            var project = OmniSharpTestHost.Workspace.CurrentSolution.Projects.Single();
+            var document = project.Documents.First();
+
+            var span = testFile.Content.GetSpans().Single();
+            var range = GetSelection(testFile.Content.GetRangeFromSpan(span));
+
+            var codeActions = await Client.RequestCodeAction(new CodeActionParams()
+            {
+                Context = new CodeActionContext(),
+                TextDocument = new TextDocumentIdentifier(DocumentUri.FromFileSystemPath(document.FilePath)),
+                Range = LanguageServerProtocol.Helpers.ToRange(range),
+            }, CancellationToken);
+
+            var codeActionOrCommand = codeActions
+                .SingleOrDefault(ca => ca.CodeAction.Title == "Extract method");
+
+            Assert.NotNull(codeActionOrCommand);
+            Assert.True(codeActionOrCommand.IsCodeAction);
+
+            var codeAction = codeActionOrCommand.CodeAction;
+            var resolvedCodeAction = await Client.ResolveCodeAction(codeAction, CancellationToken);
+
+            var change = resolvedCodeAction.Edit.DocumentChanges.SingleOrDefault();
+            Assert.True(change.IsTextDocumentEdit);
+
+            var textEdit = change.TextDocumentEdit.Edits.SingleOrDefault();
+
+            const string expected = @"{
+        NewMethod();
+    }
+
+    private static void NewMethod()
+    {
+        Console.Write(""should be using System;"");
+    }
+";
+            Assert.Equal(expected.Replace("\r\n", "\n"), textEdit.NewText);
         }
 
         [Theory]
@@ -235,24 +253,35 @@ namespace OmniSharp.Lsp.Tests
             var project = await AddProjectToWorkspace(testProject);
             var document = project.Documents.First();
 
-            await Client.ExecuteCommand(Command.Create("omnisharp/executeCodeAction")
-                .WithArguments(new
-                {
-                    Uri = DocumentUri.FromFileSystemPath(document.FilePath),
-                    Identifier = "Generate class 'Z' in new file",
-                    Name = "N/A",
-                    Range = new Range((8, 12), (8, 12)),
-                }), CancellationToken);
+            var codeActions = await Client.RequestCodeAction(new CodeActionParams()
+            {
+                Context = new CodeActionContext(),
+                TextDocument = new TextDocumentIdentifier(DocumentUri.FromFileSystemPath(document.FilePath)),
+                Range = new Range((8, 12), (8, 12)),
+            }, CancellationToken);
 
-            var updatedDocument = OmniSharpTestHost.Workspace.GetDocument(Path.Combine(Path.GetDirectoryName(document.FilePath), "Z.cs"));
-            var updateDocumentText = await updatedDocument.GetTextAsync(CancellationToken);
+            var codeActionOrCommand = codeActions
+                .SingleOrDefault(ca => ca.CodeAction.Title == "Generate type 'Z' -> Generate class 'Z' in new file");
 
-            Assert.Equal(@"namespace ConsoleApplication
+            Assert.NotNull(codeActionOrCommand);
+            Assert.True(codeActionOrCommand.IsCodeAction);
+
+            var codeAction = codeActionOrCommand.CodeAction;
+
+            var resolvedCodeAction = await Client.ResolveCodeAction(codeAction, CancellationToken);
+
+            var change = resolvedCodeAction.Edit.DocumentChanges.SingleOrDefault();
+            Assert.True(change.IsTextDocumentEdit);
+
+            var textEdit = change.TextDocumentEdit.Edits.SingleOrDefault();
+
+            const string expected = @"namespace ConsoleApplication
 {
     internal class Z
     {
     }
-}".Replace("\r\n", "\n"), updateDocumentText.ToString());
+}";
+            Assert.Equal(expected.Replace("\r\n", "\n"), textEdit.NewText);
         }
 
         [Theory]
@@ -265,20 +294,28 @@ namespace OmniSharp.Lsp.Tests
             var project = await AddProjectToWorkspace(testProject);
             var document = project.Documents.First();
 
-            await Client.ExecuteCommand(Command.Create("omnisharp/executeCodeAction")
-                .WithArguments(new
-                {
-                    Uri = DocumentUri.FromFileSystemPath(document.FilePath),
-                    Identifier = "Rename file to Class1.cs",
-                    Name = "N/A",
-                    Range = new Range((4, 10), (4, 10)),
-                }), CancellationToken);
+            var codeActions = await Client.RequestCodeAction(new CodeActionParams()
+            {
+                Context = new CodeActionContext(),
+                TextDocument = new TextDocumentIdentifier(DocumentUri.FromFileSystemPath(document.FilePath)),
+                Range = new Range((4, 10), (4, 10)),
+            }, CancellationToken);
 
-            Assert.Empty(OmniSharpTestHost.Workspace.GetDocuments(document.FilePath));
+            var codeActionOrCommand = codeActions
+                .SingleOrDefault(ca => ca.CodeAction.Title == "Rename file to Class1.cs");
 
-            Assert.NotEmpty(OmniSharpTestHost.Workspace.GetDocuments(
-                Path.Combine(Path.GetDirectoryName(document.FilePath), "Class1.cs")
-            ));
+            Assert.NotNull(codeActionOrCommand);
+            Assert.True(codeActionOrCommand.IsCodeAction);
+
+            var codeAction = codeActionOrCommand.CodeAction;
+
+            var resolvedCodeAction = await Client.ResolveCodeAction(codeAction, CancellationToken);
+
+            var change = resolvedCodeAction.Edit.DocumentChanges.SingleOrDefault();
+
+            Assert.True(change.IsRenameFile);
+
+            Assert.Equal(Path.Combine(Path.GetDirectoryName(document.FilePath), "Class1.cs"), change.RenameFile.NewUri.Path);
         }
 
         private async Task<IEnumerable<TestFile>> RunRefactoringAsync(string code, string refactoringName,
