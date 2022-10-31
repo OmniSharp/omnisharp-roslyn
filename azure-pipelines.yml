@@ -151,7 +151,7 @@ jobs:
           command: push
           nuGetFeedType: internal
           packagesToPush: "$(System.ArtifactsDirectory)/nuget/**/*.nupkg"
-          publishVstsFeed: omnisharp
+          publishVstsFeed: omnisharp/omnisharp
         condition: and(succeeded(), or(startsWith(variables['Build.SourceBranch'], 'refs/tags/v'), eq(variables['Build.SourceBranch'], 'refs/heads/master')))
       - task: NuGetCommand@2
         displayName: "Push NuGet packages to nuget.org"
