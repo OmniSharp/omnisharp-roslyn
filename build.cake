@@ -507,20 +507,23 @@ Task("PublishNet6Builds")
     {
         if (publishAll)
         {
-            if (!Platform.Current.IsWindows)
+            if (Platform.Current.IsWindows)
             {
-                PublishBuild(project, env, buildPlan, configuration, "linux-x64", "net6.0");
-                PublishBuild(project, env, buildPlan, configuration, "linux-arm64", "net6.0");
-                PublishBuild(project, env, buildPlan, configuration, "linux-musl-x64", "net6.0");
-                PublishBuild(project, env, buildPlan, configuration, "linux-musl-arm64", "net6.0");
+                PublishBuild(project, env, buildPlan, configuration, "win7-x86", "net6.0");
+                PublishBuild(project, env, buildPlan, configuration, "win7-x64", "net6.0");
+                PublishBuild(project, env, buildPlan, configuration, "win10-arm64", "net6.0");
+            }
+            else if (Platform.Current.IsMacOS)
+            {
                 PublishBuild(project, env, buildPlan, configuration, "osx-x64", "net6.0");
                 PublishBuild(project, env, buildPlan, configuration, "osx-arm64", "net6.0");
             }
             else
             {
-                PublishBuild(project, env, buildPlan, configuration, "win7-x86", "net6.0");
-                PublishBuild(project, env, buildPlan, configuration, "win7-x64", "net6.0");
-                PublishBuild(project, env, buildPlan, configuration, "win10-arm64", "net6.0");
+                PublishBuild(project, env, buildPlan, configuration, "linux-x64", "net6.0");
+                PublishBuild(project, env, buildPlan, configuration, "linux-arm64", "net6.0");
+                PublishBuild(project, env, buildPlan, configuration, "linux-musl-x64", "net6.0");
+                PublishBuild(project, env, buildPlan, configuration, "linux-musl-arm64", "net6.0");
             }
         }
         else if (Platform.Current.IsWindows)
@@ -592,20 +595,6 @@ string PublishBuild(string project, BuildEnvironment env, BuildPlan plan, string
     {
         Error($"Failed to publish {project} for {rid}");
         throw;
-    }
-
-    if (framework is "net6.0")
-    {
-        // Delete NuGet libraries so they can be loaded from SDK folder.
-        foreach (var filePath in DirectoryHelper.GetFiles(outputFolder, "NuGet.*.dll"))
-        {
-            FileHelper.Delete(filePath);
-        }
-
-        foreach (var filePath in DirectoryHelper.GetFiles(outputFolder, "System.Configuration.ConfigurationManager.dll"))
-        {
-            FileHelper.Delete(filePath);
-        }
     }
 
     CopyExtraDependencies(env, outputFolder);

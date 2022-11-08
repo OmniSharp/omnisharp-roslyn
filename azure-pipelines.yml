@@ -18,6 +18,9 @@ pr:
     include:
       - master
       - feature/*
+  paths:
+    exclude:
+      - 'CHANGELOG.md'
 
 resources:
   repositories:
@@ -143,12 +146,12 @@ jobs:
           buildType: "current"
           downloadPath: "$(System.ArtifactsDirectory)"
       - task: NuGetCommand@2
-        displayName: "Push NuGet packages to myget.org"
+        displayName: "Push NuGet packages to Azure Artifacts"
         inputs:
           command: push
-          nuGetFeedType: external
+          nuGetFeedType: internal
           packagesToPush: "$(System.ArtifactsDirectory)/nuget/**/*.nupkg"
-          publishFeedCredentials: myget.org
+          publishVstsFeed: Builds/omnisharp
         condition: and(succeeded(), or(startsWith(variables['Build.SourceBranch'], 'refs/tags/v'), eq(variables['Build.SourceBranch'], 'refs/heads/master')))
       - task: NuGetCommand@2
         displayName: "Push NuGet packages to nuget.org"
