@@ -62,7 +62,7 @@ namespace OmniSharp.LanguageServerProtocol
                 .WithInput(input)
                 .WithOutput(output)
                 // initializeParams from the client won't be arriving yet, configure with app loglevel
-                .ConfigureLogging(GetLogBuilderAction(configureLogging, application.LogLevel))
+                .ConfigureLogging(AddLanguageProtocolLogging(application.LogLevel))
                 .OnInitialize(Initialize)
                 .OnInitialized(Initialized)
                 .WithServices(ConfigureServices);
@@ -178,12 +178,13 @@ namespace OmniSharp.LanguageServerProtocol
             }
         }
 
-        private static Action<ILoggingBuilder> GetLogBuilderAction(Action<ILoggingBuilder> configureLogging, LogLevel loglevel) => builder =>
+        private static Action<ILoggingBuilder> AddLanguageProtocolLogging(LogLevel loglevel)
+            => builder => builder.AddLanguageProtocolLogging().SetMinimumLevel(loglevel);
+
+        private static Action<ILoggingBuilder> ConfigureLogging(Action<ILoggingBuilder> configureLogging, LogLevel loglevel) => builder =>
         {
             configureLogging?.Invoke(builder);
-            builder
-                .AddLanguageProtocolLogging()
-                .SetMinimumLevel(loglevel);
+            builder.SetMinimumLevel(loglevel);
         };
 
         private static (IServiceProvider serviceProvider, CompositionHost compositionHost) CreateCompositionHost(
@@ -211,7 +212,7 @@ namespace OmniSharp.LanguageServerProtocol
 
             var serviceProvider =
                 CompositionHostBuilder.CreateDefaultServiceProvider(environment, configurationResult.Configuration, eventEmitter,
-                    services, GetLogBuilderAction(configureLogging, environment.LogLevel));
+                    services, ConfigureLogging(configureLogging, environment.LogLevel));
 
             var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
             var logger = loggerFactory.CreateLogger<LanguageServerHost>();
