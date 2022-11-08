@@ -178,13 +178,13 @@ namespace OmniSharp.LanguageServerProtocol
             }
         }
 
-        private static Action<ILoggingBuilder> AddLanguageProtocolLogging(LogLevel loglevel) => builder => builder.AddLanguageProtocolLogging().SetMinimumLevel(loglevel);
+        private static Action<ILoggingBuilder> AddLanguageProtocolLogging(LogLevel loglevel)
+            => builder => builder.AddLanguageProtocolLogging().SetMinimumLevel(loglevel);
 
         private static Action<ILoggingBuilder> ConfigureLogging(Action<ILoggingBuilder> configureLogging, LogLevel loglevel) => builder =>
         {
             configureLogging?.Invoke(builder);
-            builder
-                .SetMinimumLevel(loglevel);
+            builder.SetMinimumLevel(loglevel);
         };
 
         private static (IServiceProvider serviceProvider, CompositionHost compositionHost) CreateCompositionHost(
