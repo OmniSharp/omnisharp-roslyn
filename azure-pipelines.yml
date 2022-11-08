@@ -145,14 +145,14 @@ jobs:
           artifactName: "nuget"
           buildType: "current"
           downloadPath: "$(System.ArtifactsDirectory)"
-      #- task: NuGetCommand@2
-      #  displayName: "Push NuGet packages to myget.org"
-      #  inputs:
-      #    command: push
-      #    nuGetFeedType: external
-      #    packagesToPush: "$(System.ArtifactsDirectory)/nuget/**/*.nupkg"
-      #    publishFeedCredentials: myget.org
-      #  condition: and(succeeded(), or(startsWith(variables['Build.SourceBranch'], 'refs/tags/v'), eq(variables['Build.SourceBranch'], 'refs/heads/master')))
+      - task: NuGetCommand@2
+        displayName: "Push NuGet packages to Azure Artifacts"
+        inputs:
+          command: push
+          nuGetFeedType: internal
+          packagesToPush: "$(System.ArtifactsDirectory)/nuget/**/*.nupkg"
+          publishVstsFeed: Builds/omnisharp
+        condition: and(succeeded(), or(startsWith(variables['Build.SourceBranch'], 'refs/tags/v'), eq(variables['Build.SourceBranch'], 'refs/heads/master')))
       - task: NuGetCommand@2
         displayName: "Push NuGet packages to nuget.org"
         inputs:
