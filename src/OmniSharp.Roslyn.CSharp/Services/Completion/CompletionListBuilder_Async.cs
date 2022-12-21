@@ -52,7 +52,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                         continue;
                     }
 
-
                     // The completion is somehow expensive. Currently, this one of two categories: import completion or override/partial completion.
                     Debug.Assert(completion.GetProviderName() is OverrideCompletionProvider or PartialMethodCompletionProvider
                                                               or TypeImportCompletionProvider or ExtensionMethodImportCompletionProvider
