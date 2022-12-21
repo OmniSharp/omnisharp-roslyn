@@ -94,6 +94,7 @@ class GeneratedCode
                 FileName = Path,
                 Buffer = @"_ = GeneratedCode.S;"
             });
+
             updatedResponse = await updateHandler.Handle(updateRequest);
             Assert.Equal(UpdateType.Deleted, updatedResponse.UpdateType);
             Assert.Null(updatedResponse.Source);
