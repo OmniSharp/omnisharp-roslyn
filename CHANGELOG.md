@@ -1,6 +1,9 @@
 # Changelog
 All changes to the project will be documented in this file.
 
+## [1.39.3]
+* Update Roslyn to 4.5.0-2.22527.10
+
 ## [1.39.2] - 2022-10-26
 * Add missing LSP Handlers (PR: [#2463](https://github.com/OmniSharp/omnisharp-roslyn/pull/2463))
 * Add the TypeDefinitionHandler to the LSP (PR: [#2461](https://github.com/OmniSharp/omnisharp-roslyn/pull/2461))

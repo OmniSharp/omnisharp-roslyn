@@ -46,10 +46,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
 
             var text = await document.GetTextAsync();
 
-            var documentVerison = await document.GetTextVersionAsync();
+            var documentVersion = await document.GetTextVersionAsync();
             lock (_lock)
             {
-                _lastSentVerisons[documentId] = documentVerison;
+                _lastSentVerisons[documentId] = documentVersion;
             }
 
             return new SourceGeneratedFileResponse
