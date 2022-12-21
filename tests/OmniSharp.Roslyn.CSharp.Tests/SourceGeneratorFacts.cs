@@ -84,6 +84,12 @@ class GeneratedCode
                 Buffer = Code.Replace("Hello world!", "Goodbye!")
             });
 
+            updateRequest = new UpdateSourceGeneratedFileRequest
+            {
+                DocumentGuid = gotoDefResponse.SourceGeneratedFileInfo.DocumentGuid,
+                ProjectGuid = gotoDefResponse.SourceGeneratedFileInfo.ProjectGuid
+            };
+
             updatedResponse = await updateHandler.Handle(updateRequest);
             Assert.Equal(UpdateType.Modified, updatedResponse.UpdateType);
             Assert.Contains("Goodbye!", updatedResponse.Source);
@@ -94,6 +100,12 @@ class GeneratedCode
                 FileName = Path,
                 Buffer = @"_ = GeneratedCode.S;"
             });
+
+            updateRequest = new UpdateSourceGeneratedFileRequest
+            {
+                DocumentGuid = gotoDefResponse.SourceGeneratedFileInfo.DocumentGuid,
+                ProjectGuid = gotoDefResponse.SourceGeneratedFileInfo.ProjectGuid
+            };
 
             updatedResponse = await updateHandler.Handle(updateRequest);
             Assert.Equal(UpdateType.Deleted, updatedResponse.UpdateType);
