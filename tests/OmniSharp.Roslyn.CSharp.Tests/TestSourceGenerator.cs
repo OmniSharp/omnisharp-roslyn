@@ -30,19 +30,21 @@ namespace OmniSharp.Roslyn.CSharp.Tests
     {
         private readonly bool _isEnabledByDefault;
         private readonly Action<GeneratorExecutionContext> _execute;
+        private readonly ImmutableArray<ISourceGenerator> _generators;
 
         public TestGeneratorReference(Action<GeneratorExecutionContext> execute, [CallerMemberName] string testId = "", bool isEnabledByDefault = true)
         {
             Id = testId;
             _isEnabledByDefault = isEnabledByDefault;
             _execute = execute;
+            _generators = ImmutableArray.Create<ISourceGenerator>(new TestSourceGenerator(_execute));
         }
 
         public override ImmutableArray<ISourceGenerator> GetGenerators(string language)
-            => ImmutableArray.Create<ISourceGenerator>(new TestSourceGenerator(_execute));
+            => _generators;
 
         public override ImmutableArray<ISourceGenerator> GetGeneratorsForAllLanguages()
-            => ImmutableArray.Create<ISourceGenerator>(new TestSourceGenerator(_execute));
+            => _generators;
 
         public override string FullPath => null;
         public override object Id { get; }

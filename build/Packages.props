@@ -6,7 +6,7 @@
         <MicrosoftTestPackageVersion>17.3.0</MicrosoftTestPackageVersion>
         <MSBuildPackageVersion>17.3.1</MSBuildPackageVersion>
         <NuGetPackageVersion>6.4.0-preview.1.53</NuGetPackageVersion>
-        <RoslynPackageVersion>4.4.0-3.22429.3</RoslynPackageVersion>
+        <RoslynPackageVersion>4.5.0-2.22527.10</RoslynPackageVersion>
         <XunitPackageVersion>2.4.1</XunitPackageVersion>
     </PropertyGroup>
 
@@ -59,6 +59,12 @@
         <PackageReference Update="Microsoft.VisualStudio.Setup.Configuration.Interop" Version="1.14.114" />
         <PackageReference Update="Microsoft.VisualStudio.SDK.EmbedInteropTypes" Version="15.0.12" />
 
+        <!-- The two references below can be deleted once OmniSharp.Extensions.LanguageServer
+        references Nerdbank.Streams version >= 2.9. The updated versions are needed for compatibility
+        with Razor. -->
+        <PackageReference Update="Microsoft.VisualStudio.Threading" Version="17.4.27" />
+        <PackageReference Update="Microsoft.VisualStudio.Validation" Version="17.0.64" />
+
         <PackageReference Update="Newtonsoft.Json" Version="13.0.1" />
 
         <PackageReference Update="NuGet.Common" Version="$(NuGetPackageVersion)" />
@@ -72,10 +78,10 @@
         <PackageReference Update="NuGet.Protocol" Version="$(NuGetPackageVersion)" />
         <PackageReference Update="NuGet.Versioning" Version="$(NuGetPackageVersion)" />
 
-        <PackageReference Update="OmniSharp.Extensions.LanguageServer" Version="0.19.0" />
-        <PackageReference Update="OmniSharp.Extensions.LanguageProtocol.Testing" Version="0.19.0" />
+        <PackageReference Update="OmniSharp.Extensions.LanguageServer" Version="0.19.7" />
+        <PackageReference Update="OmniSharp.Extensions.LanguageProtocol.Testing" Version="0.19.7" />
 
-        <PackageReference Update="SQLitePCLRaw.bundle_green" Version="2.0.7" />
+        <PackageReference Update="SQLitePCLRaw.bundle_green" Version="2.1.0" />
         <PackageReference Update="System.Collections.Immutable" Version="6.0.0" />
         <PackageReference Update="System.ComponentModel.Composition" Version="4.5.0" />
         <PackageReference Update="System.Composition" Version="6.0.0" />

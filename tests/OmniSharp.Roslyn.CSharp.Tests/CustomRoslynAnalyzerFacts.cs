@@ -7,8 +7,6 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 using OmniSharp.Models.Diagnostics;
-using OmniSharp.MSBuild;
-using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
 using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
@@ -211,7 +209,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             }
         }
 
-        [Fact]
+        [Fact(Skip = "https://github.com/dotnet/roslyn/issues/66085")]
         public async Task When_diagnostic_is_disabled_by_default_updating_rule_will_enable_it()
         {
             using (var host = GetHost())
