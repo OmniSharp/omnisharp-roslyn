@@ -2,7 +2,7 @@
 All changes to the project will be documented in this file.
 
 ## [1.39.3]
-* Update Roslyn to 4.5.0-2.22527.10
+* Update Roslyn to 4.5.0-2.22527.10 (PR: [#2486](https://github.com/OmniSharp/omnisharp-roslyn/pull/2486))
 
 ## [1.39.2] - 2022-10-26
 * Add missing LSP Handlers (PR: [#2463](https://github.com/OmniSharp/omnisharp-roslyn/pull/2463))
