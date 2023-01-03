@@ -1,8 +1,10 @@
 # Changelog
 All changes to the project will be documented in this file.
 
-## [1.39.3]
+## [1.39.3] - 2023-01-03
 * Update Roslyn to 4.5.0-2.22527.10 (PR: [#2486](https://github.com/OmniSharp/omnisharp-roslyn/pull/2486))
+* Update dotnet-script dependencies to 1.4.0 (PR: [#2477](https://github.com/OmniSharp/omnisharp-roslyn/pull/2477))
+* Register the LanguageServerLogger only once (PR: [#2473](https://github.com/OmniSharp/omnisharp-roslyn/pull/2473))
 
 ## [1.39.2] - 2022-10-26
 * Add missing LSP Handlers (PR: [#2463](https://github.com/OmniSharp/omnisharp-roslyn/pull/2463))
