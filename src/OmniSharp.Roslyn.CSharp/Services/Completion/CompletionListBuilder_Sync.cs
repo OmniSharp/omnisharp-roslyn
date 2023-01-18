@@ -61,6 +61,13 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
             {
                 TextSpan changeSpan = typedSpan;
                 var completion = completions.ItemsList[i];
+
+                // To-do: Add support for snippet items: https://github.com/OmniSharp/omnisharp-roslyn/issues/2485
+                if (completion.GetProviderName() == SnippetCompletionProvider)
+                {
+                    continue;
+                }
+
                 var insertTextFormat = InsertTextFormat.PlainText;
                 string labelText = completion.DisplayTextPrefix + completion.DisplayText + completion.DisplayTextSuffix;
                 List<LinePositionSpanTextChange>? additionalTextEdits = null;
