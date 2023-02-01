@@ -40,7 +40,6 @@
         "ProjectWithDisabledAnalyzers",
         "ProjectWithDisabledAnalyzers2",
         "ProjectWithAnalyzers",
-        "NetCore31Project",
         "ProjectWithAnalyzersAndEditorConfig",
         "ProjectWithParentEditorConfig",
         "TwoProjectsWithAnalyzerSuppressor"
