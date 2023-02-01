@@ -49,15 +49,12 @@ jobs:
         with:
           nuget-version: ${{ env.NuGetVersion }}
 
-      - name: 🔨 Use .NET Core ${{ env.DotNetVersion2 }} SDK
-        uses: actions/setup-dotnet@v1.7.2
+      - name: 🔨 Use .NET Core SDKs
+        uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: ${{ env.DotNetVersion2 }}
-
-      - name: 🔨 Use .NET Core ${{ env.DotNetVersion }} SDK
-        uses: actions/setup-dotnet@v1.7.2
-        with:
-          dotnet-version: ${{ env.DotNetVersion }}
+          dotnet-version: |
+            ${{ env.DotNetVersion2 }}
+            ${{ env.DotNetVersion }}
 
       - name: 🎁 dotnet tool restore
         run: |
