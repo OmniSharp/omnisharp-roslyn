@@ -48,7 +48,7 @@ namespace OmniSharp.MSBuild
                     return;
                 }
 
-                var hashedReferences = GetHashedReferences(args);
+                var hashedReferences = GetHashedReferences(args, _logger);
                 var (hashedFileExtensions, fileCounts) = GetUniqueHashedFileExtensionsAndCounts(args);
 
                 _eventEmitter.ProjectInformation(projectId, sessionId, (int)outputKind, projectCapabilities, targetFrameworks, sdkVersion, hashedReferences, hashedFileExtensions, fileCounts);
@@ -100,10 +100,13 @@ namespace OmniSharp.MSBuild
             return PropertyConverter.ToOutputKind(args.ProjectInstance.GetPropertyValue(PropertyNames.OutputType));
         }
 
-        private static IEnumerable<HashedString> GetHashedReferences(ProjectLoadedEventArgs args)
+        private static IEnumerable<HashedString> GetHashedReferences(ProjectLoadedEventArgs args, ILogger logger)
         {
             var referenceNames = args.References.Select(reference => Path.GetFileNameWithoutExtension(reference).ToLower());
-            return referenceNames.Select(_referenceHashingAlgorithm.HashInput);
+            logger.LogInformation($"References before hash: {string.Join(",", referenceNames)}");
+            var hashed = referenceNames.Select(_referenceHashingAlgorithm.HashInput);
+            logger.LogInformation($"References after hash: {string.Join(",", hashed.Select(h => h.Value))}");
+            return hashed;
         }
 
         private IEnumerable<string> GetProjectCapabilities(ProjectInstance projectInstance)
