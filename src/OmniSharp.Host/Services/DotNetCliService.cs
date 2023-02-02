@@ -94,7 +94,7 @@ namespace OmniSharp.Services
                         // A successful restore will update the project lock file which is monitored
                         // by the dotnet project system which eventually update the Roslyn model
                         exitStatus = ProcessHelper.Run(DotNetPath, $"restore {arguments}", workingDirectory, updateEnvironment: RemoveMSBuildEnvironmentVariables,
-                            outputDataReceived: (data) => _logger.LogInformation(data), errorDataReceived: (data) => _logger.LogError(data));
+                            outputDataReceived: (data) => _logger.LogDebug(data), errorDataReceived: (data) => _logger.LogDebug(data));
                     }
                     finally
                     {

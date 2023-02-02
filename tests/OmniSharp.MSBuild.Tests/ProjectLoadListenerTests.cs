@@ -140,7 +140,6 @@ namespace OmniSharp.MSBuild.Tests
             var expectedHash = GetHashedReference("system.core");
             l.LogInformation(expectedHash);
             Assert.NotEmpty(emitter.ReceivedMessages[0].References.Where(reference => reference == expectedHash));
-            Assert.False(true);
         }
 
 
