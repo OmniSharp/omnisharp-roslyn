@@ -136,10 +136,7 @@ namespace OmniSharp.MSBuild.Tests
             var dotnetCliService = host.GetExport<IDotNetCliService>();
             await dotnetCliService.RestoreAsync(testProject.Directory);
             Assert.Single(emitter.ReceivedMessages);
-            var l = LoggerFactory.CreateLogger("test");
-            var expectedHash = GetHashedReference("system.core");
-            l.LogInformation(expectedHash);
-            Assert.NotEmpty(emitter.ReceivedMessages[0].References.Where(reference => reference == expectedHash));
+            Assert.NotEmpty(emitter.ReceivedMessages[0].References.Where(reference => reference == GetHashedReference("system.core")));
         }
 
 
