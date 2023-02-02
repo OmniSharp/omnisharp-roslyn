@@ -103,7 +103,8 @@ namespace OmniSharp.MSBuild
         private static IEnumerable<HashedString> GetHashedReferences(ProjectLoadedEventArgs args)
         {
             var referenceNames = args.References.Select(reference => Path.GetFileNameWithoutExtension(reference).ToLower());
-            return referenceNames.Select(_referenceHashingAlgorithm.HashInput);
+            var hashed = referenceNames.Select(_referenceHashingAlgorithm.HashInput);
+            return hashed;
         }
 
         private IEnumerable<string> GetProjectCapabilities(ProjectInstance projectInstance)
