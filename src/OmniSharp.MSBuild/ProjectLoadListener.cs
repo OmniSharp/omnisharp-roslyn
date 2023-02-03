@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Composition;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Microsoft.Build.Execution;
@@ -51,12 +52,25 @@ namespace OmniSharp.MSBuild
                 var hashedReferences = GetHashedReferences(args);
                 var (hashedFileExtensions, fileCounts) = GetUniqueHashedFileExtensionsAndCounts(args);
 
-                _eventEmitter.ProjectInformation(projectId, sessionId, (int)outputKind, projectCapabilities, targetFrameworks, sdkVersion, hashedReferences, hashedFileExtensions, fileCounts);
+                var sdkStyleProject = IsSdkStyleProject(args);
+                _eventEmitter.ProjectInformation(projectId, sessionId, (int)outputKind, projectCapabilities, targetFrameworks, sdkVersion, hashedReferences, hashedFileExtensions, fileCounts, sdkStyleProject);
             }
             catch (Exception ex)
             {
                 _logger.LogError("Unexpected exception got thrown from project load listener: " + ex);
             }
+        }
+
+        private static bool IsSdkStyleProject(ProjectLoadedEventArgs args)
+        {
+            // To see if a project is an SDK style project we check for either of two things
+            //   1.  If it has a TargetFramework / TargetFrameworks property.  This isn't fully complete
+            //       as this property could come from a different props file
+            //   2.  If it imports an SDK.  This can be defined multiple ways in the project file, but
+            //       we can look at the resolved imports after evaluation to see if any are SDK based.
+            bool hasTargetFrameworkProperty = args.Project.Properties.Any(property => property.Name is "TargetFramework" or "TargetFrameworks");
+            bool importsSdk = args.Project.Imports.Any(import => import.SdkResult != null);
+            return hasTargetFrameworkProperty || importsSdk;
         }
 
         private static (IEnumerable<HashedString> Extensions, IEnumerable<int> Counts) GetUniqueHashedFileExtensionsAndCounts(ProjectLoadedEventArgs args)

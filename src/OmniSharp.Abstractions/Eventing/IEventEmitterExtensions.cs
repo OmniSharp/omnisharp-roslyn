@@ -54,7 +54,8 @@ namespace OmniSharp.Eventing
                                               HashedString sdkVersion,
                                               IEnumerable<HashedString> references,
                                               IEnumerable<HashedString> fileExtensions,
-                                              IEnumerable<int> fileCounts)
+                                              IEnumerable<int> fileCounts,
+                                              bool sdkStyleProject)
         {
             var projectConfiguration = new ProjectConfigurationMessage()
             {
@@ -66,7 +67,8 @@ namespace OmniSharp.Eventing
                 SessionId = sessionId.Value,
                 References = references.Select(hashed => hashed.Value),
                 FileExtensions = fileExtensions.Select(hashed => hashed.Value),
-                FileCounts = fileCounts
+                FileCounts = fileCounts,
+                SdkStyleProject = sdkStyleProject
             };
 
             emitter.Emit(
