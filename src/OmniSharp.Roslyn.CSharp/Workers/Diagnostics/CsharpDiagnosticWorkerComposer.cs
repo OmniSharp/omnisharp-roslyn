@@ -17,7 +17,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
     // Theres several implementation of worker currently based on configuration.
     // This will handle switching between them.
     [Export(typeof(ICsDiagnosticWorker)), Shared]
-    public class CsharpDiagnosticWorkerComposer: ICsDiagnosticWorker, IDisposable
+    public class CsharpDiagnosticWorkerComposer : CSharpDiagnosticWorkerBase, IDisposable
     {
         private readonly OmniSharpWorkspace _workspace;
         private readonly IEnumerable<ICodeActionProvider> _providers;
@@ -36,6 +36,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
             DiagnosticEventForwarder forwarder,
             IOptionsMonitor<OmniSharpOptions> options,
             FileSystemHelper fileSystemHelper)
+            : base(workspace, fileSystemHelper)
         {
             _workspace = workspace;
             _providers = providers;
@@ -60,7 +61,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
             }
             else if (!options.RoslynExtensionsOptions.EnableAnalyzersSupport && (firstRun || _implementation is CSharpDiagnosticWorkerWithAnalyzers))
             {
-                var old = Interlocked.Exchange(ref _implementation, new CSharpDiagnosticWorker(_workspace, _forwarder, _loggerFactory, _options.CurrentValue));
+                var old = Interlocked.Exchange(ref _implementation, new CSharpDiagnosticWorker(_workspace, _forwarder, _loggerFactory, _options.CurrentValue, _fileSystemHelper));
                 if (old is IDisposable disposable)
                 {
                     disposable.Dispose();
@@ -73,24 +74,14 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
             }
         }
 
-        public Task<ImmutableArray<DocumentDiagnostics>> GetAllDiagnosticsAsync()
+        public override Task<ImmutableArray<DocumentDiagnostics>> GetAllDiagnosticsAsync()
         {
             return _implementation.GetAllDiagnosticsAsync();
         }
 
-        public Task<ImmutableArray<DocumentDiagnostics>> GetDiagnostics(ImmutableArray<string> documentPaths)
+        public override Task<ImmutableArray<DocumentDiagnostics>> GetDiagnostics(ImmutableArray<string> documentPaths)
         {
             return _implementation.GetDiagnostics(documentPaths);
-        }
-
-        public ImmutableArray<DocumentId> QueueDocumentsForDiagnostics()
-        {
-            return _implementation.QueueDocumentsForDiagnostics();
-        }
-
-        public ImmutableArray<DocumentId> QueueDocumentsForDiagnostics(ImmutableArray<ProjectId> projectIds)
-        {
-            return _implementation.QueueDocumentsForDiagnostics(projectIds);
         }
 
         public void Dispose()
@@ -99,14 +90,17 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
             _onChange.Dispose();
         }
 
-        public Task<IEnumerable<Diagnostic>> AnalyzeDocumentAsync(Document document, CancellationToken cancellationToken)
+        public override Task<IEnumerable<Diagnostic>> AnalyzeDocumentAsync(Document document, CancellationToken cancellationToken)
         {
             return _implementation.AnalyzeDocumentAsync(document, cancellationToken);
         }
 
-        public Task<IEnumerable<Diagnostic>> AnalyzeProjectsAsync(Project project, CancellationToken cancellationToken)
+        public override Task<IEnumerable<Diagnostic>> AnalyzeProjectsAsync(Project project, CancellationToken cancellationToken)
         {
             return _implementation.AnalyzeProjectsAsync(project, cancellationToken);
         }
+
+        public override ImmutableArray<DocumentId> QueueDocumentsForDiagnostics(IEnumerable<Document> documents) =>
+            _implementation.QueueDocumentsForDiagnostics(documents);
     }
 }

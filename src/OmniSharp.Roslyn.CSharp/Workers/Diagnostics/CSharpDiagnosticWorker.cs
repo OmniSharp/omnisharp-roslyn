@@ -1,4 +1,3 @@
-
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -11,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
+using OmniSharp.FileSystem;
 using OmniSharp.Helpers;
 using OmniSharp.Models.Diagnostics;
 using OmniSharp.Options;
@@ -18,7 +18,7 @@ using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
 
 namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
 {
-    public class CSharpDiagnosticWorker: ICsDiagnosticWorker, IDisposable
+    public class CSharpDiagnosticWorker : CSharpDiagnosticWorkerBase, IDisposable
     {
         private readonly ILogger _logger;
         private readonly OmniSharpWorkspace _workspace;
@@ -27,7 +27,13 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
         private readonly IObserver<string> _openDocuments;
         private readonly IDisposable _disposable;
 
-        public CSharpDiagnosticWorker(OmniSharpWorkspace workspace, DiagnosticEventForwarder forwarder, ILoggerFactory loggerFactory, OmniSharpOptions options)
+        public CSharpDiagnosticWorker(
+                OmniSharpWorkspace workspace,
+                DiagnosticEventForwarder forwarder,
+                ILoggerFactory loggerFactory,
+                OmniSharpOptions options,
+                FileSystemHelper fileSystemHelper)
+            : base(workspace, fileSystemHelper)
         {
             _workspace = workspace;
             _forwarder = forwarder;
@@ -71,22 +77,12 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
             {
                 var newDocument = changeEvent.NewSolution.GetDocument(changeEvent.DocumentId);
 
-                EmitDiagnostics(new [] {newDocument.Id}.Union(_workspace.GetOpenDocumentIds()).Select(x => _workspace.CurrentSolution.GetDocument(x).FilePath).ToArray());
+                QueueDocumentsForDiagnostics(new[] { newDocument.Id }.Union(_workspace.GetOpenDocumentIds()));
             }
             else if (changeEvent.Kind == WorkspaceChangeKind.ProjectAdded || changeEvent.Kind == WorkspaceChangeKind.ProjectReloaded)
             {
-                EmitDiagnostics(changeEvent.NewSolution.GetProject(changeEvent.ProjectId).Documents.Select(x => x.FilePath).ToArray());
+                QueueDocumentsForDiagnostics(changeEvent.NewSolution.GetProject(changeEvent.ProjectId));
             }
-        }
-
-        public void QueueDiagnostics(params string[] documents)
-        {
-            if (!_forwarder.IsEnabled)
-            {
-                return;
-            }
-
-            this.EmitDiagnostics(documents);
         }
 
         private void EmitDiagnostics(params string[] documents)
@@ -131,13 +127,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
             };
         }
 
-        public ImmutableArray<DocumentId> QueueForDiagnosis(ImmutableArray<string> documentPaths)
-        {
-            this.EmitDiagnostics(documentPaths.ToArray());
-            return ImmutableArray<DocumentId>.Empty;
-        }
-
-        public async Task<ImmutableArray<DocumentDiagnostics>> GetDiagnostics(ImmutableArray<string> documentPaths)
+        public override async Task<ImmutableArray<DocumentDiagnostics>> GetDiagnostics(ImmutableArray<string> documentPaths)
         {
             if (!documentPaths.Any()) return ImmutableArray<DocumentDiagnostics>.Empty;
 
@@ -196,21 +186,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
             }
         }
 
-        public ImmutableArray<DocumentId> QueueDocumentsForDiagnostics()
-        {
-            var documents = _workspace.CurrentSolution.Projects.SelectMany(x => x.Documents);
-            QueueForDiagnosis(documents.Select(x => x.FilePath).ToImmutableArray());
-            return documents.Select(x => x.Id).ToImmutableArray();
-        }
-
-        public ImmutableArray<DocumentId> QueueDocumentsForDiagnostics(ImmutableArray<ProjectId> projectIds)
-        {
-            var documents = projectIds.SelectMany(projectId => _workspace.CurrentSolution.GetProject(projectId).Documents);
-            QueueForDiagnosis(documents.Select(x => x.FilePath).ToImmutableArray());
-            return documents.Select(x => x.Id).ToImmutableArray();
-        }
-
-        public Task<ImmutableArray<DocumentDiagnostics>> GetAllDiagnosticsAsync()
+        public override Task<ImmutableArray<DocumentDiagnostics>> GetAllDiagnosticsAsync()
         {
             var documents = _workspace.CurrentSolution.Projects.SelectMany(x => x.Documents).Select(x => x.FilePath).ToImmutableArray();
             return GetDiagnostics(documents);
@@ -224,13 +200,13 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
             _disposable.Dispose();
         }
 
-        public async Task<IEnumerable<Diagnostic>> AnalyzeDocumentAsync(Document document, CancellationToken cancellationToken)
+        public override async Task<IEnumerable<Diagnostic>> AnalyzeDocumentAsync(Document document, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
             return await GetDiagnosticsForDocument(document, document.Project.Name);
         }
 
-        public async Task<IEnumerable<Diagnostic>> AnalyzeProjectsAsync(Project project, CancellationToken cancellationToken)
+        public override async Task<IEnumerable<Diagnostic>> AnalyzeProjectsAsync(Project project, CancellationToken cancellationToken)
         {
             var diagnostics = new List<Diagnostic>();
             foreach (var document in project.Documents)
@@ -240,6 +216,12 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
             }
 
             return diagnostics;
+        }
+
+        public override ImmutableArray<DocumentId> QueueDocumentsForDiagnostics(IEnumerable<Document> documents)
+        {
+            EmitDiagnostics(documents.Select(x => x.FilePath).ToArray());
+            return ImmutableArray<DocumentId>.Empty;
         }
     }
 }
