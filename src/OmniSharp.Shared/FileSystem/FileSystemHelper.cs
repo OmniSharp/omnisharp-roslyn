@@ -22,6 +22,8 @@ namespace OmniSharp.FileSystem
             _omniSharpEnvironment = omniSharpEnvironment;
         }
 
+        public string TargetDirectory => _omniSharpEnvironment.TargetDirectory;
+
         public IEnumerable<string> GetFiles(string includePattern) => GetFiles(includePattern, _omniSharpEnvironment.TargetDirectory);
 
         public IEnumerable<string> GetFiles(string includePattern, string targetDirectory)
@@ -40,6 +42,24 @@ namespace OmniSharp.FileSystem
             }
 
             return matcher.GetResultsInFullPath(targetDirectory);
+        }
+
+        public Matcher BuildMatcher()
+        {
+            Matcher matcher = new();
+            matcher.AddIncludePatterns(new string[] { "./**/*", "./*" });
+
+            if (_omniSharpOptions.FileOptions.SystemExcludeSearchPatterns != null && _omniSharpOptions.FileOptions.SystemExcludeSearchPatterns.Any())
+            {
+                matcher.AddExcludePatterns(_omniSharpOptions.FileOptions.SystemExcludeSearchPatterns);
+            }
+
+            if (_omniSharpOptions.FileOptions.ExcludeSearchPatterns != null && _omniSharpOptions.FileOptions.ExcludeSearchPatterns.Any())
+            {
+                matcher.AddExcludePatterns(_omniSharpOptions.FileOptions.ExcludeSearchPatterns);
+            }
+
+            return matcher;
         }
 
         public static string GetRelativePath(string fullPath, string basePath)

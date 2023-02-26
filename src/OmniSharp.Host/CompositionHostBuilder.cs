@@ -4,6 +4,7 @@ using System.Composition.Hosting;
 using System.Composition.Hosting.Core;
 using System.Linq;
 using System.Reflection;
+using Karambolo.Extensions.Logging.File;
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
@@ -143,6 +144,9 @@ namespace OmniSharp
             // Setup the options from configuration
             services.Configure<OmniSharpOptions>(configuration)
                 .PostConfigure<OmniSharpOptions>(OmniSharpOptions.PostConfigure);
+
+            LoggingOptions loggingOptions = configuration.GetSection(nameof(LoggingOptions)).Get<LoggingOptions>();
+
             services.AddSingleton(configuration);
             services.AddSingleton<IConfiguration>(configuration);
 
@@ -157,6 +161,14 @@ namespace OmniSharp
 
             services.AddLogging(builder =>
             {
+                if(loggingOptions.Enabled)
+                {
+                    builder.AddFile(x =>
+                    {
+                        x.RootPath = environment.TargetDirectory;
+                        x.Files = new LogFileOptions[] { new() { Path = "omnisharp_log.txt"} };
+                    });
+                }
                 var workspaceInformationServiceName = typeof(WorkspaceInformationService).FullName;
                 var projectEventForwarder = typeof(ProjectEventForwarder).FullName;
 

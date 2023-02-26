@@ -19,6 +19,8 @@ namespace OmniSharp.Options
 
         public OmniSharpExtensionsOptions Plugins { get; set; } = new OmniSharpExtensionsOptions();
 
+        public LoggingOptions LoggingOptions { get; set; } = new();
+
         public override string ToString() => JsonConvert.SerializeObject(this);
 
         public static void PostConfigure(OmniSharpOptions options)
@@ -30,6 +32,7 @@ namespace OmniSharp.Options
             options.ImplementTypeOptions ??= new ImplementTypeOptions();
             options.DotNetCliOptions ??= new DotNetCliOptions();
             options.Plugins ??= new OmniSharpExtensionsOptions();
+            options.LoggingOptions ??= new();
         }
     }
 }

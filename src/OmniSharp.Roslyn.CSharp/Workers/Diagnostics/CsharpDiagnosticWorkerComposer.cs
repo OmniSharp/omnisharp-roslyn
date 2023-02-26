@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using OmniSharp.FileSystem;
 using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
 using OmniSharp.Services;
@@ -25,6 +26,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
         private readonly IOptionsMonitor<OmniSharpOptions> _options;
         private ICsDiagnosticWorker _implementation;
         private readonly IDisposable _onChange;
+        private readonly FileSystemHelper _fileSystemHelper;
 
         [ImportingConstructor]
         public CsharpDiagnosticWorkerComposer(
@@ -32,7 +34,8 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
             [ImportMany] IEnumerable<ICodeActionProvider> providers,
             ILoggerFactory loggerFactory,
             DiagnosticEventForwarder forwarder,
-            IOptionsMonitor<OmniSharpOptions> options)
+            IOptionsMonitor<OmniSharpOptions> options,
+            FileSystemHelper fileSystemHelper)
         {
             _workspace = workspace;
             _providers = providers;
@@ -40,6 +43,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
             _forwarder = forwarder;
             _options = options;
             _onChange = options.OnChange(UpdateImplementation);
+            _fileSystemHelper = fileSystemHelper;
             UpdateImplementation(options.CurrentValue);
         }
 
@@ -48,7 +52,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
             var firstRun = _implementation is null;
             if (options.RoslynExtensionsOptions.EnableAnalyzersSupport && (firstRun || _implementation is CSharpDiagnosticWorker))
             {
-                var old = Interlocked.Exchange(ref _implementation, new CSharpDiagnosticWorkerWithAnalyzers(_workspace, _providers, _loggerFactory, _forwarder, options));
+                var old = Interlocked.Exchange(ref _implementation, new CSharpDiagnosticWorkerWithAnalyzers(_workspace, _providers, _loggerFactory, _forwarder, options, _fileSystemHelper));
                 if (old is IDisposable disposable)
                 {
                     disposable.Dispose();
