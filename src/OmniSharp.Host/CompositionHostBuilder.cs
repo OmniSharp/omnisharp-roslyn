@@ -161,7 +161,7 @@ namespace OmniSharp
 
             services.AddLogging(builder =>
             {
-                if(loggingOptions.Enabled)
+                if (loggingOptions?.Enabled == true)
                 {
                     builder.AddFile(x =>
                     {
