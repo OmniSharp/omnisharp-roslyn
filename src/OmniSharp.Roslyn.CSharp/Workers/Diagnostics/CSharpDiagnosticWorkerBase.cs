@@ -25,6 +25,8 @@ public abstract class CSharpDiagnosticWorkerBase : ICsDiagnosticWorker
         _fileSystemMatcher = _fileSystemHelper.BuildMatcher();
     }
 
+    public abstract bool AnalyzersEnabled { get; }
+
     public abstract Task<IEnumerable<Diagnostic>> AnalyzeDocumentAsync(Document document, CancellationToken cancellationToken);
 
     public abstract Task<IEnumerable<Diagnostic>> AnalyzeProjectsAsync(Project project, CancellationToken cancellationToken);

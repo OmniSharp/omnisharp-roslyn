@@ -41,7 +41,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                 ILoggerFactory loggerFactory,
                 DiagnosticEventForwarder forwarder,
                 OmniSharpOptions options,
-                FileSystemHelper fileSystemHelper)
+                FileSystemHelper fileSystemHelper,
+                bool enableAnalyzers = true)
             : base(workspace, fileSystemHelper)
         {
             _logger = loggerFactory.CreateLogger<CSharpDiagnosticWorkerWithAnalyzers>();
@@ -52,6 +53,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             _forwarder = forwarder;
             _options = options;
             _workspace = workspace;
+            AnalyzersEnabled = enableAnalyzers;
 
             _workspace.WorkspaceChanged += OnWorkspaceChanged;
             _workspace.OnInitialized += OnWorkspaceInitialized;
@@ -61,6 +63,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
             OnWorkspaceInitialized(_workspace.Initialized);
         }
+
+        public override bool AnalyzersEnabled { get; }
 
         public void OnWorkspaceInitialized(bool isInitialized)
         {
@@ -408,13 +412,13 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             }
         }
 
-        private ImmutableArray<DiagnosticAnalyzer> GetAnalyzersForProject(Project project)
-        {
-            return _providers
-                .SelectMany(x => x.CodeDiagnosticAnalyzerProviders)
-                .Concat(project.AnalyzerReferences.SelectMany(x => x.GetAnalyzers(project.Language)))
-                .ToImmutableArray();
-        }
+        private ImmutableArray<DiagnosticAnalyzer> GetAnalyzersForProject(Project project) =>
+            AnalyzersEnabled
+                ? Enumerable.Empty<DiagnosticAnalyzer>().ToImmutableArray()
+                : _providers
+                    .SelectMany(x => x.CodeDiagnosticAnalyzerProviders)
+                    .Concat(project.AnalyzerReferences.SelectMany(x => x.GetAnalyzers(project.Language)))
+                    .ToImmutableArray();
 
         private void OnAnalyzerException(Exception ex, DiagnosticAnalyzer analyzer, Diagnostic diagnostic)
         {

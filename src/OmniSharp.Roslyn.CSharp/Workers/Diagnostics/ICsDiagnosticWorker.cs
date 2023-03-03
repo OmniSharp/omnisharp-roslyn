@@ -9,6 +9,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
 {
     public interface ICsDiagnosticWorker
     {
+        bool AnalyzersEnabled { get; }
         Task<ImmutableArray<DocumentDiagnostics>> GetDiagnostics(ImmutableArray<string> documentPaths);
         Task<ImmutableArray<DocumentDiagnostics>> GetAllDiagnosticsAsync();
         Task<IEnumerable<Diagnostic>> AnalyzeDocumentAsync(Document document, CancellationToken cancellationToken);

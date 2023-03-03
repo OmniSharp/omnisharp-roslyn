@@ -14,8 +14,6 @@ using OmniSharp.Services;
 
 namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
 {
-    // Theres several implementation of worker currently based on configuration.
-    // This will handle switching between them.
     [Export(typeof(ICsDiagnosticWorker)), Shared]
     public class CsharpDiagnosticWorkerComposer : CSharpDiagnosticWorkerBase, IDisposable
     {
@@ -23,7 +21,6 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
         private readonly IEnumerable<ICodeActionProvider> _providers;
         private readonly ILoggerFactory _loggerFactory;
         private readonly DiagnosticEventForwarder _forwarder;
-        private readonly IOptionsMonitor<OmniSharpOptions> _options;
         private ICsDiagnosticWorker _implementation;
         private readonly IDisposable _onChange;
         private readonly FileSystemHelper _fileSystemHelper;
@@ -42,7 +39,6 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
             _providers = providers;
             _loggerFactory = loggerFactory;
             _forwarder = forwarder;
-            _options = options;
             _onChange = options.OnChange(UpdateImplementation);
             _fileSystemHelper = fileSystemHelper;
             UpdateImplementation(options.CurrentValue);
@@ -50,29 +46,33 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
 
         private void UpdateImplementation(OmniSharpOptions options)
         {
-            var firstRun = _implementation is null;
-            if (options.RoslynExtensionsOptions.EnableAnalyzersSupport && (firstRun || _implementation is CSharpDiagnosticWorker))
+            bool firstRun = _implementation is null;
+            bool? recreateWithAnalyzers = null;
+            if (options.RoslynExtensionsOptions.EnableAnalyzersSupport && (firstRun || _implementation?.AnalyzersEnabled == false))
             {
-                var old = Interlocked.Exchange(ref _implementation, new CSharpDiagnosticWorkerWithAnalyzers(_workspace, _providers, _loggerFactory, _forwarder, options, _fileSystemHelper));
-                if (old is IDisposable disposable)
-                {
-                    disposable.Dispose();
-                }
+                recreateWithAnalyzers = true;
             }
-            else if (!options.RoslynExtensionsOptions.EnableAnalyzersSupport && (firstRun || _implementation is CSharpDiagnosticWorkerWithAnalyzers))
+            else if (!options.RoslynExtensionsOptions.EnableAnalyzersSupport && (firstRun || _implementation?.AnalyzersEnabled == true))
             {
-                var old = Interlocked.Exchange(ref _implementation, new CSharpDiagnosticWorker(_workspace, _forwarder, _loggerFactory, _options.CurrentValue, _fileSystemHelper));
-                if (old is IDisposable disposable)
-                {
-                    disposable.Dispose();
-                }
+                recreateWithAnalyzers = false;
+            }
 
-                if (!firstRun)
-                {
-                    _implementation.QueueDocumentsForDiagnostics();
-                }
+            if (recreateWithAnalyzers is null)
+            {
+                return;
+            }
+
+            ICsDiagnosticWorker old = Interlocked.Exchange(
+                    ref _implementation,
+                    new CSharpDiagnosticWorkerWithAnalyzers(
+                        _workspace, _providers, _loggerFactory, _forwarder, options, _fileSystemHelper, recreateWithAnalyzers!.Value));
+            if (old is IDisposable disposable)
+            {
+                disposable.Dispose();
             }
         }
+
+        public override bool AnalyzersEnabled => _implementation.AnalyzersEnabled;
 
         public override Task<ImmutableArray<DocumentDiagnostics>> GetAllDiagnosticsAsync()
         {
