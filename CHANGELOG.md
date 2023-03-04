@@ -2,7 +2,7 @@
 All changes to the project will be documented in this file.
 
 ## [1.39.5] - not yet released
-* Update to Roslyn `4.6.0-2.23128.12` (PR:[#2511](https://github.com/OmniSharp/omnisharp-roslyn/pull/2511))
+* Update to Roslyn `4.6.0-3.23153.5` (PR:[#2511](https://github.com/OmniSharp/omnisharp-roslyn/pull/2511))
 
 ## [1.39.4] - 2023-01-18
 * Disable snippets in sync completion (PR: [#2497](https://github.com/OmniSharp/omnisharp-roslyn/pull/2497))
