@@ -62,8 +62,8 @@
         <!-- The two references below can be deleted once OmniSharp.Extensions.LanguageServer
         references Nerdbank.Streams version >= 2.9. The updated versions are needed for compatibility
         with Razor. -->
-        <PackageReference Update="Microsoft.VisualStudio.Threading" Version="17.4.27" />
-        <PackageReference Update="Microsoft.VisualStudio.Validation" Version="17.0.64" />
+        <PackageReference Update="Microsoft.VisualStudio.Threading" Version="17.5.22" />
+        <PackageReference Update="Microsoft.VisualStudio.Validation" Version="17.0.65" />
 
         <PackageReference Update="Newtonsoft.Json" Version="13.0.1" />
 
