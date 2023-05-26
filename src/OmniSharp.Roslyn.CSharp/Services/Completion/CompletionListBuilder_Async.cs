@@ -46,8 +46,13 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                 bool hasAfterInsertStep = false;
                 if (completion.IsComplexTextEdit)
                 {
-                    // The completion is somehow expensive. Currently, this one of two categories: import completion, or override/partial
-                    // completion.
+                    // To-do: Add support for snippet items: https://github.com/OmniSharp/omnisharp-roslyn/issues/2485
+                    if (completion.GetProviderName() == SnippetCompletionProvider)
+                    {
+                        continue;
+                    }
+
+                    // The completion is somehow expensive. Currently, this one of two categories: import completion or override/partial completion.
                     Debug.Assert(completion.GetProviderName() is OverrideCompletionProvider or PartialMethodCompletionProvider
                                                               or TypeImportCompletionProvider or ExtensionMethodImportCompletionProvider
                                                               or AwaitCompletionProvider);

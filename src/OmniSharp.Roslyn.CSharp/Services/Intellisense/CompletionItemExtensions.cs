@@ -84,7 +84,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
 
             // if provider name is "Microsoft.CodeAnalysis.CSharp.Completion.Providers.EmbeddedLanguageCompletionProvider"
             // we have access to more elaborate description
-            if (item.GetProviderName() == CompletionListBuilder.AggregateEmeddedLanguageCompletionProvider)
+            if (item.GetProviderName() == CompletionListBuilder.AggregateEmbeddedLanguageCompletionProvider)
             {
                 response.DisplayText = item.InlineDescription;
                 if (item.Properties.TryGetValue("DescriptionKey", out var description))

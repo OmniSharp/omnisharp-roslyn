@@ -1,6 +1,21 @@
 # Changelog
 All changes to the project will be documented in this file.
 
+## [1.39.6] - 2023-03-14
+* Use new VS threading version to match with Razor (PR:[#2518](https://github.com/OmniSharp/omnisharp-roslyn/pull/2518))
+
+## [1.39.5] - 2023-03-09
+* Update to Roslyn `4.6.0-3.23153.5` (PR:[#2511](https://github.com/OmniSharp/omnisharp-roslyn/pull/2511))
+* Report to the client if the project being loaded is sdk style (PR:[#2502](https://github.com/OmniSharp/omnisharp-roslyn/pull/2502))
+
+## [1.39.4] - 2023-01-18
+* Disable snippets in sync completion (PR: [#2497](https://github.com/OmniSharp/omnisharp-roslyn/pull/2497))
+
+## [1.39.3] - 2023-01-03
+* Update Roslyn to 4.5.0-2.22527.10 (PR: [#2486](https://github.com/OmniSharp/omnisharp-roslyn/pull/2486))
+* Update dotnet-script dependencies to 1.4.0 (PR: [#2477](https://github.com/OmniSharp/omnisharp-roslyn/pull/2477))
+* Register the LanguageServerLogger only once (PR: [#2473](https://github.com/OmniSharp/omnisharp-roslyn/pull/2473))
+
 ## [1.39.2] - 2022-10-26
 * Add missing LSP Handlers (PR: [#2463](https://github.com/OmniSharp/omnisharp-roslyn/pull/2463))
 * Add the TypeDefinitionHandler to the LSP (PR: [#2461](https://github.com/OmniSharp/omnisharp-roslyn/pull/2461))

@@ -299,7 +299,7 @@ namespace N2
 
             using var host = useAsyncCompletion ? GetAsyncCompletionAndImportCompletionHost() : GetImportCompletionHost();
             var completions = await FindCompletionsWithImportedAsync(filename, input, host);
-            var resolved = await ResolveCompletionAsync(completions.Items.Last(c => c.TextEdit.NewText == "Console"), host);
+            var resolved = await ResolveCompletionAsync(completions.Items.First(c => c.TextEdit.NewText == "Console"), host);
 
             Assert.Single(resolved.Item.AdditionalTextEdits);
             var additionalEdit = resolved.Item.AdditionalTextEdits[0];

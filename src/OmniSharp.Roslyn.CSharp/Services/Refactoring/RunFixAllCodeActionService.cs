@@ -173,7 +173,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
                 document.Project,
                 codeFixProvider,
                 roslynScope,
-                action.EquivalenceKey,
+                action?.EquivalenceKey,
                 ImmutableArray.Create(diagnosticId),
                 _fixAllDiagnosticProvider,
                 _ => codeActionOptions,
