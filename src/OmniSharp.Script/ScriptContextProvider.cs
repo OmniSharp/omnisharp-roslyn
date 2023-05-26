@@ -90,7 +90,7 @@ namespace OmniSharp.Script
             }
             catch (Exception e)
             {
-                _logger.LogError("Failed to resolve compilation dependencies", e);
+                _logger.LogError(e, "Failed to resolve compilation dependencies");
                 compilationDependencies = Array.Empty<CompilationDependency>();
             }
 

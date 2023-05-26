@@ -1,8 +1,9 @@
 parameters:
   # Configuration: Release
   Verbosity: Normal
-  DotNetVersion: "7.0.100-rc.1.22431.12"
-  DotNetVersion2: "6.0.202"
+  DotNetVersion: "8.0.100-preview.4.23260.5"
+  DotNetVersion2: "7.0.302"
+  DotNetVersion3: "6.0.408"
   CakeVersion: "1.1.0"
   NuGetVersion: "5.7.0"
   MonoVersion: ''
@@ -29,6 +30,11 @@ steps:
     inputs:
       packageType: 'sdk'
       version: ${{ parameters.DotNetVersion2 }}
+  - task: UseDotNet@2
+    displayName: Install dotnet $(DotNetVersion3)
+    inputs:
+      packageType: 'sdk'
+      version: ${{ parameters.DotNetVersion3 }}
   - task: DotNetCoreCLI@2
     displayName: 'dotnet install cake'
     inputs:
