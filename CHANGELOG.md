@@ -1,6 +1,9 @@
 # Changelog
 All changes to the project will be documented in this file.
 
+## [1.39.7] - not yet released
+* Update to Roslyn `4.7.0-2.23276.4`
+
 ## [1.39.6] - 2023-03-14
 * Use new VS threading version to match with Razor (PR:[#2518](https://github.com/OmniSharp/omnisharp-roslyn/pull/2518))
 
