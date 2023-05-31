@@ -150,7 +150,7 @@ namespace OmniSharp.MSBuild.Tests
             Assert.Single(emitter.ReceivedMessages);
             var tfm = emitter.ReceivedMessages[0].TargetFrameworks.ToArray();
             Assert.Equal(2, tfm.Count());
-            Assert.Equal("netstandard2.0", tfm[0]);
+            Assert.Equal("netstandard1.5", tfm[0]);
             Assert.Equal("netstandard2.0", tfm[1]);
         }
 

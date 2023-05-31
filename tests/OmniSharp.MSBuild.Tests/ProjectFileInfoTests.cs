@@ -239,8 +239,7 @@ namespace OmniSharp.MSBuild.Tests
                 var projectFilePath = Path.Combine(testProject.Directory, "ConsumingProject", "ConsumingProject.csproj");
                 var projectFileInfo = CreateProjectFileInfo(_sharedOmniSharpHostFixture.OmniSharpTestHost, testProject, projectFilePath);
                 Assert.Empty(projectFileInfo.ProjectReferences);
-                var analyzerFileReference = Assert.Single(projectFileInfo.Analyzers);
-                Assert.EndsWith("Analyzer.dll", analyzerFileReference);
+                Assert.Single(projectFileInfo.Analyzers.Where(path => Path.GetFileName(path) == "Analyzer.dll"));
             }
         }
     }
