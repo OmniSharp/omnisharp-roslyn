@@ -371,7 +371,7 @@ namespace OmniSharp.LanguageServerProtocol
             var serializer = server.Services.GetRequiredService<ISerializer>();
             server.Register(s =>
             {
-                foreach (var handler in OmniSharpCodeActionHandler.Enumerate(handlers, serializer, server, documentVersions)
+                foreach (var handler in OmniSharpCodeActionHandler.Enumerate(handlers, server, documentVersions)
                     .Concat(OmniSharpCodeLensHandler.Enumerate(handlers))
                     .Concat(OmniSharpCompletionHandler.Enumerate(handlers))
                     .Concat(OmniSharpDefinitionHandler.Enumerate(handlers))
