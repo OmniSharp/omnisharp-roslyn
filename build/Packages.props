@@ -11,7 +11,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Update="Karambolo.Extensions.Logging.File" Version="3.3.1" />
         <PackageReference Update="Cake.Scripting.Transport" Version="0.9.0" />
 
         <PackageReference Update="Dotnet.Script.DependencyModel" Version="1.4.0" />
