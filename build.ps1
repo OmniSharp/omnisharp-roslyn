@@ -214,6 +214,8 @@ if (Test-Path $MODULES_PACKAGES_CONFIG) {
     Pop-Location
 }
 
+Invoke-Expression "&dotnet tool restore"
+
 # Make sure that Cake has been installed.
 if (!(Test-Path $CAKE_EXE)) {
     Throw "Could not find Cake.exe at $CAKE_EXE"
@@ -235,5 +237,6 @@ $cakeArguments += $ScriptArgs
 
 # Start Cake
 Write-Host "Running build script..."
-&$CAKE_EXE $cakeArguments
+# &$CAKE_EXE $cakeArguments
+dotnet cake $cakeArguments
 exit $LASTEXITCODE
