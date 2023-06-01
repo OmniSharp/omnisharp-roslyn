@@ -239,7 +239,9 @@ namespace OmniSharp.MSBuild.Tests
                 var projectFilePath = Path.Combine(testProject.Directory, "ConsumingProject", "ConsumingProject.csproj");
                 var projectFileInfo = CreateProjectFileInfo(_sharedOmniSharpHostFixture.OmniSharpTestHost, testProject, projectFilePath);
                 Assert.Empty(projectFileInfo.ProjectReferences);
-                Assert.Single(projectFileInfo.Analyzers.Where(path => Path.GetFileName(path) == "Analyzer.dll"));
+                // Since the SDK adds Analyzers and Source Generators to our projects for us, we now look for the analyzer that we explicitly reference.
+                var analyzers = projectFileInfo.Analyzers.Where(path => Path.GetFileName(path) == "Analyzer.dll");
+                Assert.Single(analyzers);
             }
         }
     }

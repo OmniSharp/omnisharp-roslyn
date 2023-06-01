@@ -84,4 +84,19 @@ namespace TestUtility
 #endif
         public override string SkipReason => "Can not be run on Mono runtime";
     }
+
+    public class DotnetRuntimeOnly : SkipCondition
+    {
+        public override bool ShouldSkip =>
+#if NET472
+            true;
+#elif NETCOREAPP
+            false;
+#elif NETSTANDARD2_0
+            throw new PlatformNotSupportedException();
+#else
+#error Unsupported configuration
+#endif
+        public override string SkipReason => "Can only be run on dotnet runtime";
+    }
 }
