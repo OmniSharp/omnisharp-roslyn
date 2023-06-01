@@ -18,14 +18,14 @@ using CodeActionKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CodeA
 using OmniSharpCodeActionKind = OmniSharp.Models.V2.CodeActions.CodeActionKind;
 using System;
 using Range = OmniSharp.Extensions.LanguageServer.Protocol.Models.Range;
+using NuGet.Protocol;
 
 namespace OmniSharp.LanguageServerProtocol.Handlers
 {
-    internal sealed class OmniSharpCodeActionHandler : CodeActionHandlerBase, IExecuteCommandHandler
+    internal sealed class OmniSharpCodeActionHandler : CodeActionHandlerBase
     {
         public static IEnumerable<IJsonRpcHandler> Enumerate(
             RequestHandlers handlers,
-            ISerializer serializer,
             ILanguageServer mediator,
             DocumentVersions versions)
         {
@@ -33,16 +33,13 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                      .OfType<Mef.IRequestHandler<GetCodeActionsRequest, GetCodeActionsResponse>,
                              Mef.IRequestHandler<RunCodeActionRequest, RunCodeActionResponse>>())
             {
-                yield return new OmniSharpCodeActionHandler(getActionsHandler, runActionHandler, selector, serializer, mediator, versions);
+                yield return new OmniSharpCodeActionHandler(getActionsHandler, runActionHandler, selector, mediator, versions);
             }
         }
 
         private readonly Mef.IRequestHandler<GetCodeActionsRequest, GetCodeActionsResponse> _getActionsHandler;
-        private readonly ExecuteCommandRegistrationOptions _executeCommandRegistrationOptions;
-        private ExecuteCommandCapability _executeCommandCapability;
-        private Mef.IRequestHandler<RunCodeActionRequest, RunCodeActionResponse> _runActionHandler;
+        private readonly Mef.IRequestHandler<RunCodeActionRequest, RunCodeActionResponse> _runActionHandler;
         private readonly DocumentSelector _documentSelector;
-        private readonly ISerializer _serializer;
         private readonly ILanguageServer _server;
         private readonly DocumentVersions _documentVersions;
 
@@ -50,20 +47,14 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             Mef.IRequestHandler<GetCodeActionsRequest, GetCodeActionsResponse> getActionsHandler,
             Mef.IRequestHandler<RunCodeActionRequest, RunCodeActionResponse> runActionHandler,
             DocumentSelector documentSelector,
-            ISerializer serializer,
             ILanguageServer server,
             DocumentVersions documentVersions)
         {
             _getActionsHandler = getActionsHandler;
             _runActionHandler = runActionHandler;
             _documentSelector = documentSelector;
-            _serializer = serializer;
             _server = server;
             _documentVersions = documentVersions;
-            _executeCommandRegistrationOptions = new ExecuteCommandRegistrationOptions()
-            {
-                Commands = new Container<string>("omnisharp/executeCodeAction"),
-            };
         }
 
         public override async Task<CommandOrCodeActionContainer> Handle(CodeActionParams request, CancellationToken cancellationToken)
@@ -82,23 +73,19 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
 
             foreach (var ca in omnisharpResponse.CodeActions)
             {
-
                 codeActions.Add(
                     new CodeAction
                     {
                         Title = ca.Name,
                         Kind = OmniSharpCodeActionHandler.FromOmniSharpCodeActionKind(ca.CodeActionKind),
                         Diagnostics = new Container<Diagnostic>(),
-                        Edit = new WorkspaceEdit(),
-                        Command = Command.Create("omnisharp/executeCodeAction")
-                            .WithArguments(new CommandData()
-                            {
-                                Uri = request.TextDocument.Uri,
-                                Identifier = ca.Identifier,
-                                Name = ca.Name,
-                                Range = request.Range,
-                            })
-                            with { Title = ca.Name }
+                        Data = new CommandData()
+                        {
+                            Uri = request.TextDocument.Uri,
+                            Identifier = ca.Identifier,
+                            Name = ca.Name,
+                            Range = request.Range,
+                        }.ToJToken()
                     });
             }
 
@@ -106,17 +93,12 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                 codeActions.Select(ca => new CommandOrCodeAction(ca)));
         }
 
-        public override Task<CodeAction> Handle(CodeAction request, CancellationToken cancellationToken)
+        public override async Task<CodeAction> Handle(CodeAction request, CancellationToken cancellationToken)
         {
-            return Task.FromResult(request);
-        }
+            var data = request.Data.FromJToken<CommandData>();
 
-        public async Task<Unit> Handle(ExecuteCommandParams request, CancellationToken cancellationToken)
-        {
-            Debug.Assert(request.Command == "omnisharp/executeCodeAction");
-            var data = request.ExtractArguments<CommandData>(_serializer);
-
-            var omnisharpCaRequest = new RunCodeActionRequest {
+            var omnisharpCaRequest = new RunCodeActionRequest
+            {
                 Identifier = data.Identifier,
                 FileName = data.Uri.GetFileSystemPath(),
                 Column = data.Range.Start.Character,
@@ -128,40 +110,26 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             };
 
             var omnisharpCaResponse = await _runActionHandler.Handle(omnisharpCaRequest);
-            if (omnisharpCaResponse.Changes != null)
+            if (omnisharpCaResponse.Changes == null)
             {
-                var edit = Helpers.ToWorkspaceEdit(
-                    omnisharpCaResponse.Changes,
-                    _server.ClientSettings.Capabilities.Workspace!.WorkspaceEdit.Value,
-                    _documentVersions
-                );
-                ;
-
-                await _server.Workspace.ApplyWorkspaceEdit(new ApplyWorkspaceEditParams()
-                {
-                    Label = data.Name,
-                    Edit = edit
-                }, cancellationToken);
-
-                // Do something with response?
-                //if (response.Applied)
+                return request with { Edit = new WorkspaceEdit() };
             }
 
-            return Unit.Value;
+            var edit = Helpers.ToWorkspaceEdit(
+                omnisharpCaResponse.Changes,
+                _server.ClientSettings.Capabilities.Workspace!.WorkspaceEdit.Value,
+                _documentVersions
+            );
+
+            return request with { Edit = edit };
         }
 
         class CommandData
         {
-            public DocumentUri Uri { get; set;}
-            public string Identifier { get; set;}
-            public string Name { get; set;}
-            public Range Range { get; set;}
-        }
-
-        ExecuteCommandRegistrationOptions IRegistration<ExecuteCommandRegistrationOptions, ExecuteCommandCapability>.GetRegistrationOptions(ExecuteCommandCapability capability, ClientCapabilities clientCapabilities)
-        {
-            _executeCommandCapability = capability;
-            return _executeCommandRegistrationOptions;
+            public DocumentUri Uri { get; set; }
+            public string Identifier { get; set; }
+            public string Name { get; set; }
+            public Range Range { get; set; }
         }
 
         private static CodeActionKind FromOmniSharpCodeActionKind(string omnisharpCodeAction)
@@ -179,6 +147,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             return new CodeActionRegistrationOptions()
             {
                 DocumentSelector = _documentSelector,
+                ResolveProvider = true,
                 CodeActionKinds = new Container<CodeActionKind>(
                     CodeActionKind.SourceOrganizeImports,
                     CodeActionKind.Refactor,
