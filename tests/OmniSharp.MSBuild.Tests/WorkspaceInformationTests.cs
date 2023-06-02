@@ -30,8 +30,8 @@ namespace OmniSharp.MSBuild.Tests
             var project = Assert.Single(workspaceInfo.Projects);
 
             Assert.Equal("ProjectAndSolution", project.AssemblyName);
-            Assert.Equal("bin/Debug/netcoreapp3.1/", project.OutputPath.EnsureForwardSlashes());
-            Assert.Equal("obj/Debug/netcoreapp3.1/", project.IntermediateOutputPath.EnsureForwardSlashes());
+            Assert.Equal("bin/Debug/net6.0/", project.OutputPath.EnsureForwardSlashes());
+            Assert.Equal("obj/Debug/net6.0/", project.IntermediateOutputPath.EnsureForwardSlashes());
             var expectedTargetPath = $"{testProject.Directory}/{project.OutputPath}ProjectAndSolution.dll".EnsureForwardSlashes();
             Assert.Equal(expectedTargetPath, project.TargetPath.EnsureForwardSlashes());
             Assert.Equal("Debug", project.Configuration);
@@ -39,9 +39,9 @@ namespace OmniSharp.MSBuild.Tests
             Assert.True(project.IsExe);
             Assert.False(project.IsUnityProject);
 
-            Assert.Equal(".NETCoreApp,Version=v3.1", project.TargetFramework);
+            Assert.Equal(".NETCoreApp,Version=v6.0", project.TargetFramework);
             var targetFramework = Assert.Single(project.TargetFrameworks);
-            Assert.Equal("netcoreapp3.1", targetFramework.ShortName);
+            Assert.Equal("net6.0", targetFramework.ShortName);
         }
 
         [Fact]
@@ -57,8 +57,8 @@ namespace OmniSharp.MSBuild.Tests
                 var project = Assert.Single(workspaceInfo.Projects);
 
                 Assert.Equal("ProjectAndSolutionFilter", project.AssemblyName);
-                Assert.Equal("bin/Debug/netcoreapp3.1/", project.OutputPath.EnsureForwardSlashes());
-                Assert.Equal("obj/Debug/netcoreapp3.1/", project.IntermediateOutputPath.EnsureForwardSlashes());
+                Assert.Equal("bin/Debug/net6.0/", project.OutputPath.EnsureForwardSlashes());
+                Assert.Equal("obj/Debug/net6.0/", project.IntermediateOutputPath.EnsureForwardSlashes());
                 var expectedTargetPath = $"{testProject.Directory}/Project/{project.OutputPath}ProjectAndSolutionFilter.dll".EnsureForwardSlashes();
                 Assert.Equal(expectedTargetPath, project.TargetPath.EnsureForwardSlashes());
                 Assert.Equal("Debug", project.Configuration);
@@ -66,9 +66,9 @@ namespace OmniSharp.MSBuild.Tests
                 Assert.True(project.IsExe);
                 Assert.False(project.IsUnityProject);
 
-                Assert.Equal(".NETCoreApp,Version=v3.1", project.TargetFramework);
+                Assert.Equal(".NETCoreApp,Version=v6.0", project.TargetFramework);
                 var targetFramework = Assert.Single(project.TargetFrameworks);
-                Assert.Equal("netcoreapp3.1", targetFramework.ShortName);
+                Assert.Equal("net6.0", targetFramework.ShortName);
             }
         }
 
@@ -82,8 +82,8 @@ namespace OmniSharp.MSBuild.Tests
             Assert.Equal("ProjectAndSolutionWithProjectSection.sln", Path.GetFileName(workspaceInfo.SolutionPath));
             Assert.NotNull(workspaceInfo.Projects);
             var project = Assert.Single(workspaceInfo.Projects);
-            Assert.Equal(".NETCoreApp,Version=v3.1", project.TargetFramework);
-            Assert.Equal("netcoreapp3.1", project.TargetFrameworks[0].ShortName);
+            Assert.Equal(".NETCoreApp,Version=v6.0", project.TargetFramework);
+            Assert.Equal("net6.0", project.TargetFrameworks[0].ShortName);
         }
 
         [ConditionalFact(typeof(NonMonoRuntimeOnly))]
@@ -127,13 +127,13 @@ namespace OmniSharp.MSBuild.Tests
 
             var firstProject = workspaceInfo.Projects[0];
             Assert.Equal("App.csproj", Path.GetFileName(firstProject.Path));
-            Assert.Equal(".NETCoreApp,Version=v3.1", firstProject.TargetFramework);
-            Assert.Equal("netcoreapp3.1", firstProject.TargetFrameworks[0].ShortName);
+            Assert.Equal(".NETCoreApp,Version=v6.0", firstProject.TargetFramework);
+            Assert.Equal("net6.0", firstProject.TargetFrameworks[0].ShortName);
 
             var secondProject = workspaceInfo.Projects[1];
             Assert.Equal("Lib.csproj", Path.GetFileName(secondProject.Path));
-            Assert.Equal(".NETStandard,Version=v1.3", secondProject.TargetFramework);
-            Assert.Equal("netstandard1.3", secondProject.TargetFrameworks[0].ShortName);
+            Assert.Equal(".NETStandard,Version=v2.0", secondProject.TargetFramework);
+            Assert.Equal("netstandard2.0", secondProject.TargetFrameworks[0].ShortName);
         }
 
         [Fact(Skip = "https://github.com/dotnet/msbuild/pull/7642")]
@@ -150,13 +150,13 @@ namespace OmniSharp.MSBuild.Tests
 
             var firstProject = workspaceInfo.Projects[0];
             Assert.Equal("App.csproj", Path.GetFileName(firstProject.Path));
-            Assert.Equal(".NETCoreApp,Version=v3.1", firstProject.TargetFramework);
-            Assert.Equal("netcoreapp3.1", firstProject.TargetFrameworks[0].ShortName);
+            Assert.Equal(".NETCoreApp,Version=v6.0", firstProject.TargetFramework);
+            Assert.Equal("net6.0", firstProject.TargetFrameworks[0].ShortName);
 
             var secondProject = workspaceInfo.Projects[1];
             Assert.Equal("Lib.csproj", Path.GetFileName(secondProject.Path));
-            Assert.Equal(".NETStandard,Version=v1.3", secondProject.TargetFramework);
-            Assert.Equal("netstandard1.3", secondProject.TargetFrameworks[0].ShortName);
+            Assert.Equal(".NETStandard,Version=v1.5", secondProject.TargetFramework);
+            Assert.Equal("netstandard2.0", secondProject.TargetFrameworks[0].ShortName);
         }
 
         [Fact]
@@ -268,7 +268,7 @@ namespace OmniSharp.MSBuild.Tests
 
             var project2 = workspaceInfo.Projects[1];
             Assert.Equal("Lib.csproj", Path.GetFileName(project2.Path));
-            Assert.Equal(".NETStandard,Version=v1.3", project2.TargetFramework);
+            Assert.Equal(".NETStandard,Version=v1.5", project2.TargetFramework);
             Assert.Equal(2, project2.TargetFrameworks.Count);
         }
 

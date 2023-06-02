@@ -150,7 +150,7 @@ namespace OmniSharp.MSBuild.Tests
             Assert.Single(emitter.ReceivedMessages);
             var tfm = emitter.ReceivedMessages[0].TargetFrameworks.ToArray();
             Assert.Equal(2, tfm.Count());
-            Assert.Equal("netstandard1.3", tfm[0]);
+            Assert.Equal("netstandard1.5", tfm[0]);
             Assert.Equal("netstandard2.0", tfm[1]);
         }
 
@@ -220,7 +220,7 @@ namespace OmniSharp.MSBuild.Tests
             using var testProject = await TestAssets.Instance.GetTestProjectAsync("Net60Project");
             using var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory));
             Assert.Single(emitter.ReceivedMessages);
-            Assert.Equal(GetHashedFileExtension("6.0.202"), emitter.ReceivedMessages[0].SdkVersion);
+            Assert.Equal(GetHashedFileExtension("6.0.203"), emitter.ReceivedMessages[0].SdkVersion);
         }
 
         [ConditionalFact(typeof(NonMonoRuntimeOnly))]
@@ -232,7 +232,19 @@ namespace OmniSharp.MSBuild.Tests
             using var testProject = await TestAssets.Instance.GetTestProjectAsync("Net70Project");
             using var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory));
             Assert.Single(emitter.ReceivedMessages);
-            Assert.Equal(GetHashedFileExtension("7.0.100-rc.1.22431.12"), emitter.ReceivedMessages[0].SdkVersion);
+            Assert.Equal(GetHashedFileExtension("7.0.302"), emitter.ReceivedMessages[0].SdkVersion);
+        }
+
+        [ConditionalFact(typeof(DotnetRuntimeOnly))]
+        public async Task The_correct_sdk_version_is_emitted_NET8()
+        {
+            // Arrange
+            var emitter = new ProjectLoadTestEventEmitter();
+
+            using var testProject = await TestAssets.Instance.GetTestProjectAsync("Net80Project");
+            using var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory));
+            Assert.Single(emitter.ReceivedMessages);
+            Assert.Equal(GetHashedFileExtension("8.0.100-preview.4.23260.5"), emitter.ReceivedMessages[0].SdkVersion);
         }
 
         private string GetHashedFileExtension(string fileExtension)

@@ -18,7 +18,7 @@ namespace OmniSharp.Benchmarks
             OmniSharpTestHost.Dispose();
         }
 
-        public void Setup(params KeyValuePair<string, string>[]? configuration)
+        public void Setup(params KeyValuePair<string, string?>[]? configuration)
         {
             var builder = new Microsoft.Extensions.Configuration.ConfigurationBuilder().AddInMemoryCollection(configuration);
             OmniSharpTestHost = OmniSharpTestHost.Create(configurationData: builder.Build());

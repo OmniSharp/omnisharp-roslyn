@@ -1,7 +1,7 @@
 {
     "script": {
         "enableScriptNuGetReferences": true,
-        "defaultTargetFramework": "netcoreapp3.1"
+        "defaultTargetFramework": "net6.0"
     },
     "FormattingOptions": {
         "enableEditorConfigSupport": true
