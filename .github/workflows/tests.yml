@@ -4,7 +4,7 @@ env:
   DotNetVersion: "8.0.100-preview.4.23260.5"
   DotNetVersion2: "7.0.302"
   DotNetVersion3: "6.0.203"
-  NuGetVersion: "5.7.0"
+  NuGetVersion: "6.5.0"
   MonoVersion: "6.12.0"
   Artifacts: ${{ github.workspace }}/artifacts/
   Coverage: ${{ github.workspace }}/coverage/
@@ -14,6 +14,8 @@ defaults:
     shell: pwsh
 on:
   pull_request:
+    paths-ignore:
+      - 'CHANGELOG.md'
     branches:
       - master
       - feature/*
@@ -67,13 +69,7 @@ jobs:
         run: |
           nuget install tools/packages.config -ExcludeVersion -OutputDirectory tools
 
-      # - name: 🍰 Run Cake
-      #   run: |
-      #     dotnet cake --bootstrap
-      #     dotnet cake --configuration=Debug --verbosity=Diagnostic --target=Test --test-project="${{ matrix.testProjects }}"
-
       - name: 🍰 Run Cake
-        if: ${{ runner.os == 'Linux' || runner.os == 'macOS' }}
         uses: nick-invision/retry@v2
         with:
           shell: bash
@@ -81,22 +77,7 @@ jobs:
           max_attempts: 3
           retry_on: error
           command: |
-            echo $PATH
-            chmod 755 ./build.sh
-            ./build.sh --configuration Release --verbosity Verbose --target Test --test-project="$TEST_PROJECT"
-        env:
-          TEST_PROJECT: ${{ matrix.testProjects }}
-
-      - name: 🍰 Run Cake
-        if: ${{ runner.os == 'Windows' }}
-        uses: nick-invision/retry@v2
-        with:
-          shell: powershell
-          timeout_minutes: 40
-          max_attempts: 3
-          retry_on: error
-          command: |
-            .\build.ps1 -configuration Release -verbosity Verbose -target Test --test-project="$ENV:TEST_PROJECT"
+            dotnet cake --configuration=Release --verbosity=Verbose --target=Test --test-project="$TEST_PROJECT"
         env:
           TEST_PROJECT: ${{ matrix.testProjects }}
 
