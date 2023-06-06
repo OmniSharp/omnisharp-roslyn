@@ -44,19 +44,18 @@ namespace OmniSharp.FileSystem
             return matcher.GetResultsInFullPath(targetDirectory);
         }
 
-        public Matcher BuildMatcher()
+        public Matcher BuildExcludeMatcher()
         {
             Matcher matcher = new();
-            matcher.AddIncludePatterns(new string[] { "./**/*", "./*" });
 
             if (_omniSharpOptions.FileOptions.SystemExcludeSearchPatterns != null && _omniSharpOptions.FileOptions.SystemExcludeSearchPatterns.Any())
             {
-                matcher.AddExcludePatterns(_omniSharpOptions.FileOptions.SystemExcludeSearchPatterns);
+                matcher.AddIncludePatterns(_omniSharpOptions.FileOptions.SystemExcludeSearchPatterns);
             }
 
             if (_omniSharpOptions.FileOptions.ExcludeSearchPatterns != null && _omniSharpOptions.FileOptions.ExcludeSearchPatterns.Any())
             {
-                matcher.AddExcludePatterns(_omniSharpOptions.FileOptions.ExcludeSearchPatterns);
+                matcher.AddIncludePatterns(_omniSharpOptions.FileOptions.ExcludeSearchPatterns);
             }
 
             return matcher;
