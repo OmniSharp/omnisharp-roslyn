@@ -375,11 +375,11 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
         private ImmutableArray<DiagnosticAnalyzer> GetAnalyzersForProject(Project project) =>
             AnalyzersEnabled
-                ? Enumerable.Empty<DiagnosticAnalyzer>().ToImmutableArray()
-                : _providers
+                ? _providers
                     .SelectMany(x => x.CodeDiagnosticAnalyzerProviders)
                     .Concat(project.AnalyzerReferences.SelectMany(x => x.GetAnalyzers(project.Language)))
-                    .ToImmutableArray();
+                    .ToImmutableArray()
+                : Enumerable.Empty<DiagnosticAnalyzer>().ToImmutableArray();
 
         private void OnAnalyzerException(Exception ex, DiagnosticAnalyzer analyzer, Diagnostic diagnostic)
         {
