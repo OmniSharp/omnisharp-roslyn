@@ -76,7 +76,12 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
         public override async Task<ImmutableArray<DocumentDiagnostics>> GetDiagnostics(ImmutableArray<string> documentPaths)
         {
-            var documentIds = GetDocumentIdsFromPaths(documentPaths);
+            ImmutableArray<DocumentId> documentIds = (await Task.WhenAll(
+                               documentPaths
+                                   .Select(docPath => _workspace.GetDocumentsFromFullProjectModelAsync(docPath))))
+                .SelectMany(s => s)
+                .Select(x => x.Id)
+                .ToImmutableArray();
 
             return await GetDiagnosticsByDocumentIds(documentIds, waitForDocuments: true);
         }
@@ -96,14 +101,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             return documentIds
                 .Where(x => _currentDiagnosticResultLookup.ContainsKey(x))
                 .Select(x => _currentDiagnosticResultLookup[x])
-                .ToImmutableArray();
-        }
-
-        private ImmutableArray<DocumentId> GetDocumentIdsFromPaths(ImmutableArray<string> documentPaths)
-        {
-            return documentPaths
-                .Select(docPath => _workspace.GetDocumentId(docPath))
-                .Where(x => x != default)
                 .ToImmutableArray();
         }
 
@@ -199,7 +196,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                 case WorkspaceChangeKind.DocumentAdded:
                 case WorkspaceChangeKind.DocumentReloaded:
                 case WorkspaceChangeKind.DocumentInfoChanged:
-                    QueueDocumentsForDiagnostics(new DocumentId[] { changeEvent.DocumentId });
+                    QueueDocumentsForDiagnostics(new DocumentId[] { changeEvent.DocumentId }, AnalyzerWorkType.Foreground);
                     break;
                 case WorkspaceChangeKind.DocumentRemoved:
                     if (!_currentDiagnosticResultLookup.TryRemove(changeEvent.DocumentId, out _))
@@ -350,11 +347,11 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                     logAnalyzerExecutionTime: false,
                     reportSuppressedDiagnostics: false));
 
-                Task<ImmutableArray<Diagnostic>> syntaxDiagnosticsWithAnalyzers = compilationWithAnalyzers
-                    .GetAnalyzerSyntaxDiagnosticsAsync(syntaxTree, cancellationToken);
-
                 Task<ImmutableArray<Diagnostic>> semanticDiagnosticsWithAnalyzers = compilationWithAnalyzers
                     .GetAnalyzerSemanticDiagnosticsAsync(documentSemanticModel, filterSpan: null, cancellationToken);
+
+                Task<ImmutableArray<Diagnostic>> syntaxDiagnosticsWithAnalyzers = compilationWithAnalyzers
+                    .GetAnalyzerSyntaxDiagnosticsAsync(syntaxTree, cancellationToken);
 
                 ImmutableArray<Diagnostic> documentSemanticDiagnostics = documentSemanticModel.GetDiagnostics(null, cancellationToken);
 
@@ -424,7 +421,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             _workspace.OnInitialized -= OnWorkspaceInitialized;
         }
 
-        public override ImmutableArray<DocumentId> QueueDocumentsForDiagnostics(IEnumerable<Document> documents)
+        public override ImmutableArray<DocumentId> QueueDocumentsForDiagnostics(IEnumerable<Document> documents, AnalyzerWorkType workType)
         {
             ImmutableArray<DocumentId> documentsIds = documents.Select(x => x.Id).ToImmutableArray();
             QueueForAnalysis(documentsIds, AnalyzerWorkType.Background);

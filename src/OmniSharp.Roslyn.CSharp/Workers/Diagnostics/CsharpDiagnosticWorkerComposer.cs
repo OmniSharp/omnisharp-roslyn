@@ -100,7 +100,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
             return _implementation.AnalyzeProjectsAsync(project, cancellationToken);
         }
 
-        public override ImmutableArray<DocumentId> QueueDocumentsForDiagnostics(IEnumerable<Document> documents) =>
-            _implementation.QueueDocumentsForDiagnostics(documents);
+        public override ImmutableArray<DocumentId> QueueDocumentsForDiagnostics(IEnumerable<Document> documents, AnalyzerWorkType workType) =>
+            _implementation.QueueDocumentsForDiagnostics(documents, workType);
     }
 }

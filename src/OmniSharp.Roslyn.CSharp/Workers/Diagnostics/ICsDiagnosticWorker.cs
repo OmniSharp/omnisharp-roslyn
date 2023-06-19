@@ -16,6 +16,6 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
         Task<IEnumerable<Diagnostic>> AnalyzeProjectsAsync(Project project, CancellationToken cancellationToken);
         ImmutableArray<DocumentId> QueueDocumentsForDiagnostics();
         ImmutableArray<DocumentId> QueueDocumentsForDiagnostics(ImmutableArray<ProjectId> projectId);
-        ImmutableArray<DocumentId> QueueDocumentsForDiagnostics(IEnumerable<Document> documents);
+        ImmutableArray<DocumentId> QueueDocumentsForDiagnostics(IEnumerable<Document> documents, AnalyzerWorkType workType);
     }
 }
