@@ -151,6 +151,7 @@ jobs:
           nuGetFeedType: internal
           packagesToPush: "$(System.ArtifactsDirectory)/nuget/**/*.nupkg"
           publishVstsFeed: Builds/omnisharp
+          allowPackageConflicts: true
         condition: and(succeeded(), or(startsWith(variables['Build.SourceBranch'], 'refs/tags/v'), eq(variables['Build.SourceBranch'], 'refs/heads/master')))
       - task: NuGetCommand@2
         displayName: "Push NuGet packages to nuget.org"
@@ -159,6 +160,7 @@ jobs:
           nuGetFeedType: external
           packagesToPush: "$(System.ArtifactsDirectory)/nuget/**/*.nupkg"
           publishFeedCredentials: nuget.org
+          allowPackageConflicts: true
         condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/tags/v'))
       - script: |
           AZ_REPO=$(lsb_release -cs)
