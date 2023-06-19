@@ -65,7 +65,7 @@ namespace OmniSharp.FileSystem
             path.EndsWith(".designer") ||
             path.EndsWith(".generated") ||
             path.EndsWith(".g") ||
-            path.EndsWith(".i");
+            path.EndsWith(".g.i");
 
         public static string GetRelativePath(string fullPath, string basePath)
         {
