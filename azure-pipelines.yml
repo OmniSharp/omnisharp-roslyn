@@ -153,15 +153,16 @@ jobs:
           publishVstsFeed: Builds/omnisharp
           allowPackageConflicts: true
         condition: and(succeeded(), or(startsWith(variables['Build.SourceBranch'], 'refs/tags/v'), eq(variables['Build.SourceBranch'], 'refs/heads/master')))
-      - task: NuGetCommand@2
-        displayName: "Push NuGet packages to nuget.org"
-        inputs:
-          command: push
-          nuGetFeedType: external
-          packagesToPush: "$(System.ArtifactsDirectory)/nuget/**/*.nupkg"
-          publishFeedCredentials: nuget.org
-          allowPackageConflicts: true
-        condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/tags/v'))
+      # Temporarily disable publishing to nuget.org while we attempt to renew authentication.
+      # - task: NuGetCommand@2
+      #   displayName: "Push NuGet packages to nuget.org"
+      #   inputs:
+      #     command: push
+      #     nuGetFeedType: external
+      #     packagesToPush: "$(System.ArtifactsDirectory)/nuget/**/*.nupkg"
+      #     publishFeedCredentials: nuget.org
+      #     allowPackageConflicts: true
+      #   condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/tags/v'))
       - script: |
           AZ_REPO=$(lsb_release -cs)
           echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $AZ_REPO main" | \
