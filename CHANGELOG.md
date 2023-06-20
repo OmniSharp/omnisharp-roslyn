@@ -1,6 +1,18 @@
 # Changelog
 All changes to the project will be documented in this file.
 
+## [1.39.7] - 2023-06-16
+* Respond to breaking change in VSCode 1.79.2 in completion (PR:[#2542](https://github.com/OmniSharp/omnisharp-roslyn/pull/2542))
+* Use dotnet-cake for build (PR:[#2537](https://github.com/OmniSharp/omnisharp-roslyn/pull/2537))
+* Implement LSP CodeAction resolve (PR:[#2467](https://github.com/OmniSharp/omnisharp-roslyn/pull/2467))
+
+## [1.39.6] - 2023-03-14
+* Use new VS threading version to match with Razor (PR:[#2518](https://github.com/OmniSharp/omnisharp-roslyn/pull/2518))
+
+## [1.39.5] - 2023-03-09
+* Update to Roslyn `4.6.0-3.23153.5` (PR:[#2511](https://github.com/OmniSharp/omnisharp-roslyn/pull/2511))
+* Report to the client if the project being loaded is sdk style (PR:[#2502](https://github.com/OmniSharp/omnisharp-roslyn/pull/2502))
+
 ## [1.39.4] - 2023-01-18
 * Disable snippets in sync completion (PR: [#2497](https://github.com/OmniSharp/omnisharp-roslyn/pull/2497))
 

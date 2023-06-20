@@ -42,7 +42,9 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         }
 
         [DiagnosticAnalyzer(LanguageNames.CSharp)]
+#pragma warning disable RS1036 // Specify analyzer banned API enforcement setting
         public class TestDiagnosticAnalyzer : DiagnosticAnalyzer
+#pragma warning restore RS1036 // Specify analyzer banned API enforcement setting
         {
             public TestDiagnosticAnalyzer(string id, bool isEnabledByDefault)
             {
@@ -299,7 +301,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             return TestHelpers.AddProjectToWorkspace(
                             host.Workspace,
                             "project.csproj",
-                            new[] { "netcoreapp3.1" },
+                            new[] { "net6.0" },
                             new[] { testFile },
                             analyzerRefs: analyzerReferences)
                     .Single();

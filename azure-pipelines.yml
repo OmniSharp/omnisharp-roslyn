@@ -32,9 +32,9 @@ resources:
 
 variables:
   Verbosity: Diagnostic
-  DotNetVersion: "6.0.400"
-  CakeVersion: "1.1.0"
-  NuGetVersion: "5.7.0"
+  DotNetVersion: "8.0.100-preview.4.23260.5"
+  CakeVersion: "3.0.0"
+  NuGetVersion: "6.5.0"
   GitVersionVersion: "5.0.1"
   MonoVersion: "6.12.0"
   Coverage: "$(Agent.BuildDirectory)/c"
@@ -151,6 +151,7 @@ jobs:
           nuGetFeedType: internal
           packagesToPush: "$(System.ArtifactsDirectory)/nuget/**/*.nupkg"
           publishVstsFeed: Builds/omnisharp
+          allowPackageConflicts: true
         condition: and(succeeded(), or(startsWith(variables['Build.SourceBranch'], 'refs/tags/v'), eq(variables['Build.SourceBranch'], 'refs/heads/master')))
       - task: NuGetCommand@2
         displayName: "Push NuGet packages to nuget.org"
@@ -159,6 +160,7 @@ jobs:
           nuGetFeedType: external
           packagesToPush: "$(System.ArtifactsDirectory)/nuget/**/*.nupkg"
           publishFeedCredentials: nuget.org
+          allowPackageConflicts: true
         condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/tags/v'))
       - script: |
           AZ_REPO=$(lsb_release -cs)

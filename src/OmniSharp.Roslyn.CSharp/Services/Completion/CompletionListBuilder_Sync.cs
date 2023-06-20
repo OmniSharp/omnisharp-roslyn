@@ -220,6 +220,15 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                     }
 
                     changeSpan = updatedChange.Span;
+                    // When inserting at the beginning or middle of a word, we want to only replace characters
+                    // up until the caret position, but not after.  For example when typing at the beginning of a word
+                    // we only want to insert the completion before the rest of the word.
+                    // However, Roslyn returns the entire word as the span to replace, so we have to adjust it.
+                    if (position < changeSpan.End)
+                    {
+                        changeSpan = new(changeSpan.Start, length: position - changeSpan.Start);
+                    }
+
                     (insertText, insertTextFormat) = getPossiblySnippetizedInsertText(updatedChange, adjustedNewPosition);
 
                     // If we're expecting there to be unimported types, put in an explicit sort text to put things already in scope first.
