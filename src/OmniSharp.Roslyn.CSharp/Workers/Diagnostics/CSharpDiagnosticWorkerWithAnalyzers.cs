@@ -412,7 +412,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
         public override async Task<ImmutableArray<DocumentDiagnostics>> GetAllDiagnosticsAsync()
         {
             var allDocumentsIds = _workspace.CurrentSolution.Projects.SelectMany(x => x.DocumentIds).ToImmutableArray();
-            return await GetDiagnosticsByDocumentIds(allDocumentsIds, waitForDocuments: false);
+            return await GetDiagnosticsByDocumentIds(allDocumentsIds, waitForDocuments: !AnalyzersEnabled);
         }
 
         public void Dispose()
