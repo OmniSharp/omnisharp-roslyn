@@ -8,12 +8,11 @@ using OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities;
 using OmniSharp.Extensions.LanguageServer.Protocol.Document;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OmniSharp.Models.SemanticHighlight;
-using OmniSharp.Roslyn.CSharp.Services.SemanticHighlight;
 using static OmniSharp.LanguageServerProtocol.Helpers;
 
 namespace OmniSharp.LanguageServerProtocol.Handlers
 {
-    class OmniSharpSemanticTokensHandler : SemanticTokensHandlerBase
+    internal class OmniSharpSemanticTokensHandler : SemanticTokensHandlerBase
     {
         public static IEnumerable<IJsonRpcHandler> Enumerate(RequestHandlers handlers)
         {
@@ -22,34 +21,49 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                     yield return new OmniSharpSemanticTokensHandler(handler, selector);
         }
 
+        internal static readonly ImmutableDictionary<SemanticHighlightClassification, SemanticTokenType> _coreTokenMap =
+            new Dictionary<SemanticHighlightClassification, SemanticTokenType>()
+            {
+                [SemanticHighlightClassification.Comment] = SemanticTokenType.Comment,
+                [SemanticHighlightClassification.Keyword] = SemanticTokenType.Keyword,
+                [SemanticHighlightClassification.NumericLiteral] = SemanticTokenType.Number,
+                [SemanticHighlightClassification.Operator] = SemanticTokenType.Operator,
+                [SemanticHighlightClassification.StringLiteral] = SemanticTokenType.String,
+                [SemanticHighlightClassification.ClassName] = SemanticTokenType.Class,
+                [SemanticHighlightClassification.StructName] = SemanticTokenType.Struct,
+                [SemanticHighlightClassification.NamespaceName] = SemanticTokenType.Namespace,
+                [SemanticHighlightClassification.EnumName] = SemanticTokenType.Enum,
+                [SemanticHighlightClassification.InterfaceName] = SemanticTokenType.Interface,
+                [SemanticHighlightClassification.TypeParameterName] = SemanticTokenType.TypeParameter,
+                [SemanticHighlightClassification.ParameterName] = SemanticTokenType.Parameter,
+                [SemanticHighlightClassification.LocalName] = SemanticTokenType.Variable,
+                [SemanticHighlightClassification.PropertyName] = SemanticTokenType.Property,
+                [SemanticHighlightClassification.MethodName] = SemanticTokenType.Method,
+                [SemanticHighlightClassification.EnumMemberName] = SemanticTokenType.EnumMember,
+                [SemanticHighlightClassification.EventName] = SemanticTokenType.Event,
+                [SemanticHighlightClassification.PreprocessorKeyword] = SemanticTokenType.Macro,
+                [SemanticHighlightClassification.LabelName] = SemanticTokenType.Label,
+            }.ToImmutableDictionary();
+
         private readonly Mef.IRequestHandler<SemanticHighlightRequest, SemanticHighlightResponse> _definitionHandler;
         private readonly DocumentSelector _documentSelector;
 
+        private static string MakeLSPCompatibleString(string str)
+            => char.ToLower(str[0]) + str.Substring(1);
+
         private static readonly ImmutableDictionary<SemanticHighlightClassification, SemanticTokenType> _tokenTypes
-            = SemanticHighlightService._classificationMap
-                .OrderBy(kvp => kvp.Value)
-                .Aggregate(
-                    new Dictionary<SemanticHighlightClassification, SemanticTokenType>(),
-                    (dictionary, kvp) =>
-                    {
-                        if (!dictionary.ContainsKey(kvp.Value))
-                            dictionary.Add(kvp.Value, new SemanticTokenType(kvp.Key));
-                        return dictionary;
-                    })
-                    .ToImmutableDictionary();
+            = System.Enum.GetValues(typeof(SemanticHighlightClassification))
+                .Cast<SemanticHighlightClassification>()
+                .ToImmutableDictionary(value => value,
+                    // Use Core LSP token types where possible
+                    value => _coreTokenMap.ContainsKey(value)
+                        ? _coreTokenMap[value]
+                        : new SemanticTokenType(MakeLSPCompatibleString(value.ToString())));
 
         private static readonly ImmutableDictionary<SemanticHighlightModifier, SemanticTokenModifier> _tokenModifiers
-            = SemanticHighlightService._modifierMap
-                .OrderBy(kvp => kvp.Value)
-                .Aggregate(
-                    new Dictionary<SemanticHighlightModifier, SemanticTokenModifier>(),
-                    (dictionary, kvp) =>
-                    {
-                        if (!dictionary.ContainsKey(kvp.Value))
-                            dictionary.Add(kvp.Value, new SemanticTokenModifier(kvp.Key));
-                        return dictionary;
-                    })
-                    .ToImmutableDictionary();
+            = System.Enum.GetValues(typeof(SemanticHighlightModifier))
+                .Cast<SemanticHighlightModifier>()
+                .ToImmutableDictionary(value => value, value => new SemanticTokenModifier(MakeLSPCompatibleString(value.ToString())));
 
         private readonly SemanticTokensLegend _legend = new()
         {
