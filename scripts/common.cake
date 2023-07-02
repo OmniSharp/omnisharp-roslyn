@@ -5,7 +5,6 @@
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System.Net;
 
 public static class Log
 {
@@ -119,22 +118,6 @@ public static class PathHelper
 string CombinePaths(params string[] paths)
 {
     return PathHelper.Combine(paths);
-}
-
-void DownloadFileAndUnzip(string url, string folder)
-{
-    DirectoryHelper.ForceCreate(folder);
-    var zipFileName = CombinePaths(folder, "temp.zip");
-
-    Information("Downloading {0}", url);
-
-    using (var client = new WebClient())
-    {
-        client.DownloadFile(url, zipFileName);
-    }
-
-    Unzip(zipFileName, folder);
-    FileHelper.Delete(zipFileName);
 }
 
 public class Folders

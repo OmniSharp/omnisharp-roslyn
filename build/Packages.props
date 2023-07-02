@@ -2,11 +2,11 @@
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
     <PropertyGroup>
-        <MicrosoftExtensionPackageVersion>6.0.0</MicrosoftExtensionPackageVersion>
-        <MicrosoftTestPackageVersion>17.4.1</MicrosoftTestPackageVersion>
-        <MSBuildPackageVersion>17.3.1</MSBuildPackageVersion>
-        <NuGetPackageVersion>6.4.0-preview.1.53</NuGetPackageVersion>
-        <RoslynPackageVersion>4.6.0-3.23153.5</RoslynPackageVersion>
+        <MicrosoftExtensionPackageVersion>7.0.0</MicrosoftExtensionPackageVersion>
+        <MicrosoftTestPackageVersion>17.6.0</MicrosoftTestPackageVersion>
+        <MSBuildPackageVersion>17.3.2</MSBuildPackageVersion>
+        <NuGetPackageVersion>6.7.0-preview.1.20</NuGetPackageVersion>
+        <RoslynPackageVersion>4.7.0-2.23274.2</RoslynPackageVersion>
         <XunitPackageVersion>2.4.1</XunitPackageVersion>
     </PropertyGroup>
 
@@ -65,7 +65,7 @@
         <PackageReference Update="Microsoft.VisualStudio.Threading" Version="17.5.22" />
         <PackageReference Update="Microsoft.VisualStudio.Validation" Version="17.0.65" />
 
-        <PackageReference Update="Newtonsoft.Json" Version="13.0.1" />
+        <PackageReference Update="Newtonsoft.Json" Version="13.0.3" />
 
         <PackageReference Update="NuGet.Common" Version="$(NuGetPackageVersion)" />
         <PackageReference Update="NuGet.Configuration" Version="$(NuGetPackageVersion)" />
@@ -82,13 +82,13 @@
         <PackageReference Update="OmniSharp.Extensions.LanguageProtocol.Testing" Version="0.19.7" />
 
         <PackageReference Update="SQLitePCLRaw.bundle_green" Version="2.1.0" />
-        <PackageReference Update="System.Collections.Immutable" Version="6.0.0" />
-        <PackageReference Update="System.ComponentModel.Composition" Version="4.5.0" />
-        <PackageReference Update="System.Composition" Version="6.0.0" />
-        <PackageReference Update="System.Configuration.ConfigurationManager" Version="4.5.0" />
+        <PackageReference Update="System.Collections.Immutable" Version="7.0.0" />
+        <PackageReference Update="System.ComponentModel.Composition" Version="7.0.0" />
+        <PackageReference Update="System.Composition" Version="7.0.0" />
+        <PackageReference Update="System.Configuration.ConfigurationManager" Version="7.0.0" />
         <PackageReference Update="System.Memory" Version="4.5.5" />
-        <PackageReference Update="System.Reflection.Metadata" Version="6.0.0" />
-        <PackageReference Update="System.Threading.Tasks.Dataflow" Version="6.0.0" />
+        <PackageReference Update="System.Reflection.Metadata" Version="7.0.0" />
+        <PackageReference Update="System.Threading.Tasks.Dataflow" Version="7.0.0" />
         <PackageReference Update="System.ValueTuple" Version="4.5.0" />
 
         <PackageReference Update="System.Reactive" Version="4.4.1" />

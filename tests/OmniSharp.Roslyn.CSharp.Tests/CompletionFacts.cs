@@ -2250,6 +2250,24 @@ namespace N
             }
         }
 
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task ReplacesUpUntilCursorInMiddleOfWord(string filename)
+        {
+            const string input = @"public class C1 {}
+pub$$class";
+
+            var completions = await FindCompletionsAsync(filename, input, SharedOmniSharpTestHost);
+            Assert.All(completions.Items, (completion) =>
+            {
+                Assert.Equal(0, completion.TextEdit.StartColumn);
+                Assert.Equal(1, completion.TextEdit.StartLine);
+                Assert.Equal(3, completion.TextEdit.EndColumn);
+                Assert.Equal(1, completion.TextEdit.EndLine);
+            });
+        }
+
         private CompletionService GetCompletionService(OmniSharpTestHost host)
             => host.GetRequestHandler<CompletionService>(EndpointName);
 

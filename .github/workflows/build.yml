@@ -1,9 +1,10 @@
 
 name: 'Build'
 env:
-  DotNetVersion: "7.0.100-rc.1.22431.12"
-  DotNetVersion2: "6.0.202"
-  NuGetVersion: "5.7.0"
+  DotNetVersion: "8.0.100-preview.4.23260.5"
+  DotNetVersion2: "7.0.302"
+  DotNetVersion3: "6.0.203"
+  NuGetVersion: "6.5.0"
   MonoVersion: "6.12.0"
   Artifacts: ${{ github.workspace }}/artifacts/
   Coverage: ${{ github.workspace }}/coverage/
@@ -13,8 +14,6 @@ defaults:
     shell: pwsh
 on:
   pull_request:
-    paths-ignore:
-      - 'CHANGELOG.md'
     branches:
       - master
       - feature/*
@@ -53,6 +52,7 @@ jobs:
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: |
+            ${{ env.DotNetVersion3 }}
             ${{ env.DotNetVersion2 }}
             ${{ env.DotNetVersion }}
 
@@ -64,24 +64,9 @@ jobs:
         run: |
           nuget install tools/packages.config -ExcludeVersion -OutputDirectory tools
 
-      # - name: 🍰 Run Cake
-      #   run: |
-      #     dotnet cake --bootstrap
-      #     dotnet cake --configuration=Release --verbosity=Verbose --target=CI --publish-all --archive
-
       - name: 🍰 Run Cake
-        if: ${{ runner.os == 'Linux' || runner.os == 'macOS' }}
-        shell: bash
         run: |
-          echo $PATH
-          chmod 755 ./build.sh
-          ./build.sh --configuration Release --verbosity Verbose --target CI --publish-all --archive
-
-      - name: 🍰 Run Cake
-        if: ${{ runner.os == 'Windows' }}
-        shell: powershell
-        run: |
-          .\build.ps1 -configuration Release -verbosity Verbose -target CI --publish-all --archive
+          dotnet cake --configuration=Release --verbosity=Verbose --target=CI --publish-all --archive
 
       - name: ⬆ Publish Logs
         uses: actions/upload-artifact@v2
