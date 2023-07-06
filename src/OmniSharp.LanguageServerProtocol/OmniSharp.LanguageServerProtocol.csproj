@@ -13,7 +13,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" PrivateAssets="All" />
         <PackageReference Include="OmniSharp.Extensions.LanguageServer" />
 
         <!-- The two references below can be deleted once OmniSharp.Extensions.LanguageServer
