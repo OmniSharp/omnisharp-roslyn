@@ -15,7 +15,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" PrivateAssets="All" />
     <PackageReference Include="McMaster.Extensions.CommandLineUtils" />
     <PackageReference Include="Microsoft.Build.Locator" />
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" />
