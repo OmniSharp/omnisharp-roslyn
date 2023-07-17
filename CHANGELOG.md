@@ -1,6 +1,9 @@
 # Changelog
 All changes to the project will be documented in this file.
 
+## [1.39.8] - 2023-07-17
+* Use core LSP TokenTypes where possible and validate token names (PR: [#2548](https://github.com/OmniSharp/omnisharp-roslyn/pull/2548))
+
 ## [1.39.7] - 2023-06-16
 * Respond to breaking change in VSCode 1.79.2 in completion (PR:[#2542](https://github.com/OmniSharp/omnisharp-roslyn/pull/2542))
 * Use dotnet-cake for build (PR:[#2537](https://github.com/OmniSharp/omnisharp-roslyn/pull/2537))
