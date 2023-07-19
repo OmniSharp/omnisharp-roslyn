@@ -244,6 +244,7 @@ void BuildWithDotNetCli(BuildEnvironment env, string configuration)
                 .Append($"/bl:{logFileNameBase}.binlog;ProjectImports={projectImports}")
                 .Append($"/v:{Verbosity.Minimal.GetMSBuildVerbosityName()}")
                 .Append("/tl")
+                .Append("/graphBuild")
     };
 
     settings.AddFileLogger(
