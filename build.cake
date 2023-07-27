@@ -77,7 +77,7 @@ void InstallDotNetSdk(BuildEnvironment env, BuildPlan plan, string version, stri
 
     if (!Platform.Current.IsWindows)
     {
-        Run("chmod", $"+x '{scriptFilePath}'");
+        Run("chmod", $"+x \"{scriptFilePath}\"");
     }
 
     var argList = new List<string>();
@@ -467,7 +467,7 @@ string PublishMonoBuildForPlatform(string project, MonoRuntime monoRuntime, Buil
 
     var runScriptFile = CombinePaths(env.Folders.MonoPackaging, "run");
     FileHelper.Copy(runScriptFile, CombinePaths(outputFolder, "run"), overwrite: true);
-    Run("chmod", $"+x '{CombinePaths(outputFolder, "run")}'");
+    Run("chmod", $"+x \"{CombinePaths(outputFolder, "run")}\"");
 
     CopyExtraDependencies(env, outputFolder);
     AddOmniSharpBindingRedirects(omnisharpFolder);
