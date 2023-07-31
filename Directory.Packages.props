@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <Project>
     <PropertyGroup>
         <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
@@ -6,8 +7,8 @@
         <MicrosoftExtensionPackageVersion>7.0.0</MicrosoftExtensionPackageVersion>
         <MicrosoftTestPackageVersion>17.6.0</MicrosoftTestPackageVersion>
         <MSBuildPackageVersion>17.3.2</MSBuildPackageVersion>
-        <NuGetPackageVersion>6.7.0-preview.1.20</NuGetPackageVersion>
-        <RoslynPackageVersion>4.7.0-2.23274.2</RoslynPackageVersion>
+        <NuGetPackageVersion>6.8.0-preview.1.41</NuGetPackageVersion>
+        <RoslynPackageVersion>4.8.0-1.23374.10</RoslynPackageVersion>
         <XunitPackageVersion>2.4.1</XunitPackageVersion>
     </PropertyGroup>
 
