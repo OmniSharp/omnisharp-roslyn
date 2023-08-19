@@ -2230,7 +2230,7 @@ namespace N
 {
     internal class C
     {
-// The trailing tabs on the previous line and the next line are integral to this bug
+	// The trailing tabs on the previous line and the next line are integral to this bug
 
         override $$
         public C()
@@ -2245,7 +2245,7 @@ namespace N
             foreach (var item in completions.Items)
             {
                 Assert.Single(item.AdditionalTextEdits);
-                Assert.Equal("        // The trailing tabs on the previous line and the next line are integral to this bug\n\n", NormalizeNewlines(item.AdditionalTextEdits[0].NewText));
+                Assert.Equal("\n        // The trailing tabs on the previous line and the next line are integral to this bug\n\n", NormalizeNewlines(item.AdditionalTextEdits[0].NewText));
                 Assert.StartsWith("        public override ", item.TextEdit.NewText);
             }
         }
