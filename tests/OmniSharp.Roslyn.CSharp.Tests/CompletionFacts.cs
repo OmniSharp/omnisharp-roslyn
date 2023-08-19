@@ -2229,9 +2229,9 @@ class Program
 namespace N
 {
     internal class C
-    {
+    {	
 // The trailing tabs on the previous line and the next line are integral to this bug
-
+	
         override $$
         public C()
         {
