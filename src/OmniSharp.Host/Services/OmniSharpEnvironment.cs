@@ -38,6 +38,11 @@ namespace OmniSharp.Services
                 throw new ArgumentException("OmniSharp only supports being launched with a directory path or a path to a solution (.sln, .slnf) file.", nameof(path));
             }
 
+            if (TargetDirectory[TargetDirectory.Length - 1] != Path.DirectorySeparatorChar)
+            {
+                TargetDirectory += Path.DirectorySeparatorChar;
+            }
+
             HostProcessId = hostPid;
             LogLevel = logLevel;
             AdditionalArguments = additionalArguments;
