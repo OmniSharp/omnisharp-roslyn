@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
+using OmniSharp.Extensions;
 using OmniSharp.Models;
 
 namespace OmniSharp.Helpers
@@ -16,7 +16,9 @@ namespace OmniSharp.Helpers
             if (!location.IsInSource)
                 throw new Exception("Location is not in the source tree");
 
-            var lineSpan = Path.GetExtension(location.SourceTree.FilePath).Equals(".cake", StringComparison.OrdinalIgnoreCase)
+            var lineSpan = Path.GetExtension(location.SourceTree.FilePath).Equals(".cake", StringComparison.OrdinalIgnoreCase) ||
+                location.SourceTree.FilePath.EndsWith("razor__virtual.cs") ||
+                location.SourceTree.FilePath.EndsWith("cshtml__virtual.cs")
                 ? location.GetLineSpan()
                 : location.GetMappedLineSpan();
 
@@ -24,12 +26,17 @@ namespace OmniSharp.Helpers
             var sourceText = GetSourceText(location, documents, lineSpan.HasMappedPath);
             var text = GetLineText(location, sourceText, lineSpan.StartLinePosition.Line);
 
-            var fileName = Path.IsPathRooted(lineSpan.Path)
+            var generatedInfo = workspace.CurrentSolution.GetSourceGeneratedFileInfo(location);
+
+            var fileName = Path.IsPathRooted(lineSpan.Path) || generatedInfo != null
+                // If there is generated file information, the path is not rooted, but we don't want to try and locate it as it doesn't
+                // exist on disk
                 ? lineSpan.Path
                 // when a #line directive maps into a separate file using a relative path, get the full path relative to the folder containing the source tree
                 : Path.GetFullPath(Path.Combine(Path.GetDirectoryName(location.SourceTree.FilePath), lineSpan.Path));
 
-            return new QuickFix
+
+            return new SymbolLocation
             {
                 Text = text.Trim(),
                 FileName = fileName,
@@ -37,7 +44,8 @@ namespace OmniSharp.Helpers
                 Column = lineSpan.HasMappedPath ? 0 : lineSpan.StartLinePosition.Character, // when a #line directive maps into a separate file, assume columns (0,0)
                 EndLine = lineSpan.EndLinePosition.Line,
                 EndColumn = lineSpan.HasMappedPath ? 0 : lineSpan.EndLinePosition.Character,
-                Projects = documents.Select(document => document.Project.Name).ToArray()
+                Projects = documents.Select(document => document.Project.Name).ToArray(),
+                GeneratedFileInfo = generatedInfo
             };
 
             static SourceText GetSourceText(Location location, IEnumerable<Document> documents, bool hasMappedPath)

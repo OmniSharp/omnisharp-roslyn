@@ -130,16 +130,12 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
 
         private IEnumerable<AutoCompleteResponse> MakeSnippetedResponses(AutoCompleteRequest request, ISymbol symbol, string completionText, bool preselect, bool isSuggestionMode)
         {
-            switch (symbol)
+            return symbol switch
             {
-                case IMethodSymbol methodSymbol:
-                    return MakeSnippetedResponses(request, methodSymbol, completionText, preselect, isSuggestionMode);
-                case INamedTypeSymbol typeSymbol:
-                    return MakeSnippetedResponses(request, typeSymbol, completionText, preselect, isSuggestionMode);
-
-                default:
-                    return new[] { MakeAutoCompleteResponse(request, symbol, completionText, preselect, isSuggestionMode) };
-            }
+                IMethodSymbol methodSymbol => MakeSnippetedResponses(request, methodSymbol, completionText, preselect, isSuggestionMode),
+                INamedTypeSymbol typeSymbol => MakeSnippetedResponses(request, typeSymbol, completionText, preselect, isSuggestionMode),
+                _ => new[] { MakeAutoCompleteResponse(request, symbol, completionText, preselect, isSuggestionMode) },
+            };
         }
 
         private IEnumerable<AutoCompleteResponse> MakeSnippetedResponses(AutoCompleteRequest request, IMethodSymbol methodSymbol, string completionText, bool preselect, bool isSuggestionMode)

@@ -39,6 +39,11 @@ namespace TestUtility
                 }
             }
 
+            if (current[current.Length - 1] != Path.DirectorySeparatorChar)
+            {
+                current += Path.DirectorySeparatorChar;
+            }
+
             return current;
         }
 

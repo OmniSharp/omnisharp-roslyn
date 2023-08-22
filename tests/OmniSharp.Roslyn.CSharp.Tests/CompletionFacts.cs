@@ -299,7 +299,7 @@ namespace N2
 
             using var host = useAsyncCompletion ? GetAsyncCompletionAndImportCompletionHost() : GetImportCompletionHost();
             var completions = await FindCompletionsWithImportedAsync(filename, input, host);
-            var resolved = await ResolveCompletionAsync(completions.Items.Last(c => c.TextEdit.NewText == "Console"), host);
+            var resolved = await ResolveCompletionAsync(completions.Items.First(c => c.TextEdit.NewText == "Console"), host);
 
             Assert.Single(resolved.Item.AdditionalTextEdits);
             var additionalEdit = resolved.Item.AdditionalTextEdits[0];
@@ -2248,6 +2248,24 @@ namespace N
                 Assert.Equal("\n        // The trailing tabs on the previous line and the next line are integral to this bug\n\n", NormalizeNewlines(item.AdditionalTextEdits[0].NewText));
                 Assert.StartsWith("        public override ", item.TextEdit.NewText);
             }
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task ReplacesUpUntilCursorInMiddleOfWord(string filename)
+        {
+            const string input = @"public class C1 {}
+pub$$class";
+
+            var completions = await FindCompletionsAsync(filename, input, SharedOmniSharpTestHost);
+            Assert.All(completions.Items, (completion) =>
+            {
+                Assert.Equal(0, completion.TextEdit.StartColumn);
+                Assert.Equal(1, completion.TextEdit.StartLine);
+                Assert.Equal(3, completion.TextEdit.EndColumn);
+                Assert.Equal(1, completion.TextEdit.EndLine);
+            });
         }
 
         private CompletionService GetCompletionService(OmniSharpTestHost host)

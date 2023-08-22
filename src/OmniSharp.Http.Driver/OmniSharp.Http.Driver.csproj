@@ -11,13 +11,11 @@
         <!-- Always run on the latest runtime installed. -->
         <RuntimeFrameworkVersion>6.0.0-preview.7.21317.1</RuntimeFrameworkVersion>
         <RollForward>LatestMajor</RollForward>
+        <SkipHostDlls Condition="'$(TargetFramework)' != 'net472'">true</SkipHostDlls>
     </PropertyGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\OmniSharp.Http\OmniSharp.Http.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-        <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" PrivateAssets="All" />
-    </ItemGroup>
 </Project>

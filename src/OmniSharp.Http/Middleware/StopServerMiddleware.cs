@@ -1,15 +1,25 @@
 using System.Threading;
 using System.Threading.Tasks;
+#if NETCOREAPP
+using Microsoft.Extensions.Hosting;
+#else
 using Microsoft.AspNetCore.Hosting;
+#endif
 using Microsoft.AspNetCore.Http;
 
 namespace OmniSharp.Http.Middleware
 {
     class StopServerMiddleware
     {
+#if NETCOREAPP
+        private readonly IHostApplicationLifetime _lifetime;
+
+        public StopServerMiddleware(RequestDelegate next, IHostApplicationLifetime lifetime)
+#else
         private readonly IApplicationLifetime _lifetime;
 
         public StopServerMiddleware(RequestDelegate next, IApplicationLifetime lifetime)
+#endif
         {
             _lifetime = lifetime;
         }

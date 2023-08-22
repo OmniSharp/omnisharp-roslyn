@@ -16,14 +16,16 @@ namespace OmniSharp
         {
         }
 
-        public Task<OmniSharpExtractClassOptions> GetExtractClassOptionsAsync(Document document, INamedTypeSymbol originalType, ISymbol selectedMember)
+        public Task<OmniSharpExtractClassOptions> GetExtractClassOptionsAsync(Document document, INamedTypeSymbol originalType, ImmutableArray<ISymbol> selectedMembers)
         {
-            var symbolsToUse = selectedMember == null ? originalType.GetMembers().Where(member => member switch
-            {
-                IMethodSymbol methodSymbol => methodSymbol.MethodKind == MethodKind.Ordinary,
-                IFieldSymbol fieldSymbol => !fieldSymbol.IsImplicitlyDeclared,
-                _ => member.Kind == SymbolKind.Property || member.Kind == SymbolKind.Event
-            }) : new ISymbol[] { selectedMember };
+            var symbolsToUse = selectedMembers.IsEmpty
+                ? originalType.GetMembers().Where(member => member switch
+                    {
+                        IMethodSymbol methodSymbol => methodSymbol.MethodKind == MethodKind.Ordinary,
+                        IFieldSymbol fieldSymbol => !fieldSymbol.IsImplicitlyDeclared,
+                        _ => member.Kind == SymbolKind.Property || member.Kind == SymbolKind.Event
+                    })
+                : selectedMembers;
 
             var memberAnalysisResults = symbolsToUse.Select(m => new OmniSharpExtractClassMemberAnalysisResult(m, makeAbstract: false)).ToImmutableArray();
             const string name = "NewBaseType";

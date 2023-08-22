@@ -2,10 +2,9 @@
     "DotNetInstallScriptURL": "https://dot.net/v1",
     "DotNetChannel": "Preview",
     "DotNetVersions": [
-        "3.1.417",
-        "5.0.406",
-        "6.0.201",
-        "7.0.100-preview.2.22153.17"
+        "6.0.203",
+        "7.0.302",
+        "8.0.100-preview.4.23260.5"
     ],
     "RequiredMonoVersion": "6.6.0",
     "DownloadURL": "https://roslynomnisharp.blob.core.windows.net/ext",
@@ -42,8 +41,6 @@
         "ProjectWithDisabledAnalyzers",
         "ProjectWithDisabledAnalyzers2",
         "ProjectWithAnalyzers",
-        "NetCore31Project",
-        "Net50Project",
         "ProjectWithAnalyzersAndEditorConfig",
         "ProjectWithParentEditorConfig",
         "TwoProjectsWithAnalyzerSuppressor"

@@ -7,8 +7,6 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 using OmniSharp.Models.Diagnostics;
-using OmniSharp.MSBuild;
-using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
 using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
@@ -44,7 +42,9 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         }
 
         [DiagnosticAnalyzer(LanguageNames.CSharp)]
+#pragma warning disable RS1036 // Specify analyzer banned API enforcement setting
         public class TestDiagnosticAnalyzer : DiagnosticAnalyzer
+#pragma warning restore RS1036 // Specify analyzer banned API enforcement setting
         {
             public TestDiagnosticAnalyzer(string id, bool isEnabledByDefault)
             {
@@ -211,7 +211,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             }
         }
 
-        [Fact]
+        [Fact(Skip = "https://github.com/dotnet/roslyn/issues/66085")]
         public async Task When_diagnostic_is_disabled_by_default_updating_rule_will_enable_it()
         {
             using (var host = GetHost())
@@ -301,7 +301,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             return TestHelpers.AddProjectToWorkspace(
                             host.Workspace,
                             "project.csproj",
-                            new[] { "netcoreapp3.1" },
+                            new[] { "net6.0" },
                             new[] { testFile },
                             analyzerRefs: analyzerReferences)
                     .Single();

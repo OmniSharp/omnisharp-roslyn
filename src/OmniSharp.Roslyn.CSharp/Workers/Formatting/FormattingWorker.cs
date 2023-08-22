@@ -5,15 +5,13 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using ICSharpCode.Decompiler.Util;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.CSharp.Formatting;
 using Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.DocumentationComments;
 using Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.Formatting;
-using Microsoft.CodeAnalysis.Formatting;
+using Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.Options;
 using Microsoft.CodeAnalysis.Text;
-using Microsoft.Extensions.Logging;
 using OmniSharp.Extensions;
 using OmniSharp.Models;
 using OmniSharp.Options;
@@ -105,7 +103,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Formatting
         {
             var spans = (textSpan != null) ? new[] { textSpan.Value } : null;
             var formattingOtions = await GetFormattingOptionsAsync(document, omnisharpOptions);
-            var newDocument =  await OmniSharpFormatter.FormatAsync(document, spans, formattingOtions, CancellationToken.None);
+            var newDocument = await OmniSharpFormatter.FormatAsync(document, spans, formattingOtions, CancellationToken.None);
             if (omnisharpOptions.FormattingOptions.OrganizeImports)
             {
                 var organizeImportsOptions = await GetOrganizeImportsOptionsAsync(document, omnisharpOptions);
@@ -117,21 +115,29 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Formatting
 
         // If we are not using .editorconfig for formatting options then we can avoid any overhead of calculating document options.
         internal static async ValueTask<OmniSharpOrganizeImportsOptionsWrapper> GetOrganizeImportsOptionsAsync(Document document, OmniSharpOptions omnisharpOptions)
-            => omnisharpOptions.FormattingOptions.EnableEditorConfigSupport
-                ? await OmniSharpOrganizeImportsOptionsWrapper.FromDocumentAsync(document, CancellationToken.None)
-                : WrapOrganizeImportsOptions(omnisharpOptions.FormattingOptions);
+        {
+            var fallbackOptions = WrapOrganizeImportsOptions(omnisharpOptions.FormattingOptions);
+            return omnisharpOptions.FormattingOptions.EnableEditorConfigSupport
+                        ? await OmniSharpOrganizeImportsOptionsWrapper.FromDocumentAsync(document, fallbackOptions, CancellationToken.None)
+                        : fallbackOptions;
+        }
 
         // If we are not using .editorconfig for formatting options then we can avoid any overhead of calculating document options.
         internal static async ValueTask<OmniSharpSyntaxFormattingOptionsWrapper> GetFormattingOptionsAsync(Document document, OmniSharpOptions omnisharpOptions)
-            => omnisharpOptions.FormattingOptions.EnableEditorConfigSupport
-                ? await OmniSharpSyntaxFormattingOptionsWrapper.FromDocumentAsync(document, CancellationToken.None)
-                : WrapFormattingOptions(omnisharpOptions.FormattingOptions);
+        {
+            var fallbackOptions = CreateLineFormattingOptions(omnisharpOptions.FormattingOptions);
+            return omnisharpOptions.FormattingOptions.EnableEditorConfigSupport
+                        ? await OmniSharpSyntaxFormattingOptionsWrapper.FromDocumentAsync(document, fallbackOptions, CancellationToken.None)
+                        : WrapFormattingOptions(omnisharpOptions.FormattingOptions);
+        }
 
         // If we are not using .editorconfig for formatting options then we can avoid any overhead of calculating document options.
         internal static async ValueTask<OmniSharpDocumentationCommentOptionsWrapper> GetDocumentationCommentOptionsAsync(Document document, OmniSharpOptions omnisharpOptions)
-            => omnisharpOptions.FormattingOptions.EnableEditorConfigSupport
-                ? await OmniSharpDocumentationCommentOptionsWrapper.FromDocumentAsync(document, autoXmlDocCommentGeneration: true, CancellationToken.None)
-                : WrapDocumentationCommentOptions(omnisharpOptions.FormattingOptions);
+        {
+            return omnisharpOptions.FormattingOptions.EnableEditorConfigSupport
+                        ? await OmniSharpDocumentationCommentOptionsWrapper.FromDocumentAsync(document, autoXmlDocCommentGeneration: true, CancellationToken.None)
+                        : WrapDocumentationCommentOptions(omnisharpOptions.FormattingOptions);
+        }
 
         private static OmniSharpOrganizeImportsOptionsWrapper WrapOrganizeImportsOptions(OmniSharp.Options.FormattingOptions options)
            => new(
@@ -194,11 +200,16 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Formatting
                 newLineForClausesInQuery: options.NewLineForClausesInQuery);
 
         private static OmniSharpDocumentationCommentOptionsWrapper WrapDocumentationCommentOptions(OmniSharp.Options.FormattingOptions options)
-          => new(
-              autoXmlDocCommentGeneration: true,
-              tabSize: options.TabSize,
-              useTabs: options.UseTabs,
-              newLine: options.NewLine);
+          => new(autoXmlDocCommentGeneration: true, CreateLineFormattingOptions(options));
+
+        private static OmniSharpLineFormattingOptions CreateLineFormattingOptions(OmniSharp.Options.FormattingOptions options)
+            => new()
+            {
+                IndentationSize = options.IndentationSize,
+                TabSize = options.TabSize,
+                UseTabs = options.UseTabs,
+                NewLine = options.NewLine,
+            };
 
         internal static OmniSharpLabelPositionOptions LabelPositionOptionForStringValue(string value)
             => value.ToUpper() switch

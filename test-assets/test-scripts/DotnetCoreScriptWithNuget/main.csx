@@ -1,4 +1,4 @@
-#! "netcoreapp3.1"
+#! "net6.0"
 #r "nuget: Newtonsoft.Json,11.0.2"
 
 using Newtonsoft.Json;

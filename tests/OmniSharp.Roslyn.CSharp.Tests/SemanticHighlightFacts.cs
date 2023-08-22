@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models.SemanticHighlight;
@@ -348,6 +349,41 @@ record struct R1(string S, int I);
                 Parameter("I"),
                 Punctuation(")"),
                 Punctuation(";")
+            );
+        }
+
+        [Fact]
+        public async Task SemanticHighlightLinkedFiles()
+        {
+            var testFile = new TestFile("a.cs", @"
+class C1 { }
+");
+
+            TestHelpers.AddProjectToWorkspace(
+                SharedOmniSharpTestHost.Workspace,
+                Path.Combine(Directory.GetCurrentDirectory(), "a.csproj"),
+                new[] { "net472" },
+                new[] { testFile });
+
+            TestHelpers.AddProjectToWorkspace(
+                SharedOmniSharpTestHost.Workspace,
+                Path.Combine(Directory.GetCurrentDirectory(), "b.csproj"),
+                new[] { "net472" },
+                new[] { testFile });
+
+            var requestHandler = GetRequestHandler(SharedOmniSharpTestHost);
+            var request = new SemanticHighlightRequest
+            {
+                FileName = "a.cs",
+            };
+
+            var response = await requestHandler.Handle(request);
+
+            AssertSyntax(response.Spans, testFile.Content.Code, 0,
+                Keyword("class"),
+                ClassName("C1"),
+                Punctuation("{"),
+                Punctuation("}")
             );
         }
 

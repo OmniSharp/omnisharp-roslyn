@@ -18,7 +18,7 @@ namespace OmniSharp.Benchmarks
         [GlobalSetup]
         public async Task SetupAsync()
         {
-            Setup(new KeyValuePair<string, string>("RoslynExtensionsOptions:EnableImportCompletion", "true"));
+            Setup(new KeyValuePair<string, string?>("RoslynExtensionsOptions:EnableImportCompletion", "true"));
 
             var builder = new StringBuilder();
 

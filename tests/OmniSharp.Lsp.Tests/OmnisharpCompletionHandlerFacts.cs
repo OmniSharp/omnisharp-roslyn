@@ -283,7 +283,7 @@ namespace N2
 
             await EnableImportCompletion();
             var completions = await FindCompletionsWithImportedAsync(filename, input);
-            var resolved = await ResolveCompletionAsync(completions.Items.Last(c => c.TextEdit.TextEdit.NewText == "Console"));
+            var resolved = await ResolveCompletionAsync(completions.Items.First(c => c.TextEdit.TextEdit.NewText == "Console"));
 
             Assert.Single(resolved.AdditionalTextEdits);
             var additionalEdit = resolved.AdditionalTextEdits.First();

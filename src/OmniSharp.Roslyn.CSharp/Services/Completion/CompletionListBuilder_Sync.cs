@@ -35,29 +35,39 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
             bool expectingImportedItems,
             bool isSuggestionMode)
         {
-            var completionsBuilder = new List<CompletionItem>(completions.Items.Length);
+            var completionsBuilder = new List<CompletionItem>(completions.ItemsList.Count);
             var seenUnimportedCompletions = false;
             var commitCharacterRuleCache = new Dictionary<ImmutableArray<CharacterSetModificationRule>, IReadOnlyList<char>>();
             var commitCharacterRuleBuilder = new HashSet<char>();
 
-            var completionTasksAndProviderNames = completions.Items.SelectAsArray((document, completionService), (completion, arg) =>
+            var completionTasksAndProviderNamesBuilder = ImmutableArray.CreateBuilder<(Task<CompletionChange>?, string? providerName)>();
+            for (int i = 0; i < completions.ItemsList.Count; i++)
             {
+                var completion = completions.ItemsList[i];
                 var providerName = completion.GetProviderName();
                 if (providerName is TypeImportCompletionProvider or
                                     ExtensionMethodImportCompletionProvider)
                 {
-                    return (null, providerName);
+                    completionTasksAndProviderNamesBuilder.Add((null, providerName));
                 }
                 else
                 {
-                    return ((Task<CompletionChange>?)arg.completionService.GetChangeAsync(arg.document, completion), providerName);
+                    completionTasksAndProviderNamesBuilder.Add(((Task<CompletionChange>?)completionService.GetChangeAsync(document, completion), providerName));
                 }
-            });
+            }
+            var completionTasksAndProviderNames = completionTasksAndProviderNamesBuilder.ToImmutable();
 
-            for (int i = 0; i < completions.Items.Length; i++)
+            for (int i = 0; i < completions.ItemsList.Count; i++)
             {
                 TextSpan changeSpan = typedSpan;
-                var completion = completions.Items[i];
+                var completion = completions.ItemsList[i];
+
+                // To-do: Add support for snippet items: https://github.com/OmniSharp/omnisharp-roslyn/issues/2485
+                if (completion.GetProviderName() == SnippetCompletionProvider)
+                {
+                    continue;
+                }
+
                 var insertTextFormat = InsertTextFormat.PlainText;
                 string labelText = completion.DisplayTextPrefix + completion.DisplayText + completion.DisplayTextSuffix;
                 List<LinePositionSpanTextChange>? additionalTextEdits = null;
@@ -210,6 +220,15 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                     }
 
                     changeSpan = updatedChange.Span;
+                    // When inserting at the beginning or middle of a word, we want to only replace characters
+                    // up until the caret position, but not after.  For example when typing at the beginning of a word
+                    // we only want to insert the completion before the rest of the word.
+                    // However, Roslyn returns the entire word as the span to replace, so we have to adjust it.
+                    if (position < changeSpan.End)
+                    {
+                        changeSpan = new(changeSpan.Start, length: position - changeSpan.Start);
+                    }
+
                     (insertText, insertTextFormat) = getPossiblySnippetizedInsertText(updatedChange, adjustedNewPosition);
 
                     // If we're expecting there to be unimported types, put in an explicit sort text to put things already in scope first.

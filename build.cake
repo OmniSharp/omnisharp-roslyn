@@ -60,7 +60,7 @@ Task("GitVersion")
 /// </summary>
 Task("Setup")
     .IsDependentOn("ValidateMono")
-    .IsDependentOn("InstallDotNetCoreSdk");
+    .IsDependentOn("InstallDotNetSdk");
 
 void InstallDotNetSdk(BuildEnvironment env, BuildPlan plan, string version, string installFolder, bool sharedRuntime = false, bool noPath = false)
 {
@@ -73,14 +73,11 @@ void InstallDotNetSdk(BuildEnvironment env, BuildPlan plan, string version, stri
     var scriptFilePath = CombinePaths(installFolder, scriptFileName);
     var url = $"{plan.DotNetInstallScriptURL}/{scriptFileName}";
 
-    using (var client = new WebClient())
-    {
-        client.DownloadFile(url, scriptFilePath);
-    }
+    DownloadFile(url, File(scriptFilePath));
 
     if (!Platform.Current.IsWindows)
     {
-        Run("chmod", $"+x '{scriptFilePath}'");
+        Run("chmod", $"+x \"{scriptFilePath}\"");
     }
 
     var argList = new List<string>();
@@ -110,7 +107,7 @@ void InstallDotNetSdk(BuildEnvironment env, BuildPlan plan, string version, stri
     Run(env.ShellCommand, $"{env.ShellArgument} {scriptFilePath} {string.Join(" ", argList)}").ExceptionOnError($"Failed to Install .NET Core SDK {version}");
 }
 
-Task("InstallDotNetCoreSdk")
+Task("InstallDotNetSdk")
     .Does(() =>
 {
     if (!useGlobalDotNetSdk)
@@ -157,21 +154,21 @@ Task("PrepareTestAssets:CommonTestAssets")
         var folder = CombinePaths(env.Folders.TestAssets, "test-projects", project);
 
         try {
-            DotNetCoreBuild(folder, new DotNetCoreBuildSettings()
+            DotNetBuild(folder, new DotNetBuildSettings()
             {
                 ToolPath = env.DotNetCommand,
                 WorkingDirectory = folder,
-                Verbosity = DotNetCoreVerbosity.Minimal
+                Verbosity = DotNetVerbosity.Minimal
             });
         } catch {
             // ExternalAlias has issues once in a while, try building again to get it working.
             if (project == "ExternAlias") {
 
-                DotNetCoreBuild(folder, new DotNetCoreBuildSettings()
+                DotNetBuild(folder, new DotNetBuildSettings()
                 {
                     ToolPath = env.DotNetCommand,
                     WorkingDirectory = folder,
-                    Verbosity = DotNetCoreVerbosity.Minimal
+                    Verbosity = DotNetVerbosity.Minimal
                 });
             }
         }
@@ -185,11 +182,11 @@ Task("PrepareTestAssets:RestoreOnlyTestAssets")
 
         var folder = CombinePaths(env.Folders.TestAssets, "test-projects", project);
 
-        DotNetCoreRestore(new DotNetCoreRestoreSettings()
+        DotNetRestore(new DotNetRestoreSettings()
         {
             ToolPath = env.DotNetCommand,
             WorkingDirectory = folder,
-            Verbosity = DotNetCoreVerbosity.Minimal
+            Verbosity = DotNetVerbosity.Minimal
         });
     });
 
@@ -202,11 +199,11 @@ Task("PrepareTestAssets:WindowsOnlyTestAssets")
 
         var folder = CombinePaths(env.Folders.TestAssets, "test-projects", project);
 
-        DotNetCoreBuild(folder, new DotNetCoreBuildSettings()
+        DotNetBuild(folder, new DotNetBuildSettings()
         {
             ToolPath = env.DotNetCommand,
             WorkingDirectory = folder,
-            Verbosity = DotNetCoreVerbosity.Minimal
+            Verbosity = DotNetVerbosity.Minimal
         });
     });
 
@@ -238,7 +235,7 @@ void BuildWithDotNetCli(BuildEnvironment env, string configuration)
         ? MSBuildBinaryLogImports.Embed
         : MSBuildBinaryLogImports.None;
 
-    var settings = new DotNetCoreMSBuildSettings
+    var settings = new DotNetMSBuildSettings
     {
         WorkingDirectory = env.WorkingDirectory,
 
@@ -246,6 +243,8 @@ void BuildWithDotNetCli(BuildEnvironment env, string configuration)
             args.Append("/restore")
                 .Append($"/bl:{logFileNameBase}.binlog;ProjectImports={projectImports}")
                 .Append($"/v:{Verbosity.Minimal.GetMSBuildVerbosityName()}")
+                .Append("/tl")
+                .Append("/graphBuild")
     };
 
     settings.AddFileLogger(
@@ -268,7 +267,7 @@ void BuildWithDotNetCli(BuildEnvironment env, string configuration)
         .WithProperty("RuntimeFrameworkVersion", "6.0.0-preview.7.21317.1") // Set the minimum runtime to a .NET 6 prerelease so that prerelease SDKs will be considered during rollForward.
         .WithProperty("RollForward", "LatestMajor");
 
-    DotNetCoreMSBuild("OmniSharp.sln", settings);
+    DotNetMSBuild("OmniSharp.sln", settings);
 }
 
 Task("Build")
@@ -468,7 +467,7 @@ string PublishMonoBuildForPlatform(string project, MonoRuntime monoRuntime, Buil
 
     var runScriptFile = CombinePaths(env.Folders.MonoPackaging, "run");
     FileHelper.Copy(runScriptFile, CombinePaths(outputFolder, "run"), overwrite: true);
-    Run("chmod", $"+x '{CombinePaths(outputFolder, "run")}'");
+    Run("chmod", $"+x \"{CombinePaths(outputFolder, "run")}\"");
 
     CopyExtraDependencies(env, outputFolder);
     AddOmniSharpBindingRedirects(omnisharpFolder);
@@ -507,20 +506,23 @@ Task("PublishNet6Builds")
     {
         if (publishAll)
         {
-            if (!Platform.Current.IsWindows)
+            if (Platform.Current.IsWindows)
             {
-                PublishBuild(project, env, buildPlan, configuration, "linux-x64", "net6.0");
-                PublishBuild(project, env, buildPlan, configuration, "linux-arm64", "net6.0");
-                PublishBuild(project, env, buildPlan, configuration, "linux-musl-x64", "net6.0");
-                PublishBuild(project, env, buildPlan, configuration, "linux-musl-arm64", "net6.0");
+                PublishBuild(project, env, buildPlan, configuration, "win7-x86", "net6.0");
+                PublishBuild(project, env, buildPlan, configuration, "win7-x64", "net6.0");
+                PublishBuild(project, env, buildPlan, configuration, "win10-arm64", "net6.0");
+            }
+            else if (Platform.Current.IsMacOS)
+            {
                 PublishBuild(project, env, buildPlan, configuration, "osx-x64", "net6.0");
                 PublishBuild(project, env, buildPlan, configuration, "osx-arm64", "net6.0");
             }
             else
             {
-                PublishBuild(project, env, buildPlan, configuration, "win7-x86", "net6.0");
-                PublishBuild(project, env, buildPlan, configuration, "win7-x64", "net6.0");
-                PublishBuild(project, env, buildPlan, configuration, "win10-arm64", "net6.0");
+                PublishBuild(project, env, buildPlan, configuration, "linux-x64", "net6.0");
+                PublishBuild(project, env, buildPlan, configuration, "linux-arm64", "net6.0");
+                PublishBuild(project, env, buildPlan, configuration, "linux-musl-x64", "net6.0");
+                PublishBuild(project, env, buildPlan, configuration, "linux-musl-arm64", "net6.0");
             }
         }
         else if (Platform.Current.IsWindows)
@@ -567,7 +569,7 @@ string PublishBuild(string project, BuildEnvironment env, BuildPlan plan, string
 
     try
     {
-        var publishSettings = new DotNetCorePublishSettings()
+        var publishSettings = new DotNetPublishSettings()
         {
             Framework = framework,
             Runtime = rid, // TODO: With everything today do we need to publish this with a rid?  This appears to be legacy bit when we used to push for all supported dotnet core rids.
@@ -575,7 +577,7 @@ string PublishBuild(string project, BuildEnvironment env, BuildPlan plan, string
             SelfContained = false, // Since we are specifying a runtime identifier this defaults to true. We don't need to ship a runtime for net6 because we require the .NET SDK to be installed.
             Configuration = configuration,
             OutputDirectory = outputFolder,
-            MSBuildSettings = new DotNetCoreMSBuildSettings()
+            MSBuildSettings = new DotNetMSBuildSettings()
                 .WithProperty("PackageVersion", env.VersionInfo.NuGetVersion)
                 .WithProperty("AssemblyVersion", env.VersionInfo.AssemblySemVer)
                 .WithProperty("FileVersion", env.VersionInfo.AssemblySemVer)
@@ -584,28 +586,14 @@ string PublishBuild(string project, BuildEnvironment env, BuildPlan plan, string
                 .WithProperty("RollForward", "LatestMajor"),
             ToolPath = env.DotNetCommand,
             WorkingDirectory = env.WorkingDirectory,
-            Verbosity = DotNetCoreVerbosity.Minimal,
+            Verbosity = DotNetVerbosity.Minimal,
         };
-        DotNetCorePublish(projectFileName, publishSettings);
+        DotNetPublish(projectFileName, publishSettings);
     }
     catch
     {
         Error($"Failed to publish {project} for {rid}");
         throw;
-    }
-
-    if (framework is "net6.0")
-    {
-        // Delete NuGet libraries so they can be loaded from SDK folder.
-        foreach (var filePath in DirectoryHelper.GetFiles(outputFolder, "NuGet.*.dll"))
-        {
-            FileHelper.Delete(filePath);
-        }
-
-        foreach (var filePath in DirectoryHelper.GetFiles(outputFolder, "System.Configuration.ConfigurationManager.dll"))
-        {
-            FileHelper.Delete(filePath);
-        }
     }
 
     CopyExtraDependencies(env, outputFolder);
@@ -656,12 +644,12 @@ Task("PublishWindowsBuilds")
 });
 
 Task("PublishNuGet")
-    .IsDependentOn("InstallDotNetCoreSdk")
+    .IsDependentOn("InstallDotNetSdk")
     .Does(() => {
-        DotNetCorePack(".", new DotNetCorePackSettings() {
+        DotNetPack(".", new DotNetPackSettings() {
             Configuration = "Release",
             OutputDirectory = "./artifacts/nuget/",
-            MSBuildSettings = new DotNetCoreMSBuildSettings()
+            MSBuildSettings = new DotNetMSBuildSettings()
                 .SetConfiguration(configuration)
                 .WithProperty("PackageVersion", env.VersionInfo.NuGetVersion)
                 .WithProperty("AssemblyVersion", env.VersionInfo.AssemblySemVer)

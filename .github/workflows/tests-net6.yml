@@ -1,9 +1,10 @@
 
 name: 'Tests net6.0'
 env:
-  DotNetVersion: "7.0.100-preview.2.22153.17"
-  DotNetVersion2: "3.1.417"
-  NuGetVersion: "5.7.0"
+  DotNetVersion: "8.0.100-preview.4.23260.5"
+  DotNetVersion2: "7.0.302"
+  DotNetVersion3: "6.0.203"
+  NuGetVersion: "6.5.0"
   MonoVersion: "6.12.0"
   Artifacts: ${{ github.workspace }}/artifacts/
   Coverage: ${{ github.workspace }}/coverage/
@@ -15,7 +16,6 @@ on:
   pull_request:
     branches:
       - master
-      - demo/*
       - feature/*
     tags:
       - '*'
@@ -51,15 +51,13 @@ jobs:
         with:
           nuget-version: ${{ env.NuGetVersion }}
 
-      - name: 🔨 Use .NET Core ${{ env.DotNetVersion2 }} SDK
-        uses: actions/setup-dotnet@v1.7.2
+      - name: 🔨 Use .NET Core SDKs
+        uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: ${{ env.DotNetVersion2 }}
-
-      - name: 🔨 Use .NET Core ${{ env.DotNetVersion }} SDK
-        uses: actions/setup-dotnet@v1.7.2
-        with:
-          dotnet-version: ${{ env.DotNetVersion }}
+          dotnet-version: |
+            ${{ env.DotNetVersion3 }}
+            ${{ env.DotNetVersion2 }}
+            ${{ env.DotNetVersion }}
 
       - name: 🎁 dotnet tool restore
         run: |
@@ -69,13 +67,7 @@ jobs:
         run: |
           nuget install tools/packages.config -ExcludeVersion -OutputDirectory tools
 
-      # - name: 🍰 Run Cake
-      #   run: |
-      #     dotnet cake --bootstrap
-      #     dotnet cake --configuration=Debug --verbosity=Diagnostic --target=Test --test-project="${{ matrix.testProjects }}"
-
       - name: 🍰 Run Cake
-        if: ${{ runner.os == 'Linux' || runner.os == 'macOS' }}
         uses: nick-invision/retry@v2
         with:
           shell: bash
@@ -83,22 +75,7 @@ jobs:
           max_attempts: 3
           retry_on: error
           command: |
-            echo $PATH
-            chmod 755 ./build.sh
-            ./build.sh --configuration Release --verbosity Verbose --target Test --test-project="$TEST_PROJECT" --use-dotnet-test
-        env:
-          TEST_PROJECT: ${{ matrix.testProjects }}
-
-      - name: 🍰 Run Cake
-        if: ${{ runner.os == 'Windows' }}
-        uses: nick-invision/retry@v2
-        with:
-          shell: powershell
-          timeout_minutes: 40
-          max_attempts: 3
-          retry_on: error
-          command: |
-            .\build.ps1 -configuration Release -verbosity Verbose -target Test --test-project="$ENV:TEST_PROJECT" --use-dotnet-test
+            dotnet cake --configuration=Release --verbosity=Verbose --target=Test --test-project="$TEST_PROJECT" --use-dotnet-test
         env:
           TEST_PROJECT: ${{ matrix.testProjects }}
 

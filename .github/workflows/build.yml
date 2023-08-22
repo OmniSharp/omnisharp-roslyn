@@ -1,9 +1,10 @@
 
 name: 'Build'
 env:
-  DotNetVersion: "7.0.100-preview.2.22153.17"
-  DotNetVersion2: "3.1.417"
-  NuGetVersion: "5.7.0"
+  DotNetVersion: "8.0.100-preview.4.23260.5"
+  DotNetVersion2: "7.0.302"
+  DotNetVersion3: "6.0.203"
+  NuGetVersion: "6.5.0"
   MonoVersion: "6.12.0"
   Artifacts: ${{ github.workspace }}/artifacts/
   Coverage: ${{ github.workspace }}/coverage/
@@ -25,7 +26,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-18.04, windows-2019, macos-10.15]
+        os: [ubuntu-20.04, windows-2022, macos-11]
     name: 'Build'
     steps:
       - name: Checkout
@@ -47,15 +48,13 @@ jobs:
         with:
           nuget-version: ${{ env.NuGetVersion }}
 
-      - name: 🔨 Use .NET Core ${{ env.DotNetVersion2 }} SDK
-        uses: actions/setup-dotnet@v1.7.2
+      - name: 🔨 Use .NET Core SDKs
+        uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: ${{ env.DotNetVersion2 }}
-
-      - name: 🔨 Use .NET Core ${{ env.DotNetVersion }} SDK
-        uses: actions/setup-dotnet@v1.7.2
-        with:
-          dotnet-version: ${{ env.DotNetVersion }}
+          dotnet-version: |
+            ${{ env.DotNetVersion3 }}
+            ${{ env.DotNetVersion2 }}
+            ${{ env.DotNetVersion }}
 
       - name: 🎁 dotnet tool restore
         run: |
@@ -65,24 +64,9 @@ jobs:
         run: |
           nuget install tools/packages.config -ExcludeVersion -OutputDirectory tools
 
-      # - name: 🍰 Run Cake
-      #   run: |
-      #     dotnet cake --bootstrap
-      #     dotnet cake --configuration=Release --verbosity=Verbose --target=CI --publish-all --archive
-
       - name: 🍰 Run Cake
-        if: ${{ runner.os == 'Linux' || runner.os == 'macOS' }}
-        shell: bash
         run: |
-          echo $PATH
-          chmod 755 ./build.sh
-          ./build.sh --configuration Release --verbosity Verbose --target CI --publish-all --archive
-
-      - name: 🍰 Run Cake
-        if: ${{ runner.os == 'Windows' }}
-        shell: powershell
-        run: |
-          .\build.ps1 -configuration Release -verbosity Verbose -target CI --publish-all --archive
+          dotnet cake --configuration=Release --verbosity=Verbose --target=CI --publish-all --archive
 
       - name: ⬆ Publish Logs
         uses: actions/upload-artifact@v2

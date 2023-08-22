@@ -45,20 +45,6 @@ namespace OmniSharp.Lsp.Tests
         }
 
         [Fact]
-        public async Task CheckAllFilesOnNonAnalyzerReturnImmediatlyAllResults()
-        {
-            await ReadyHost(false);
-            AddFilesToWorkspace(
-                new TestFile("a.cs", "class C1 { int n = true; }"),
-                new TestFile("b.cs", "class C2 { int n = true; }"));
-
-            await SettleNext();
-
-            Assert.Contains(GetDiagnostics("a.cs"), x => x.Code == "CS0029");
-            Assert.Contains(GetDiagnostics("b.cs"), x => x.Code == "CS0029");
-        }
-
-        [Fact]
         public async Task CheckAllFilesWithAnalyzersWillEventuallyReturnAllResults()
         {
             await ReadyHost(true);

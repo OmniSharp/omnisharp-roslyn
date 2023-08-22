@@ -1,7 +1,71 @@
 # Changelog
 All changes to the project will be documented in this file.
 
-## [1.39.0]
+## [1.39.8] - 2023-07-17
+* Use core LSP TokenTypes where possible and validate token names (PR: [#2548](https://github.com/OmniSharp/omnisharp-roslyn/pull/2548))
+
+## [1.39.7] - 2023-06-16
+* Respond to breaking change in VSCode 1.79.2 in completion (PR:[#2542](https://github.com/OmniSharp/omnisharp-roslyn/pull/2542))
+* Use dotnet-cake for build (PR:[#2537](https://github.com/OmniSharp/omnisharp-roslyn/pull/2537))
+* Implement LSP CodeAction resolve (PR:[#2467](https://github.com/OmniSharp/omnisharp-roslyn/pull/2467))
+
+## [1.39.6] - 2023-03-14
+* Use new VS threading version to match with Razor (PR:[#2518](https://github.com/OmniSharp/omnisharp-roslyn/pull/2518))
+
+## [1.39.5] - 2023-03-09
+* Update to Roslyn `4.6.0-3.23153.5` (PR:[#2511](https://github.com/OmniSharp/omnisharp-roslyn/pull/2511))
+* Report to the client if the project being loaded is sdk style (PR:[#2502](https://github.com/OmniSharp/omnisharp-roslyn/pull/2502))
+
+## [1.39.4] - 2023-01-18
+* Disable snippets in sync completion (PR: [#2497](https://github.com/OmniSharp/omnisharp-roslyn/pull/2497))
+
+## [1.39.3] - 2023-01-03
+* Update Roslyn to 4.5.0-2.22527.10 (PR: [#2486](https://github.com/OmniSharp/omnisharp-roslyn/pull/2486))
+* Update dotnet-script dependencies to 1.4.0 (PR: [#2477](https://github.com/OmniSharp/omnisharp-roslyn/pull/2477))
+* Register the LanguageServerLogger only once (PR: [#2473](https://github.com/OmniSharp/omnisharp-roslyn/pull/2473))
+
+## [1.39.2] - 2022-10-26
+* Add missing LSP Handlers (PR: [#2463](https://github.com/OmniSharp/omnisharp-roslyn/pull/2463))
+* Add the TypeDefinitionHandler to the LSP (PR: [#2461](https://github.com/OmniSharp/omnisharp-roslyn/pull/2461))
+* Update .NET SDK and Roslyn (PR: [#2458](https://github.com/OmniSharp/omnisharp-roslyn/pull/2458))
+* Don't remap line mappings in Razor files (PR: [#2460](https://github.com/OmniSharp/omnisharp-roslyn/pull/2460))
+* Adds missing /open endpoint to Cake (PR: [#2457](https://github.com/OmniSharp/omnisharp-roslyn/pull/2457))
+* Adds V2 Highlight support to Cake (PR: [#2456](https://github.com/OmniSharp/omnisharp-roslyn/pull/2456))
+* Include Cake bits in .NET 6 builds (PR: [#2455](https://github.com/OmniSharp/omnisharp-roslyn/pull/2455))
+* Host dependency cleanup (PR: [#2436](https://github.com/OmniSharp/omnisharp-roslyn/pull/2436))
+* Upgrade http driver to latest ASP.NET Core version when running in .NET 6 (PR: [#2446](https://github.com/OmniSharp/omnisharp-roslyn/pull/2446))
+* updated IL Spy to 7.2.1.6856 (PR: [#2447](https://github.com/OmniSharp/omnisharp-roslyn/pull/2447))
+* Add comment to app.config explaining System.Memory versioning (PR: [#2444](https://github.com/OmniSharp/omnisharp-roslyn/pull/2444))
+* Add explicit System.Memory dependency to Hosts (PR: [#2443](https://github.com/OmniSharp/omnisharp-roslyn/pull/2443))
+* Return generated file info for find references (PR: [#2434](https://github.com/OmniSharp/omnisharp-roslyn/pull/2434))
+* Support NUnit TheoryAttribute (PR: [#2435](https://github.com/OmniSharp/omnisharp-roslyn/pull/2435))
+* Provide SourceGeneratedFileInfo for workspace symbolls requests (PR: [#2431](https://github.com/OmniSharp/omnisharp-roslyn/pull/2431))
+* Take the first dotnet cli we find instead of the last one we find (match the comment) (PR: [#2427](https://github.com/OmniSharp/omnisharp-roslyn/pull/2427)]
+* Record whether a CodeAction is a fix or not (PR: [#2430](https://github.com/OmniSharp/omnisharp-roslyn/pull/2430))
+* Update VMs used in build CI. (PR: [#2425](https://github.com/OmniSharp/omnisharp-roslyn/pull/2425))
+* Only get first document's highlights (PR: [#2424](https://github.com/OmniSharp/omnisharp-roslyn/pull/2424))
+
+## [1.39.1] - 2022-07-25
+* Update Roslyn to 4.4.0 1.22369.1 (PR: [#2420](https://github.com/OmniSharp/omnisharp-roslyn/pull/2420))
+* Simplify some code (PR: [#2370](https://github.com/OmniSharp/omnisharp-roslyn/pull/2370))
+* Return meaningful error when pinned SDK version is not found. ([[omnisharp-vscode#5128](https://github.com/OmniSharp/omnisharp-vscode/issues/5128), PR: [#2403](https://github.com/OmniSharp/omnisharp-roslyn/pull/2403))
+* Added support for `<WarningsAsErrors>nullable</WarningsAsErrors>` ([#2292](https://github.com/OmniSharp/omnisharp-roslyn/issues/2292), PR: [#2406](https://github.com/OmniSharp/omnisharp-roslyn/pull/2406))
+* Removed nuget versioning reference from OmniSharp.Abstractions ([#2410](https://github.com/OmniSharp/omnisharp-roslyn/issues/2410), PR: [#2414](https://github.com/OmniSharp/omnisharp-roslyn/pull/2414))
+* Bump Newtonsoft.Json to 13.0.1 (PR: [#2415](https://github.com/OmniSharp/omnisharp-roslyn/pull/2415))
+
+## [1.39.0] - 2022-05-19
+* Update Roslyn to 4.3.0-2.22267.5 (PR: [#2401](https://github.com/OmniSharp/omnisharp-roslyn/pull/2401))
+* Fixed run script for Mono ([omnisharp-vscode#5181](https://github.com/OmniSharp/omnisharp-vscode/issues/5181), [omnisharp-vscode#5179](https://github.com/OmniSharp/omnisharp-vscode/issues/5179), PR: [#2398](https://github.com/OmniSharp/omnisharp-roslyn/pull/2398))
+* Fall back to /usr/lib/os-release if /etc/os-release doesn't exist (PR: [#2380](https://github.com/OmniSharp/omnisharp-roslyn/pull/2380))
+* Added support for linux-musl-x64 and linux-musl-arm64 ([#2366](https://github.com/OmniSharp/omnisharp-roslyn/issues/2366), PR: [#2395](https://github.com/OmniSharp/omnisharp-roslyn/pull/2395))
+* Enable GoToDefinition for symbols in metadata documents ([omnisharp-vscode#4818](https://github.com/OmniSharp/omnisharp-vscode/issues/4818), PR: [#2390](https://github.com/OmniSharp/omnisharp-roslyn/pull/2390))
+* Use human readable doc in lsp's signature help ([#2372](https://github.com/OmniSharp/omnisharp-roslyn/issues/2372), PR: [#2392](https://github.com/OmniSharp/omnisharp-roslyn/pull/2392))
+* Add TextEdits support to InlayHints (PR: [#2385](https://github.com/OmniSharp/omnisharp-roslyn/pull/2385))
+* Fix Equals of AutoCompleteResponse and simplify some code (PR: [#2362](https://github.com/OmniSharp/omnisharp-roslyn/pull/2362))
+* Support O# running on .NET 7 SDKs (PR: [#2377](https://github.com/OmniSharp/omnisharp-roslyn/pull/2377))
+* Provide constructor accepting hostServices (PR: [#2373](https://github.com/OmniSharp/omnisharp-roslyn/pull/2373))
+* Typo fix ([#2374](https://github.com/OmniSharp/omnisharp-roslyn/pull/2374))
+* Update to latest .NET SDKs (PR: [#2378](https://github.com/OmniSharp/omnisharp-roslyn/pull/2378))
 * Remove MSBuild and Mono from release packages ([#2339](https://github.com/OmniSharp/omnisharp-roslyn/issues/2339), PR: [#2360](https://github.com/OmniSharp/omnisharp-roslyn/pull/2360))
 
 ## [1.38.2] - 2022-03-22

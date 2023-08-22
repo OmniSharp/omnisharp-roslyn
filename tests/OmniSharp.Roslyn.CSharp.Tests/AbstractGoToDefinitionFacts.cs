@@ -1,4 +1,8 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
@@ -6,10 +10,6 @@ using OmniSharp.Mef;
 using OmniSharp.Models.Metadata;
 using OmniSharp.Models.v1.SourceGeneratedFile;
 using OmniSharp.Roslyn.CSharp.Services.Navigation;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Linq;
-using System.Threading.Tasks;
 using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
@@ -469,7 +469,7 @@ class Bar {
             // second comment should indicate we have decompiled
             var comments = compilationUnit.DescendantTrivia().Where(t => t.IsKind(SyntaxKind.SingleLineCommentTrivia)).ToArray();
             Assert.NotNull(comments);
-            Assert.Equal("// Decompiled with ICSharpCode.Decompiler 7.1.0.6543", comments[1].ToString());
+            Assert.Equal("// Decompiled with ICSharpCode.Decompiler 7.2.1.6856", comments[1].ToString());
 
             // contrary to regular metadata, we should have methods with full bodies
             // this condition would fail if decompilation wouldn't work
@@ -533,7 +533,7 @@ class C
 
             TestHelpers.AddProjectToWorkspace(SharedOmniSharpTestHost.Workspace,
                 "project.csproj",
-                new[] { "netcoreapp3.1" },
+                new[] { "net6.0" },
                 new[] { testFile },
                 analyzerRefs: ImmutableArray.Create<AnalyzerReference>(new TestGeneratorReference(
                     context => context.AddSource("GeneratedFile", generatedTestFile.Content.Code))));
