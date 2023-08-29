@@ -86,8 +86,10 @@ namespace OmniSharp.DotNetTest
                 return true;
             }
 
+            var projectFileName = Path.GetFileName(Project.FilePath);
+
             // The project must be built before we can test.
-            var arguments = "build";
+            var arguments = $"build {projectFileName}";
 
             // If this is .NET CLI version 2.0.0 or greater, we also specify --no-restore to ensure that
             // implicit restore on build doesn't slow the build down.
