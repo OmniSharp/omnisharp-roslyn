@@ -24,9 +24,9 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
         }
 
         private readonly Mef.IRequestHandler<FormatAfterKeystrokeRequest, FormatRangeResponse> _formatAfterKeystrokeHandler;
-        private readonly DocumentSelector _documentSelector;
+        private readonly TextDocumentSelector _documentSelector;
 
-        public OmniSharpDocumentOnTypeFormattingHandler(Mef.IRequestHandler<FormatAfterKeystrokeRequest, FormatRangeResponse> formatAfterKeystrokeHandler, DocumentSelector documentSelector)
+        public OmniSharpDocumentOnTypeFormattingHandler(Mef.IRequestHandler<FormatAfterKeystrokeRequest, FormatRangeResponse> formatAfterKeystrokeHandler, TextDocumentSelector documentSelector)
         {
             _formatAfterKeystrokeHandler = formatAfterKeystrokeHandler;
             _documentSelector = documentSelector;

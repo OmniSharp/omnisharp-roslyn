@@ -11,11 +11,11 @@ namespace OmniSharp.LanguageServerProtocol
     public class RequestHandlers : IEnumerable<RequestHandlerCollection>
     {
         private readonly IEnumerable<Lazy<IRequestHandler, OmniSharpRequestHandlerMetadata>> _requestHandlers;
-        private readonly IEnumerable<(string language, DocumentSelector selector)> _documentSelectors;
+        private readonly IEnumerable<(string language, TextDocumentSelector selector)> _documentSelectors;
 
         public RequestHandlers(
             IEnumerable<Lazy<IRequestHandler, OmniSharpRequestHandlerMetadata>> requestHandlers,
-            IEnumerable<(string language, DocumentSelector selector)> documentSelectors)
+            IEnumerable<(string language, TextDocumentSelector selector)> documentSelectors)
         {
             _requestHandlers = requestHandlers;
             _documentSelectors = documentSelectors;
@@ -32,7 +32,7 @@ namespace OmniSharp.LanguageServerProtocol
                 .GetEnumerator();
         }
 
-        public IEnumerable<(DocumentSelector selector, T handler)> OfType<T>()
+        public IEnumerable<(TextDocumentSelector selector, T handler)> OfType<T>()
             where T : IRequestHandler
         {
             foreach (var group in this)
@@ -44,7 +44,7 @@ namespace OmniSharp.LanguageServerProtocol
             }
         }
 
-        public IEnumerable<(DocumentSelector selector, T handler, T2 handler2)> OfType<T, T2>()
+        public IEnumerable<(TextDocumentSelector selector, T handler, T2 handler2)> OfType<T, T2>()
             where T : IRequestHandler
             where T2 : IRequestHandler
         {
@@ -58,7 +58,7 @@ namespace OmniSharp.LanguageServerProtocol
             }
         }
 
-        public IEnumerable<(DocumentSelector selector, T handler, T2 handler2, T3 handler3)> OfType<T, T2, T3>()
+        public IEnumerable<(TextDocumentSelector selector, T handler, T2 handler2, T3 handler3)> OfType<T, T2, T3>()
             where T : IRequestHandler
             where T2 : IRequestHandler
             where T3 : IRequestHandler
@@ -74,7 +74,7 @@ namespace OmniSharp.LanguageServerProtocol
             }
         }
 
-        public IEnumerable<(DocumentSelector selector, T handler, T2 handler2, T3 handler3, T4 handler4)> OfType<T, T2, T3, T4>()
+        public IEnumerable<(TextDocumentSelector selector, T handler, T2 handler2, T3 handler3, T4 handler4)> OfType<T, T2, T3, T4>()
             where T : IRequestHandler
             where T2 : IRequestHandler
             where T3 : IRequestHandler

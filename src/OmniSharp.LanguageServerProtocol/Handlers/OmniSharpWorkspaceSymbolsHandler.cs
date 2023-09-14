@@ -39,7 +39,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             _findSymbolsHandlers = findSymbolsHandlers.ToArray();
         }
 
-        public override async Task<Container<SymbolInformation>> Handle(
+        public override async Task<Container<WorkspaceSymbol>> Handle(
             WorkspaceSymbolParams request,
             CancellationToken cancellationToken)
         {
@@ -56,7 +56,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             return responses
                 .SelectMany(z => z?.QuickFixes.OfType<SymbolLocation>() ?? Enumerable.Empty<SymbolLocation>())
                 .Select(
-                    x => new SymbolInformation
+                    x => new WorkspaceSymbol
                     {
                         Name = x.Text,
                         Kind = Helpers.ToSymbolKind(x.Kind),

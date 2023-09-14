@@ -33,12 +33,12 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
 
         private readonly Mef.IRequestHandler<MembersTreeRequest, FileMemberTree> _membersAsTreeHandler;
         private readonly Mef.IRequestHandler<FindUsagesRequest, QuickFixResponse> _findUsagesHandler;
-        private readonly DocumentSelector _documentSelector;
+        private readonly TextDocumentSelector _documentSelector;
 
         public OmniSharpCodeLensHandler(
             Mef.IRequestHandler<MembersTreeRequest, FileMemberTree> membersAsTreeHandler,
             Mef.IRequestHandler<FindUsagesRequest, QuickFixResponse> findUsagesHandler,
-            DocumentSelector documentSelector)
+            TextDocumentSelector documentSelector)
         {
             _membersAsTreeHandler = membersAsTreeHandler;
             _findUsagesHandler = findUsagesHandler;
@@ -68,8 +68,8 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             var omnisharpRequest = new FindUsagesRequest
             {
                 FileName = Helpers.FromUri(request.Data.ToObject<Uri>()),
-                Column = (int) request.Range.Start.Character,
-                Line = (int) request.Range.Start.Line,
+                Column = (int)request.Range.Start.Character,
+                Line = (int)request.Range.Start.Line,
                 OnlyThisFile = false,
                 ExcludeDefinition = true
             };
@@ -83,11 +83,13 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                 ContractResolver = new CamelCasePropertyNamesContractResolver()
             };
 
-            request = request with { Command = new Command
+            request = request with
             {
-                Title = length == 1 ? "1 reference" : $"{length} references",
-                Name = "omnisharp/client/findReferences",
-                Arguments = new JArray(
+                Command = new Command
+                {
+                    Title = length == 1 ? "1 reference" : $"{length} references",
+                    Name = "omnisharp/client/findReferences",
+                    Arguments = new JArray(
                     new[]
                     {
                         JObject.FromObject(
@@ -98,7 +100,8 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                             },
                             jsonCamelCaseContract)
                     }),
-            } };
+                }
+            };
 
             return request;
         }

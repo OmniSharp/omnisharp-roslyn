@@ -24,9 +24,9 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
         }
 
         private readonly Mef.IRequestHandler<CodeStructureRequest, CodeStructureResponse> _codeStructureHandler;
-        private readonly DocumentSelector _documentSelector;
+        private readonly TextDocumentSelector _documentSelector;
 
-        public OmniSharpDocumentSymbolHandler(Mef.IRequestHandler<CodeStructureRequest, CodeStructureResponse> codeStructureHandler, DocumentSelector documentSelector)
+        public OmniSharpDocumentSymbolHandler(Mef.IRequestHandler<CodeStructureRequest, CodeStructureResponse> codeStructureHandler, TextDocumentSelector documentSelector)
         {
             _codeStructureHandler = codeStructureHandler;
             _documentSelector = documentSelector;
@@ -66,7 +66,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
         {
             return new DocumentSymbolRegistrationOptions()
             {
-                DocumentSelector = _documentSelector
+                DocumentSelector = _documentSelector,
             };
         }
     }
