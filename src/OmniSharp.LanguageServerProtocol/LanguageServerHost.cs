@@ -383,6 +383,7 @@ namespace OmniSharp.LanguageServerProtocol
                     .Concat(OmniSharpFoldingRangenHandler.Enumerate(handlers))
                     .Concat(OmniSharpHoverHandler.Enumerate(handlers))
                     .Concat(OmniSharpImplementationHandler.Enumerate(handlers))
+                    .Concat(OmniSharpInlayHintHandler.Enumerate(handlers))
                     .Concat(OmniSharpReferencesHandler.Enumerate(handlers))
                     .Concat(OmniSharpRenameHandler.Enumerate(handlers))
                     .Concat(OmniSharpSemanticTokensHandler.Enumerate(handlers))

@@ -10,6 +10,7 @@ using OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities;
 using OmniSharp.Extensions.LanguageServer.Protocol.Document;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OmniSharp.Models.v1.Completion;
+using static OmniSharp.LanguageServerProtocol.Helpers;
 using CompletionItem = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItem;
 using CompletionItemKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemKind;
 using CompletionItemTag = OmniSharp.Extensions.LanguageServer.Protocol.Models.CompletionItemTag;
@@ -61,7 +62,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                 FileName = Helpers.FromUri(request.TextDocument.Uri),
                 Column = Convert.ToInt32(request.Position.Character),
                 Line = Convert.ToInt32(request.Position.Line),
-                CompletionTrigger = ConvertEnum<CompletionTriggerKind, OmnisharpCompletionTriggerKind>(request.Context?.TriggerKind ?? CompletionTriggerKind.Invoked),
+                CompletionTrigger = Helpers.ConvertEnum<CompletionTriggerKind, OmnisharpCompletionTriggerKind>(request.Context?.TriggerKind ?? CompletionTriggerKind.Invoked),
                 TriggerCharacter = request.Context?.TriggerCharacter is { Length: > 0 } str ? str[0] : null
             };
 
@@ -91,40 +92,6 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                 ResolveProvider = true,
                 TriggerCharacters = new[] { ".", " " },
             };
-        }
-
-        private static T2 ConvertEnum<T1, T2>(T1 t1)
-            where T1 : struct, Enum
-            where T2 : struct, Enum
-        {
-            VerifyEnumsInSync(typeof(T1), typeof(T2));
-            // The JIT will optimize this box away
-            return (T2)(object)t1;
-        }
-
-        [Conditional("DEBUG")]
-        private static void VerifyEnumsInSync(Type enum1, Type enum2)
-        {
-            Debug.Assert(enum1.IsEnum);
-            Debug.Assert(enum2.IsEnum);
-
-            var lspValues = Enum.GetValues(enum1);
-            var modelValues = Enum.GetValues(enum2);
-            Debug.Assert(lspValues.Length == modelValues.Length);
-            for (int i = 0; i < lspValues.Length; i++)
-            {
-                var lspValue = lspValues.GetValue(i);
-                var modelValue = modelValues.GetValue(i);
-
-                if (lspValue is null || modelValue is null)
-                {
-                    Debug.Assert(lspValue is null && modelValue is null);
-                }
-                else
-                {
-                    Debug.Assert((int)lspValue == (int)modelValue);
-                }
-            }
         }
 
         private CompletionItem ToLSPCompletionItem(OmnisharpCompletionItem omnisharpCompletionItem)
