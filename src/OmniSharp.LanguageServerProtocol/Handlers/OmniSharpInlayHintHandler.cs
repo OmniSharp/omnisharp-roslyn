@@ -76,7 +76,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             var trimmedLabel = trimmedStartLabel.TrimEnd();
             return new LSPInlayHint()
             {
-                Label = hint.Label,
+                Label = trimmedLabel,
                 Tooltip = hint.Tooltip,
                 Position = ToPosition(hint.Position),
                 TextEdits = new(ToTextEdits(hint.TextEdits)),
