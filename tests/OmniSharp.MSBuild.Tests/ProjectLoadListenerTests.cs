@@ -1,14 +1,13 @@
-using Microsoft.Build.Construction;
-using Microsoft.Build.Execution;
-using Microsoft.CodeAnalysis;
-using Microsoft.Extensions.Logging;
-
-using OmniSharp.Services;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Build.Construction;
+using Microsoft.Build.Execution;
+using Microsoft.CodeAnalysis;
+using Microsoft.Extensions.Logging;
+using OmniSharp.Services;
 using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
@@ -244,7 +243,7 @@ namespace OmniSharp.MSBuild.Tests
             using var testProject = await TestAssets.Instance.GetTestProjectAsync("Net80Project");
             using var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory));
             Assert.Single(emitter.ReceivedMessages);
-            Assert.Equal(GetHashedFileExtension("8.0.100-preview.4.23260.5"), emitter.ReceivedMessages[0].SdkVersion);
+            Assert.Equal(GetHashedFileExtension("8.0.100-rc.1.23463.5"), emitter.ReceivedMessages[0].SdkVersion);
         }
 
         private string GetHashedFileExtension(string fileExtension)
