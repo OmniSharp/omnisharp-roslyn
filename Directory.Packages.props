@@ -4,6 +4,7 @@
         <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
         <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
 
+        <OmniSharpExtensionsPackageVersion>0.19.9</OmniSharpExtensionsPackageVersion>
         <MicrosoftExtensionPackageVersion>7.0.0</MicrosoftExtensionPackageVersion>
         <MicrosoftTestPackageVersion>17.6.0</MicrosoftTestPackageVersion>
         <MSBuildPackageVersion>17.3.2</MSBuildPackageVersion>
@@ -65,12 +66,6 @@
         <PackageVersion Include="Microsoft.VisualStudio.Setup.Configuration.Interop" Version="1.14.114" />
         <PackageVersion Include="Microsoft.VisualStudio.SDK.EmbedInteropTypes" Version="15.0.12" />
 
-        <!-- The two references below can be deleted once OmniSharp.Extensions.LanguageServer
-        references Nerdbank.Streams version >= 2.9. The Included versions are needed for compatibility
-        with Razor. -->
-        <PackageVersion Include="Microsoft.VisualStudio.Threading" Version="17.5.22" />
-        <PackageVersion Include="Microsoft.VisualStudio.Validation" Version="17.0.65" />
-
         <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
 
         <PackageVersion Include="NuGet.Common" Version="$(NuGetPackageVersion)" />
@@ -84,9 +79,9 @@
         <PackageVersion Include="NuGet.Protocol" Version="$(NuGetPackageVersion)" />
         <PackageVersion Include="NuGet.Versioning" Version="$(NuGetPackageVersion)" />
 
-        <PackageVersion Include="OmniSharp.Extensions.LanguageServer" Version="0.19.8" />
-        <PackageVersion Include="OmniSharp.Extensions.LanguageProtocol.Testing" Version="0.19.8" />
-        <PackageVersion Include="OmniSharp.Extensions.JsonRpc" Version="0.19.8" />
+        <PackageVersion Include="OmniSharp.Extensions.LanguageServer" Version="$(OmniSharpExtensionsPackageVersion)" />
+        <PackageVersion Include="OmniSharp.Extensions.LanguageProtocol.Testing" Version="$(OmniSharpExtensionsPackageVersion)" />
+        <PackageVersion Include="OmniSharp.Extensions.JsonRpc" Version="$(OmniSharpExtensionsPackageVersion)" />
 
         <PackageVersion Include="SQLitePCLRaw.bundle_green" Version="2.1.0" />
         <PackageVersion Include="System.Collections.Immutable" Version="7.0.0" />

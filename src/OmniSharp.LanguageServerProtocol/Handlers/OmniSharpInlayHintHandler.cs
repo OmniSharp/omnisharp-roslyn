@@ -77,7 +77,9 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             return new LSPInlayHint()
             {
                 Label = trimmedLabel,
-                Tooltip = hint.Tooltip,
+                Tooltip = hint.Tooltip is null
+                    ? null
+                    : new MarkupContent() { Kind = MarkupKind.Markdown, Value = hint.Tooltip },
                 Position = ToPosition(hint.Position),
                 TextEdits = new(ToTextEdits(hint.TextEdits)),
                 PaddingLeft = hint.Label.Length > trimmedStartLabel.Length,
@@ -91,14 +93,16 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             return new OmniSharpInlayHint()
             {
                 Label = $"{(hint.PaddingLeft == true ? " " : "")}{hint.Label.String}{(hint.PaddingRight == true ? " " : "")}",
-                Tooltip = hint.Tooltip?.String,
+                Tooltip = hint.Tooltip.HasMarkupContent
+                    ? hint.Tooltip.MarkupContent.Value
+                    : hint.Tooltip?.String,
                 Position = FromPosition(hint.Position),
                 TextEdits = hint.TextEdits is null ? null : FromTextEdits(hint.TextEdits),
                 Data = hint.Data.ToObject<(string SolutionVersion, int Position)>()
             };
         }
 
-        protected override InlayHintRegistrationOptions CreateRegistrationOptions(InlayHintWorkspaceClientCapabilities capability, ClientCapabilities clientCapabilities)
+        protected override InlayHintRegistrationOptions CreateRegistrationOptions(InlayHintClientCapabilities capability, ClientCapabilities clientCapabilities)
         {
             return new InlayHintRegistrationOptions()
             {
