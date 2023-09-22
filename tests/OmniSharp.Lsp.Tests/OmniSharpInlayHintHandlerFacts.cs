@@ -54,25 +54,25 @@ class C { }
         AssertEx.AssertEqualToleratingWhitespaceDifferences(@"
 ```csharp
 (parameter) C param1
-```", param1.Tooltip.String);
+```", param1.Tooltip.MarkupContent.Value);
 
         var paramB = await ResolveInlayHint(inlayHints[1]);
         AssertEx.AssertEqualToleratingWhitespaceDifferences(@"
 ```csharp
 (parameter) C paramB
-```", paramB.Tooltip.String);
+```", paramB.Tooltip.MarkupContent.Value);
 
         var c1 = await ResolveInlayHint(inlayHints[2]);
         AssertEx.AssertEqualToleratingWhitespaceDifferences(@"
 ```csharp
 class C
-```", c1.Tooltip.String);
+```", c1.Tooltip.MarkupContent.Value);
 
         var c2 = await ResolveInlayHint(inlayHints[3]);
         AssertEx.AssertEqualToleratingWhitespaceDifferences(@"
 ```csharp
 class C
-```", c2.Tooltip.String);
+```", c2.Tooltip.MarkupContent.Value);
     }
 
     [Theory]
