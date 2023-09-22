@@ -21,9 +21,9 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
         }
 
         private readonly Mef.IRequestHandler<QuickInfoRequest, QuickInfoResponse> _definitionHandler;
-        private readonly DocumentSelector _documentSelector;
+        private readonly TextDocumentSelector _documentSelector;
 
-        public OmniSharpHoverHandler(Mef.IRequestHandler<QuickInfoRequest, QuickInfoResponse> definitionHandler, DocumentSelector documentSelector)
+        public OmniSharpHoverHandler(Mef.IRequestHandler<QuickInfoRequest, QuickInfoResponse> definitionHandler, TextDocumentSelector documentSelector)
         {
             _definitionHandler = definitionHandler;
             _documentSelector = documentSelector;
@@ -52,7 +52,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
         {
             return new HoverRegistrationOptions()
             {
-                DocumentSelector = _documentSelector
+                DocumentSelector = _documentSelector,
             };
         }
     }

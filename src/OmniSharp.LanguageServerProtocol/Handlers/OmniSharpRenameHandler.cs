@@ -15,9 +15,9 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
     internal class OmniSharpRenameHandler : RenameHandlerBase
     {
         private readonly Mef.IRequestHandler<RenameRequest, RenameResponse> _renameHandler;
-        private readonly DocumentSelector _documentSelector;
+        private readonly TextDocumentSelector _documentSelector;
 
-        public OmniSharpRenameHandler(Mef.IRequestHandler<RenameRequest, RenameResponse> renameHandler, DocumentSelector documentSelector)
+        public OmniSharpRenameHandler(Mef.IRequestHandler<RenameRequest, RenameResponse> renameHandler, TextDocumentSelector documentSelector)
         {
             _renameHandler = renameHandler;
             _documentSelector = documentSelector;

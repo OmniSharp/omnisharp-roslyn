@@ -24,9 +24,9 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
         }
 
         private readonly Mef.IRequestHandler<FormatRangeRequest, FormatRangeResponse> _formatRangeHandler;
-        private readonly DocumentSelector _documentSelector;
+        private readonly TextDocumentSelector _documentSelector;
 
-        public OmniSharpDocumentFormatRangeHandler(Mef.IRequestHandler<FormatRangeRequest, FormatRangeResponse> formatRangeHandler, DocumentSelector documentSelector)
+        public OmniSharpDocumentFormatRangeHandler(Mef.IRequestHandler<FormatRangeRequest, FormatRangeResponse> formatRangeHandler, TextDocumentSelector documentSelector)
         {
             _formatRangeHandler = formatRangeHandler;
             _documentSelector = documentSelector;

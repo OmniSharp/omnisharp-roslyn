@@ -22,9 +22,9 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
         }
 
         private readonly Mef.IRequestHandler<GotoTypeDefinitionRequest, GotoTypeDefinitionResponse> _definitionHandler;
-        private readonly DocumentSelector _documentSelector;
+        private readonly TextDocumentSelector _documentSelector;
 
-        public OmniSharpTypeDefinitionHandler(Mef.IRequestHandler<GotoTypeDefinitionRequest, GotoTypeDefinitionResponse> definitionHandler, DocumentSelector documentSelector)
+        public OmniSharpTypeDefinitionHandler(Mef.IRequestHandler<GotoTypeDefinitionRequest, GotoTypeDefinitionResponse> definitionHandler, TextDocumentSelector documentSelector)
         {
             _definitionHandler = definitionHandler;
             _documentSelector = documentSelector;
@@ -57,7 +57,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
         {
             return new TypeDefinitionRegistrationOptions()
             {
-                DocumentSelector = _documentSelector
+                DocumentSelector = _documentSelector,
             };
         }
     }

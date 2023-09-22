@@ -23,9 +23,9 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
         }
 
         private readonly Mef.IRequestHandler<FindUsagesRequest, QuickFixResponse> _findUsagesHandler;
-        private readonly DocumentSelector _documentSelector;
+        private readonly TextDocumentSelector _documentSelector;
 
-        public OmniSharpDocumentHighlightHandler(Mef.IRequestHandler<FindUsagesRequest, QuickFixResponse> findUsagesHandler, DocumentSelector documentSelector)
+        public OmniSharpDocumentHighlightHandler(Mef.IRequestHandler<FindUsagesRequest, QuickFixResponse> findUsagesHandler, TextDocumentSelector documentSelector)
         {
             _findUsagesHandler = findUsagesHandler;
             _documentSelector = documentSelector;
@@ -62,7 +62,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
         {
             return new DocumentHighlightRegistrationOptions()
             {
-                DocumentSelector = _documentSelector
+                DocumentSelector = _documentSelector,
             };
         }
     }
