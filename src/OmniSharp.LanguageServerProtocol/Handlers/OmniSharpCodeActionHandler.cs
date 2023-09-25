@@ -1,24 +1,24 @@
-using System.Linq;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using MediatR;
 using Microsoft.CodeAnalysis;
+using NuGet.Protocol;
 using OmniSharp.Extensions.JsonRpc;
 using OmniSharp.Extensions.LanguageServer.Protocol;
 using OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities;
+using OmniSharp.Extensions.LanguageServer.Protocol.Document;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OmniSharp.Extensions.LanguageServer.Protocol.Server;
-using OmniSharp.Models.V2.CodeActions;
-using OmniSharp.Extensions.LanguageServer.Protocol.Document;
 using OmniSharp.Extensions.LanguageServer.Protocol.Workspace;
-using Diagnostic = OmniSharp.Extensions.LanguageServer.Protocol.Models.Diagnostic;
+using OmniSharp.Models.V2.CodeActions;
 using CodeActionKind = OmniSharp.Extensions.LanguageServer.Protocol.Models.CodeActionKind;
+using Diagnostic = OmniSharp.Extensions.LanguageServer.Protocol.Models.Diagnostic;
 using OmniSharpCodeActionKind = OmniSharp.Models.V2.CodeActions.CodeActionKind;
-using System;
 using Range = OmniSharp.Extensions.LanguageServer.Protocol.Models.Range;
-using NuGet.Protocol;
 
 namespace OmniSharp.LanguageServerProtocol.Handlers
 {
@@ -39,14 +39,14 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
 
         private readonly Mef.IRequestHandler<GetCodeActionsRequest, GetCodeActionsResponse> _getActionsHandler;
         private readonly Mef.IRequestHandler<RunCodeActionRequest, RunCodeActionResponse> _runActionHandler;
-        private readonly DocumentSelector _documentSelector;
+        private readonly TextDocumentSelector _documentSelector;
         private readonly ILanguageServer _server;
         private readonly DocumentVersions _documentVersions;
 
         public OmniSharpCodeActionHandler(
             Mef.IRequestHandler<GetCodeActionsRequest, GetCodeActionsResponse> getActionsHandler,
             Mef.IRequestHandler<RunCodeActionRequest, RunCodeActionResponse> runActionHandler,
-            DocumentSelector documentSelector,
+            TextDocumentSelector documentSelector,
             ILanguageServer server,
             DocumentVersions documentVersions)
         {

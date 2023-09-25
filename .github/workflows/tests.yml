@@ -1,7 +1,7 @@
 
 name: 'Tests'
 env:
-  DotNetVersion: "8.0.100-preview.4.23260.5"
+  DotNetVersion: "8.0.100-rc.1.23463.5"
   DotNetVersion2: "7.0.302"
   DotNetVersion3: "6.0.203"
   NuGetVersion: "6.5.0"

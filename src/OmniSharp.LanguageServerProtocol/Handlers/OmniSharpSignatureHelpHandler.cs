@@ -15,9 +15,9 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
     internal class OmniSharpSignatureHelpHandler : SignatureHelpHandlerBase
     {
         private readonly Mef.IRequestHandler<SignatureHelpRequest, SignatureHelpResponse> _signatureHandler;
-        private readonly DocumentSelector _documentSelector;
+        private readonly TextDocumentSelector _documentSelector;
 
-        public OmniSharpSignatureHelpHandler(Mef.IRequestHandler<SignatureHelpRequest, SignatureHelpResponse> signatureHandler, DocumentSelector documentSelector)
+        public OmniSharpSignatureHelpHandler(Mef.IRequestHandler<SignatureHelpRequest, SignatureHelpResponse> signatureHandler, TextDocumentSelector documentSelector)
         {
             _signatureHandler = signatureHandler;
             _documentSelector = documentSelector;

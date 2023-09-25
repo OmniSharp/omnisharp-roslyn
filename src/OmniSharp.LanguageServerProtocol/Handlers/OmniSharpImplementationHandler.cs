@@ -24,9 +24,9 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
         }
 
         private readonly Mef.IRequestHandler<FindImplementationsRequest, QuickFixResponse> _findImplementationsHandler;
-        private readonly DocumentSelector _documentSelector;
+        private readonly TextDocumentSelector _documentSelector;
 
-        public OmniSharpImplementationHandler(Mef.IRequestHandler<FindImplementationsRequest, QuickFixResponse> findImplementationsHandler, DocumentSelector documentSelector)
+        public OmniSharpImplementationHandler(Mef.IRequestHandler<FindImplementationsRequest, QuickFixResponse> findImplementationsHandler, TextDocumentSelector documentSelector)
         {
             _findImplementationsHandler = findImplementationsHandler;
             _documentSelector = documentSelector;
@@ -54,7 +54,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
         {
             return new ImplementationRegistrationOptions()
             {
-                DocumentSelector = _documentSelector
+                DocumentSelector = _documentSelector,
             };
         }
     }

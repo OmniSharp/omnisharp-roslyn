@@ -46,7 +46,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             }.ToImmutableDictionary();
 
         private readonly Mef.IRequestHandler<SemanticHighlightRequest, SemanticHighlightResponse> _definitionHandler;
-        private readonly DocumentSelector _documentSelector;
+        private readonly TextDocumentSelector _documentSelector;
 
         private static string MakeLSPCompatibleString(string str)
             => char.ToLower(str[0]) + str.Substring(1);
@@ -71,7 +71,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             TokenModifiers = new Container<SemanticTokenModifier>(_tokenModifiers.Values),
         };
 
-        public OmniSharpSemanticTokensHandler(Mef.IRequestHandler<SemanticHighlightRequest, SemanticHighlightResponse> definitionHandler, DocumentSelector documentSelector)
+        public OmniSharpSemanticTokensHandler(Mef.IRequestHandler<SemanticHighlightRequest, SemanticHighlightResponse> definitionHandler, TextDocumentSelector documentSelector)
         {
             _definitionHandler = definitionHandler;
             _documentSelector = documentSelector;

@@ -44,7 +44,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
         private readonly Mef.IRequestHandler<FileOpenRequest, FileOpenResponse> _openHandler;
         private readonly Mef.IRequestHandler<FileCloseRequest, FileCloseResponse> _closeHandler;
         private readonly Mef.IRequestHandler<UpdateBufferRequest, object> _bufferHandler;
-        private readonly DocumentSelector _documentSelector;
+        private readonly TextDocumentSelector _documentSelector;
         private readonly TextDocumentSyncKind _documentSyncKind;
         private readonly OmniSharpWorkspace _workspace;
         private readonly DocumentVersions _documentVersions;
@@ -53,7 +53,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             Mef.IRequestHandler<FileOpenRequest, FileOpenResponse> openHandler,
             Mef.IRequestHandler<FileCloseRequest, FileCloseResponse> closeHandler,
             Mef.IRequestHandler<UpdateBufferRequest, object> bufferHandler,
-            DocumentSelector documentSelector,
+            TextDocumentSelector documentSelector,
             TextDocumentSyncKind documentSyncKind,
             OmniSharpWorkspace workspace,
             DocumentVersions documentVersions)
@@ -160,7 +160,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             return Unit.Value;
         }
 
-        protected override TextDocumentSyncRegistrationOptions CreateRegistrationOptions(SynchronizationCapability capability, ClientCapabilities clientCapabilities)
+        protected override TextDocumentSyncRegistrationOptions CreateRegistrationOptions(TextSynchronizationCapability capability, ClientCapabilities clientCapabilities)
         {
             return new TextDocumentSyncRegistrationOptions()
             {
