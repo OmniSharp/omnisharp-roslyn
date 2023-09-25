@@ -136,7 +136,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         }
 
         [Fact]
-        public async Task WheNewnWorkIsAddedAgainWhenPreviousIsAnalysing_ThenDontWaitAnotherOneToGetReady()
+        public async Task WhenNewWorkIsAddedAgainWhenPreviousIsAnalysing_ThenDontWaitAnotherOneToGetReady()
         {
             var queue = new AsyncAnalyzerWorkQueue(new LoggerFactory());
             var document1 = CreateTestDocumentId();

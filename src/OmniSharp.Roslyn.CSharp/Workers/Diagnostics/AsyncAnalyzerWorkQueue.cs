@@ -13,7 +13,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
     public class AsyncAnalyzerWorkQueue
     {
         private readonly object _lock = new();
-        private readonly Queue _forground = new();
+        private readonly Queue _foreground = new();
         private readonly Queue _background = new();
         private readonly ILogger<AnalyzerWorkQueue> _logger;
         private TaskCompletionSource<object?> _takeWorkWaiter = new(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -28,7 +28,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
             get
             {
                 lock (_lock)
-                    return _forground.PendingCount + _background.PendingCount;
+                    return _foreground.PendingCount + _background.PendingCount;
             }
         }
 
@@ -38,15 +38,16 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
             {
                 foreach (var documentId in documentIds)
                 {
-                    _forground.RequestCancellationIfActive(documentId);
+                    _foreground.RequestCancellationIfActive(documentId);
                     _background.RequestCancellationIfActive(documentId);
 
                     if (workType == AnalyzerWorkType.Foreground)
-                        _forground.Enqueue(documentId);
+                        _foreground.Enqueue(documentId);
                     else if (workType == AnalyzerWorkType.Background)
                         _background.Enqueue(documentId);
                 }
 
+                // Complete the work waiter task to allow work to be taken from the queue.
                 if (!_takeWorkWaiter.Task.IsCompleted)
                     _takeWorkWaiter.SetResult(null);
             }
@@ -62,15 +63,15 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
 
                 lock (_lock)
                 {
-                    if (_forground.TryDequeue(out var documentId, out var cancellationTokenSource))
+                    if (_foreground.TryDequeue(out var documentId, out var cancellationTokenSource))
                     {
                         return new QueueItem
                         (
                             DocumentId: documentId,
                             CancellationToken: cancellationTokenSource.Token,
                             AnalyzerWorkType: AnalyzerWorkType.Foreground,
-                            DocumentCount: _forground.MaximumPendingCount,
-                            DocumentCountRemaining: _forground.PendingCount
+                            DocumentCount: _foreground.MaximumPendingCount,
+                            DocumentCountRemaining: _foreground.PendingCount
                         );
                     }
                     else if (_background.TryDequeue(out documentId, out cancellationTokenSource))
@@ -85,12 +86,15 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
                         );
                     }
 
-                    if (_forground.PendingCount == 0 && _background.PendingCount == 0 && _takeWorkWaiter.Task.IsCompleted)
+                    if (_foreground.PendingCount == 0 && _background.PendingCount == 0 && _takeWorkWaiter.Task.IsCompleted)
                         _takeWorkWaiter = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
 
                     awaitTask = _takeWorkWaiter.Task;
                 }
 
+                // There is no chance of the default cancellation token being cancelled, so we can
+                // simply wait for work to be queued. Otherwise, we need to handle the case that the
+                // token is cancelled before we have work to return.
                 if (cancellationToken == default)
                 {
                     await awaitTask.ConfigureAwait(false);
@@ -103,9 +107,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
                     {
                         await Task.WhenAny(awaitTask, tcs.Task).ConfigureAwait(false);
                     }
-
                 }
-
             }
         }
 
@@ -114,7 +116,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
             lock (_lock)
             {
                 if (item.AnalyzerWorkType == AnalyzerWorkType.Foreground)
-                    _forground.WorkComplete(item.DocumentId, item.CancellationToken);
+                    _foreground.WorkComplete(item.DocumentId, item.CancellationToken);
                 else if (item.AnalyzerWorkType == AnalyzerWorkType.Background)
                     _background.WorkComplete(item.DocumentId, item.CancellationToken);
             }
@@ -128,7 +130,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
             Task waitForgroundTask;
 
             lock (_lock)
-                waitForgroundTask = _forground.GetWaiter();
+                waitForgroundTask = _foreground.GetWaiter();
 
             if (waitForgroundTask.IsCompleted)
                 return;

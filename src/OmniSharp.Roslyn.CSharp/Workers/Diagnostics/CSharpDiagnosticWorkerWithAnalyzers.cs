@@ -316,12 +316,12 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                     reportSuppressedDiagnostics: false));
 
                 Task<ImmutableArray<Diagnostic>> semanticDiagnosticsWithAnalyzers = compilationWithAnalyzers
-                    .GetAnalyzerSemanticDiagnosticsAsync(documentSemanticModel, filterSpan: null, cancellationToken);
+                    .GetAnalyzerSemanticDiagnosticsAsync(documentSemanticModel, filterSpan: null, combinedCancellation.Token);
 
                 Task<ImmutableArray<Diagnostic>> syntaxDiagnosticsWithAnalyzers = compilationWithAnalyzers
-                    .GetAnalyzerSyntaxDiagnosticsAsync(syntaxTree, cancellationToken);
+                    .GetAnalyzerSyntaxDiagnosticsAsync(syntaxTree, combinedCancellation.Token);
 
-                ImmutableArray<Diagnostic> documentSemanticDiagnostics = documentSemanticModel.GetDiagnostics(null, cancellationToken);
+                ImmutableArray<Diagnostic> documentSemanticDiagnostics = documentSemanticModel.GetDiagnostics(null, combinedCancellation.Token);
 
                 await Task.WhenAll(syntaxDiagnosticsWithAnalyzers, semanticDiagnosticsWithAnalyzers);
 
@@ -331,7 +331,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                     .Concat(documentSemanticDiagnostics)
                     .ToImmutableArray();
             }
-            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            catch (OperationCanceledException) when (combinedCancellation.Token.IsCancellationRequested)
             {
                 throw;
             }
