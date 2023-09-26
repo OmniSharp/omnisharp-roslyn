@@ -395,12 +395,12 @@ namespace N3
 
             Assert.Single(resolved.Item.AdditionalTextEdits);
             var additionalEdit = resolved.Item.AdditionalTextEdits[0];
-            Assert.Equal(NormalizeNewlines("N2;\nusing "),
+            Assert.Equal(NormalizeNewlines("using N2;\n"),
                          additionalEdit.NewText);
             Assert.Equal(1, additionalEdit.StartLine);
-            Assert.Equal(6, additionalEdit.StartColumn);
+            Assert.Equal(0, additionalEdit.StartColumn);
             Assert.Equal(1, additionalEdit.EndLine);
-            Assert.Equal(6, additionalEdit.EndColumn);
+            Assert.Equal(0, additionalEdit.EndColumn);
             VerifySortOrders(completions.Items);
         }
 
