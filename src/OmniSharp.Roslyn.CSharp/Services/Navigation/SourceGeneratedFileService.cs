@@ -23,7 +23,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
         IRequestHandler<SourceGeneratedFileClosedRequest, SourceGeneratedFileClosedResponse>
     {
         private static MethodInfo? CreateDocumentIdFromSerialized => typeof(DocumentId)
-            .GetMethod("CreateFromSerialized", BindingFlags.Static | BindingFlags.NonPublic, null, new[] { typeof(ProjectId), typeof(Guid), typeof(bool), typeof(string) }, null);
+            .GetMethod("CreateFromSerialized", BindingFlags.Static | BindingFlags.NonPublic, binder: null, types: new[] { typeof(ProjectId), typeof(Guid), typeof(bool), typeof(string) }, modifiers: null);
 
         private readonly OmniSharpWorkspace _workspace;
         private readonly ILogger _logger;
