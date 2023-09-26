@@ -304,7 +304,7 @@ namespace N2
             Assert.Single(resolved.Item.AdditionalTextEdits);
             var additionalEdit = resolved.Item.AdditionalTextEdits[0];
             Assert.Equal(NormalizeNewlines("using System;\n\n"),
-                         additionalEdit.NewText);
+                         NormalizeNewlines(additionalEdit.NewText));
             Assert.Equal(0, additionalEdit.StartLine);
             Assert.Equal(0, additionalEdit.StartColumn);
             Assert.Equal(0, additionalEdit.EndLine);
