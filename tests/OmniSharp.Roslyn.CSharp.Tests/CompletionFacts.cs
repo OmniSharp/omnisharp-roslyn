@@ -2273,7 +2273,7 @@ pub$$class";
 
         protected async Task<CompletionResponse> FindCompletionsAsync(string filename, string source, OmniSharpTestHost testHost, char? triggerChar = null, TestFile[] additionalFiles = null, bool forceExpandedCompletionIndexCreation = false)
         {
-            var testFile = new TestFile(filename, source);
+            var testFile = new TestFile(filename, NormalizeNewlines(source));
 
             var files = new[] { testFile };
             if (additionalFiles is object)

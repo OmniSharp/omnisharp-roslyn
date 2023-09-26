@@ -1530,7 +1530,7 @@ class Foo
         protected async Task<CompletionList> FindCompletionsAsync(string filename, string source, char? triggerChar = null, TestFile[] additionalFiles = null)
         {
             var bufferPath = $"{Directory.GetCurrentDirectory()}{Path.DirectorySeparatorChar}somepath{Path.DirectorySeparatorChar}{filename}";
-            var testFile = new TestFile(bufferPath, source);
+            var testFile = new TestFile(bufferPath, NormalizeNewlines(source));
 
             var files = new[] { testFile };
             if (additionalFiles is object)
