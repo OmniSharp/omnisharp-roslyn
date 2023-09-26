@@ -288,7 +288,7 @@ namespace N2
             Assert.Single(resolved.AdditionalTextEdits);
             var additionalEdit = resolved.AdditionalTextEdits.First();
             Assert.Equal(NormalizeNewlines("using System;\n\n"),
-                         additionalEdit.NewText);
+                         NormalizeNewLines(additionalEdit.NewText));
             Assert.Equal(0, additionalEdit.Range.Start.Line);
             Assert.Equal(0, additionalEdit.Range.Start.Character);
             Assert.Equal(0, additionalEdit.Range.End.Line);
