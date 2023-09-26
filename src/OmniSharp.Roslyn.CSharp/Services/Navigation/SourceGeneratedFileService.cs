@@ -1,13 +1,15 @@
 ﻿#nullable enable
 
+using System;
+using System.Collections.Generic;
+using System.Composition;
+using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Mef;
 using OmniSharp.Models.v1.SourceGeneratedFile;
-using System.Collections.Generic;
-using System.Composition;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Navigation
 {
@@ -20,6 +22,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
         IRequestHandler<UpdateSourceGeneratedFileRequest, UpdateSourceGeneratedFileResponse>,
         IRequestHandler<SourceGeneratedFileClosedRequest, SourceGeneratedFileClosedResponse>
     {
+        private static MethodInfo? CreateDocumentIdFromSerialized => typeof(DocumentId)
+            .GetMethod("CreateFromSerialized", BindingFlags.Static | BindingFlags.NonPublic, null, new[] { typeof(ProjectId), typeof(Guid), typeof(bool), typeof(string) }, null);
+
         private readonly OmniSharpWorkspace _workspace;
         private readonly ILogger _logger;
         private readonly Dictionary<DocumentId, VersionStamp> _lastSentVerisons = new();
@@ -100,6 +105,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
             return SourceGeneratedFileClosedResponse.Instance;
         }
 
-        private DocumentId GetId(SourceGeneratedFileInfo info) => DocumentId.CreateFromSerialized(ProjectId.CreateFromSerialized(info.ProjectGuid), info.DocumentGuid);
+        private DocumentId GetId(SourceGeneratedFileInfo info)
+        {
+            return CreateDocumentIdFromSerialized?.Invoke(null, new object?[] { ProjectId.CreateFromSerialized(info.ProjectGuid), info.DocumentGuid, true, null }) as DocumentId
+                ?? DocumentId.CreateFromSerialized(ProjectId.CreateFromSerialized(info.ProjectGuid), info.DocumentGuid);
+        }
     }
 }
