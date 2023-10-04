@@ -1588,7 +1588,8 @@ class Foo
         }
 
         private static string NormalizeNewlines(string str)
-            => str.Replace("\r\n", Environment.NewLine);
+            => str.Replace("\r\n", Environment.NewLine)
+                .Replace("\n", Environment.NewLine);
 
         private static void VerifySortOrders(IEnumerable<CompletionItem> items)
         {
