@@ -42,10 +42,10 @@ class C { }
 
         AssertEx.Equal(new[]
             {
-                new InlayHint { Position = new Position { Line = 3, Character = 2 }, Label = "param1:", Tooltip = null, TextEdits = new[] { new TextEdit { Range = new Range() { Start = new Position() { Line = 3, Character = 2 }, End = new Position() { Line = 3, Character = 2 } }, NewText = "param1: " } }, PaddingLeft = false, PaddingRight = true },
-                new InlayHint { Position = new Position { Line = 3, Character = 9 }, Label = "paramB:", Tooltip = null, TextEdits = new[] { new TextEdit { Range = new Range() { Start = new Position() { Line = 3, Character = 9 }, End = new Position() { Line = 3, Character = 9 } }, NewText = "paramB: " } }, PaddingLeft = false, PaddingRight = true },
-                new InlayHint { Position = new Position { Line = 1, Character = 4 }, Label = "C", Tooltip = null, TextEdits = new[] { new TextEdit { Range = new Range() { Start = new Position() { Line = 1, Character = 0 }, End = new Position() { Line = 1, Character = 3 } }, NewText = "C" } }, PaddingLeft = false, PaddingRight = true },
-                new InlayHint { Position = new Position { Line = 2, Character = 4 }, Label = "C", Tooltip = null, TextEdits = new[] { new TextEdit { Range = new Range() { Start = new Position() { Line = 2, Character = 0 }, End = new Position() { Line = 2, Character = 3 } }, NewText = "C" } }, PaddingLeft = false, PaddingRight = true },
+                new InlayHint { Position = new Position { Line = 3, Character = 2 }, Label = "param1:", Kind = InlayHintKind.Parameter, Tooltip = null, TextEdits = new[] { new TextEdit { Range = new Range() { Start = new Position() { Line = 3, Character = 2 }, End = new Position() { Line = 3, Character = 2 } }, NewText = "param1: " } }, PaddingLeft = false, PaddingRight = true },
+                new InlayHint { Position = new Position { Line = 3, Character = 9 }, Label = "paramB:", Kind = InlayHintKind.Parameter, Tooltip = null, TextEdits = new[] { new TextEdit { Range = new Range() { Start = new Position() { Line = 3, Character = 9 }, End = new Position() { Line = 3, Character = 9 } }, NewText = "paramB: " } }, PaddingLeft = false, PaddingRight = true },
+                new InlayHint { Position = new Position { Line = 1, Character = 4 }, Label = "C", Kind = InlayHintKind.Type, Tooltip = null, TextEdits = new[] { new TextEdit { Range = new Range() { Start = new Position() { Line = 1, Character = 0 }, End = new Position() { Line = 1, Character = 3 } }, NewText = "C" } }, PaddingLeft = false, PaddingRight = true },
+                new InlayHint { Position = new Position { Line = 2, Character = 4 }, Label = "C", Kind = InlayHintKind.Type, Tooltip = null, TextEdits = new[] { new TextEdit { Range = new Range() { Start = new Position() { Line = 2, Character = 0 }, End = new Position() { Line = 2, Character = 3 } }, NewText = "C" } }, PaddingLeft = false, PaddingRight = true },
             },
             inlayHints,
             ignoreDataComparer);
@@ -94,8 +94,8 @@ void M(int param1, int paramB) { }
         var response = await GetInlayHints(fileName, code);
         AssertEx.Equal(new[]
             {
-                new InlayHint { Position = new Position { Line = 1, Character = 4 }, Label = "int", Tooltip = null, TextEdits = new[] { new TextEdit { Range = new Range() { Start = new Position() { Line = 1, Character = 0 }, End = new Position() { Line = 1, Character = 3 } }, NewText = "int" } }, PaddingLeft = false, PaddingRight = true },
-                new InlayHint { Position = new Position { Line = 2, Character = 4 }, Label = "int", Tooltip = null, TextEdits = new[] { new TextEdit { Range = new Range() { Start = new Position() { Line = 2, Character = 0 }, End = new Position() { Line = 2, Character = 3 } }, NewText = "int" } }, PaddingLeft = false, PaddingRight = true },
+                new InlayHint { Position = new Position { Line = 1, Character = 4 }, Label = "int", Kind = InlayHintKind.Type, Tooltip = null, TextEdits = new[] { new TextEdit { Range = new Range() { Start = new Position() { Line = 1, Character = 0 }, End = new Position() { Line = 1, Character = 3 } }, NewText = "int" } }, PaddingLeft = false, PaddingRight = true },
+                new InlayHint { Position = new Position { Line = 2, Character = 4 }, Label = "int", Kind = InlayHintKind.Type, Tooltip = null, TextEdits = new[] { new TextEdit { Range = new Range() { Start = new Position() { Line = 2, Character = 0 }, End = new Position() { Line = 2, Character = 3 } }, NewText = "int" } }, PaddingLeft = false, PaddingRight = true },
             },
             response,
             ignoreDataComparer);
@@ -120,8 +120,8 @@ void M(int param1, int paramB) { }
         var response = await GetInlayHints(fileName, code);
         AssertEx.Equal(new[]
             {
-                new InlayHint { Position = new Position { Line = 3, Character = 2 }, Label = "param1:", Tooltip = null, TextEdits = new[] { new TextEdit { Range = new Range() { Start = new Position() { Line = 3, Character = 2 }, End = new Position() { Line = 3, Character = 2 } }, NewText = "param1: " } }, PaddingLeft = false, PaddingRight = true },
-                new InlayHint { Position = new Position { Line = 3, Character = 9 }, Label = "paramB:", Tooltip = null, TextEdits = new[] { new TextEdit { Range = new Range() { Start = new Position() { Line = 3, Character = 9 }, End = new Position() { Line = 3, Character = 9 } }, NewText = "paramB: " } }, PaddingLeft = false, PaddingRight = true },
+                new InlayHint { Position = new Position { Line = 3, Character = 2 }, Label = "param1:", Kind = InlayHintKind.Parameter, Tooltip = null, TextEdits = new[] { new TextEdit { Range = new Range() { Start = new Position() { Line = 3, Character = 2 }, End = new Position() { Line = 3, Character = 2 } }, NewText = "param1: " } }, PaddingLeft = false, PaddingRight = true },
+                new InlayHint { Position = new Position { Line = 3, Character = 9 }, Label = "paramB:", Kind = InlayHintKind.Parameter, Tooltip = null, TextEdits = new[] { new TextEdit { Range = new Range() { Start = new Position() { Line = 3, Character = 9 }, End = new Position() { Line = 3, Character = 9 } }, NewText = "paramB: " } }, PaddingLeft = false, PaddingRight = true },
             },
             response,
             ignoreDataComparer);
@@ -149,7 +149,7 @@ void M(int param1, int paramB) { }
             var response = await GetInlayHints(fileName, code);
             AssertEx.Equal(new[]
                 {
-                    new InlayHint { Position = new Position { Line = 1, Character = 4 }, Label = "int", Tooltip = null, TextEdits = new[] { new TextEdit { Range = new Range() { Start = new Position() { Line = 1, Character = 0 }, End = new Position() { Line = 1, Character = 3 } }, NewText = "int" } }, PaddingLeft = false, PaddingRight = true },
+                    new InlayHint { Position = new Position { Line = 1, Character = 4 }, Label = "int", Kind = InlayHintKind.Type, Tooltip = null, TextEdits = new[] { new TextEdit { Range = new Range() { Start = new Position() { Line = 1, Character = 0 }, End = new Position() { Line = 1, Character = 3 } }, NewText = "int" } }, PaddingLeft = false, PaddingRight = true },
                 },
                 response,
                 ignoreDataComparer);
@@ -179,8 +179,8 @@ using System;
             var response = await GetInlayHints(fileName, code);
             AssertEx.Equal(new[]
                 {
-                    new InlayHint { Position = new Position { Line = 2, Character = 34 }, Label = "int", Tooltip = null, TextEdits = new[] { new TextEdit { Range = new Range() { Start = new Position() { Line = 2, Character = 34 }, End = new Position() { Line = 2, Character = 34 } }, NewText = "int " } }, PaddingLeft = false, PaddingRight = true },
-                    new InlayHint { Position = new Position { Line = 2, Character = 37 }, Label = "string", Tooltip = null, TextEdits = new[] { new TextEdit { Range = new Range() { Start = new Position() { Line = 2, Character = 37 }, End = new Position() { Line = 2, Character = 37 } }, NewText = "string " } }, PaddingLeft = false, PaddingRight = true }
+                    new InlayHint { Position = new Position { Line = 2, Character = 34 }, Label = "int", Kind = InlayHintKind.Type, Tooltip = null, TextEdits = new[] { new TextEdit { Range = new Range() { Start = new Position() { Line = 2, Character = 34 }, End = new Position() { Line = 2, Character = 34 } }, NewText = "int " } }, PaddingLeft = false, PaddingRight = true },
+                    new InlayHint { Position = new Position { Line = 2, Character = 37 }, Label = "string", Kind = InlayHintKind.Type, Tooltip = null, TextEdits = new[] { new TextEdit { Range = new Range() { Start = new Position() { Line = 2, Character = 37 }, End = new Position() { Line = 2, Character = 37 } }, NewText = "string " } }, PaddingLeft = false, PaddingRight = true }
                 },
                 response,
                 ignoreDataComparer);
@@ -209,7 +209,7 @@ using System;
             var response = await GetInlayHints(fileName, code);
             AssertEx.Equal(new[]
                 {
-                    new InlayHint { Position =  new Position { Line = 1, Character = 14 }, Label = "string", Tooltip = null, TextEdits = new[] { new TextEdit { Range = new Range() { Start = new Position() { Line = 1, Character = 14 }, End = new Position() { Line = 1, Character = 14 } }, NewText = " string" } }, PaddingLeft = true, PaddingRight = false }
+                    new InlayHint { Position =  new Position { Line = 1, Character = 14 }, Label = "string", Kind = InlayHintKind.Type, Tooltip = null, TextEdits = new[] { new TextEdit { Range = new Range() { Start = new Position() { Line = 1, Character = 14 }, End = new Position() { Line = 1, Character = 14 } }, NewText = " string" } }, PaddingLeft = true, PaddingRight = false }
                 },
                 response,
                 ignoreDataComparer);
@@ -239,7 +239,7 @@ void M(int i) {}
             var response = await GetInlayHints(fileName, code);
             AssertEx.Equal(new[]
                 {
-                    new InlayHint { Position =  new Position { Line = 1, Character = 2 }, Label = "i:", Tooltip = null, TextEdits = new[] { new TextEdit { Range = new Range() { Start = new Position() { Line = 1, Character = 2 }, End = new Position() { Line = 1, Character = 2 } }, NewText = "i: " } }, PaddingLeft = false, PaddingRight = true }
+                    new InlayHint { Position =  new Position { Line = 1, Character = 2 }, Label = "i:", Kind = InlayHintKind.Parameter, Tooltip = null, TextEdits = new[] { new TextEdit { Range = new Range() { Start = new Position() { Line = 1, Character = 2 }, End = new Position() { Line = 1, Character = 2 } }, NewText = "i: " } }, PaddingLeft = false, PaddingRight = true }
                 },
                 response,
                 ignoreDataComparer);
@@ -275,8 +275,8 @@ class C
             var response = await GetInlayHints(fileName, code);
             AssertEx.Equal(new[]
                 {
-                    new InlayHint { Position =  new Position { Line = 3, Character = 2 }, Label = "test:", Tooltip = null, TextEdits = new[] { new TextEdit { Range = new Range() { Start = new Position() { Line = 3, Character = 2 }, End = new Position() { Line = 3, Character = 2 } }, NewText = "test: " } }, PaddingLeft = false, PaddingRight = true },
-                    new InlayHint { Position =  new Position { Line = 3, Character = 9 }, Label = "test:", Tooltip = null, TextEdits = new[] { new TextEdit { Range = new Range() { Start = new Position() { Line = 3, Character = 9 }, End = new Position() { Line = 3, Character = 9 } }, NewText = "test: " } }, PaddingLeft = false, PaddingRight = true }
+                    new InlayHint { Position =  new Position { Line = 3, Character = 2 }, Label = "test:", Kind = InlayHintKind.Parameter, Tooltip = null, TextEdits = new[] { new TextEdit { Range = new Range() { Start = new Position() { Line = 3, Character = 2 }, End = new Position() { Line = 3, Character = 2 } }, NewText = "test: " } }, PaddingLeft = false, PaddingRight = true },
+                    new InlayHint { Position =  new Position { Line = 3, Character = 9 }, Label = "test:", Kind = InlayHintKind.Parameter, Tooltip = null, TextEdits = new[] { new TextEdit { Range = new Range() { Start = new Position() { Line = 3, Character = 9 }, End = new Position() { Line = 3, Character = 9 } }, NewText = "test: " } }, PaddingLeft = false, PaddingRight = true }
                 },
                 response,
                 ignoreDataComparer);
@@ -312,7 +312,7 @@ class C
             var response = await GetInlayHints(fileName, code);
             AssertEx.Equal(new[]
                 {
-                    new InlayHint { Position =  new Position { Line = 2, Character = 2 }, Label = "c:", Tooltip = null, TextEdits = new[] { new TextEdit { Range = new Range() { Start = new Position() { Line = 2, Character = 2 }, End = new Position() { Line = 2, Character = 2 } }, NewText = "c: " } }, PaddingLeft = false, PaddingRight = true }
+                    new InlayHint { Position =  new Position { Line = 2, Character = 2 }, Label = "c:", Kind = InlayHintKind.Parameter, Tooltip = null, TextEdits = new[] { new TextEdit { Range = new Range() { Start = new Position() { Line = 2, Character = 2 }, End = new Position() { Line = 2, Character = 2 } }, NewText = "c: " } }, PaddingLeft = false, PaddingRight = true }
                 },
                 response,
                 ignoreDataComparer);
@@ -345,7 +345,7 @@ void M(int test) {}
             var response = await GetInlayHints(fileName, code);
             AssertEx.Equal(new[]
                 {
-                    new InlayHint { Position =  new Position { Line = 2, Character = 2 }, Label = "test:", Tooltip = null, TextEdits = new[] { new TextEdit { Range = new Range() { Start = new Position() { Line = 2, Character = 2 }, End = new Position() { Line = 2, Character = 2 } }, NewText = "test: " } }, PaddingLeft = false, PaddingRight = true }
+                    new InlayHint { Position =  new Position { Line = 2, Character = 2 }, Label = "test:", Kind = InlayHintKind.Parameter, Tooltip = null, TextEdits = new[] { new TextEdit { Range = new Range() { Start = new Position() { Line = 2, Character = 2 }, End = new Position() { Line = 2, Character = 2 } }, NewText = "test: " } }, PaddingLeft = false, PaddingRight = true }
                 },
                 response,
                 ignoreDataComparer);
@@ -376,8 +376,8 @@ void M(int test1, int test2) {}
             var response = await GetInlayHints(fileName, code);
             AssertEx.Equal(new[]
                 {
-                    new InlayHint { Position = new Position { Line = 1, Character = 2 }, Label = "test1:", Tooltip = null, TextEdits = new[] { new TextEdit { Range = new Range() { Start = new Position() { Line = 1, Character = 2 }, End = new Position() { Line = 1, Character = 2 } }, NewText = "test1: " } }, PaddingLeft = false, PaddingRight = true },
-                    new InlayHint { Position = new Position { Line = 1, Character = 5 }, Label = "test2:", Tooltip = null, TextEdits = new[] { new TextEdit { Range = new Range() { Start = new Position() { Line = 1, Character = 5 }, End = new Position() { Line = 1, Character = 5 } }, NewText = "test2: " } }, PaddingLeft = false, PaddingRight = true }
+                    new InlayHint { Position = new Position { Line = 1, Character = 2 }, Label = "test1:", Kind = InlayHintKind.Parameter, Tooltip = null, TextEdits = new[] { new TextEdit { Range = new Range() { Start = new Position() { Line = 1, Character = 2 }, End = new Position() { Line = 1, Character = 2 } }, NewText = "test1: " } }, PaddingLeft = false, PaddingRight = true },
+                    new InlayHint { Position = new Position { Line = 1, Character = 5 }, Label = "test2:", Kind = InlayHintKind.Parameter, Tooltip = null, TextEdits = new[] { new TextEdit { Range = new Range() { Start = new Position() { Line = 1, Character = 5 }, End = new Position() { Line = 1, Character = 5 } }, NewText = "test2: " } }, PaddingLeft = false, PaddingRight = true }
                 },
                 response,
                 ignoreDataComparer);
@@ -411,7 +411,7 @@ class C
             var response = await GetInlayHints(fileName, code);
             AssertEx.Equal(new[]
                 {
-                    new InlayHint { Position = new Position { Line = 1, Character = 18 }, Label = "enabled:", Tooltip = null, TextEdits = new[] { new TextEdit { Range = new Range() { Start = new Position() { Line = 1, Character = 18 }, End = new Position() { Line = 1, Character = 18 } }, NewText = "enabled: " } }, PaddingLeft = false, PaddingRight = true }
+                    new InlayHint { Position = new Position { Line = 1, Character = 18 }, Label = "enabled:", Kind = InlayHintKind.Parameter, Tooltip = null, TextEdits = new[] { new TextEdit { Range = new Range() { Start = new Position() { Line = 1, Character = 18 }, End = new Position() { Line = 1, Character = 18 } }, NewText = "enabled: " } }, PaddingLeft = false, PaddingRight = true }
                 },
                 response,
                 ignoreDataComparer);
@@ -446,7 +446,7 @@ class C
             var response = await GetInlayHints(fileName, code);
             AssertEx.Equal(new[]
                 {
-                    new InlayHint { Position = new Position { Line = 2, Character = 4 }, Label = "i:", Tooltip = null, TextEdits = new[] { new TextEdit { Range = new Range() { Start = new Position() { Line = 2, Character = 4 }, End = new Position() { Line = 2, Character = 4 } }, NewText = "i: " } }, PaddingLeft = false, PaddingRight = true }
+                    new InlayHint { Position = new Position { Line = 2, Character = 4 }, Label = "i:", Kind = InlayHintKind.Parameter, Tooltip = null, TextEdits = new[] { new TextEdit { Range = new Range() { Start = new Position() { Line = 2, Character = 4 }, End = new Position() { Line = 2, Character = 4 } }, NewText = "i: " } }, PaddingLeft = false, PaddingRight = true }
                 },
                 response,
                 ignoreDataComparer);
