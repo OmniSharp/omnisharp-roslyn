@@ -1,13 +1,13 @@
-﻿using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.Text;
-using OmniSharp.Extensions.LanguageServer.Protocol.Document;
-using OmniSharp.Extensions.LanguageServer.Protocol.Models;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Text;
+using OmniSharp.Extensions.LanguageServer.Protocol.Document;
+using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
@@ -288,7 +288,7 @@ namespace N2
             Assert.Single(resolved.AdditionalTextEdits);
             var additionalEdit = resolved.AdditionalTextEdits.First();
             Assert.Equal(NormalizeNewlines("using System;\n\n"),
-                         additionalEdit.NewText);
+                         NormalizeNewlines(additionalEdit.NewText));
             Assert.Equal(0, additionalEdit.Range.Start.Line);
             Assert.Equal(0, additionalEdit.Range.Start.Character);
             Assert.Equal(0, additionalEdit.Range.End.Line);
@@ -375,12 +375,12 @@ namespace N3
 
             Assert.Single(resolved.AdditionalTextEdits);
             var additionalEdit = resolved.AdditionalTextEdits.First();
-            Assert.Equal(NormalizeNewlines("N2;\nusing "),
+            Assert.Equal(NormalizeNewlines("using N2;\n"),
                          additionalEdit.NewText);
             Assert.Equal(1, additionalEdit.Range.Start.Line);
-            Assert.Equal(6, additionalEdit.Range.Start.Character);
+            Assert.Equal(0, additionalEdit.Range.Start.Character);
             Assert.Equal(1, additionalEdit.Range.End.Line);
-            Assert.Equal(6, additionalEdit.Range.End.Character);
+            Assert.Equal(0, additionalEdit.Range.End.Character);
             VerifySortOrders(completions.Items);
         }
 
@@ -1530,7 +1530,7 @@ class Foo
         protected async Task<CompletionList> FindCompletionsAsync(string filename, string source, char? triggerChar = null, TestFile[] additionalFiles = null)
         {
             var bufferPath = $"{Directory.GetCurrentDirectory()}{Path.DirectorySeparatorChar}somepath{Path.DirectorySeparatorChar}{filename}";
-            var testFile = new TestFile(bufferPath, source);
+            var testFile = new TestFile(bufferPath, NormalizeNewlines(source));
 
             var files = new[] { testFile };
             if (additionalFiles is object)
@@ -1588,7 +1588,7 @@ class Foo
         }
 
         private static string NormalizeNewlines(string str)
-            => str.Replace("\r\n", Environment.NewLine);
+            => str.Replace("\r\n", "\n");
 
         private static void VerifySortOrders(IEnumerable<CompletionItem> items)
         {
