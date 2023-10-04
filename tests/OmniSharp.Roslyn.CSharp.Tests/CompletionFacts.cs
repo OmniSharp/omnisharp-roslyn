@@ -304,7 +304,7 @@ namespace N2
             Assert.Single(resolved.Item.AdditionalTextEdits);
             var additionalEdit = resolved.Item.AdditionalTextEdits[0];
             Assert.Equal(NormalizeNewlines("using System;\n\n"),
-                         additionalEdit.NewText);
+                         NormalizeNewlines(additionalEdit.NewText));
             Assert.Equal(0, additionalEdit.StartLine);
             Assert.Equal(0, additionalEdit.StartColumn);
             Assert.Equal(0, additionalEdit.EndLine);
@@ -395,12 +395,12 @@ namespace N3
 
             Assert.Single(resolved.Item.AdditionalTextEdits);
             var additionalEdit = resolved.Item.AdditionalTextEdits[0];
-            Assert.Equal(NormalizeNewlines("N2;\nusing "),
+            Assert.Equal(NormalizeNewlines("using N2;\n"),
                          additionalEdit.NewText);
             Assert.Equal(1, additionalEdit.StartLine);
-            Assert.Equal(6, additionalEdit.StartColumn);
+            Assert.Equal(0, additionalEdit.StartColumn);
             Assert.Equal(1, additionalEdit.EndLine);
-            Assert.Equal(6, additionalEdit.EndColumn);
+            Assert.Equal(0, additionalEdit.EndColumn);
             VerifySortOrders(completions.Items);
         }
 
@@ -2301,7 +2301,7 @@ public class A
 
         protected async Task<CompletionResponse> FindCompletionsAsync(string filename, string source, OmniSharpTestHost testHost, char? triggerChar = null, TestFile[] additionalFiles = null, bool forceExpandedCompletionIndexCreation = false)
         {
-            var testFile = new TestFile(filename, source);
+            var testFile = new TestFile(filename, NormalizeNewlines(source));
 
             var files = new[] { testFile };
             if (additionalFiles is object)
@@ -2359,7 +2359,7 @@ public class A
         }
 
         private static string NormalizeNewlines(string str)
-            => str.Replace("\r\n", Environment.NewLine);
+            => str.Replace("\r\n", "\n");
 
         private static void VerifySortOrders(IReadOnlyList<CompletionItem> items)
         {

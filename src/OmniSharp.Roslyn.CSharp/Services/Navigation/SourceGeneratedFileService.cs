@@ -1,13 +1,14 @@
 ﻿#nullable enable
 
-using Microsoft.CodeAnalysis;
-using Microsoft.Extensions.Logging;
-using OmniSharp.Mef;
-using OmniSharp.Models.v1.SourceGeneratedFile;
 using System.Collections.Generic;
 using System.Composition;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.Workspace;
+using Microsoft.Extensions.Logging;
+using OmniSharp.Mef;
+using OmniSharp.Models.v1.SourceGeneratedFile;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Navigation
 {
@@ -100,6 +101,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
             return SourceGeneratedFileClosedResponse.Instance;
         }
 
-        private DocumentId GetId(SourceGeneratedFileInfo info) => DocumentId.CreateFromSerialized(ProjectId.CreateFromSerialized(info.ProjectGuid), info.DocumentGuid);
+        private static DocumentId GetId(SourceGeneratedFileInfo info) => OmniSharpDocumentId.CreateFromSerialized(
+            ProjectId.CreateFromSerialized(info.ProjectGuid),
+            info.DocumentGuid,
+            isSourceGenerated: true,
+            debugName: null);
     }
 }
