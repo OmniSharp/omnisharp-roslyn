@@ -2268,6 +2268,34 @@ pub$$class";
             });
         }
 
+        [Theory]
+        [InlineData("dummy.cs", true)]
+        [InlineData("dummy.cs", false)]
+        [InlineData("dummy.csx", true)]
+        [InlineData("dummy.csx", false)]
+        public async Task SoftSelectionWhenFilterTextIsEmpty(string filename, bool useAsyncCompletion)
+        {
+            const string input = @"
+using System;
+using System.Text;
+public class A
+{
+    public void M(string someText)
+    {
+        var x = new StringBuilder();
+        x.Append($$
+    }
+}";
+
+            using var host = useAsyncCompletion ? GetAsyncCompletionAndImportCompletionHost() : GetImportCompletionHost();
+
+            var completions = await FindCompletionsAsync(filename, input, host, '(');
+            var someTextItem = completions.Items.First(item => item.Label == "someText");
+
+            Assert.Null(someTextItem.CommitCharacters);
+            Assert.False(someTextItem.Preselect);
+        }
+
         private CompletionService GetCompletionService(OmniSharpTestHost host)
             => host.GetRequestHandler<CompletionService>(EndpointName);
 

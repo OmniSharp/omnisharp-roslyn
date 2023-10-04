@@ -1,15 +1,16 @@
 ﻿#nullable enable
 
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Diagnostics;
+using System.Text;
+using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Completion;
 using Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.Completion;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
 using OmniSharp.Models.v1.Completion;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Diagnostics;
-using System.Threading.Tasks;
 using CompletionItem = OmniSharp.Models.v1.Completion.CompletionItem;
 using CSharpCompletionList = Microsoft.CodeAnalysis.Completion.CompletionList;
 using CSharpCompletionService = Microsoft.CodeAnalysis.Completion.CompletionService;
@@ -95,7 +96,15 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                         out insertText, out filterText, out sortText, out insertTextFormat, out changeSpan, out additionalTextEdits);
                 }
 
-                var commitCharacters = BuildCommitCharacters(completion.Rules.CommitCharacterRules, isSuggestionMode, commitCharacterRuleCache, commitCharacterRuleBuilder);
+                var treatAsASuggestion = isSuggestionMode ||
+                    (
+                        // The user hasn't actually typed anything and completion provider does
+                        // not request the item be hard-selected.
+                        completion.Rules.MatchPriority != MatchPriority.Preselect &&
+                        typedSpan.Length == 0 &&
+                        completion.Rules.SelectionBehavior != CompletionItemSelectionBehavior.HardSelection
+                    );
+                var commitCharacters = BuildCommitCharacters(completion.Rules.CommitCharacterRules, treatAsASuggestion, commitCharacterRuleCache, commitCharacterRuleBuilder);
 
                 completionsBuilder.Add(new CompletionItem
                 {
@@ -108,7 +117,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                     Kind = GetCompletionItemKind(completion.Tags),
                     Detail = completion.InlineDescription,
                     Data = (cacheId, i),
-                    Preselect = completion.Rules.SelectionBehavior == CompletionItemSelectionBehavior.HardSelection,
+                    Preselect = completion.Rules.MatchPriority == MatchPriority.Preselect,
                     CommitCharacters = commitCharacters,
                     HasAfterInsertStep = hasAfterInsertStep,
                 });
