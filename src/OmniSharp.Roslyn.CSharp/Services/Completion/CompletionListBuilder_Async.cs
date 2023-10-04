@@ -96,14 +96,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                         out insertText, out filterText, out sortText, out insertTextFormat, out changeSpan, out additionalTextEdits);
                 }
 
-                var treatAsASuggestion = isSuggestionMode ||
-                    (
-                        // The user hasn't actually typed anything and completion provider does
-                        // not request the item be hard-selected.
-                        completion.Rules.MatchPriority != MatchPriority.Preselect &&
-                        typedSpan.Length == 0 &&
-                        completion.Rules.SelectionBehavior != CompletionItemSelectionBehavior.HardSelection
-                    );
+                var treatAsASuggestion = isSuggestionMode || ShouldTreatCompletionItemAsSuggestion(completion, typedSpan);
                 var commitCharacters = BuildCommitCharacters(completion.Rules.CommitCharacterRules, treatAsASuggestion, commitCharacterRuleCache, commitCharacterRuleBuilder);
 
                 completionsBuilder.Add(new CompletionItem
