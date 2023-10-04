@@ -588,13 +588,7 @@ namespace N3
             var item = completions.Items.First(c => c.Label == "text:");
             Assert.NotNull(item);
             Assert.Equal("text", item.TextEdit.NewText);
-            Assert.All(completions.Items, c =>
-            {
-                if (c.Label == "ToString")
-                    Assert.True(c.Preselect);
-                else
-                    Assert.False(c.Preselect);
-            });
+            Assert.All(completions.Items, c => Assert.False(c.Preselect));
         }
 
         [Theory]
