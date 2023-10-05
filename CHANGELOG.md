@@ -1,6 +1,9 @@
 # Changelog
 All changes to the project will be documented in this file.
 
+## [1.39.10] - 2023-10-05
+* Add RazorComplier EA to support razor generators (PR: [#2572](https://github.com/OmniSharp/omnisharp-roslyn/pull/2572))
+
 ## [1.39.9] - 2023-10-04
 * Add Kind parameter to InlayHint (PR: [#2570](https://github.dev/OmniSharp/omnisharp-roslyn/pull/2570))
 * Do not include commit characters if the typed span is empty (PR: [#2569](https://github.com/OmniSharp/omnisharp-roslyn/pull/2569))
