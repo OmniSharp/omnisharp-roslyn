@@ -17,6 +17,12 @@ public sealed record InlayHint
     public string Label { get; set; }
 
     /// <summary>
+    /// The kind of this hint. Can be omitted in which case the client
+	/// should fall back to a reasonable default.
+    /// </summary>
+    public InlayHintKind? Kind { get; set; }
+
+    /// <summary>
     /// The tooltip text when you hover over this item.
     /// </summary>
     public string? Tooltip { get; set; }

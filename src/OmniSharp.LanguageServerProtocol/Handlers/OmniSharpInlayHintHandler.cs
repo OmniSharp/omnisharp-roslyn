@@ -77,6 +77,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             return new LSPInlayHint()
             {
                 Label = trimmedLabel,
+                Kind = hint.Kind.HasValue ? ConvertEnum<OmniSharpInlayHintKind, LSPInlayHintKind>(hint.Kind.Value) : null,
                 Tooltip = hint.Tooltip is not null
                     ? new MarkupContent() { Kind = MarkupKind.Markdown, Value = hint.Tooltip }
                     : null,
@@ -93,6 +94,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             return new OmniSharpInlayHint()
             {
                 Label = $"{(hint.PaddingLeft == true ? " " : "")}{hint.Label.String}{(hint.PaddingRight == true ? " " : "")}",
+                Kind = hint.Kind.HasValue ? ConvertEnum<LSPInlayHintKind, OmniSharpInlayHintKind>(hint.Kind.Value) : null,
                 Tooltip = hint.Tooltip is not null
                     ? hint.Tooltip.HasMarkupContent
                         ? hint.Tooltip.MarkupContent.Value

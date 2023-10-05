@@ -1,8 +1,13 @@
 ﻿#nullable enable
 
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Diagnostics;
+using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.Completion;
 using Microsoft.CodeAnalysis.Completion;
+using Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.Completion;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Extensions;
 using OmniSharp.Models;
@@ -10,11 +15,6 @@ using OmniSharp.Models.v1.Completion;
 using OmniSharp.Roslyn.CSharp.Helpers;
 using OmniSharp.Roslyn.Utilities;
 using OmniSharp.Utilities;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Diagnostics;
-using System.Linq;
-using System.Threading.Tasks;
 using CompletionItem = OmniSharp.Models.v1.Completion.CompletionItem;
 using CSharpCompletionItem = Microsoft.CodeAnalysis.Completion.CompletionItem;
 using CSharpCompletionList = Microsoft.CodeAnalysis.Completion.CompletionList;
@@ -110,7 +110,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                         }
                 }
 
-                var commitCharacters = BuildCommitCharacters(completion.Rules.CommitCharacterRules, isSuggestionMode, commitCharacterRuleCache, commitCharacterRuleBuilder);
+                var treatAsASuggestion = isSuggestionMode || ShouldTreatCompletionItemAsSuggestion(completion, typedSpan);
+                var commitCharacters = BuildCommitCharacters(completion.Rules.CommitCharacterRules, treatAsASuggestion, commitCharacterRuleCache, commitCharacterRuleBuilder);
 
                 completionsBuilder.Add(new CompletionItem
                 {
@@ -123,7 +124,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                     Kind = GetCompletionItemKind(completion.Tags),
                     Detail = completion.InlineDescription,
                     Data = (cacheId, i),
-                    Preselect = completion.Rules.SelectionBehavior == CompletionItemSelectionBehavior.HardSelection,
+                    Preselect = completion.Rules.MatchPriority == MatchPriority.Preselect,
                     CommitCharacters = commitCharacters,
                 });
             }

@@ -1,6 +1,18 @@
 # Changelog
 All changes to the project will be documented in this file.
 
+## [1.39.9] - 2023-10-04
+* Add Kind parameter to InlayHint (PR: [#2570](https://github.dev/OmniSharp/omnisharp-roslyn/pull/2570))
+* Do not include commit characters if the typed span is empty (PR: [#2569](https://github.com/OmniSharp/omnisharp-roslyn/pull/2569))
+* Update Roslyn to version 4.9.0-1.23504.3 (PR: [#2567](https://github.com/OmniSharp/omnisharp-roslyn/pull/2567))
+* Async diagnostics analyzer work queue (PR: [#2351](https://github.com/OmniSharp/omnisharp-roslyn/pull/2351))
+* Add InlayHint implementation to OmniSharp.LSP (PR: [#2566](https://github.com/OmniSharp/omnisharp-roslyn/pull/2566))
+* Include the project file name when invoking `dotnet build` (PR: [#2565](https://github.com/OmniSharp/omnisharp-roslyn/pull/2565))
+* feat: ignore diagnostics for generated code (PR: [#2509](https://github.com/OmniSharp/omnisharp-roslyn/pull/2509))
+* Update documentation to reflect --stdio flag deprecation (#2439) (PR: [#2554](https://github.com/OmniSharp/omnisharp-roslyn/pull/2554))
+* Update Roslyn to version 4.8.0-1.23374.10 (PR: [#2555](https://github.com/OmniSharp/omnisharp-roslyn/pull/2555))
+* Use double quote when quoting un script path (PR: [#2553](https://github.com/OmniSharp/omnisharp-roslyn/pull/2553))
+
 ## [1.39.8] - 2023-07-17
 * Use core LSP TokenTypes where possible and validate token names (PR: [#2548](https://github.com/OmniSharp/omnisharp-roslyn/pull/2548))
 
