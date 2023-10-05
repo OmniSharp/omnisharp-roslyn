@@ -588,13 +588,7 @@ namespace N3
             var item = completions.Items.First(c => c.Label == "text:");
             Assert.NotNull(item);
             Assert.Equal("text", item.TextEdit.NewText);
-            Assert.All(completions.Items, c =>
-            {
-                if (c.Label == "ToString")
-                    Assert.True(c.Preselect);
-                else
-                    Assert.False(c.Preselect);
-            });
+            Assert.All(completions.Items, c => Assert.False(c.Preselect));
         }
 
         [Theory]
@@ -2266,6 +2260,34 @@ pub$$class";
                 Assert.Equal(3, completion.TextEdit.EndColumn);
                 Assert.Equal(1, completion.TextEdit.EndLine);
             });
+        }
+
+        [Theory]
+        [InlineData("dummy.cs", true)]
+        [InlineData("dummy.cs", false)]
+        [InlineData("dummy.csx", true)]
+        [InlineData("dummy.csx", false)]
+        public async Task SoftSelectionWhenFilterTextIsEmpty(string filename, bool useAsyncCompletion)
+        {
+            const string input = @"
+using System;
+using System.Text;
+public class A
+{
+    public void M(string someText)
+    {
+        var x = new StringBuilder();
+        x.Append($$
+    }
+}";
+
+            using var host = useAsyncCompletion ? GetAsyncCompletionAndImportCompletionHost() : GetImportCompletionHost();
+
+            var completions = await FindCompletionsAsync(filename, input, host, '(');
+            var someTextItem = completions.Items.First(item => item.Label == "someText");
+
+            Assert.Null(someTextItem.CommitCharacters);
+            Assert.False(someTextItem.Preselect);
         }
 
         private CompletionService GetCompletionService(OmniSharpTestHost host)
