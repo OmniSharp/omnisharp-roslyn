@@ -1,16 +1,17 @@
 ﻿#nullable enable
 
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Completion;
 using Microsoft.CodeAnalysis.Tags;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
 using OmniSharp.Models.v1.Completion;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Linq;
-using System.Threading.Tasks;
 using CompletionItem = OmniSharp.Models.v1.Completion.CompletionItem;
+using CSharpCompletionItem = Microsoft.CodeAnalysis.Completion.CompletionItem;
 using CSharpCompletionList = Microsoft.CodeAnalysis.Completion.CompletionList;
 using CSharpCompletionService = Microsoft.CodeAnalysis.Completion.CompletionService;
 
@@ -170,6 +171,15 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
             }
 
             return CompletionItemKind.Text;
+        }
+
+        internal static bool ShouldTreatCompletionItemAsSuggestion(CSharpCompletionItem item, TextSpan typedSpan)
+        {
+            // The user hasn't actually typed anything and completion provider does
+            // not request the item be hard-selected.
+            return item.Rules.MatchPriority != MatchPriority.Preselect &&
+                typedSpan.Length == 0 &&
+                item.Rules.SelectionBehavior != CompletionItemSelectionBehavior.HardSelection;
         }
     }
 }
