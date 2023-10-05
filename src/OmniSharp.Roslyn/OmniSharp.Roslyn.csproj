@@ -16,6 +16,8 @@
     <PackageReference Include="Microsoft.CodeAnalysis.Common" />
     <PackageReference Include="Microsoft.CodeAnalysis.Workspaces.Common" />
     <PackageReference Include="Microsoft.CodeAnalysis.ExternalAccess.OmniSharp" />
+    <!-- Not directly referenced but needed for Razor source generators -->
+    <PackageReference Include="Microsoft.CodeAnalysis.ExternalAccess.RazorCompiler" ReferenceOutputAssembly="false" />
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" />
     <PackageReference Include="System.ComponentModel.Composition" />
     <PackageReference Include="System.Reflection.DispatchProxy" />
