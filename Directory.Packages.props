@@ -21,8 +21,8 @@
 
         <PackageVersion Include="DiffPlex" Version="1.7.1" />
 
-        <PackageVersion Include="Dotnet.Script.DependencyModel" Version="1.4.0" />
-        <PackageVersion Include="Dotnet.Script.DependencyModel.NuGet" Version="1.4.0" />
+        <PackageVersion Include="Dotnet.Script.DependencyModel" Version="1.5.0" />
+        <PackageVersion Include="Dotnet.Script.DependencyModel.NuGet" Version="1.5.0" />
 
         <PackageVersion Include="ICSharpCode.Decompiler" Version="7.2.1.6856" />
 
