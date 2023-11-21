@@ -7,10 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="..\app.config" Link="app.config" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\..\src\OmniSharp.Script\OmniSharp.Script.csproj" />
     <ProjectReference Include="..\TestUtility\TestUtility.csproj" />
   </ItemGroup>

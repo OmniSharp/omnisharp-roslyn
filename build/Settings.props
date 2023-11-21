@@ -32,6 +32,25 @@
     <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)\OmniSharpKey.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <SuggestedBindingRedirects Include="Microsoft.Build, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <MaxVersion>15.1.0.0</MaxVersion>
+    </SuggestedBindingRedirects>
+    <SuggestedBindingRedirects Include="Microsoft.Build.Framework, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <MaxVersion>15.1.0.0</MaxVersion>
+    </SuggestedBindingRedirects>
+    <SuggestedBindingRedirects Include="Microsoft.Build.Utilities.Core, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <MaxVersion>15.1.0.0</MaxVersion>
+    </SuggestedBindingRedirects>
+    <SuggestedBindingRedirects Include="Microsoft.Build.Tasks.Core, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <MaxVersion>15.1.0.0</MaxVersion>
+    </SuggestedBindingRedirects>
+  </ItemGroup>
+
   <ItemGroup>
     <None Include="$(MSBuildThisFileDirectory)/omnisharp.png" Pack="true" PackagePath="/images/omnisharp.png" />
   </ItemGroup>
