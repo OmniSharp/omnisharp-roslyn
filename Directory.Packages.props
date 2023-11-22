@@ -5,28 +5,28 @@
         <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
 
         <OmniSharpExtensionsPackageVersion>0.19.9</OmniSharpExtensionsPackageVersion>
-        <MicrosoftExtensionPackageVersion>7.0.0</MicrosoftExtensionPackageVersion>
-        <MicrosoftTestPackageVersion>17.6.0</MicrosoftTestPackageVersion>
-        <MSBuildPackageVersion>17.3.2</MSBuildPackageVersion>
-        <NuGetPackageVersion>6.8.0-preview.1.69</NuGetPackageVersion>
-        <RoslynPackageVersion>4.9.0-1.23504.3</RoslynPackageVersion>
-        <XunitPackageVersion>2.4.1</XunitPackageVersion>
+        <MicrosoftExtensionPackageVersion>8.0.0</MicrosoftExtensionPackageVersion>
+        <MicrosoftTestPackageVersion>17.8.0</MicrosoftTestPackageVersion>
+        <MSBuildPackageVersion>17.8.3</MSBuildPackageVersion>
+        <NuGetPackageVersion>6.8.0-rc.122</NuGetPackageVersion>
+        <RoslynPackageVersion>4.9.0-2.23570.8</RoslynPackageVersion>
+        <XunitPackageVersion>2.6.1</XunitPackageVersion>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageVersion Include="BenchmarkDotNet" Version="0.12.1" />
-        <PackageVersion Include="BenchmarkDotNet.Diagnostics.Windows" Version="0.12.1" />
+        <PackageVersion Include="BenchmarkDotNet" Version="0.13.10" />
+        <PackageVersion Include="BenchmarkDotNet.Diagnostics.Windows" Version="0.13.10" />
 
-        <PackageVersion Include="Cake.Scripting.Transport" Version="0.9.0" />
+        <PackageVersion Include="Cake.Scripting.Transport" Version="0.15.0" />
 
         <PackageVersion Include="DiffPlex" Version="1.7.1" />
 
         <PackageVersion Include="Dotnet.Script.DependencyModel" Version="1.5.0" />
         <PackageVersion Include="Dotnet.Script.DependencyModel.NuGet" Version="1.5.0" />
 
-        <PackageVersion Include="ICSharpCode.Decompiler" Version="7.2.1.6856" />
+        <PackageVersion Include="ICSharpCode.Decompiler" Version="8.2.0.7535" />
 
-        <PackageVersion Include="McMaster.Extensions.CommandLineUtils" Version="3.1.0" />
+        <PackageVersion Include="McMaster.Extensions.CommandLineUtils" Version="4.1.0" />
 
         <PackageVersion Include="Microsoft.Build" Version="$(MSBuildPackageVersion)" />
         <PackageVersion Include="Microsoft.Build.Framework" Version="$(MSBuildPackageVersion)" />
@@ -58,7 +58,7 @@
         <PackageVersion Include="Microsoft.Extensions.Options" Version="$(MicrosoftExtensionPackageVersion)" />
         <PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="$(MicrosoftExtensionPackageVersion)" />
 
-        <PackageVersion Include="Microsoft.Build.Locator" Version="1.4.1" />
+        <PackageVersion Include="Microsoft.Build.Locator" Version="1.6.10" />
 
         <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftTestPackageVersion)" />
         <PackageVersion Include="Microsoft.TestPlatform.TranslationLayer" Version="$(MicrosoftTestPackageVersion)" />
@@ -82,23 +82,25 @@
         <PackageVersion Include="OmniSharp.Extensions.JsonRpc" Version="$(OmniSharpExtensionsPackageVersion)" />
 
         <PackageVersion Include="SQLitePCLRaw.bundle_green" Version="2.1.0" />
-        <PackageVersion Include="System.Collections.Immutable" Version="7.0.0" />
-        <PackageVersion Include="System.ComponentModel.Composition" Version="7.0.0" />
-        <PackageVersion Include="System.Composition" Version="7.0.0" />
-        <PackageVersion Include="System.Configuration.ConfigurationManager" Version="7.0.0" />
+
+        <PackageVersion Include="System.Collections.Immutable" Version="8.0.0" />
+        <PackageVersion Include="System.ComponentModel.Composition" Version="8.0.0" />
+        <PackageVersion Include="System.Composition" Version="8.0.0" />
+        <PackageVersion Include="System.Configuration.ConfigurationManager" Version="8.0.0" />
         <PackageVersion Include="System.Memory" Version="4.5.5" />
-        <PackageVersion Include="System.Reflection.Metadata" Version="7.0.0" />
-        <PackageVersion Include="System.Threading.Tasks.Dataflow" Version="7.0.0" />
+        <PackageVersion Include="System.Reflection.Metadata" Version="8.0.0" />
+        <PackageVersion Include="System.Text.Json" Version="8.0.0" />
+        <PackageVersion Include="System.Threading.Tasks.Dataflow" Version="8.0.0" />
         <PackageVersion Include="System.ValueTuple" Version="4.5.0" />
 
         <PackageVersion Include="System.Reactive" Version="6.0.0" />
 
         <PackageVersion Include="xunit.abstractions" Version="2.0.3" />
-        <PackageVersion Include="xunit.runner.visualstudio" Version="2.4.3" />
+        <PackageVersion Include="xunit.runner.visualstudio" Version="2.5.4" />
         <PackageVersion Include="xunit" Version="$(XunitPackageVersion)" />
     </ItemGroup>
     <ItemGroup>
-        <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
+        <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
     </ItemGroup>
     <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
         <PackageVersion Include="Microsoft.AspNetCore.Diagnostics" Version="2.2.0" />
