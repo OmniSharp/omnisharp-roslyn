@@ -39,6 +39,7 @@
         <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="$(RoslynPackageVersion)" />
         <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="$(RoslynPackageVersion)" />
         <PackageVersion Include="Microsoft.CodeAnalysis.Workspaces.Common" Version="$(RoslynPackageVersion)" />
+        <PackageVersion Include="Microsoft.CodeAnalysis.ExternalAccess.AspNetCore" Version="$(RoslynPackageVersion)" />
         <PackageVersion Include="Microsoft.CodeAnalysis.ExternalAccess.OmniSharp" Version="$(RoslynPackageVersion)" />
         <PackageVersion Include="Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.CSharp" Version="$(RoslynPackageVersion)" />
         <PackageVersion Include="Microsoft.CodeAnalysis.ExternalAccess.RazorCompiler" Version="$(RoslynPackageVersion)" />
