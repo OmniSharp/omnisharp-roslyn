@@ -20,6 +20,5 @@
     <PackageReference Include="Microsoft.CodeAnalysis.ExternalAccess.RazorCompiler" ReferenceOutputAssembly="false" />
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" />
     <PackageReference Include="System.ComponentModel.Composition" />
-    <PackageReference Include="System.Reflection.DispatchProxy" />
   </ItemGroup>
 </Project>

@@ -18,7 +18,6 @@
     <ItemGroup>
         <PackageReference Include="Microsoft.TestPlatform.TranslationLayer" />
         <PackageReference Condition="'$(TargetFramework)' == 'net6.0'" Include="Microsoft.TestPlatform.ObjectModel" />
-        <PackageReference Condition="'$(TargetFramework)' == 'net6.0'" Include="System.Runtime.InteropServices.RuntimeInformation" />
     </ItemGroup>
 
 </Project>

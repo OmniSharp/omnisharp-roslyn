@@ -64,9 +64,6 @@
         <PackageVersion Include="Microsoft.TestPlatform.TranslationLayer" Version="$(MicrosoftTestPackageVersion)" />
         <PackageVersion Include="Microsoft.TestPlatform.ObjectModel" Version="$(MicrosoftTestPackageVersion)" />
 
-        <PackageVersion Include="Microsoft.VisualStudio.Setup.Configuration.Interop" Version="1.14.114" />
-        <PackageVersion Include="Microsoft.VisualStudio.SDK.EmbedInteropTypes" Version="15.0.12" />
-
         <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
 
         <PackageVersion Include="NuGet.Common" Version="$(NuGetPackageVersion)" />
@@ -95,9 +92,6 @@
         <PackageVersion Include="System.ValueTuple" Version="4.5.0" />
 
         <PackageVersion Include="System.Reactive" Version="6.0.0" />
-
-        <PackageVersion Include="System.Reflection.DispatchProxy" Version="4.5.1" />
-        <PackageVersion Include="System.Runtime.InteropServices.RuntimeInformation" Version="4.3.0" />
 
         <PackageVersion Include="xunit.abstractions" Version="2.0.3" />
         <PackageVersion Include="xunit.runner.visualstudio" Version="2.4.3" />
