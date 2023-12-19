@@ -11,6 +11,7 @@ using Xunit;
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
 #pragma warning disable VSTHRD103 // Call async methods when in an async method
+#pragma warning disable xUnit1031 // Test methods should not use blocking task operations
     public class AsyncAnalyzerWorkerQueueFacts
     {
         private class Logger : ILogger

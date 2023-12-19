@@ -396,6 +396,7 @@ record struct R1(string S, int I);
                             .Cast<int>()
                             .Where(value => (tokenModifiers & (1 << value)) != 0)
                             .Cast<SemanticHighlightModifier>()
+                            .ToArray()
                         : Enumerable.Empty<SemanticHighlightModifier>()
                 };
 
