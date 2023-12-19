@@ -19,7 +19,7 @@ namespace OmniSharp.Tests
         {
             var app = new CommandLineApplication();
             app.OnExecute(() => 0);
-            app.Execute(new[] { arg1, arg2, arg3 });
+            app.Execute(new[] { arg1, arg2, arg3 }.OfType<string>().ToArray());
 
             Assert.Single(app.OtherArgs);
             Assert.Equal("a=b", app.OtherArgs.First());
