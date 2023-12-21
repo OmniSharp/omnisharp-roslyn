@@ -6,6 +6,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using AsyncKeyedLock;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using OmniSharp.Eventing;
@@ -20,8 +21,7 @@ namespace OmniSharp.Services
 
         private readonly ILogger _logger;
         private readonly IEventEmitter _eventEmitter;
-        private readonly ConcurrentDictionary<string, object> _locks;
-        private readonly SemaphoreSlim _semaphore;
+        private readonly AsyncKeyedLocker<string> _locks;
 
         public string DotNetPath { get; }
 
@@ -29,8 +29,11 @@ namespace OmniSharp.Services
         {
             _logger = loggerFactory.CreateLogger<DotNetCliService>();
             _eventEmitter = eventEmitter;
-            _locks = new ConcurrentDictionary<string, object>();
-            _semaphore = new SemaphoreSlim(Environment.ProcessorCount / 2);
+            _locks = new AsyncKeyedLocker<string>(o =>
+            {
+                o.PoolSize = 20;
+                o.PoolInitialFill = 1;
+            });
 
             // Check if any of the provided paths have a dotnet executable.
             string executableExtension = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? ".exe" : string.Empty;
@@ -79,16 +82,14 @@ namespace OmniSharp.Services
 
         public Task RestoreAsync(string workingDirectory, string arguments = null, Action onFailure = null)
         {
-            return Task.Factory.StartNew(() =>
+            return Task.Factory.StartNew(async () =>
             {
                 _logger.LogInformation($"Begin dotnet restore in '{workingDirectory}'");
 
-                var restoreLock = _locks.GetOrAdd(workingDirectory, new object());
-                lock (restoreLock)
+                using (await _locks.LockAsync(workingDirectory).ConfigureAwait(false))
                 {
                     var exitStatus = new ProcessExitStatus(-1);
                     _eventEmitter.RestoreStarted(workingDirectory);
-                    _semaphore.Wait();
                     try
                     {
                         // A successful restore will update the project lock file which is monitored
@@ -98,10 +99,6 @@ namespace OmniSharp.Services
                     }
                     finally
                     {
-                        _semaphore.Release();
-
-                        _locks.TryRemove(workingDirectory, out _);
-
                         _eventEmitter.RestoreFinished(workingDirectory, exitStatus.Succeeded);
 
                         if (exitStatus.Failed && onFailure != null)
