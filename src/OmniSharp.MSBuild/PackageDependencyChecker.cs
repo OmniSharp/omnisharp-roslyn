@@ -45,7 +45,7 @@ namespace OmniSharp.MSBuild
 
             if (allowAutoRestore && _options.EnablePackageAutoRestore)
             {
-                _dotNetCli.RestoreAsync(projectFile.Directory, onFailure: () =>
+                _dotNetCli.RestoreAsync(projectFile.Directory, projectFile.FilePath, onFailure: () =>
                 {
                     _eventEmitter.UnresolvedDepdendencies(projectFile.FilePath, unresolvedDependencies);
                 });
