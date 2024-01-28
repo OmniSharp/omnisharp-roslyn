@@ -43,7 +43,7 @@ namespace TestUtility
             message.AppendLine("Actual:");
             message.AppendLine(actual);
 
-            Assert.True(false, message.ToString());
+            Assert.Fail(message.ToString());
         }
     }
 }

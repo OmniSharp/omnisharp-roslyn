@@ -33,7 +33,7 @@ namespace OmniSharp.MSBuild.Tests
                 // Expect empty workspace initially since no documents have been requested yet
                 Assert.Null(workspaceInfo.SolutionPath);
                 Assert.NotNull(workspaceInfo.Projects);
-                Assert.Equal(0, workspaceInfo.Projects.Count);
+                Assert.Empty(workspaceInfo.Projects);
 
                 // Requesting library document should load only that project
                 GetCodeActionsService codeActionHandler = host.GetRequestHandler<GetCodeActionsService>(OmniSharpEndpoints.V2.GetCodeActions);
@@ -44,7 +44,7 @@ namespace OmniSharp.MSBuild.Tests
                 Assert.NotNull(codeActionResponse);
                 Assert.Null(workspaceInfo.SolutionPath);
                 Assert.NotNull(workspaceInfo.Projects);
-                Assert.Equal(1, workspaceInfo.Projects.Count);
+                Assert.Single(workspaceInfo.Projects);
                 Assert.Equal("Lib.csproj", Path.GetFileName(workspaceInfo.Projects[0].Path));
 
                 // Requesting app document should load that project as well
@@ -72,7 +72,7 @@ namespace OmniSharp.MSBuild.Tests
                 // Expect empty workspace initially since no documents have been requested yet
                 Assert.Null(workspaceInfo.SolutionPath);
                 Assert.NotNull(workspaceInfo.Projects);
-                Assert.Equal(0, workspaceInfo.Projects.Count);
+                Assert.Empty(workspaceInfo.Projects);
 
                 // Requesting app document should load both projects
                 MembersAsTreeService membersAsTreeService = host.GetRequestHandler<MembersAsTreeService>(OmniSharpEndpoints.MembersTree);
@@ -101,7 +101,7 @@ namespace OmniSharp.MSBuild.Tests
                 // Expect empty workspace initially since no documents have been requested yet
                 Assert.Null(workspaceInfo.SolutionPath);
                 Assert.NotNull(workspaceInfo.Projects);
-                Assert.Equal(0, workspaceInfo.Projects.Count);
+                Assert.Empty(workspaceInfo.Projects);
 
                 // Requesting the document should load project App, its reference Lib1 and Lib2 that is referenced by Lib1
                 MembersAsTreeService membersAsTreeService = host.GetRequestHandler<MembersAsTreeService>(OmniSharpEndpoints.MembersTree);
