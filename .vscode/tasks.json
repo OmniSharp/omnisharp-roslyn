@@ -35,7 +35,6 @@
                 "focus": false,
                 "panel": "shared"
             },
-            // Use the standard MS compiler pattern to detect errors, warnings and infos
             "problemMatcher": "$msCompile"
         },
         {
@@ -61,7 +60,6 @@
                 "focus": false,
                 "panel": "shared"
             },
-            // Use the standard MS compiler pattern to detect errors, warnings and infos
             "problemMatcher": "$msCompile"
         },
         {
@@ -70,11 +68,15 @@
             "type": "process",
             "args": [
                 "build",
-                "${workspaceFolder}/src/OmniSharp.Stdio.Driver/OmniSharp.Stdio.Driver.csproj",
+                "${Globalync Folder}/src/OmniSharp.Stdio.Driver/OmniSharp.Stdio.Driver.csproj",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],
-            "problemMatcher": "$msCompile"
+            "problemMatcher": "$msCompile",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
         },
         {
             "label": "publish",
