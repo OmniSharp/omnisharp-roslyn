@@ -1,6 +1,12 @@
 # Changelog
 All changes to the project will be documented in this file.
 
+## [1.39.11] - 2023-12-19
+* Update changelog (PR: [#2591](https://github.com/OmniSharp/omnisharp-roslyn/pull/2591))
+* Update Readme text and fix broken link. ([#2581](https://github.com/OmniSharp/omnisharp-roslyn/issues/2581), PR: [#2582](https://github.com/OmniSharp/omnisharp-roslyn/pull/2582))
+* Update SDKs and dependencies ([#2586](https://github.com/OmniSharp/omnisharp-roslyn/issues/2586), PR: [#2588](https://github.com/OmniSharp/omnisharp-roslyn/pull/2588))
+* Updated to latest dotnet-script 1.5.0 (PR: [#2585](https://github.com/OmniSharp/omnisharp-roslyn/pull/2585))
+
 ## [1.39.10] - 2023-10-05
 * Add RazorComplier EA to support razor generators (PR: [#2572](https://github.com/OmniSharp/omnisharp-roslyn/pull/2572))
 

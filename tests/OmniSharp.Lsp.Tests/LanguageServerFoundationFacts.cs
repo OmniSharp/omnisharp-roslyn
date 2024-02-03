@@ -83,7 +83,7 @@ namespace OmniSharp.Lsp.Tests
             }
             catch (MethodNotSupportedException)
             {
-                Assert.False(true, "Method should be supported!");
+                Assert.Fail("Method should be supported!");
             }
             catch (Exception e)
             {
