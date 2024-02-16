@@ -114,6 +114,34 @@ namespace OmniSharp.MSBuild.Tests
             Assert.Contains(project.TargetFrameworks[0].ShortName, new[] { "net70", "net7.0" });
         }
 
+        [ConditionalFact(typeof(NonMonoRuntimeOnly))]
+        public async Task Net80Project()
+        {
+            using var testProject = await TestAssets.Instance.GetTestProjectAsync("Net80Project");
+            using var host = CreateMSBuildTestHost(testProject.Directory);
+            var workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
+
+            Assert.NotNull(workspaceInfo.Projects);
+            var project = Assert.Single(workspaceInfo.Projects);
+            Assert.Equal("Net80Project", project.AssemblyName);
+            Assert.Equal(".NETCoreApp,Version=v8.0", project.TargetFramework);
+            Assert.Contains(project.TargetFrameworks[0].ShortName, new[] { "net80", "net8.0" });
+        }
+
+        [ConditionalFact(typeof(NonMonoRuntimeOnly))]
+        public async Task Net90Project()
+        {
+            using var testProject = await TestAssets.Instance.GetTestProjectAsync("Net90Project");
+            using var host = CreateMSBuildTestHost(testProject.Directory);
+            var workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
+
+            Assert.NotNull(workspaceInfo.Projects);
+            var project = Assert.Single(workspaceInfo.Projects);
+            Assert.Equal("Net90Project", project.AssemblyName);
+            Assert.Equal(".NETCoreApp,Version=v9.0", project.TargetFramework);
+            Assert.Contains(project.TargetFrameworks[0].ShortName, new[] { "net79", "net9.0" });
+        }
+
         [Fact]
         public async Task TwoProjectsWithSolution()
         {

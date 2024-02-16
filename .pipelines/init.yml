@@ -1,9 +1,10 @@
 parameters:
   # Configuration: Release
   Verbosity: Normal
-  DotNetVersion: "8.0.100"
-  DotNetVersion2: "7.0.404"
-  DotNetVersion3: "6.0.203" # This is the last version Mono supports. It is used for our Mono CI tests.
+  DotNetVersion: "9.0.100-preview.1.24101.2"
+  DotNetVersion2: "8.0.201"
+  DotNetVersion3: "7.0.406"
+  DotNetVersion4: "6.0.203" # This is the last version Mono supports. It is used for our Mono CI tests.
   CakeVersion: "1.1.0"
   NuGetVersion: "5.7.0"
   MonoVersion: ''
@@ -35,6 +36,11 @@ steps:
     inputs:
       packageType: 'sdk'
       version: ${{ parameters.DotNetVersion3 }}
+  - task: UseDotNet@2
+    displayName: Install dotnet $(DotNetVersion4)
+    inputs:
+      packageType: 'sdk'
+      version: ${{ parameters.DotNetVersion4 }}
   - task: DotNetCoreCLI@2
     displayName: 'dotnet install cake'
     inputs:
