@@ -1,6 +1,9 @@
 # Changelog
 All changes to the project will be documented in this file.
 
+## [1.39.12] - Not Released
+* Update SDKs and Roslyn ([#2603](https://github.com/OmniSharp/omnisharp-roslyn/pull/2603))
+
 ## [1.39.11] - 2023-12-19
 * Update changelog (PR: [#2591](https://github.com/OmniSharp/omnisharp-roslyn/pull/2591))
 * Update Readme text and fix broken link. ([#2581](https://github.com/OmniSharp/omnisharp-roslyn/issues/2581), PR: [#2582](https://github.com/OmniSharp/omnisharp-roslyn/pull/2582))
