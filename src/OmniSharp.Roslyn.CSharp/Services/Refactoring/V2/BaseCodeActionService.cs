@@ -227,7 +227,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
         {
             return actions.SelectMany(action =>
             {
-                var nestedActions = action.CodeAction.GetNestedCodeActions();
+                var nestedActions = action.CodeAction.NestedActions;
                 if (!nestedActions.IsDefaultOrEmpty)
                 {
                     return nestedActions.Select(nestedAction => new AvailableCodeAction(nestedAction, action.CodeActionKind, action.CodeAction));

@@ -8,8 +8,8 @@
         <MicrosoftExtensionPackageVersion>8.0.0</MicrosoftExtensionPackageVersion>
         <MicrosoftTestPackageVersion>17.8.0</MicrosoftTestPackageVersion>
         <MSBuildPackageVersion>17.3.2</MSBuildPackageVersion>
-        <NuGetPackageVersion>6.8.0-rc.122</NuGetPackageVersion>
-        <RoslynPackageVersion>4.9.0-3.23611.3</RoslynPackageVersion>
+        <NuGetPackageVersion>6.10.0-preview.1.18</NuGetPackageVersion>
+        <RoslynPackageVersion>4.10.0-2.24112.8</RoslynPackageVersion>
         <XunitPackageVersion>2.6.1</XunitPackageVersion>
     </PropertyGroup>
 
@@ -42,7 +42,6 @@
         <PackageVersion Include="Microsoft.CodeAnalysis.ExternalAccess.AspNetCore" Version="$(RoslynPackageVersion)" />
         <PackageVersion Include="Microsoft.CodeAnalysis.ExternalAccess.OmniSharp" Version="$(RoslynPackageVersion)" />
         <PackageVersion Include="Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.CSharp" Version="$(RoslynPackageVersion)" />
-        <PackageVersion Include="Microsoft.CodeAnalysis.ExternalAccess.RazorCompiler" Version="$(RoslynPackageVersion)" />
 
         <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="$(MicrosoftExtensionPackageVersion)" />
         <PackageVersion Include="Microsoft.Extensions.Configuration" Version="$(MicrosoftExtensionPackageVersion)" />
@@ -82,7 +81,7 @@
         <PackageVersion Include="OmniSharp.Extensions.LanguageProtocol.Testing" Version="$(OmniSharpExtensionsPackageVersion)" />
         <PackageVersion Include="OmniSharp.Extensions.JsonRpc" Version="$(OmniSharpExtensionsPackageVersion)" />
 
-        <PackageVersion Include="SQLitePCLRaw.bundle_green" Version="2.1.0" />
+        <PackageVersion Include="SQLitePCLRaw.bundle_green" Version="2.1.8" />
 
         <PackageVersion Include="System.Collections.Immutable" Version="8.0.0" />
         <PackageVersion Include="System.ComponentModel.Composition" Version="8.0.0" />

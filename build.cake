@@ -159,24 +159,18 @@ Task("PrepareTestAssets:CommonTestAssets")
         {
             DotNetBuild(folder, new DotNetBuildSettings()
             {
-                ToolPath = env.DotNetCommand,
+                WorkingDirectory = folder,
+                Verbosity = DotNetVerbosity.Minimal,
+            });
+        }
+        catch when (project == "ExternAlias")
+        {
+            // ExternalAlias has issues once in a while, try building again to get it working.
+            DotNetBuild(folder, new DotNetBuildSettings()
+            {
                 WorkingDirectory = folder,
                 Verbosity = DotNetVerbosity.Minimal
             });
-        }
-        catch
-        {
-            // ExternalAlias has issues once in a while, try building again to get it working.
-            if (project == "ExternAlias")
-            {
-
-                DotNetBuild(folder, new DotNetBuildSettings()
-                {
-                    ToolPath = env.DotNetCommand,
-                    WorkingDirectory = folder,
-                    Verbosity = DotNetVerbosity.Minimal
-                });
-            }
         }
     });
 
@@ -190,7 +184,6 @@ Task("PrepareTestAssets:RestoreOnlyTestAssets")
 
         DotNetRestore(new DotNetRestoreSettings()
         {
-            ToolPath = env.DotNetCommand,
             WorkingDirectory = folder,
             Verbosity = DotNetVerbosity.Minimal
         });
@@ -207,7 +200,6 @@ Task("PrepareTestAssets:WindowsOnlyTestAssets")
 
         DotNetBuild(folder, new DotNetBuildSettings()
         {
-            ToolPath = env.DotNetCommand,
             WorkingDirectory = folder,
             Verbosity = DotNetVerbosity.Minimal
         });
@@ -302,7 +294,7 @@ Task("Test")
     .IsDependentOn("PrepareTestAssets")
     .Does(() =>
 {
-    var testTargetFramework = useDotNetTest ? "net7.0" : "net472";
+    var testTargetFramework = useDotNetTest ? "net8.0" : "net472";
     var testProjects = string.IsNullOrEmpty(testProjectArgument) ? buildPlan.TestProjects : testProjectArgument.Split(',');
     foreach (var testProject in testProjects)
     {

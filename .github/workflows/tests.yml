@@ -1,9 +1,10 @@
 
 name: 'Tests'
 env:
-  DotNetVersion: "8.0.100"
-  DotNetVersion2: "7.0.404"
-  DotNetVersion3: "6.0.203" # This is the last version Mono supports. It is used for our Mono CI tests.
+  DotNetVersion: "9.0.100-preview.1.24101.2"
+  DotNetVersion2: "8.0.201"
+  DotNetVersion3: "7.0.406"
+  DotNetVersion4: "6.0.203" # This is the last version Mono supports. It is used for our Mono CI tests.
   NuGetVersion: "6.5.0"
   MonoVersion: "6.12.0"
   Artifacts: ${{ github.workspace }}/artifacts/
@@ -55,6 +56,7 @@ jobs:
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: |
+            ${{ env.DotNetVersion4 }}
             ${{ env.DotNetVersion3 }}
             ${{ env.DotNetVersion2 }}
             ${{ env.DotNetVersion }}
