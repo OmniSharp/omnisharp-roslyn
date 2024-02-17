@@ -82,7 +82,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                     ? new MarkupContent() { Kind = MarkupKind.Markdown, Value = hint.Tooltip }
                     : null,
                 Position = ToPosition(hint.Position),
-                TextEdits = new(ToTextEdits(hint.TextEdits)),
+                TextEdits = hint.TextEdits is not null ? new(ToTextEdits(hint.TextEdits)) : null,
                 PaddingLeft = hint.Label.Length > trimmedStartLabel.Length,
                 PaddingRight = trimmedStartLabel.Length > trimmedLabel.Length,
                 Data = JToken.FromObject(hint.Data),
