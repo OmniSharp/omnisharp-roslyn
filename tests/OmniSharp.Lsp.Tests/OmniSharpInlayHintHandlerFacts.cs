@@ -159,6 +159,43 @@ void M(int param1, int paramB) { }
     [Theory]
     [InlineData("dummy.cs")]
     [InlineData("dummy.csx")]
+    public async Task InlayHintsForLambdaParameterTypeNearFunctionParameterName(string fileName)
+    {
+        var code = @"
+using System;
+void fun(Func<int, bool> lambda) {}
+{|ihRegion:fun(b => true);|}
+";
+
+        var options = InlayHintsOptions.AllOn with { ForLambdaParameterTypes = false };
+
+        {
+            await SetInlayHintOptionsAsync(options);
+            var response = await GetInlayHints(fileName, code);
+            AssertEx.Equal(new[]
+                {
+                    new InlayHint { Position = new Position { Line = 3, Character = 4 }, Label = "lambda:", Kind = InlayHintKind.Parameter, Tooltip = null, TextEdits = new[] { new TextEdit { Range = new Range() { Start = new Position() { Line = 3, Character = 4 }, End = new Position() { Line = 3, Character = 4 } }, NewText = "lambda: " } }, PaddingLeft = false, PaddingRight = true },
+                },
+                response,
+                ignoreDataComparer);
+        }
+
+        {
+            await SetInlayHintOptionsAsync(options with { ForLambdaParameterTypes = true });
+            var response = await GetInlayHints(fileName, code);
+            AssertEx.Equal(new[]
+                {
+                    new InlayHint { Position = new Position { Line = 3, Character = 4 }, Label = "lambda:", Kind = InlayHintKind.Parameter, Tooltip = null, TextEdits = new[] { new TextEdit { Range = new Range() { Start = new Position() { Line = 3, Character = 4 }, End = new Position() { Line = 3, Character = 4 } }, NewText = "lambda: " } }, PaddingLeft = false, PaddingRight = true },
+                    new InlayHint { Position = new Position { Line = 3, Character = 4 }, Label = "int", Kind = InlayHintKind.Type, Tooltip = null, TextEdits = null, PaddingLeft = false, PaddingRight = true },
+                },
+                response,
+                ignoreDataComparer);
+        }
+    }
+
+    [Theory]
+    [InlineData("dummy.cs")]
+    [InlineData("dummy.csx")]
     public async Task InlayHintsForLambdaParameterTypes(string fileName)
     {
         var code = @"
