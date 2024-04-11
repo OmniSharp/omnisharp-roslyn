@@ -71,7 +71,6 @@
         <PackageVersion Include="NuGet.DependencyResolver.Core" Version="$(NuGetPackageVersion)" />
         <PackageVersion Include="NuGet.Frameworks" Version="$(NuGetPackageVersion)" />
         <PackageVersion Include="NuGet.LibraryModel" Version="$(NuGetPackageVersion)" />
-        <PackageVersion Include="NuGet.Packaging.Core" Version="$(NuGetPackageVersion)" />
         <PackageVersion Include="NuGet.Packaging" Version="$(NuGetPackageVersion)" />
         <PackageVersion Include="NuGet.ProjectModel" Version="$(NuGetPackageVersion)" />
         <PackageVersion Include="NuGet.Protocol" Version="$(NuGetPackageVersion)" />
