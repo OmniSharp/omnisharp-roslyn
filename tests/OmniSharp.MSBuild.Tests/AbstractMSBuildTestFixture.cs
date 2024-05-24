@@ -28,6 +28,7 @@ namespace OmniSharp.MSBuild.Tests
             // prerelease version so that our .NET 7 tests will pass.
             var configuration = new Dictionary<string, string>
             {
+                ["sdk:Version"] = "8.0.201",
                 ["sdk:IncludePrereleases"] = bool.TrueString
             }.ToConfiguration();
 
