@@ -77,6 +77,8 @@ jobs:
   - job: Linux
     pool:
       vmImage: "ubuntu-22.04"
+    variables:
+      CLR_OPENSSL_VERSION_OVERRIDE: '1.1'
     dependsOn: GitVersion
     steps:
       - template: ./.pipelines/init.yml
