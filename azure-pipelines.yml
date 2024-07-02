@@ -113,7 +113,7 @@ jobs:
 
   - job: Release
     pool:
-      vmImage: "Ubuntu-latest"
+      vmImage: "ubuntu-latest"
     dependsOn:
       - macOS
       - Linux
