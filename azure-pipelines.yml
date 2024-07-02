@@ -55,7 +55,7 @@ jobs:
 
   - job: macOS
     pool:
-      vmImage: "macOS-11"
+      vmImage: "macos-12"
     dependsOn: GitVersion
     steps:
       - template: ./.pipelines/init.yml
