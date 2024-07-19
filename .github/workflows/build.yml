@@ -27,7 +27,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-20.04, windows-2022, macos-11]
+        os: [ubuntu-20.04, windows-2022, macos-12]
     name: 'Build'
     steps:
       - name: Checkout

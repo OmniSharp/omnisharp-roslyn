@@ -8,7 +8,7 @@
         <MicrosoftExtensionPackageVersion>8.0.0</MicrosoftExtensionPackageVersion>
         <MicrosoftTestPackageVersion>17.8.0</MicrosoftTestPackageVersion>
         <MSBuildPackageVersion>17.3.2</MSBuildPackageVersion>
-        <NuGetPackageVersion>6.10.0-preview.1.18</NuGetPackageVersion>
+        <NuGetPackageVersion>6.11.0-rc.110</NuGetPackageVersion>
         <RoslynPackageVersion>4.10.0-2.24112.8</RoslynPackageVersion>
         <XunitPackageVersion>2.6.1</XunitPackageVersion>
     </PropertyGroup>
@@ -71,7 +71,6 @@
         <PackageVersion Include="NuGet.DependencyResolver.Core" Version="$(NuGetPackageVersion)" />
         <PackageVersion Include="NuGet.Frameworks" Version="$(NuGetPackageVersion)" />
         <PackageVersion Include="NuGet.LibraryModel" Version="$(NuGetPackageVersion)" />
-        <PackageVersion Include="NuGet.Packaging.Core" Version="$(NuGetPackageVersion)" />
         <PackageVersion Include="NuGet.Packaging" Version="$(NuGetPackageVersion)" />
         <PackageVersion Include="NuGet.ProjectModel" Version="$(NuGetPackageVersion)" />
         <PackageVersion Include="NuGet.Protocol" Version="$(NuGetPackageVersion)" />
@@ -89,7 +88,7 @@
         <PackageVersion Include="System.Configuration.ConfigurationManager" Version="8.0.0" />
         <PackageVersion Include="System.Memory" Version="4.5.5" />
         <PackageVersion Include="System.Reflection.Metadata" Version="8.0.0" />
-        <PackageVersion Include="System.Text.Json" Version="8.0.0" />
+        <PackageVersion Include="System.Text.Json" Version="8.0.4" />
         <PackageVersion Include="System.Threading.Tasks.Dataflow" Version="8.0.0" />
         <PackageVersion Include="System.ValueTuple" Version="4.5.0" />
 
