@@ -37,7 +37,9 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 .ToArray();
 
             var expected = testFile.Content.GetSpans()
-                .Select(span => testFile.Content.GetRangeFromSpan(span).ToRange()).ToArray();
+                .Select(span => testFile.Content.GetRangeFromSpan(span).ToRange())
+                .Reverse()
+                .ToArray();
 
             Assert.Equal(expected, lineSpans);
         }
