@@ -61,30 +61,30 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
         {
             var codeFixesFromProjectReferences = project.AnalyzerReferences
                 .OfType<AnalyzerFileReference>()
-                .SelectMany(analyzerFileReference => analyzerFileReference.GetAssembly().DefinedTypes)
+                .SelectMany(analyzerFileReference => GetConcreteTypes(analyzerFileReference.GetAssembly()))
                 .Where(x => !x.IsAbstract && x.IsSubclassOf(typeof(CodeFixProvider)))
                 .Select(x =>
                 {
                     try
                     {
-                        var attribute = x.GetCustomAttribute<ExportCodeFixProviderAttribute>();
+                        var attribute = x.GetCustomAttribute<ExportCodeFixProviderAttribute>(inherit: false);
                         if (attribute == null)
                         {
-                            _logger.LogTrace($"Skipping code fix provider '{x.AsType()}' because it is missing the ExportCodeFixProviderAttribute.");
+                            _logger.LogTrace($"Skipping code fix provider '{x}' because it is missing the ExportCodeFixProviderAttribute.");
                             return null;
                         }
 
                         if (attribute.Languages == null || !attribute.Languages.Contains(project.Language))
                         {
-                            _logger.LogInformation($"Skipping code fix provider '{x.AsType()}' because its language '{attribute.Languages?.FirstOrDefault()}' doesn't match '{project.Language}'.");
+                            _logger.LogInformation($"Skipping code fix provider '{x}' because its language '{attribute.Languages?.FirstOrDefault()}' doesn't match '{project.Language}'.");
                             return null;
                         }
 
-                        return x.AsType().CreateInstance<CodeFixProvider>();
+                        return (CodeFixProvider)Activator.CreateInstance(x);
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError($"Creating instance of code fix provider '{x.AsType()}' failed, error: {ex}");
+                        _logger.LogError($"Creating instance of code fix provider '{x}' failed, error: {ex}");
                         return null;
                     }
                 })
@@ -97,6 +97,26 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             _cache.AddOrUpdate(project.Id, allCodeFixes, (_, __) => allCodeFixes);
 
             return allCodeFixes;
+        }
+
+        private IEnumerable<Type> GetConcreteTypes(Assembly assembly)
+        {
+            try
+            {
+                var concreteTypes = assembly
+                    .GetTypes()
+                    .Where(type => !type.GetTypeInfo().IsInterface
+                        && !type.GetTypeInfo().IsAbstract
+                        && !type.GetTypeInfo().ContainsGenericParameters);
+
+                // Realize the collection to ensure exceptions are caught
+                return concreteTypes.ToList();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Getting concrete types from assembly '{assembly}' failed, error: {ex}");
+                return Type.EmptyTypes;
+            }
         }
     }
 }
