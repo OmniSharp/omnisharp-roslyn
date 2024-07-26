@@ -32,7 +32,7 @@ resources:
 
 variables:
   Verbosity: Diagnostic
-  DotNetVersion: "8.0.201"
+  DotNetVersion: "8.0.303"
   CakeVersion: "3.0.0"
   NuGetVersion: "6.5.0"
   GitVersionVersion: "5.0.1"
