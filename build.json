@@ -16,8 +16,8 @@
     "TestProjects": [
         "OmniSharp.MSBuild.Tests",
         "OmniSharp.Roslyn.CSharp.Tests",
-        "OmniSharp.DotNetTest.Tests",
         "OmniSharp.Lsp.Tests",
+        "OmniSharp.DotNetTest.Tests",
         "OmniSharp.Script.Tests",
         "OmniSharp.Cake.Tests",
         "OmniSharp.Http.Tests",

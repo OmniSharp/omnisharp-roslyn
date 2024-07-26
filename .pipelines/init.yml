@@ -1,13 +1,10 @@
 parameters:
   # Configuration: Release
   Verbosity: Normal
-  DotNetVersion: "9.0.100-preview.1.24101.2"
-  DotNetVersion2: "8.0.201"
-  DotNetVersion3: "7.0.406"
-  DotNetVersion4: "6.0.203" # This is the last version Mono supports. It is used for our Mono CI tests.
+  DotNetVersion: "8.0.201"
   CakeVersion: "1.1.0"
   NuGetVersion: "5.7.0"
-  MonoVersion: ''
+  MonoVersion: ""
 steps:
   - task: DownloadBuildArtifacts@0
     displayName: "Download GitVersion Variables"
@@ -18,36 +15,21 @@ steps:
       pipelineId: GitVersion
       targetPath: "$(Build.ArtifactStagingDirectory)/gitversion/"
   - task: RocketSurgeonsGuild.variable-tools.DeserializeVariables.DeserializeVariables@1
-    displayName: 'Deserialize GitVersion'
+    displayName: "Deserialize GitVersion"
     inputs:
       jsonfiles: $(Build.ArtifactStagingDirectory)/gitversion/**/gitversion.json
   - task: UseDotNet@2
     displayName: Install dotnet $(DotNetVersion)
     inputs:
-      packageType: 'sdk'
+      packageType: "sdk"
       version: ${{ parameters.DotNetVersion }}
-  - task: UseDotNet@2
-    displayName: Install dotnet $(DotNetVersion2)
-    inputs:
-      packageType: 'sdk'
-      version: ${{ parameters.DotNetVersion2 }}
-  - task: UseDotNet@2
-    displayName: Install dotnet $(DotNetVersion3)
-    inputs:
-      packageType: 'sdk'
-      version: ${{ parameters.DotNetVersion3 }}
-  - task: UseDotNet@2
-    displayName: Install dotnet $(DotNetVersion4)
-    inputs:
-      packageType: 'sdk'
-      version: ${{ parameters.DotNetVersion4 }}
   - task: DotNetCoreCLI@2
-    displayName: 'dotnet install cake'
+    displayName: "dotnet install cake"
     inputs:
       command: custom
       custom: tool
-      arguments: 'install -g Cake.Tool --version $(CakeVersion)'
-      workingDirectory: '$(Build.ArtifactStagingDirectory)'
+      arguments: "install -g Cake.Tool --version $(CakeVersion)"
+      workingDirectory: "$(Build.ArtifactStagingDirectory)"
     env:
       CakeVersion: ${{ parameters.CakeVersion }}
   - task: NuGetToolInstaller@0
@@ -55,21 +37,21 @@ steps:
     inputs:
       versionSpec: ${{ parameters.NuGetVersion }}
   - task: NuGetCommand@2
-    displayName: 'Cake restore packages.config'
+    displayName: "Cake restore packages.config"
     inputs:
       command: custom
       feedsToUse: config
       arguments: install tools/packages.config -ExcludeVersion -OutputDirectory tools
   - ${{ if ne(parameters.MonoVersion, '') }}:
-    - script: |
-        curl -o mono.pkg https://download.mono-project.com/archive/$MONO_VERSION/macos-10-universal/MonoFramework-MDK-$MONO_VERSION.182.macos10.xamarin.universal.pkg
-        sudo installer -pkg mono.pkg -target /
-        sudo cp -rf /Library/Frameworks/Mono.framework/Versions/$MONO_VERSION/ /Library/Frameworks/Mono.framework/Versions/Current/
-        MONOPREFIX=/Library/Frameworks/Mono.framework/Versions/$MONO_VERSION
-        echo "##vso[task.setvariable variable=DYLD_FALLBACK_LIBRARY_PATH;]$MONOPREFIX/lib:/lib:/usr/lib:$DYLD_LIBRARY_FALLBACK_PATH"
-        echo "##vso[task.setvariable variable=PKG_CONFIG_PATH;]$MONOPREFIX/lib/pkgconfig:$MONOPREFIX/share/pkgconfig:$PKG_CONFIG_PATH"
-        echo "##vso[task.setvariable variable=PATH;]$MONOPREFIX/bin:$PATH"
-      env:
-        MONO_VERSION: ${{ parameters.MonoVersion }}
-      displayName: Use Mono ${{ parameters.MonoVersion }}
-      failOnStderr: false
+      - script: |
+          curl -o mono.pkg https://download.mono-project.com/archive/$MONO_VERSION/macos-10-universal/MonoFramework-MDK-$MONO_VERSION.182.macos10.xamarin.universal.pkg
+          sudo installer -pkg mono.pkg -target /
+          sudo cp -rf /Library/Frameworks/Mono.framework/Versions/$MONO_VERSION/ /Library/Frameworks/Mono.framework/Versions/Current/
+          MONOPREFIX=/Library/Frameworks/Mono.framework/Versions/$MONO_VERSION
+          echo "##vso[task.setvariable variable=DYLD_FALLBACK_LIBRARY_PATH;]$MONOPREFIX/lib:/lib:/usr/lib:$DYLD_LIBRARY_FALLBACK_PATH"
+          echo "##vso[task.setvariable variable=PKG_CONFIG_PATH;]$MONOPREFIX/lib/pkgconfig:$MONOPREFIX/share/pkgconfig:$PKG_CONFIG_PATH"
+          echo "##vso[task.setvariable variable=PATH;]$MONOPREFIX/bin:$PATH"
+        env:
+          MONO_VERSION: ${{ parameters.MonoVersion }}
+        displayName: Use Mono ${{ parameters.MonoVersion }}
+        failOnStderr: false

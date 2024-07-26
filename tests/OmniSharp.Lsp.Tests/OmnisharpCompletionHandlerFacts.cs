@@ -1561,11 +1561,18 @@ class Foo
                 return completions;
             }
 
-            // Populating the completion list should take no more than a few ms, don't let it take too
+            // Populating the completion cache should take no more than a few ms, don't let it take too
             // long
-            await Task.Delay(ImportCompletionTimeout);
-
-            completions = await FindCompletionsAsync(filename, source);
+            CancellationTokenSource cts = new CancellationTokenSource(millisecondsDelay: ImportCompletionTimeout);
+            await Task.Run(async () =>
+            {
+                while (completions.IsIncomplete)
+                {
+                    await Task.Delay(100);
+                    completions = await FindCompletionsAsync(filename, source);
+                    cts.Token.ThrowIfCancellationRequested();
+                }
+            }, cts.Token);
 
             Assert.False(completions.IsIncomplete);
             return completions;
