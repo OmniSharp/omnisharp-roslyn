@@ -5,6 +5,8 @@ trigger:
       - master
       - refs/tags/*
 
+pr: none
+
 resources:
   repositories:
     - repository: rsg
@@ -33,11 +35,11 @@ variables:
 stages:
   - stage: CreateBetaReleaseTag
     displayName: "Tag Beta Release"
+    condition: eq(variables.IsMaster, true)
     jobs:
       - job: GitVersion
         pool:
           vmImage: "windows-2019"
-        condition: variables.IsMaster
         steps:
           - template: gitversion/store.yml@rsg
             parameters:
@@ -69,11 +71,11 @@ stages:
 
   - stage: BuildRelease
     displayName: "Build Release"
+    condition: eq(variables.IsRelease, true)
     jobs:
       - job: GitVersion
         pool:
           vmImage: "windows-2019"
-        condition: variables.IsRelease
         steps:
           - template: gitversion/store.yml@rsg
             parameters:
@@ -189,7 +191,7 @@ stages:
               packagesToPush: "$(System.ArtifactsDirectory)/nuget/**/*.nupkg"
               publishFeedCredentials: nuget.org
               allowPackageConflicts: true
-            condition: and(succeeded(), variables.IsOfficialRelease)
+            condition: and(succeeded(), eq(variables.IsOfficialRelease, true))
           - task: GitHubRelease@1
             displayName: "GitHub release (edit)"
             inputs:
