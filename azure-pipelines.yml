@@ -33,11 +33,11 @@ variables:
 stages:
   - stage: CreateBetaReleaseTag
     displayName: "Tag Beta Release"
-    condition: variables.IsMaster
     jobs:
       - job: GitVersion
         pool:
           vmImage: "windows-2019"
+        condition: variables.IsMaster
         steps:
           - template: gitversion/store.yml@rsg
             parameters:
@@ -69,11 +69,11 @@ stages:
 
   - stage: BuildRelease
     displayName: "Build Release"
-    condition: variables.IsRelease
     jobs:
       - job: GitVersion
         pool:
           vmImage: "windows-2019"
+        condition: variables.IsRelease
         steps:
           - template: gitversion/store.yml@rsg
             parameters:
@@ -83,7 +83,6 @@ stages:
       - job: macOS
         pool:
           vmImage: "macos-12"
-        condition: not(variables.IsMaster)
         dependsOn: GitVersion
         steps:
           - template: ./.pipelines/init.yml
@@ -105,7 +104,6 @@ stages:
       - job: Linux
         pool:
           vmImage: "ubuntu-20.04"
-        condition: not(variables.IsMaster)
         dependsOn: GitVersion
         steps:
           - template: ./.pipelines/init.yml
@@ -126,7 +124,6 @@ stages:
       - job: Windows
         pool:
           vmImage: "windows-2022"
-        condition: not(variables.IsMaster)
         dependsOn: GitVersion
         steps:
           - template: ./.pipelines/init.yml
@@ -184,7 +181,6 @@ stages:
               packagesToPush: "$(System.ArtifactsDirectory)/nuget/**/*.nupkg"
               publishVstsFeed: Builds/omnisharp
               allowPackageConflicts: true
-            condition: succeeded()
           - task: NuGetCommand@2
             displayName: "Push NuGet packages to nuget.org"
             inputs:
@@ -196,7 +192,6 @@ stages:
             condition: and(succeeded(), variables.IsOfficialRelease)
           - task: GitHubRelease@1
             displayName: "GitHub release (edit)"
-            condition: succeeded()
             inputs:
               gitHubConnection: github
               repositoryName: OmniSharp/omnisharp-roslyn
