@@ -51,21 +51,27 @@ stages:
           vmImage: "ubuntu-latest"
         dependsOn: GitVersion
         steps:
+          - checkout: self
+            fetchTags: false
+            persistCredentials: true
           - template: ./.pipelines/init.yml
             parameters:
               Verbosity: $(Verbosity)
               CakeVersion: $(CakeVersion)
               DotNetVersion: $(DotNetVersion)
               NuGetVersion: $(NuGetVersion)
+          - shell: |
+              git tag v$(Build.BuildNumber)
+              git push --tags
           - task: GitHubRelease@1
             displayName: "GitHub create beta release"
             inputs:
               gitHubConnection: github
               repositoryName: OmniSharp/omnisharp-roslyn
               action: create
-              tag: "v$(GitVersion.SemVer)"
-              tagSource: "userSpecifiedTag"
-              title: "v$(GitVersion.SemVer)"
+              tag: "v$(Build.BuildNumber)"
+              tagSource: gitTag
+              title: "v$(Build.BuildNumber)"
               isDraft: true
               isPreRelease: true
               addChangeLog: true
