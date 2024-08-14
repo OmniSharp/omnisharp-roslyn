@@ -60,7 +60,7 @@ stages:
               CakeVersion: $(CakeVersion)
               DotNetVersion: $(DotNetVersion)
               NuGetVersion: $(NuGetVersion)
-          - shell: |
+          - script: |
               git tag v$(Build.BuildNumber)
               git push --tags
           - task: GitHubRelease@1
