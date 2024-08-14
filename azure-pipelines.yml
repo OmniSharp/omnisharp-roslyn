@@ -64,6 +64,7 @@ stages:
               repositoryName: OmniSharp/omnisharp-roslyn
               action: create
               tag: "v$(GitVersion.SemVer)"
+              tagSource: "userSpecifiedTag"
               title: "v$(GitVersion.SemVer)"
               isDraft: true
               isPreRelease: true
