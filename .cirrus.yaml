@@ -1,0 +1,52 @@
+env:
+  # Allows to run builds for the 50 last commits in a branch:
+  CIRRUS_CLONE_DEPTH: 50
+  CIRRUS_SHELL: bash
+  SLACK_TOKEN: VAULT[development/kv/data/slack data.token]
+  SLACK_CHANNEL: squad-ide-intellij-family-bots
+
+only_sonarsource_qa: &ONLY_SONARSOURCE_QA
+  only_if: $CIRRUS_USER_COLLABORATOR == 'true' && $CIRRUS_TAG == "" && ($CIRRUS_PR != "" || $CIRRUS_BRANCH == "master" || $CIRRUS_BRANCH =~ "branch-.*" || $CIRRUS_BRANCH =~ "dogfood-on-.*")
+
+container_definition: &CONTAINER_DEFINITION
+  cluster_name: ${CIRRUS_CLUSTER_NAME}
+  region: eu-central-1
+  dockerfile: .cirrus/Dockerfile
+  builder_role: cirrus-builder
+  builder_image: docker-builder-v*
+  builder_instance_type: t3.small
+  docker_arguments:
+    CIRRUS_AWS_ACCOUNT: ${CIRRUS_AWS_ACCOUNT}
+
+ec2_instance_definition: &INSTANCE_DEFINITION
+  region: eu-central-1
+  type: c6i.xlarge
+  image: base-windows-dotnet-v*
+  platform: windows
+
+notify_slack_on_failure: &NOTIFY_SLACK_ON_FAILURE
+  on_failure:
+    slack_notification_script: source slack-failure-notification
+
+build_linux_task:
+  <<: *ONLY_SONARSOURCE_QA
+  eks_container:
+    <<: *CONTAINER_DEFINITION
+    cpu: 4
+    memory: 4G
+  env:
+    PATH: ${PATH}:${HOME}/.dotnet/tools
+    CLR_OPENSSL_VERSION_OVERRIDE: "1.1"
+  build_linux_script: ./build.sh --target Quick --configuration Release
+  linux_artifacts:
+    path: artifacts/package/**/omnisharp-*.*
+  <<: *NOTIFY_SLACK_ON_FAILURE
+
+build_windows_task:
+  <<: *ONLY_SONARSOURCE_QA
+  ec2_instance:
+    <<: *INSTANCE_DEFINITION
+  build_windows_script: powershell -File build.ps1 -target Quick -configuration Release
+  windows_artifacts:
+    path: artifacts/package/**/omnisharp-*.*
+  <<: *NOTIFY_SLACK_ON_FAILURE
