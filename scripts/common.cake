@@ -283,10 +283,10 @@ public class BuildEnvironment
 
                 return new GitVersion
                 {
-                    NuGetVersion = "0.0.1-local",
-                    AssemblySemVer = "0.0.1.0",
-                    InformationalVersion = "0.0.1-local",
-                    SemVer = "0.0.1-local"
+                    NuGetVersion = "1.39.10",
+                    AssemblySemVer = "1.39.10.0",
+                    InformationalVersion = "1.39.10",
+                    SemVer = "1.39.10"
                 };
             }
         }

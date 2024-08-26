@@ -10,6 +10,7 @@
         <!-- Always run on the latest runtime installed. -->
         <RuntimeFrameworkVersion>6.0.0-preview.7.21317.1</RuntimeFrameworkVersion>
         <RollForward>LatestMajor</RollForward>
+        <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
     </PropertyGroup>
 
     <ItemGroup>

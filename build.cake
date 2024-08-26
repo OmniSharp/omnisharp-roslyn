@@ -522,76 +522,25 @@ Task("PublishNet6Builds")
 {
     foreach (var project in buildPlan.HostProjects)
     {
-        if (publishAll)
-        {
-            if (Platform.Current.IsWindows)
-            {
-                PublishBuild(project, env, buildPlan, configuration, "win7-x86", "net6.0");
-                PublishBuild(project, env, buildPlan, configuration, "win7-x64", "net6.0");
-                PublishBuild(project, env, buildPlan, configuration, "win10-arm64", "net6.0");
-            }
-            else if (Platform.Current.IsMacOS)
-            {
-                PublishBuild(project, env, buildPlan, configuration, "osx-x64", "net6.0");
-                PublishBuild(project, env, buildPlan, configuration, "osx-arm64", "net6.0");
-            }
-            else
-            {
-                PublishBuild(project, env, buildPlan, configuration, "linux-x64", "net6.0");
-                PublishBuild(project, env, buildPlan, configuration, "linux-arm64", "net6.0");
-                PublishBuild(project, env, buildPlan, configuration, "linux-musl-x64", "net6.0");
-                PublishBuild(project, env, buildPlan, configuration, "linux-musl-arm64", "net6.0");
-                PublishBuild(project, env, buildPlan, configuration, "linux-bionic-arm64", "net6.0");
-            }
-        }
-        else if (Platform.Current.IsWindows)
-        {
-            if (Platform.Current.IsX86)
-            {
-                PublishBuild(project, env, buildPlan, configuration, "win7-x86", "net6.0");
-            }
-            else if (Platform.Current.IsX64)
-            {
-                PublishBuild(project, env, buildPlan, configuration, "win7-x64", "net6.0");
-            }
-            else
-            {
-                PublishBuild(project, env, buildPlan, configuration, "win10-arm64", "net6.0");
-            }
-        }
-        else
-        {
-            if (Platform.Current.IsMacOS)
-            {
-                PublishBuild(project, env, buildPlan, configuration, "osx-x64", "net6.0");
-                PublishBuild(project, env, buildPlan, configuration, "osx-arm64", "net6.0");
-            }
-            else
-            {
-                PublishBuild(project, env, buildPlan, configuration, "linux-x64", "net6.0");
-                PublishBuild(project, env, buildPlan, configuration, "linux-arm64", "net6.0");
-                PublishBuild(project, env, buildPlan, configuration, "linux-musl-x64", "net6.0");
-                PublishBuild(project, env, buildPlan, configuration, "linux-musl-arm64", "net6.0");
-            }
-        }
+        PublishBuild(project, env, buildPlan, configuration, "net6.0");
     }
 });
 
-string PublishBuild(string project, BuildEnvironment env, BuildPlan plan, string configuration, string rid, string framework)
+string PublishBuild(string project, BuildEnvironment env, BuildPlan plan, string configuration, string framework)
 {
     var projectName = project + ".csproj";
     var projectFileName = CombinePaths(env.Folders.Source, project, projectName);
-    var outputFolder = CombinePaths(env.Folders.ArtifactsPublish, project, rid, framework);
+    var outputFolder = CombinePaths(env.Folders.ArtifactsPublish, project, framework);
 
-    Information("Publishing {0} for {1}...", projectName, rid);
+    Information("Publishing {0} for {1}...", projectName, framework);
 
     try
     {
         var publishSettings = new DotNetPublishSettings()
         {
             Framework = framework,
-            Runtime = rid, // TODO: With everything today do we need to publish this with a rid?  This appears to be legacy bit when we used to push for all supported dotnet core rids.
-            PublishReadyToRun = true, // Improve startup performance by applying some AOT compilation
+            PublishReadyToRun = false, // Decrease size by NOT applying some AOT compilation
+            PublishTrimmed = false, // FIXME would be great to manage to trim
             SelfContained = false, // Since we are specifying a runtime identifier this defaults to true. We don't need to ship a runtime for net6 because we require the .NET SDK to be installed.
             Configuration = configuration,
             OutputDirectory = outputFolder,
@@ -610,14 +559,14 @@ string PublishBuild(string project, BuildEnvironment env, BuildPlan plan, string
     }
     catch
     {
-        Error($"Failed to publish {project} for {rid}");
+        Error($"Failed to publish {project} for {framework}");
         throw;
     }
 
     CopyExtraDependencies(env, outputFolder);
     UpdateBindingRedirects(outputFolder);
 
-    var platformFolder = framework != "net472" ? $"{rid}-{framework}" : rid;
+    var platformFolder = $"{framework}";
     Package(project, platformFolder, outputFolder, env.Folders.ArtifactsPackage, env.Folders.DeploymentPackage);
 
     return outputFolder;
@@ -630,34 +579,7 @@ Task("PublishWindowsBuilds")
 {
     foreach (var project in buildPlan.HostProjects)
     {
-        string outputFolder;
-
-        if (publishAll)
-        {
-            var outputFolderX86 = PublishBuild(project, env, buildPlan, configuration, "win7-x86", "net472");
-            var outputFolderX64 = PublishBuild(project, env, buildPlan, configuration, "win7-x64", "net472");
-            var outputFolderArm64 = PublishBuild(project, env, buildPlan, configuration, "win10-arm64", "net472");
-
-            outputFolder = Platform.Current.IsX86
-                ? outputFolderX86
-                : Platform.Current.IsX64
-                    ? outputFolderX64
-                    : outputFolderArm64;
-        }
-        else if (Platform.Current.IsX86)
-        {
-            outputFolder = PublishBuild(project, env, buildPlan, configuration, "win7-x86", "net472");
-        }
-        else if (Platform.Current.IsX64)
-        {
-            outputFolder = PublishBuild(project, env, buildPlan, configuration, "win7-x64", "net472");
-        }
-        else
-        {
-            outputFolder = PublishBuild(project, env, buildPlan, configuration, "win10-arm64", "net472");
-        }
-
-        CreateRunScript(project, outputFolder, env.Folders.ArtifactsScripts);
+        string outputFolder = PublishBuild(project, env, buildPlan, configuration, "net472");
     }
 });
 
