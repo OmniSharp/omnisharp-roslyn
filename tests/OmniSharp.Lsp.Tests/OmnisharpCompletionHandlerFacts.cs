@@ -522,7 +522,7 @@ namespace N3
         [Theory]
         [InlineData("dummy.cs")]
         [InlineData("dummy.csx")]
-        public async Task ReturnsObjectInitalizerMembers(string filename)
+        public async Task ReturnsObjectInitializerMembers(string filename)
         {
             const string source =
                 @"public class MyClass1 {

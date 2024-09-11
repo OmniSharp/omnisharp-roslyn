@@ -116,7 +116,7 @@ namespace OmniSharp.Stdio.Tests
                 throw new NotImplementedException();
             }
 
-            public void Initalize(IConfiguration configuration)
+            public void Initialize(IConfiguration configuration)
             {
             }
         }
