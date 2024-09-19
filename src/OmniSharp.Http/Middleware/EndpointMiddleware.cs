@@ -88,11 +88,10 @@ namespace OmniSharp.Http.Middleware
                 {
                     if (_endpointHandlers.TryGetValue(endpoint, out var handler))
                     {
-                        var response = await handler.Value.Handle(new RequestPacket()
-                        {
-                            Command = endpoint,
-                            ArgumentsStream = httpContext.Request.Body
-                        });
+                        // tweaking to accept cmd line json format
+                        var jsonstring = await new StreamReader(httpContext.Request.Body).ReadToEndAsync();
+                        var request = RequestPacket.Parse(jsonstring);
+                        var response = await handler.Value.Handle(request);
 
                         httpContext.Response.WriteJson(response);
                         return;
