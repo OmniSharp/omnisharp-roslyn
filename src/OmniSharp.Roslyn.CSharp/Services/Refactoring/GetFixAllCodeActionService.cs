@@ -40,22 +40,11 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
             }
 
             var allDiagnostics = await GetDiagnosticsAsync(request.Scope, document);
-            var validFixes = allDiagnostics
-                .GroupBy(docAndDiag => docAndDiag.ProjectId)
-                .SelectMany(grouping =>
-                {
-                    var projectFixProviders = GetCodeFixProviders(grouping.Key);
-                    return grouping
-                        .SelectMany(docAndDiag => docAndDiag.Diagnostics)
-                        .Where(diag => projectFixProviders.Any(provider => provider.HasFixForId(diag.Id)));
-                })
-                .GroupBy(diag => diag.Id)
-                .Select(grouping => grouping.First())
-                .Select(x => new FixAllItem(x.Id, x.GetMessage()))
-                .OrderBy(x => x.Id)
+            var rawFixes = allDiagnostics
+                .SelectMany(d => d.Diagnostics)
+                .Select(d => new FixAllItem("", JsonConvert.SerializeObject(d)))
                 .ToArray();
-
-            return new GetFixAllResponse(validFixes);
+            return new GetFixAllResponse(rawFixes);
         }
     }
 }
