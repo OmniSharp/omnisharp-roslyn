@@ -14,6 +14,7 @@
     </ItemGroup>
 
     <ItemGroup>
+        <PackageReference Include="Newtonsoft.Json" />
         <PackageReference Include="System.Reactive" />
         <PackageReference Include="ICSharpCode.Decompiler" />
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />

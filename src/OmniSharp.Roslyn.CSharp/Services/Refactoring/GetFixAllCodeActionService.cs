@@ -12,6 +12,7 @@ using OmniSharp.Roslyn.CSharp.Helpers;
 using OmniSharp.Roslyn.CSharp.Services.Refactoring.V2;
 using OmniSharp.Roslyn.CSharp.Workers.Diagnostics;
 using OmniSharp.Services;
+using Newtonsoft.Json;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
 {
