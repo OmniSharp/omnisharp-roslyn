@@ -16,13 +16,11 @@ namespace OmniSharp.MSBuild.Tests
     {
         private readonly IAssemblyLoader _assemblyLoader;
         private readonly IMSBuildLocator _msbuildLocator;
-        private readonly IAnalyzerAssemblyLoader _analyzerAssemblyLoader;
 
         public AbstractMSBuildTestFixture(ITestOutputHelper output)
             : base(output)
         {
             _assemblyLoader = new AssemblyLoader(this.LoggerFactory);
-            _analyzerAssemblyLoader = ShadowCopyAnalyzerAssemblyLoader.Instance;
 
             // Since we can only load MSBuild once into our process we need to include
             // prerelease version so that our .NET 7 tests will pass.
@@ -47,7 +45,7 @@ namespace OmniSharp.MSBuild.Tests
             IConfiguration configurationData = null)
         {
             var environment = new OmniSharpEnvironment(path, logLevel: LogLevel.Trace);
-            var serviceProvider = TestServiceProvider.Create(this.TestOutput, environment, this.LoggerFactory, _assemblyLoader, _analyzerAssemblyLoader, _msbuildLocator,
+            var serviceProvider = TestServiceProvider.Create(this.TestOutput, environment, this.LoggerFactory, _assemblyLoader, ShadowCopyAnalyzerAssemblyLoader.CreateShadowCopyLoader(), _msbuildLocator,
                 configurationData);
 
             return OmniSharpTestHost.Create(serviceProvider, additionalExports);
