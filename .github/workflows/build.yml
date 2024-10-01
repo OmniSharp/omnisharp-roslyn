@@ -63,7 +63,7 @@ jobs:
           dotnet cake --configuration=Release --verbosity=Verbose --target=CI --publish-all --archive
 
       - name: ⬆ Publish Logs
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         continue-on-error: true
         if: ${{ always() }}
         with:
@@ -71,7 +71,7 @@ jobs:
           path: '${{ env.Artifacts }}/logs/'
 
       - name: ⬆ Publish Packages
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         continue-on-error: true
         if: ${{ always() }}
         with:
@@ -79,7 +79,7 @@ jobs:
           path: '${{ env.Artifacts }}/package/'
 
       - name: ⬆ Publish Deployment
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         continue-on-error: true
         if: ${{ always() }}
         with:
@@ -87,7 +87,7 @@ jobs:
           path: '${{ env.Artifacts }}/deployment/'
 
       - name: ⬆ Publish NuGet
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         continue-on-error: true
         if: ${{ always() }}
         with:
@@ -95,7 +95,7 @@ jobs:
           path: '${{ env.Artifacts }}/nuget/'
 
       - name: ⬆ Publish Scripts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         continue-on-error: true
         if: ${{ always() }}
         with:
