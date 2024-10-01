@@ -5,6 +5,8 @@ namespace OmniSharp.Roslyn.Utilities
 {
     public static class ShadowCopyAnalyzerAssemblyLoader
     {
-        public static readonly IAnalyzerAssemblyLoader Instance = OmnisharpAnalyzerAssemblyLoaderFactory.CreateShadowCopyAnalyzerAssemblyLoader();
+        public static readonly IAnalyzerAssemblyLoader Instance = CreateShadowCopyLoader();
+
+        public static IAnalyzerAssemblyLoader CreateShadowCopyLoader() => OmnisharpAnalyzerAssemblyLoaderFactory.CreateShadowCopyAnalyzerAssemblyLoader();
     }
 }

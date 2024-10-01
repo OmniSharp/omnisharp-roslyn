@@ -8,8 +8,8 @@
         <MicrosoftExtensionPackageVersion>8.0.0</MicrosoftExtensionPackageVersion>
         <MicrosoftTestPackageVersion>17.8.0</MicrosoftTestPackageVersion>
         <MSBuildPackageVersion>17.3.2</MSBuildPackageVersion>
-        <NuGetPackageVersion>6.11.0-rc.110</NuGetPackageVersion>
-        <RoslynPackageVersion>4.12.0-1.24358.3</RoslynPackageVersion>
+        <NuGetPackageVersion>6.12.0-preview.1.81</NuGetPackageVersion>
+        <RoslynPackageVersion>4.13.0-1.24477.2</RoslynPackageVersion>
         <XunitPackageVersion>2.6.1</XunitPackageVersion>
     </PropertyGroup>
 
@@ -19,7 +19,7 @@
 
         <PackageVersion Include="Cake.Scripting.Transport" Version="0.15.0" />
 
-        <PackageVersion Include="DiffPlex" Version="1.7.1" />
+        <PackageVersion Include="DiffPlex" Version="1.7.2" />
 
         <PackageVersion Include="Dotnet.Script.DependencyModel" Version="1.5.0" />
         <PackageVersion Include="Dotnet.Script.DependencyModel.NuGet" Version="1.5.0" />

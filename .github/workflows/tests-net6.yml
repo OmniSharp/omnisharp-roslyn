@@ -1,8 +1,8 @@
 
 name: 'Tests net6.0'
 env:
-  DotNetVersion: "9.0.100-preview.6.24328.19"
-  DotNetVersion2: "8.0.303"
+  DotNetVersion: "9.0.100-rc.1.24452.12"
+  DotNetVersion2: "8.0.402"
   DotNetVersion3: "7.0.410"
   DotNetVersion4: "6.0.203" # This is the last version Mono supports. It is used for our Mono CI tests.
   NuGetVersion: "6.5.0"
@@ -39,14 +39,6 @@ jobs:
           clean: 'false'
           fetch-depth: '0'
 
-      # TODO: Need to figure out the correct way to install mono on linux / mac
-      # Currently the latest image has mono 6.12
-      # https://github.com/actions/virtual-environments/blob/main/images/linux/Ubuntu1804-README.md
-      # - name: 🔨 Use Mono ${{ env.MonoVersion }} SDK
-      #   uses: maxim-lobanov/setup-xamarin@v1
-      #   with:
-      #     mono-version: ${{ env.MonoVersion }}
-
       - name: Setup NuGet.exe
         uses: nuget/setup-nuget@v1
         with:
@@ -82,7 +74,7 @@ jobs:
           TEST_PROJECT: ${{ matrix.testProjects }}
 
       - name: ⬆ Publish Logs
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         continue-on-error: true
         if: ${{ always() }}
         with:
