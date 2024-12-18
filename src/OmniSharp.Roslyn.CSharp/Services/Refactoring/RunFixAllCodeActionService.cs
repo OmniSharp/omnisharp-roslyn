@@ -15,7 +15,6 @@ using Microsoft.Extensions.Logging;
 using OmniSharp.Abstractions.Models.V1.FixAll;
 using OmniSharp.Mef;
 using OmniSharp.Options;
-using OmniSharp.Roslyn.CodeActions;
 using OmniSharp.Roslyn.CSharp.Services.Refactoring.V2;
 using OmniSharp.Roslyn.CSharp.Workers.Diagnostics;
 using OmniSharp.Services;
@@ -140,8 +139,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
 
             _logger.LogTrace("{0} is still present in the document. Getting fixes.", diagnosticId);
 
-            var codeActionOptions = CodeActionOptionsFactory.Create(Options);
-
             CodeAction action = null;
             var context = OmniSharpCodeFixContextFactory.CreateCodeFixContext(
                 document,
@@ -154,7 +151,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
                         action = a;
                     }
                 },
-                codeActionOptions,
                 cancellationToken);
 
             await codeFixProvider.RegisterCodeFixesAsync(context).ConfigureAwait(false);
@@ -176,7 +172,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
                 action?.EquivalenceKey,
                 ImmutableArray.Create(diagnosticId),
                 _fixAllDiagnosticProvider,
-                _ => codeActionOptions,
                 cancellationToken);
 
             _logger.LogTrace("Finding FixAll fix for {0}.", diagnosticId);
