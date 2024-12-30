@@ -163,6 +163,10 @@ namespace TestUtility
             {
                 Workspace.RemoveProject(projectId);
             }
+
+            // The fallback AnalyzerConfigOptions seem to be reset when all the Projects are removed from the Workspace.
+            // Calling initialize again here will set them so that they are available.
+            WorkspaceInitializer.Initialize(_serviceProvider, _compositionHost);
         }
 
         public Task<TResponse> GetResponse<TRequest, TResponse>(
