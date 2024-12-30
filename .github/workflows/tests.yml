@@ -1,8 +1,7 @@
-
-name: 'Tests'
+name: "Tests"
 env:
   DotNetVersion: "9.0.101"
-  DotNetVersion2: "8.0.307"
+  DotNetVersion2: "8.0.303"
   DotNetVersion3: "7.0.410"
   DotNetVersion4: "6.0.203" # This is the last version Mono supports. It is used for our Mono CI tests.
   NuGetVersion: "6.5.0"
@@ -19,7 +18,7 @@ on:
       - master
       - feature/*
     tags:
-      - '*'
+      - "*"
   workflow_dispatch:
 jobs:
   build:
@@ -31,13 +30,13 @@ jobs:
         testProjects:
           - OmniSharp.MSBuild.Tests,OmniSharp.Roslyn.CSharp.Tests,OmniSharp.DotNetTest.Tests,OmniSharp.Cake.Tests
           - OmniSharp.Lsp.Tests,OmniSharp.Script.Tests,OmniSharp.Tests,OmniSharp.Stdio.Tests,OmniSharp.Http.Tests
-    name: 'Test'
+    name: "Test"
     steps:
       - name: Checkout
         uses: actions/checkout@v2
         with:
-          clean: 'false'
-          fetch-depth: '0'
+          clean: "false"
+          fetch-depth: "0"
 
       - name: Setup NuGet.exe
         uses: nuget/setup-nuget@v1
@@ -78,5 +77,5 @@ jobs:
         continue-on-error: true
         if: ${{ always() }}
         with:
-          name: 'logs - ${{ github.workflow }} ${{ matrix.os }}'
-          path: '${{ env.Artifacts }}/logs/'
+          name: "logs - ${{ github.workflow }} ${{ matrix.os }}"
+          path: "${{ env.Artifacts }}/logs/"

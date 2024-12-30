@@ -1,8 +1,7 @@
-
-name: 'Build'
+name: "Build"
 env:
   DotNetVersion: "9.0.101"
-  DotNetVersion2: "8.0.307"
+  DotNetVersion2: "8.0.303"
   DotNetVersion3: "7.0.410"
   DotNetVersion4: "6.0.203" # This is the last version Mono supports. It is used for our Mono CI tests.
   NuGetVersion: "6.5.0"
@@ -19,7 +18,7 @@ on:
       - master
       - feature/*
     tags:
-      - '*'
+      - "*"
   workflow_dispatch:
 jobs:
   build:
@@ -28,13 +27,13 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-20.04, windows-2022, macos-14]
-    name: 'Build'
+    name: "Build"
     steps:
       - name: Checkout
         uses: actions/checkout@v2
         with:
-          clean: 'false'
-          fetch-depth: '0'
+          clean: "false"
+          fetch-depth: "0"
 
       - name: Setup NuGet.exe
         uses: nuget/setup-nuget@v1
@@ -67,37 +66,37 @@ jobs:
         continue-on-error: true
         if: ${{ always() }}
         with:
-          name: 'logs - ${{ github.workflow }} ${{ matrix.os }}'
-          path: '${{ env.Artifacts }}/logs/'
+          name: "logs - ${{ github.workflow }} ${{ matrix.os }}"
+          path: "${{ env.Artifacts }}/logs/"
 
       - name: ⬆ Publish Packages
         uses: actions/upload-artifact@v4
         continue-on-error: true
         if: ${{ always() }}
         with:
-          name: 'packages'
-          path: '${{ env.Artifacts }}/package/'
+          name: "packages"
+          path: "${{ env.Artifacts }}/package/"
 
       - name: ⬆ Publish Deployment
         uses: actions/upload-artifact@v4
         continue-on-error: true
         if: ${{ always() }}
         with:
-          name: 'deployment'
-          path: '${{ env.Artifacts }}/deployment/'
+          name: "deployment"
+          path: "${{ env.Artifacts }}/deployment/"
 
       - name: ⬆ Publish NuGet
         uses: actions/upload-artifact@v4
         continue-on-error: true
         if: ${{ always() }}
         with:
-          name: 'nuget'
-          path: '${{ env.Artifacts }}/nuget/'
+          name: "nuget"
+          path: "${{ env.Artifacts }}/nuget/"
 
       - name: ⬆ Publish Scripts
         uses: actions/upload-artifact@v4
         continue-on-error: true
         if: ${{ always() }}
         with:
-          name: 'scripts - ${{ matrix.os }}'
-          path: '${{ env.Artifacts }}/scripts/'
+          name: "scripts - ${{ matrix.os }}"
+          path: "${{ env.Artifacts }}/scripts/"

@@ -7,7 +7,7 @@ namespace OmniSharp.Tests
 {
     public class DotNetCliServiceFacts : AbstractTestFixture
     {
-        private const string DotNetVersion = "8.0.307";
+        private const string DotNetVersion = "8.0.303";
         private int Major { get; }
         private int Minor { get; }
         private int Patch { get; }
