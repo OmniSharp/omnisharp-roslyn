@@ -26,7 +26,6 @@ SCRIPT="build.cake"
 TARGET="Default"
 CONFIGURATION="Release"
 VERBOSITY="Verbose"
-DRYRUN=
 SHOW_VERSION=false
 SCRIPT_ARGUMENTS=()
 
@@ -37,7 +36,6 @@ for i in "$@"; do
         -t|--target) TARGET="$2"; shift ;;
         -c|--configuration) CONFIGURATION="$2"; shift ;;
         -v|--verbosity) VERBOSITY="$2"; shift ;;
-        -d|--dryrun) DRYRUN="-dryrun" ;;
         --version) SHOW_VERSION=true ;;
         --) shift; SCRIPT_ARGUMENTS+=("$@"); break ;;
         *) SCRIPT_ARGUMENTS+=("$1") ;;
@@ -92,5 +90,5 @@ dotnet tool restore
 if $SHOW_VERSION; then
     dotnet cake --version
 else
-    dotnet cake $SCRIPT --verbosity=$VERBOSITY --configuration=$CONFIGURATION --target=$TARGET $DRYRUN "${SCRIPT_ARGUMENTS[@]}"
+    dotnet cake $SCRIPT --verbosity=$VERBOSITY --configuration=$CONFIGURATION --target=$TARGET "${SCRIPT_ARGUMENTS[@]}"
 fi
