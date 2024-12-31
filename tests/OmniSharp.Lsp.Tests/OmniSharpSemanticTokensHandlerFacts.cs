@@ -1,19 +1,19 @@
 using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.Text;
+using OmniSharp.Extensions.LanguageServer.Protocol.Client;
+using OmniSharp.Extensions.LanguageServer.Protocol.Document;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OmniSharp.Lsp.Tests;
-using OmniSharp.Extensions.LanguageServer.Protocol.Document;
 using OmniSharp.Models.SemanticHighlight;
 using OmniSharp.Models.V2;
 using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
 using Range = OmniSharp.Models.V2.Range;
-using System.Collections.Generic;
-using System.IO;
-using OmniSharp.Extensions.LanguageServer.Protocol.Client;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
@@ -165,7 +165,7 @@ class C1
                 Operator("="),
                 String("\"hello\""),
                 Punctuation(";"),
-                Keyword("await"),
+                ControlKeyword("await"),
                 ControlKeyword("foreach"),
                 Punctuation("("),
                 Keyword("var"),

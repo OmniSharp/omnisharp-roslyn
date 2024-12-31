@@ -187,7 +187,7 @@ class C1
                 Operator("="),
                 String("\"hello\""),
                 Punctuation(";"),
-                Keyword("await"),
+                ControlKeyword("await"),
                 ControlKeyword("foreach"),
                 Punctuation("("),
                 Keyword("var"),

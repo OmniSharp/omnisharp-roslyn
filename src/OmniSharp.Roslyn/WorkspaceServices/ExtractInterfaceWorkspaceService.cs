@@ -16,14 +16,14 @@ namespace OmniSharp
         {
         }
 
-        public Task<OmniSharpExtractInterfaceOptionsResult> GetExtractInterfaceOptionsAsync(List<ISymbol> extractableMembers, string defaultInterfaceName)
+        public OmniSharpExtractInterfaceOptionsResult GetExtractInterfaceOptions(List<ISymbol> extractableMembers, string defaultInterfaceName)
         {
-            return Task.FromResult(new OmniSharpExtractInterfaceOptionsResult(
+            return new OmniSharpExtractInterfaceOptionsResult(
                 isCancelled: false,
                 extractableMembers.ToImmutableArray(),
                 defaultInterfaceName,
                 $"{defaultInterfaceName}.cs",
-                OmniSharpExtractInterfaceOptionsResult.OmniSharpExtractLocation.SameFile));
+                OmniSharpExtractInterfaceOptionsResult.OmniSharpExtractLocation.SameFile);
         }
     }
 }

@@ -13,7 +13,6 @@ using Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.CodeActions;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
 using OmniSharp.Options;
-using OmniSharp.Roslyn.CodeActions;
 using OmniSharp.Roslyn.CSharp.Services.CodeActions;
 using OmniSharp.Services;
 
@@ -246,7 +245,6 @@ namespace OmniSharp
             var context = OmniSharpCodeFixContextFactory.CreateCodeFixContext(
                 document, span, diagnostics,
                 registerCodeFix: (a, d) => codeFixes.Add(a),
-                CodeActionOptionsFactory.Create(_options),
                 cancellationToken: CancellationToken.None);
 
             // Note: We're intentionally not checking CodeFixProvider.FixableDiagnosticIds here.

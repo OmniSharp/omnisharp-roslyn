@@ -1,6 +1,8 @@
 using System;
 using System.Composition.Hosting;
 using System.Linq;
+using Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.ImplementType;
+using Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.Options;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -33,6 +35,7 @@ namespace OmniSharp
 
             logger.LogDebug("Starting with OmniSharp options: {options}", options.CurrentValue);
             ProvideWorkspaceOptions(compositionHost, workspace, options, logger, omnisharpEnvironment);
+            ProvideFallbackAnalyzerConfigOptions(workspace, options, logger);
 
             // when configuration options change
             // run workspace options providers automatically
@@ -40,6 +43,7 @@ namespace OmniSharp
             {
                 logger.LogDebug("OmniSharp options changed: {options}", options.CurrentValue);
                 ProvideWorkspaceOptions(compositionHost, workspace, options, logger, omnisharpEnvironment);
+                ProvideFallbackAnalyzerConfigOptions(workspace, options, logger);
             });
 
             var projectSystems = compositionHost.GetExports<IProjectSystem>();
@@ -99,6 +103,54 @@ namespace OmniSharp
                     logger.LogError(e, message);
                 }
             }
+        }
+
+        private static void ProvideFallbackAnalyzerConfigOptions(
+            OmniSharpWorkspace workspace,
+            IOptionsMonitor<OmniSharpOptions> options,
+            ILogger logger)
+        {
+            logger.LogInformation($"Updating the solution's fallback AnalyzerConfigOptions.");
+            OmniSharpSolutionAnalyzerConfigOptionsUpdater.UpdateOptions(workspace, ToOmniSharpEditorConfigOptions(options.CurrentValue));
+        }
+
+        private static OmniSharpEditorConfigOptions ToOmniSharpEditorConfigOptions(OmniSharpOptions options)
+        {
+            var lineFormattingOptions = new OmniSharpLineFormattingOptions
+            {
+                NewLine = options.FormattingOptions.NewLine,
+                UseTabs = options.FormattingOptions.UseTabs,
+                TabSize = options.FormattingOptions.TabSize,
+                IndentationSize = options.FormattingOptions.IndentationSize,
+            };
+
+            var implementTypeOptions = new OmniSharpImplementTypeOptions
+            {
+                InsertionBehavior = ToOmniSharpInsertionBehavior(options.ImplementTypeOptions.InsertionBehavior),
+                PropertyGenerationBehavior = ToOmniSharpPropertyGenerationBehavior(options.ImplementTypeOptions.PropertyGenerationBehavior),
+            };
+
+            return new OmniSharpEditorConfigOptions
+            {
+                LineFormattingOptions = lineFormattingOptions,
+                ImplementTypeOptions = implementTypeOptions,
+            };
+
+            static OmniSharpImplementTypeInsertionBehavior ToOmniSharpInsertionBehavior(ImplementTypeInsertionBehavior insertionBehavior)
+                => insertionBehavior switch
+                {
+                    ImplementTypeInsertionBehavior.WithOtherMembersOfTheSameKind => OmniSharpImplementTypeInsertionBehavior.WithOtherMembersOfTheSameKind,
+                    ImplementTypeInsertionBehavior.AtTheEnd => OmniSharpImplementTypeInsertionBehavior.AtTheEnd,
+                    _ => throw new ArgumentException(nameof(insertionBehavior))
+                };
+
+            static OmniSharpImplementTypePropertyGenerationBehavior ToOmniSharpPropertyGenerationBehavior(ImplementTypePropertyGenerationBehavior propertyGenerationBehavior)
+                => propertyGenerationBehavior switch
+                {
+                    ImplementTypePropertyGenerationBehavior.PreferThrowingProperties => OmniSharpImplementTypePropertyGenerationBehavior.PreferThrowingProperties,
+                    ImplementTypePropertyGenerationBehavior.PreferAutoProperties => OmniSharpImplementTypePropertyGenerationBehavior.PreferAutoProperties,
+                    _ => throw new ArgumentException(nameof(propertyGenerationBehavior))
+                };
         }
     }
 }
