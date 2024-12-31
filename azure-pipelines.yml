@@ -91,7 +91,7 @@ stages:
 
       - job: macOS
         pool:
-          vmImage: "macos-12"
+          vmImage: "macos-13"
         dependsOn: GitVersion
         steps:
           - template: ./.pipelines/init.yml
