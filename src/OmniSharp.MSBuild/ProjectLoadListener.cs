@@ -33,6 +33,9 @@ namespace OmniSharp.MSBuild
             _eventEmitter = eventEmitter;
         }
 
+        public void ProjectLoadingStarted(string projectPath) =>
+            _eventEmitter.ProjectLoadingStarted(projectPath);
+
         public void ProjectLoaded(ProjectLoadedEventArgs args)
         {
             try
@@ -53,7 +56,18 @@ namespace OmniSharp.MSBuild
                 var (hashedFileExtensions, fileCounts) = GetUniqueHashedFileExtensionsAndCounts(args);
 
                 var sdkStyleProject = IsSdkStyleProject(args);
-                _eventEmitter.ProjectInformation(projectId, sessionId, (int)outputKind, projectCapabilities, targetFrameworks, sdkVersion, hashedReferences, hashedFileExtensions, fileCounts, sdkStyleProject);
+                _eventEmitter.ProjectInformation(
+                        projectId,
+                        sessionId,
+                        (int)outputKind,
+                        projectCapabilities,
+                        targetFrameworks,
+                        sdkVersion,
+                        hashedReferences,
+                        hashedFileExtensions,
+                        fileCounts,
+                        sdkStyleProject,
+                        args.Project.ProjectFileLocation.File);
             }
             catch (Exception ex)
             {

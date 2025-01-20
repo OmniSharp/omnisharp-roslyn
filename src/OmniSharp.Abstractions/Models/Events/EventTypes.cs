@@ -2,6 +2,7 @@ namespace OmniSharp.Models.Events
 {
     public static class EventTypes
     {
+        public const string ProjectLoadingStarted = nameof(ProjectLoadingStarted);
         public const string ProjectAdded = nameof(ProjectAdded);
         public const string ProjectChanged = nameof(ProjectChanged);
         public const string ProjectRemoved = nameof(ProjectRemoved);

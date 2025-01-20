@@ -15,5 +15,6 @@ namespace OmniSharp.Models.Events
         public IEnumerable<string> FileExtensions { get; set; }
         public IEnumerable<int> FileCounts { get; set; }
         public bool SdkStyleProject { get; set; }
+        public string ProjectFilePath { get; set; }
     }
 }

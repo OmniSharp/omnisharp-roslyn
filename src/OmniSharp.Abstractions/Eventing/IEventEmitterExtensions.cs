@@ -45,6 +45,11 @@ namespace OmniSharp.Eventing
                 });
         }
 
+        public static void ProjectLoadingStarted(this IEventEmitter emitter, string projectPath) =>
+            emitter.Emit(
+                    EventTypes.ProjectLoadingStarted,
+                    projectPath);
+
         public static void ProjectInformation(this IEventEmitter emitter,
                                               HashedString projectId,
                                               HashedString sessionId,
@@ -55,7 +60,8 @@ namespace OmniSharp.Eventing
                                               IEnumerable<HashedString> references,
                                               IEnumerable<HashedString> fileExtensions,
                                               IEnumerable<int> fileCounts,
-                                              bool sdkStyleProject)
+                                              bool sdkStyleProject,
+                                              string projectFilePath)
         {
             var projectConfiguration = new ProjectConfigurationMessage()
             {
@@ -68,7 +74,8 @@ namespace OmniSharp.Eventing
                 References = references.Select(hashed => hashed.Value),
                 FileExtensions = fileExtensions.Select(hashed => hashed.Value),
                 FileCounts = fileCounts,
-                SdkStyleProject = sdkStyleProject
+                SdkStyleProject = sdkStyleProject,
+                ProjectFilePath = projectFilePath
             };
 
             emitter.Emit(

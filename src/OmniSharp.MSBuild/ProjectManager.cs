@@ -4,11 +4,13 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using OmniSharp.Eventing;
@@ -18,15 +20,13 @@ using OmniSharp.MSBuild.Logging;
 using OmniSharp.MSBuild.Models.Events;
 using OmniSharp.MSBuild.Notification;
 using OmniSharp.MSBuild.ProjectFile;
+using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
 using OmniSharp.Roslyn.CSharp.Services.Refactoring.V2;
-using OmniSharp.Options;
+using OmniSharp.Roslyn.EditorConfig;
 using OmniSharp.Roslyn.Utilities;
 using OmniSharp.Services;
 using OmniSharp.Utilities;
-using System.Reflection;
-using Microsoft.CodeAnalysis.Diagnostics;
-using OmniSharp.Roslyn.EditorConfig;
 
 namespace OmniSharp.MSBuild
 {
@@ -310,6 +310,17 @@ namespace OmniSharp.MSBuild
         private (ProjectFileInfo, ProjectLoadedEventArgs) LoadOrReloadProject(string projectFilePath, Func<(ProjectFileInfo, ImmutableArray<MSBuildDiagnostic>, ProjectLoadedEventArgs)> loader)
         {
             _logger.LogInformation($"Loading project: {projectFilePath}");
+            foreach (IMSBuildEventSink eventSink in _eventSinks)
+            {
+                try
+                {
+                    eventSink.ProjectLoadingStarted(projectFilePath);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Exception thrown while calling event sinks");
+                }
+            }
 
             try
             {

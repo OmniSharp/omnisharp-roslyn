@@ -30,6 +30,10 @@ namespace OmniSharp.MSBuild.Tests
             {
                 _onLoaded(e);
             }
+
+            public void ProjectLoadingStarted(string projectPath)
+            {
+            }
         }
 
         [Fact]
