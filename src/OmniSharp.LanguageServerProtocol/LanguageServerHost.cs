@@ -50,7 +50,7 @@ namespace OmniSharp.LanguageServerProtocol
         private CompositionHost _compositionHost;
         private IServiceProvider _serviceProvider;
         private readonly Action<ILoggingBuilder> _configureLogging;
-        private IObserver<WorkDoneProgressReport> _workDoneObserver = null!;
+        private IObserver<WorkDoneProgressReport> _workDoneObserver;
 
         public LanguageServerHost(
             Stream input,
@@ -145,12 +145,12 @@ namespace OmniSharp.LanguageServerProtocol
                     .Select(ps => ps.WaitForIdleAsync())
                     .ToArray());
 
-            _workDoneObserver.OnNext(new WorkDoneProgressReport
+            _workDoneObserver?.OnNext(new WorkDoneProgressReport
             {
                 Message = "Language Server ready",
                 Percentage = 100,
             });
-            _workDoneObserver.OnCompleted();
+            _workDoneObserver?.OnCompleted();
 
             Console.CancelKeyPress += (sender, e) =>
             {
