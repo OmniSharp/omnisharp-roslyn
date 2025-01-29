@@ -45,10 +45,10 @@ Every merge to `master` is automatically published to this feed and individual r
     -   `win-x86`
     -   `win-arm64`
     -   `linux-x64`
-    -   `linux-x86`
     -   `linux-musl-x64`
     -   `linux-arm64`
     -   `linux-musl-arm64`
+    -   `linux-bionic-arm64`
     -   `osx`
     -   `mono` (Requires global mono installed)
 -   Extensions are archive specific, windows will be `zip` and all others will be `tar.gz`.
