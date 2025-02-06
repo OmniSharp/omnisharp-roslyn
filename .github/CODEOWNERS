@@ -1,2 +1,2 @@
 # https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
-.github/CODEOWNERS @sonarsource/devex-ide-squad
+.github/CODEOWNERS @SonarSource/remediation-ide-experience-squad
