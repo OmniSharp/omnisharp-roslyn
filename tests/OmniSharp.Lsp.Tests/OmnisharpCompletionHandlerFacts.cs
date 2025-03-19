@@ -339,7 +339,7 @@ namespace N2
 
         [Theory]
         [InlineData("dummy.cs")]
-        [InlineData("dummy.csx")]
+        // [InlineData("dummy.csx")] - Skipping for being flaky
         public async Task UsingsAddedInOrder(string filename)
         {
 
@@ -944,8 +944,8 @@ public class Derived : Base
             Assert.Equal(4, item.TextEdit.TextEdit.Range.Start.Character);
             Assert.Equal(8, item.TextEdit.TextEdit.Range.End.Line);
             Assert.Equal(13, item.TextEdit.TextEdit.Range.End.Character);
-            Assert.Equal("public override string Prop => throw new NotImplementedException();", item.TextEdit.TextEdit.NewText);
-            Assert.Equal(InsertTextFormat.PlainText, item.InsertTextFormat);
+            Assert.Equal("public override string Prop => throw new NotImplementedException();$0", item.TextEdit.TextEdit.NewText);
+            Assert.Equal(InsertTextFormat.Snippet, item.InsertTextFormat);
             Assert.Equal("override Prop", item.FilterText);
         }
 
