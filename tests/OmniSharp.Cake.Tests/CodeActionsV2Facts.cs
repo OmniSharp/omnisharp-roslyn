@@ -69,6 +69,7 @@ namespace OmniSharp.Cake.Tests
                 ("System.Text.RegularExpressions.Regex", CodeActionKind.QuickFix),
                 ("Extract method", CodeActionKind.RefactorExtract),
                 ("Extract local function", CodeActionKind.RefactorExtract),
+                ("Use expression body for method", CodeActionKind.Refactor),
                 ("Introduce local for 'Regex.Match(\"foo\", \"bar\")'", CodeActionKind.Refactor),
                 ("Introduce parameter for 'Regex.Match(\"foo\", \"bar\")' -> and update call sites directly", CodeActionKind.Refactor),
                 ("Introduce parameter for 'Regex.Match(\"foo\", \"bar\")' -> into extracted method to invoke at call sites", CodeActionKind.Refactor),
