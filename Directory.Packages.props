@@ -8,8 +8,8 @@
         <MicrosoftExtensionPackageVersion>8.0.0</MicrosoftExtensionPackageVersion>
         <MicrosoftTestPackageVersion>17.8.0</MicrosoftTestPackageVersion>
         <MSBuildPackageVersion>17.3.2</MSBuildPackageVersion>
-        <NuGetPackageVersion>6.13.0-rc.95</NuGetPackageVersion>
-        <RoslynPackageVersion>6.14.0-preview.1.45</RoslynPackageVersion>
+        <NuGetPackageVersion>6.14.0-preview.1.45</NuGetPackageVersion>
+        <RoslynPackageVersion>4.13.0-3.24620.4</RoslynPackageVersion>
         <XunitPackageVersion>2.6.1</XunitPackageVersion>
     </PropertyGroup>
 
