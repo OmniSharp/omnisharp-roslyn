@@ -2219,20 +2219,20 @@ class Program
         [InlineData("dummy.csx")]
         public async Task TestOverrideWithTrailingWhitespacePrior(string filename)
         {
-            const string input = @"
-namespace N
-{
-    internal class C
-    {
-// The trailing tabs on the previous line and the next line are integral to this bug
-
-        override $$
-        public C()
-        {
-        }
-    }
-}
-";
+            string input = $$"""
+                namespace N
+                {
+                    internal class C
+                    {{{'\t'}}
+                // The trailing tabs on the previous line and the next line are integral to this bug
+                {{'\t'}}
+                        override $$
+                        public C()
+                        {
+                        }
+                    }
+                }
+                """;
 
             var completions = await FindCompletionsAsync(filename, input, SharedOmniSharpTestHost);
 
