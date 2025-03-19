@@ -146,6 +146,7 @@ namespace OmniSharp.Lsp.Tests
                     "Generate type 'Console' -> Generate nested class 'Console'",
                     "Extract local function",
                     "Extract method",
+                    "Use expression body for method",
                     "Introduce local for 'Console.Write(\"should be using System;\")'"
                 }
                 : new List<string>
@@ -168,6 +169,7 @@ namespace OmniSharp.Lsp.Tests
                     "Generate type 'Console' -> Generate nested class 'Console'",
                     "Extract local function",
                     "Extract method",
+                    "Use expression body for method",
                     "Introduce local for 'Console.Write(\"should be using System;\")'"
                 };
 

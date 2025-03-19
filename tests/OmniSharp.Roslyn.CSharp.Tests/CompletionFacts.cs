@@ -1358,8 +1358,8 @@ public class Derived : Base
             Assert.Equal(4, item.TextEdit.StartColumn);
             Assert.Equal(8, item.TextEdit.EndLine);
             Assert.Equal(13, item.TextEdit.EndColumn);
-            Assert.Equal("public override string Prop => throw new NotImplementedException();", item.TextEdit.NewText);
-            Assert.Equal(InsertTextFormat.PlainText, item.InsertTextFormat);
+            Assert.Equal("public override string Prop => throw new NotImplementedException()$0;", item.TextEdit.NewText);
+            Assert.Equal(InsertTextFormat.Snippet, item.InsertTextFormat);
             Assert.Equal("override Prop", item.FilterText);
         }
 
@@ -2219,20 +2219,20 @@ class Program
         [InlineData("dummy.csx")]
         public async Task TestOverrideWithTrailingWhitespacePrior(string filename)
         {
-            const string input = @"
-namespace N
-{
-    internal class C
-    {	
-// The trailing tabs on the previous line and the next line are integral to this bug
-	
-        override $$
-        public C()
-        {
-        }
-    }
-}
-";
+            string input = $$"""
+                namespace N
+                {
+                    internal class C
+                    {{{'\t'}}
+                // The trailing tabs on the previous line and the next line are integral to this bug
+                {{'\t'}}
+                        override $$
+                        public C()
+                        {
+                        }
+                    }
+                }
+                """;
 
             var completions = await FindCompletionsAsync(filename, input, SharedOmniSharpTestHost);
 
