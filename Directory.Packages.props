@@ -5,11 +5,12 @@
         <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
 
         <OmniSharpExtensionsPackageVersion>0.19.9</OmniSharpExtensionsPackageVersion>
-        <MicrosoftExtensionPackageVersion>8.0.0</MicrosoftExtensionPackageVersion>
+        <MicrosoftExtensionPackageVersion>9.0.0</MicrosoftExtensionPackageVersion>
+        <MicrosoftBaseCommonLibraryVersion>9.0.0</MicrosoftBaseCommonLibraryVersion>
         <MicrosoftTestPackageVersion>17.8.0</MicrosoftTestPackageVersion>
         <MSBuildPackageVersion>17.3.2</MSBuildPackageVersion>
         <NuGetPackageVersion>6.13.0-rc.95</NuGetPackageVersion>
-        <RoslynPackageVersion>4.13.0-3.24620.4</RoslynPackageVersion>
+        <RoslynPackageVersion>4.14.0-3.25168.13</RoslynPackageVersion>
         <XunitPackageVersion>2.6.1</XunitPackageVersion>
     </PropertyGroup>
 
@@ -43,7 +44,7 @@
         <PackageVersion Include="Microsoft.CodeAnalysis.ExternalAccess.OmniSharp" Version="$(RoslynPackageVersion)" />
         <PackageVersion Include="Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.CSharp" Version="$(RoslynPackageVersion)" />
 
-        <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="8.0.1" />
+        <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="$(MicrosoftExtensionPackageVersion)" />
         <PackageVersion Include="Microsoft.Extensions.Configuration" Version="$(MicrosoftExtensionPackageVersion)" />
         <PackageVersion Include="Microsoft.Extensions.Configuration.Binder" Version="$(MicrosoftExtensionPackageVersion)" />
         <PackageVersion Include="Microsoft.Extensions.Configuration.CommandLine" Version="$(MicrosoftExtensionPackageVersion)" />
@@ -55,7 +56,7 @@
         <PackageVersion Include="Microsoft.Extensions.FileSystemGlobbing" Version="$(MicrosoftExtensionPackageVersion)" />
         <PackageVersion Include="Microsoft.Extensions.Logging" Version="$(MicrosoftExtensionPackageVersion)" />
         <PackageVersion Include="Microsoft.Extensions.Logging.Console" Version="$(MicrosoftExtensionPackageVersion)" />
-        <PackageVersion Include="Microsoft.Extensions.Options" Version="8.0.2" />
+        <PackageVersion Include="Microsoft.Extensions.Options" Version="$(MicrosoftExtensionPackageVersion)" />
         <PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="$(MicrosoftExtensionPackageVersion)" />
 
         <PackageVersion Include="Microsoft.Build.Locator" Version="1.6.10" />
@@ -82,14 +83,14 @@
 
         <PackageVersion Include="SQLitePCLRaw.bundle_green" Version="2.1.8" />
 
-        <PackageVersion Include="System.Collections.Immutable" Version="8.0.0" />
-        <PackageVersion Include="System.ComponentModel.Composition" Version="8.0.0" />
-        <PackageVersion Include="System.Composition" Version="8.0.0" />
-        <PackageVersion Include="System.Configuration.ConfigurationManager" Version="8.0.0" />
+        <PackageVersion Include="System.Collections.Immutable" Version="$(MicrosoftBaseCommonLibraryVersion)" />
+        <PackageVersion Include="System.ComponentModel.Composition" Version="$(MicrosoftBaseCommonLibraryVersion)" />
+        <PackageVersion Include="System.Composition" Version="$(MicrosoftBaseCommonLibraryVersion)" />
+        <PackageVersion Include="System.Configuration.ConfigurationManager" Version="$(MicrosoftBaseCommonLibraryVersion)" />
         <PackageVersion Include="System.Memory" Version="4.5.5" />
-        <PackageVersion Include="System.Reflection.Metadata" Version="8.0.0" />
-        <PackageVersion Include="System.Text.Json" Version="8.0.5" />
-        <PackageVersion Include="System.Threading.Tasks.Dataflow" Version="8.0.0" />
+        <PackageVersion Include="System.Reflection.Metadata" Version="$(MicrosoftBaseCommonLibraryVersion)" />
+        <PackageVersion Include="System.Text.Json" Version="$(MicrosoftBaseCommonLibraryVersion)" />
+        <PackageVersion Include="System.Threading.Tasks.Dataflow" Version="$(MicrosoftBaseCommonLibraryVersion)" />
         <PackageVersion Include="System.ValueTuple" Version="4.5.0" />
 
         <PackageVersion Include="System.Reactive" Version="6.0.0" />
