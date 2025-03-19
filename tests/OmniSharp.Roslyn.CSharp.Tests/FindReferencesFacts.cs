@@ -549,7 +549,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             Assert.Null(exception);
         }
 
-        [Fact]
+        [Fact(Skip = "Need Roslyn EA for the TestGeneratorReference")]
         public async Task ReturnsGeneratedReferences()
         {
             const string Source = @"
