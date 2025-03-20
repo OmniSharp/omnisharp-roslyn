@@ -8,13 +8,10 @@
       <PackageReference Include="NuGet.DependencyResolver.Core" ExcludeAssets="all" PrivateAssets="all" />
       <PackageReference Include="NuGet.Frameworks" ExcludeAssets="all" PrivateAssets="all" />
       <PackageReference Include="NuGet.LibraryModel" ExcludeAssets="all" PrivateAssets="all" />
-      <PackageReference Include="NuGet.Packaging.Core" ExcludeAssets="all" PrivateAssets="all" />
       <PackageReference Include="NuGet.Packaging" ExcludeAssets="all" PrivateAssets="all" />
       <PackageReference Include="NuGet.ProjectModel" ExcludeAssets="all" PrivateAssets="all" />
       <PackageReference Include="NuGet.Protocol" ExcludeAssets="all" PrivateAssets="all" />
       <PackageReference Include="NuGet.Versioning" ExcludeAssets="all" PrivateAssets="all" />
   </ItemGroup>
-
-  <Import Project="build\Packages.props" />
 
 </Project>

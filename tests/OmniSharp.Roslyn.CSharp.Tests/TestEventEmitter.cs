@@ -1,49 +1,77 @@
 using System;
-using System.Collections.Concurrent;
-using System.Collections.Immutable;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 using OmniSharp.Eventing;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
     public class TestEventEmitter<T> : IEventEmitter
+    {
+        private readonly object _lock = new();
+        private readonly List<T> _messages = new();
+        private readonly List<(Predicate<T> Predicate, TaskCompletionSource<object> TaskCompletionSource)> _predicates = new();
+
+        public async Task ExpectForEmitted(Expression<Predicate<T>> predicate)
         {
-            public ImmutableArray<T> Messages { get; private set; } = ImmutableArray<T>.Empty;
+            var asCompiledPredicate = predicate.Compile();
+            var tcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
 
-            public async Task ExpectForEmitted(Expression<Predicate<T>> predicate)
+            lock (_lock)
             {
-                var asCompiledPredicate = predicate.Compile();
+                if (_messages.Any(m => asCompiledPredicate(m)))
+                    return;
 
-                // May seem hacky but nothing is more painfull to debug than infinite hanging test ...
-                for(int i = 0; i < 100; i++)
-                {
-                    if(Messages.Any(m => asCompiledPredicate(m)))
-                    {
-                        return;
-                    }
-
-                    await Task.Delay(250);
-                }
-
-                throw new InvalidOperationException($"Timeout reached before expected event count reached before prediction {predicate} came true, current diagnostics '{String.Join(";", Messages)}'");
+                _predicates.Add((asCompiledPredicate, tcs));
             }
 
-            public void Clear()
+            try
             {
-                Messages = ImmutableArray<T>.Empty;
+                using var cts = new CancellationTokenSource(25000);
+
+                cts.Token.Register(() => tcs.SetCanceled());
+
+                await tcs.Task;
             }
-
-            public ValueTask EmitAsync(string kind, object args, CancellationToken cancellationToken = default)
+            catch (OperationCanceledException)
             {
-                if(args is T asT)
-                {
-                    Messages = Messages.Add(asT);
-                }
+                var messages = string.Join(";", _messages.Select(x => JsonConvert.SerializeObject(x)));
 
-                return new();
+                throw new InvalidOperationException($"Timeout reached before expected event count reached before prediction {predicate} came true, current diagnostics '{messages}'");
+            }
+            finally
+            {
+                lock (_lock)
+                    _predicates.Remove((asCompiledPredicate, tcs));
             }
         }
+
+        public void Clear()
+        {
+            lock (_lock)
+                _messages.Clear();
+        }
+
+        public ValueTask EmitAsync(string kind, object args, CancellationToken cancellationToken = default)
+        {
+            if (args is T asT)
+            {
+                lock (_lock)
+                {
+                    _messages.Add(asT);
+
+                    foreach (var (predicate, tcs) in _predicates)
+                    {
+                        if (predicate(asT))
+                            tcs.SetResult(null);
+                    }
+                }
+            }
+
+            return new();
+        }
+    }
 }

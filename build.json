@@ -3,8 +3,9 @@
     "DotNetChannel": "Preview",
     "DotNetVersions": [
         "6.0.203",
-        "7.0.302",
-        "8.0.100-preview.4.23260.5"
+        "7.0.410",
+        "8.0.303",
+        "9.0.101"
     ],
     "RequiredMonoVersion": "6.6.0",
     "DownloadURL": "https://roslynomnisharp.blob.core.windows.net/ext",
@@ -15,13 +16,13 @@
     "TestProjects": [
         "OmniSharp.MSBuild.Tests",
         "OmniSharp.Roslyn.CSharp.Tests",
+        "OmniSharp.Lsp.Tests",
+        "OmniSharp.DotNetTest.Tests",
+        "OmniSharp.Script.Tests",
+        "OmniSharp.Cake.Tests",
         "OmniSharp.Http.Tests",
         "OmniSharp.Stdio.Tests",
-        "OmniSharp.DotNetTest.Tests",
-        "OmniSharp.Tests",
-        "OmniSharp.Cake.Tests",
-        "OmniSharp.Script.Tests",
-        "OmniSharp.Lsp.Tests"
+        "OmniSharp.Tests"
     ],
     "TestAssets": [
         "NUnitTestProject",

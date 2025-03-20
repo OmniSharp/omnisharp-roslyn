@@ -85,7 +85,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
                     public string PropertyHere { get; set; }
                 }";
-            var response = await RunRefactoringAsync(code, "Generate constructor...");
+            var response = await RunRefactoringAsync(code, "Generate constructor from members...");
             AssertUtils.AssertIgnoringIndent(expected, ((ModifiedFileResponse)response.Changes.First()).Buffer);
         }
 

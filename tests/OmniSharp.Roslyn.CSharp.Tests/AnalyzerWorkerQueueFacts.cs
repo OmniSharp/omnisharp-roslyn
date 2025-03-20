@@ -10,6 +10,7 @@ using Xunit;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
+#pragma warning disable xUnit1031 // Test methods should not use blocking task operations
     public class AnalyzerWorkerQueueFacts
     {
         private class Logger : ILogger
@@ -53,7 +54,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         public void WhenItemsAreAddedButThrotlingIsntOverNoWorkShouldBeReturned(AnalyzerWorkType workType)
         {
             var now = DateTime.UtcNow;
-            var queue = new AnalyzerWorkQueue(new LoggerFactory(), utcNow: () => now, timeoutForPendingWorkMs: 10*1000);
+            var queue = new AnalyzerWorkQueue(new LoggerFactory(), utcNow: () => now, timeoutForPendingWorkMs: 10 * 1000);
             var document = CreateTestDocumentId();
 
             queue.PutWork(new[] { document }, workType);
@@ -66,7 +67,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         public void WhenWorksIsAddedToQueueThenTheyWillBeReturned(AnalyzerWorkType workType)
         {
             var now = DateTime.UtcNow;
-            var queue = new AnalyzerWorkQueue(new LoggerFactory(), utcNow: () => now, timeoutForPendingWorkMs: 10*1000);
+            var queue = new AnalyzerWorkQueue(new LoggerFactory(), utcNow: () => now, timeoutForPendingWorkMs: 10 * 1000);
             var document = CreateTestDocumentId();
 
             queue.PutWork(new[] { document }, workType);
@@ -84,7 +85,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         public void WhenSameItemIsAddedMultipleTimesInRowThenThrottleItemAsOne(AnalyzerWorkType workType)
         {
             var now = DateTime.UtcNow;
-            var queue = new AnalyzerWorkQueue(new LoggerFactory(), utcNow: () => now, timeoutForPendingWorkMs: 10*1000);
+            var queue = new AnalyzerWorkQueue(new LoggerFactory(), utcNow: () => now, timeoutForPendingWorkMs: 10 * 1000);
             var document = CreateTestDocumentId();
 
             queue.PutWork(new[] { document }, workType);
@@ -204,7 +205,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         public async Task WhenWorkIsAddedAgainWhenPreviousIsAnalysing_ThenDontWaitAnotherOneToGetReady()
         {
             var now = DateTime.UtcNow;
-            var queue = new AnalyzerWorkQueue(new LoggerFactory(), utcNow: () => now, timeoutForPendingWorkMs: 10*1000);
+            var queue = new AnalyzerWorkQueue(new LoggerFactory(), utcNow: () => now, timeoutForPendingWorkMs: 10 * 1000);
             var document = CreateTestDocumentId();
 
             queue.PutWork(new[] { document }, AnalyzerWorkType.Foreground);
@@ -232,7 +233,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public void WhenBackgroundWorkIsAdded_DontWaitIt()
         {
-            var queue = new AnalyzerWorkQueue(new LoggerFactory(), timeoutForPendingWorkMs: 10*1000);
+            var queue = new AnalyzerWorkQueue(new LoggerFactory(), timeoutForPendingWorkMs: 10 * 1000);
             var document = CreateTestDocumentId();
 
             queue.PutWork(new[] { document }, AnalyzerWorkType.Background);
@@ -244,7 +245,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         public void WhenSingleFileIsPromoted_ThenPromoteItFromBackgroundQueueToForeground()
         {
             var now = DateTime.UtcNow;
-            var queue = new AnalyzerWorkQueue(new LoggerFactory(), utcNow: () => now, timeoutForPendingWorkMs: 10*1000);
+            var queue = new AnalyzerWorkQueue(new LoggerFactory(), utcNow: () => now, timeoutForPendingWorkMs: 10 * 1000);
             var document = CreateTestDocumentId();
 
             queue.PutWork(new[] { document }, AnalyzerWorkType.Background);
@@ -260,7 +261,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         public void WhenFileIsntAtBackgroundQueueAndTriedToBePromoted_ThenDontDoNothing()
         {
             var now = DateTime.UtcNow;
-            var queue = new AnalyzerWorkQueue(new LoggerFactory(), utcNow: () => now, timeoutForPendingWorkMs: 10*1000);
+            var queue = new AnalyzerWorkQueue(new LoggerFactory(), utcNow: () => now, timeoutForPendingWorkMs: 10 * 1000);
             var document = CreateTestDocumentId();
 
             queue.TryPromote(document);
@@ -274,7 +275,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         public void WhenFileIsProcessingInBackgroundQueue_ThenPromoteItAsForeground()
         {
             var now = DateTime.UtcNow;
-            var queue = new AnalyzerWorkQueue(new LoggerFactory(), utcNow: () => now, timeoutForPendingWorkMs: 10*1000);
+            var queue = new AnalyzerWorkQueue(new LoggerFactory(), utcNow: () => now, timeoutForPendingWorkMs: 10 * 1000);
             var document = CreateTestDocumentId();
 
             queue.PutWork(new[] { document }, AnalyzerWorkType.Background);

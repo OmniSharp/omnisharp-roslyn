@@ -21,9 +21,9 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
         }
 
         private readonly Mef.IRequestHandler<BlockStructureRequest, BlockStructureResponse> _definitionHandler;
-        private readonly DocumentSelector _documentSelector;
+        private readonly TextDocumentSelector _documentSelector;
 
-        public OmniSharpFoldingRangenHandler(Mef.IRequestHandler<BlockStructureRequest, BlockStructureResponse> definitionHandler, DocumentSelector documentSelector)
+        public OmniSharpFoldingRangenHandler(Mef.IRequestHandler<BlockStructureRequest, BlockStructureResponse> definitionHandler, TextDocumentSelector documentSelector)
         {
             _definitionHandler = definitionHandler;
             _documentSelector = documentSelector;
@@ -68,7 +68,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
         {
             return new FoldingRangeRegistrationOptions()
             {
-                DocumentSelector = _documentSelector
+                DocumentSelector = _documentSelector,
             };
         }
     }

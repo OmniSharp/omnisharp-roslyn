@@ -25,7 +25,7 @@ namespace OmniSharp.Script
         private const string IgnoreCorLibraryDuplicatedTypesField = "IgnoreCorLibraryDuplicatedTypes";
         private const string RuntimeMetadataReferenceResolverType = "Microsoft.CodeAnalysis.Scripting.Hosting.RuntimeMetadataReferenceResolver";
         private const string ResolverField = "_resolver";
-        private const string FileReferenceProviderField = "_fileReferenceProvider";
+        private const string CreateFromFileFuncField = "_createFromFileFunc";
 
         // aligned with CSI.exe
         // https://github.com/dotnet/roslyn/blob/version-3.2.0/src/Interactive/csi/csi.desktop.rsp
@@ -248,8 +248,8 @@ namespace OmniSharp.Script
             if (runtimeMetadataReferenceResolverValue != null)
             {
                 var runtimeMetadataReferenceResolverType = typeof(CommandLineScriptGlobals).GetTypeInfo().Assembly.GetType(RuntimeMetadataReferenceResolverType);
-                var fileReferenceProviderField = runtimeMetadataReferenceResolverType?.GetField(FileReferenceProviderField, BindingFlags.Instance | BindingFlags.NonPublic);
-                fileReferenceProviderField.SetValue(runtimeMetadataReferenceResolverValue, new Func<string, MetadataReferenceProperties, PortableExecutableReference>((path, properties) =>
+                var createFromFileFuncField = runtimeMetadataReferenceResolverType?.GetField(CreateFromFileFuncField, BindingFlags.Instance | BindingFlags.NonPublic);
+                createFromFileFuncField.SetValue(runtimeMetadataReferenceResolverValue, new Func<string, MetadataReferenceProperties, PortableExecutableReference>((path, properties) =>
                 {
                     var documentationFile = Path.ChangeExtension(path, ".xml");
                     var documentationProvider = File.Exists(documentationFile)

@@ -20,7 +20,7 @@ namespace OmniSharp.Services
 
         private readonly ILogger _logger;
         private readonly IEventEmitter _eventEmitter;
-        private readonly ConcurrentDictionary<string, object> _locks;
+        private readonly ConcurrentDictionary<(string WorkingDirectory, string Arguments), Task> _restoreTasks;
         private readonly SemaphoreSlim _semaphore;
 
         public string DotNetPath { get; }
@@ -29,7 +29,7 @@ namespace OmniSharp.Services
         {
             _logger = loggerFactory.CreateLogger<DotNetCliService>();
             _eventEmitter = eventEmitter;
-            _locks = new ConcurrentDictionary<string, object>();
+            _restoreTasks = new();
             _semaphore = new SemaphoreSlim(Environment.ProcessorCount / 2);
 
             // Check if any of the provided paths have a dotnet executable.
@@ -79,38 +79,41 @@ namespace OmniSharp.Services
 
         public Task RestoreAsync(string workingDirectory, string arguments = null, Action onFailure = null)
         {
-            return Task.Factory.StartNew(() =>
+            return _restoreTasks.GetOrAdd((workingDirectory, arguments), RestoreAsync, onFailure);
+        }
+
+        private Task RestoreAsync((string WorkingDirectory, string Arguments) key, Action onFailure = null)
+        {
+            return Task.Factory.StartNew(async () =>
             {
+                var (workingDirectory, arguments) = key;
+
                 _logger.LogInformation($"Begin dotnet restore in '{workingDirectory}'");
 
-                var restoreLock = _locks.GetOrAdd(workingDirectory, new object());
-                lock (restoreLock)
+                var exitStatus = new ProcessExitStatus(-1);
+                await _eventEmitter.RestoreStartedAsync(workingDirectory);
+                _semaphore.Wait();
+                try
                 {
-                    var exitStatus = new ProcessExitStatus(-1);
-                    _eventEmitter.RestoreStartedAsync(workingDirectory);
-                    _semaphore.Wait();
-                    try
+                    // A successful restore will update the project lock file which is monitored
+                    // by the dotnet project system which eventually update the Roslyn model
+                    exitStatus = ProcessHelper.Run(DotNetPath, $"restore {arguments}", workingDirectory, updateEnvironment: RemoveMSBuildEnvironmentVariables,
+                        outputDataReceived: (data) => _logger.LogDebug(data), errorDataReceived: (data) => _logger.LogDebug(data));
+                }
+                finally
+                {
+                    _semaphore.Release();
+
+                    _restoreTasks.TryRemove(key, out _);
+
+                    await _eventEmitter.RestoreFinishedAsync(workingDirectory, exitStatus.Succeeded);
+
+                    if (exitStatus.Failed && onFailure != null)
                     {
-                        // A successful restore will update the project lock file which is monitored
-                        // by the dotnet project system which eventually update the Roslyn model
-                        exitStatus = ProcessHelper.Run(DotNetPath, $"restore {arguments}", workingDirectory, updateEnvironment: RemoveMSBuildEnvironmentVariables,
-                            outputDataReceived: (data) => _logger.LogDebug(data), errorDataReceived: (data) => _logger.LogDebug(data));
+                        onFailure();
                     }
-                    finally
-                    {
-                        _semaphore.Release();
 
-                        _locks.TryRemove(workingDirectory, out _);
-
-                        _eventEmitter.RestoreFinishedAsync(workingDirectory, exitStatus.Succeeded);
-
-                        if (exitStatus.Failed && onFailure != null)
-                        {
-                            onFailure();
-                        }
-
-                        _logger.LogInformation($"Finish restoring project {workingDirectory}. Exit code {exitStatus}");
-                    }
+                    _logger.LogInformation($"Finish restoring project {workingDirectory}. Exit code {exitStatus}");
                 }
             });
         }

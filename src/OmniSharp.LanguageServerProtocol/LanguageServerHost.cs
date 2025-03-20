@@ -257,7 +257,7 @@ namespace OmniSharp.LanguageServerProtocol
                 .GroupBy(x => x.Language)
                 .Select(x => (
                     language: x.Key,
-                    selector: new DocumentSelector(x
+                    selector: new TextDocumentSelector(x
                         .SelectMany(z => z.Extensions)
                         .Distinct()
                         .SelectMany(z =>
@@ -266,14 +266,14 @@ namespace OmniSharp.LanguageServerProtocol
                             {
                                 return new[]
                                 {
-                                    new DocumentFilter() {Pattern = $"**/*{z}"},
-                                    new DocumentFilter() {Scheme = "csharp"}
+                                    new TextDocumentFilter() {Pattern = $"**/*{z}"},
+                                    new TextDocumentFilter() {Scheme = "csharp"}
                                 };
                             }
 
                             return new[]
                             {
-                                new DocumentFilter() {Pattern = $"**/*{z}"},
+                                new TextDocumentFilter() {Pattern = $"**/*{z}"},
                             };
                         })
                     )
@@ -406,6 +406,7 @@ namespace OmniSharp.LanguageServerProtocol
                     .Concat(OmniSharpFoldingRangenHandler.Enumerate(handlers))
                     .Concat(OmniSharpHoverHandler.Enumerate(handlers))
                     .Concat(OmniSharpImplementationHandler.Enumerate(handlers))
+                    .Concat(OmniSharpInlayHintHandler.Enumerate(handlers))
                     .Concat(OmniSharpReferencesHandler.Enumerate(handlers))
                     .Concat(OmniSharpRenameHandler.Enumerate(handlers))
                     .Concat(OmniSharpSemanticTokensHandler.Enumerate(handlers))

@@ -37,10 +37,10 @@ class C { }
         var response = await GetInlayHints(fileName, code, testHost);
         AssertEx.Equal(new[]
             {
-                new InlayHint { Position = new Point { Line = 3, Column = 2 }, Label = "param1: ", Tooltip = null, TextEdits = new[] { new LinePositionSpanTextChange { StartLine = 3, StartColumn = 2, EndLine = 3, EndColumn = 2, NewText = "param1: " } } },
-                new InlayHint { Position = new Point { Line = 3, Column = 9 }, Label = "paramB: ", Tooltip = null, TextEdits = new[] { new LinePositionSpanTextChange { StartLine = 3, StartColumn = 9, EndLine = 3, EndColumn = 9, NewText = "paramB: " } } },
-                new InlayHint { Position = new Point { Line = 1, Column = 4 }, Label = "C ", Tooltip = null, TextEdits = new[] { new LinePositionSpanTextChange { StartLine = 1, StartColumn = 0, EndLine = 1, EndColumn = 3, NewText = "C" } } },
-                new InlayHint { Position = new Point { Line = 2, Column = 4 }, Label = "C ", Tooltip = null, TextEdits = new[] { new LinePositionSpanTextChange { StartLine = 2, StartColumn = 0, EndLine = 2, EndColumn = 3, NewText = "C" } } },
+                new InlayHint { Position = new Point { Line = 3, Column = 2 }, Label = "param1: ", Kind = InlayHintKind.Parameter, Tooltip = null, TextEdits = new[] { new LinePositionSpanTextChange { StartLine = 3, StartColumn = 2, EndLine = 3, EndColumn = 2, NewText = "param1: " } } },
+                new InlayHint { Position = new Point { Line = 3, Column = 9 }, Label = "paramB: ", Kind = InlayHintKind.Parameter, Tooltip = null, TextEdits = new[] { new LinePositionSpanTextChange { StartLine = 3, StartColumn = 9, EndLine = 3, EndColumn = 9, NewText = "paramB: " } } },
+                new InlayHint { Position = new Point { Line = 1, Column = 4 }, Label = "C ", Kind = InlayHintKind.Type, Tooltip = null, TextEdits = new[] { new LinePositionSpanTextChange { StartLine = 1, StartColumn = 0, EndLine = 1, EndColumn = 3, NewText = "C" } } },
+                new InlayHint { Position = new Point { Line = 2, Column = 4 }, Label = "C ", Kind = InlayHintKind.Type, Tooltip = null, TextEdits = new[] { new LinePositionSpanTextChange { StartLine = 2, StartColumn = 0, EndLine = 2, EndColumn = 3, NewText = "C" } } },
             },
             response.InlayHints);
 
@@ -88,8 +88,8 @@ void M(int param1, int paramB) { }
         var response = await GetInlayHints(fileName, code, testHost);
         AssertEx.Equal(new[]
             {
-                new InlayHint { Position = new Point { Line = 1, Column = 4 }, Label = "int ", Tooltip = null, TextEdits = new[] { new LinePositionSpanTextChange { StartLine = 1, StartColumn = 0, EndLine = 1, EndColumn = 3, NewText = "int" } } },
-                new InlayHint { Position = new Point { Line = 2, Column = 4 }, Label = "int ", Tooltip = null, TextEdits = new[] { new LinePositionSpanTextChange { StartLine = 2, StartColumn = 0, EndLine = 2, EndColumn = 3, NewText = "int" } } },
+                new InlayHint { Position = new Point { Line = 1, Column = 4 }, Label = "int ", Kind = InlayHintKind.Type, Tooltip = null, TextEdits = new[] { new LinePositionSpanTextChange { StartLine = 1, StartColumn = 0, EndLine = 1, EndColumn = 3, NewText = "int" } } },
+                new InlayHint { Position = new Point { Line = 2, Column = 4 }, Label = "int ", Kind = InlayHintKind.Type, Tooltip = null, TextEdits = new[] { new LinePositionSpanTextChange { StartLine = 2, StartColumn = 0, EndLine = 2, EndColumn = 3, NewText = "int" } } },
             },
             response.InlayHints);
     }
@@ -113,8 +113,8 @@ void M(int param1, int paramB) { }
         var response = await GetInlayHints(fileName, code, testHost);
         AssertEx.Equal(new[]
             {
-                new InlayHint { Position = new Point { Line = 3, Column = 2 }, Label = "param1: ", Tooltip = null, TextEdits = new[] { new LinePositionSpanTextChange { StartLine = 3, StartColumn = 2, EndLine = 3, EndColumn = 2, NewText = "param1: " } } },
-                new InlayHint { Position = new Point { Line = 3, Column = 9 }, Label = "paramB: ", Tooltip = null, TextEdits = new[] { new LinePositionSpanTextChange { StartLine = 3, StartColumn = 9, EndLine = 3, EndColumn = 9, NewText = "paramB: " } } },
+                new InlayHint { Position = new Point { Line = 3, Column = 2 }, Label = "param1: ", Kind = InlayHintKind.Parameter, Tooltip = null, TextEdits = new[] { new LinePositionSpanTextChange { StartLine = 3, StartColumn = 2, EndLine = 3, EndColumn = 2, NewText = "param1: " } } },
+                new InlayHint { Position = new Point { Line = 3, Column = 9 }, Label = "paramB: ", Kind = InlayHintKind.Parameter, Tooltip = null, TextEdits = new[] { new LinePositionSpanTextChange { StartLine = 3, StartColumn = 9, EndLine = 3, EndColumn = 9, NewText = "paramB: " } } },
             },
             response.InlayHints);
     }
@@ -142,7 +142,7 @@ void M(int param1, int paramB) { }
             var response = await GetInlayHints(fileName, code, testHost);
             AssertEx.Equal(new[]
                 {
-                    new InlayHint { Position = new Point { Line = 1, Column = 4 }, Label = "int ", Tooltip = null, TextEdits = new[] { new LinePositionSpanTextChange { StartLine = 1, StartColumn = 0, EndLine = 1, EndColumn = 3, NewText = "int" } } },
+                    new InlayHint { Position = new Point { Line = 1, Column = 4 }, Label = "int ", Kind = InlayHintKind.Type, Tooltip = null, TextEdits = new[] { new LinePositionSpanTextChange { StartLine = 1, StartColumn = 0, EndLine = 1, EndColumn = 3, NewText = "int" } } },
                 },
                 response.InlayHints);
         }
@@ -171,8 +171,8 @@ using System;
             var response = await GetInlayHints(fileName, code, testHost);
             AssertEx.Equal(new[]
                 {
-                    new InlayHint { Position = new Point { Line = 2, Column = 34 }, Label = "int ", Tooltip = null, TextEdits = new[] { new  LinePositionSpanTextChange { StartLine = 2, StartColumn = 34, EndLine = 2, EndColumn = 34, NewText = "int " } } },
-                    new InlayHint { Position = new Point { Line = 2, Column = 37 }, Label = "string ", Tooltip = null, TextEdits = new[] { new  LinePositionSpanTextChange { StartLine = 2, StartColumn = 37, EndLine = 2, EndColumn = 37, NewText = "string " } } }
+                    new InlayHint { Position = new Point { Line = 2, Column = 34 }, Label = "int ", Kind = InlayHintKind.Type, Tooltip = null, TextEdits = new[] { new  LinePositionSpanTextChange { StartLine = 2, StartColumn = 34, EndLine = 2, EndColumn = 34, NewText = "int " } } },
+                    new InlayHint { Position = new Point { Line = 2, Column = 37 }, Label = "string ", Kind = InlayHintKind.Type, Tooltip = null, TextEdits = new[] { new  LinePositionSpanTextChange { StartLine = 2, StartColumn = 37, EndLine = 2, EndColumn = 37, NewText = "string " } } }
                 },
                 response.InlayHints);
         }
@@ -200,7 +200,7 @@ using System;
             var response = await GetInlayHints(fileName, code, testHost);
             AssertEx.Equal(new[]
                 {
-                    new InlayHint { Position =  new Point { Line = 1, Column = 14 }, Label = " string", Tooltip = null, TextEdits = new[] { new LinePositionSpanTextChange { StartLine = 1, StartColumn = 14, EndLine = 1, EndColumn = 14, NewText = " string" } } }
+                    new InlayHint { Position =  new Point { Line = 1, Column = 14 }, Label = " string", Kind = InlayHintKind.Type, Tooltip = null, TextEdits = new[] { new LinePositionSpanTextChange { StartLine = 1, StartColumn = 14, EndLine = 1, EndColumn = 14, NewText = " string" } } }
                 },
                 response.InlayHints);
         }
@@ -229,7 +229,7 @@ void M(int i) {}
             var response = await GetInlayHints(fileName, code, testHost);
             AssertEx.Equal(new[]
                 {
-                new InlayHint { Position =  new Point { Line = 1, Column = 2 }, Label = "i: ", Tooltip = null, TextEdits = new[] { new LinePositionSpanTextChange { StartLine = 1, StartColumn = 2, EndLine = 1, EndColumn = 2, NewText = "i: " } } }
+                new InlayHint { Position =  new Point { Line = 1, Column = 2 }, Label = "i: ", Kind = InlayHintKind.Parameter, Tooltip = null, TextEdits = new[] { new LinePositionSpanTextChange { StartLine = 1, StartColumn = 2, EndLine = 1, EndColumn = 2, NewText = "i: " } } }
             },
                 response.InlayHints);
         }
@@ -264,8 +264,8 @@ class C
             var response = await GetInlayHints(fileName, code, testHost);
             AssertEx.Equal(new[]
                 {
-                    new InlayHint { Position =  new Point { Line = 3, Column = 2 }, Label = "test: ", Tooltip = null, TextEdits = new[] { new LinePositionSpanTextChange { StartLine = 3, StartColumn = 2, EndLine = 3, EndColumn = 2, NewText = "test: " } } },
-                    new InlayHint { Position =  new Point { Line = 3, Column = 9 }, Label = "test: ", Tooltip = null, TextEdits = new[] { new LinePositionSpanTextChange { StartLine = 3, StartColumn = 9, EndLine = 3, EndColumn = 9, NewText = "test: " } } }
+                    new InlayHint { Position =  new Point { Line = 3, Column = 2 }, Label = "test: ", Kind = InlayHintKind.Parameter, Tooltip = null, TextEdits = new[] { new LinePositionSpanTextChange { StartLine = 3, StartColumn = 2, EndLine = 3, EndColumn = 2, NewText = "test: " } } },
+                    new InlayHint { Position =  new Point { Line = 3, Column = 9 }, Label = "test: ", Kind = InlayHintKind.Parameter, Tooltip = null, TextEdits = new[] { new LinePositionSpanTextChange { StartLine = 3, StartColumn = 9, EndLine = 3, EndColumn = 9, NewText = "test: " } } }
                 },
                 response.InlayHints);
         }
@@ -300,7 +300,7 @@ class C
             var response = await GetInlayHints(fileName, code, testHost);
             AssertEx.Equal(new[]
                 {
-                    new InlayHint { Position =  new Point { Line = 2, Column = 2 }, Label = "c: ", Tooltip = null, TextEdits = new[] { new LinePositionSpanTextChange { StartLine = 2, StartColumn = 2, EndLine = 2, EndColumn = 2, NewText = "c: " } } }
+                    new InlayHint { Position =  new Point { Line = 2, Column = 2 }, Label = "c: ", Kind = InlayHintKind.Parameter, Tooltip = null, TextEdits = new[] { new LinePositionSpanTextChange { StartLine = 2, StartColumn = 2, EndLine = 2, EndColumn = 2, NewText = "c: " } } }
                 },
                 response.InlayHints);
         }
@@ -333,7 +333,7 @@ void M(int test) {}
             var response = await GetInlayHints(fileName, code, testHost);
             AssertEx.Equal(new[]
                 {
-                    new InlayHint { Position =  new Point { Line = 2, Column = 2 }, Label = "test: ", Tooltip = null, TextEdits = new[] { new LinePositionSpanTextChange { StartLine = 2, StartColumn = 2, EndLine = 2, EndColumn = 2, NewText = "test: " } } }
+                    new InlayHint { Position =  new Point { Line = 2, Column = 2 }, Label = "test: ", Kind = InlayHintKind.Parameter, Tooltip = null, TextEdits = new[] { new LinePositionSpanTextChange { StartLine = 2, StartColumn = 2, EndLine = 2, EndColumn = 2, NewText = "test: " } } }
                 },
                 response.InlayHints);
         }
@@ -364,8 +364,8 @@ void M(int test1, int test2) {}
             var response = await GetInlayHints(fileName, code, testHost);
             AssertEx.Equal(new[]
                 {
-                    new InlayHint { Position = new Point { Line = 1, Column = 2 }, Label = "test1: ", Tooltip = null, TextEdits = new[] { new LinePositionSpanTextChange { StartLine = 1, StartColumn = 2, EndLine = 1, EndColumn = 2, NewText = "test1: " } } },
-                    new InlayHint { Position = new Point { Line = 1, Column = 5 }, Label = "test2: ", Tooltip = null, TextEdits = new[] { new LinePositionSpanTextChange { StartLine = 1, StartColumn = 5, EndLine = 1, EndColumn = 5, NewText = "test2: " } } }
+                    new InlayHint { Position = new Point { Line = 1, Column = 2 }, Label = "test1: ", Kind = InlayHintKind.Parameter, Tooltip = null, TextEdits = new[] { new LinePositionSpanTextChange { StartLine = 1, StartColumn = 2, EndLine = 1, EndColumn = 2, NewText = "test1: " } } },
+                    new InlayHint { Position = new Point { Line = 1, Column = 5 }, Label = "test2: ", Kind = InlayHintKind.Parameter, Tooltip = null, TextEdits = new[] { new LinePositionSpanTextChange { StartLine = 1, StartColumn = 5, EndLine = 1, EndColumn = 5, NewText = "test2: " } } }
                 },
                 response.InlayHints);
         }
@@ -398,7 +398,7 @@ class C
             var response = await GetInlayHints(fileName, code, testHost);
             AssertEx.Equal(new[]
                 {
-                    new InlayHint { Position = new Point { Line = 1, Column = 18 }, Label = "enabled: ", Tooltip = null, TextEdits = new[] { new LinePositionSpanTextChange { StartLine = 1, StartColumn = 18, EndLine = 1, EndColumn = 18, NewText = "enabled: " } } }
+                    new InlayHint { Position = new Point { Line = 1, Column = 18 }, Label = "enabled: ", Kind = InlayHintKind.Parameter, Tooltip = null, TextEdits = new[] { new LinePositionSpanTextChange { StartLine = 1, StartColumn = 18, EndLine = 1, EndColumn = 18, NewText = "enabled: " } } }
                 },
                 response.InlayHints);
         }
@@ -433,7 +433,7 @@ class C
             var response = await GetInlayHints(fileName, code, testHost);
             AssertEx.Equal(new[]
                 {
-                    new InlayHint { Position = new Point { Line = 2, Column = 4 }, Label = "i: ", Tooltip = null, TextEdits = new[] { new LinePositionSpanTextChange { StartLine = 2, StartColumn = 4, EndLine = 2, EndColumn = 4, NewText = "i: " } } }
+                    new InlayHint { Position = new Point { Line = 2, Column = 4 }, Label = "i: ", Kind = InlayHintKind.Parameter, Tooltip = null, TextEdits = new[] { new LinePositionSpanTextChange { StartLine = 2, StartColumn = 4, EndLine = 2, EndColumn = 4, NewText = "i: " } } }
                 },
                 response.InlayHints);
         }

@@ -133,9 +133,9 @@ namespace OmniSharp.DotNetTest.Tests
         [InlineData(12, 26, NUnitTestProject, 2)]
         [InlineData(13, 26, NUnitTestProject, 2)]
 
-        [InlineData(21, 28, MSTestProject, 3)]
-        [InlineData(17, 17, MSTestProject, 3)]
-        [InlineData(18, 17, MSTestProject, 3)]
+        [InlineData(21, 28, MSTestProject, 2)]
+        [InlineData(17, 17, MSTestProject, 2)]
+        [InlineData(18, 17, MSTestProject, 2)]
         public async Task InvokeParameterizedTest(int line, int column, string projectName, int expectedNumTests)
         {
             var response = await RunDotNetTestAsync(
@@ -197,26 +197,26 @@ namespace OmniSharp.DotNetTest.Tests
         [InlineData(76, 0, NUnitTestProject, 4)]
 
         // Class Header
-        [InlineData(6, 4, MSTestProject, 10)]
-        [InlineData(6, 13, MSTestProject, 10)]
-        [InlineData(6, 17, MSTestProject, 10)]
-        [InlineData(7, 0, MSTestProject, 10)]
-        [InlineData(7, 4, MSTestProject, 10)]
+        [InlineData(6, 4, MSTestProject, 8)]
+        [InlineData(6, 13, MSTestProject, 8)]
+        [InlineData(6, 17, MSTestProject, 8)]
+        [InlineData(7, 0, MSTestProject, 8)]
+        [InlineData(7, 4, MSTestProject, 8)]
 
         // Before [TestMethod]
-        [InlineData(10, 7, MSTestProject, 10)]
+        [InlineData(10, 7, MSTestProject, 8)]
 
         // After closing brace
-        [InlineData(14, 9, MSTestProject, 10)]
+        [InlineData(14, 9, MSTestProject, 8)]
 
         // Between test methods
-        [InlineData(15, 0, MSTestProject, 10)]
+        [InlineData(15, 0, MSTestProject, 8)]
 
         // In non-test method
-        [InlineData(54, 0, MSTestProject, 10)]
+        [InlineData(54, 0, MSTestProject, 8)]
 
         // In non-test method
-        [InlineData(63, 0, MSTestProject, 10)]
+        [InlineData(63, 0, MSTestProject, 8)]
         public async Task NoContainingMethodInvokesClass(int line, int column, string projectName, int expectedNumTests)
         {
             var response = await RunDotNetTestAsync(

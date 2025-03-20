@@ -16,7 +16,7 @@ namespace OmniSharp
         {
         }
 
-        public Task<OmniSharpExtractClassOptions> GetExtractClassOptionsAsync(Document document, INamedTypeSymbol originalType, ImmutableArray<ISymbol> selectedMembers)
+        public OmniSharpExtractClassOptions GetExtractClassOptions(Document document, INamedTypeSymbol originalType, ImmutableArray<ISymbol> selectedMembers)
         {
             var symbolsToUse = selectedMembers.IsEmpty
                 ? originalType.GetMembers().Where(member => member switch
@@ -29,7 +29,7 @@ namespace OmniSharp
 
             var memberAnalysisResults = symbolsToUse.Select(m => new OmniSharpExtractClassMemberAnalysisResult(m, makeAbstract: false)).ToImmutableArray();
             const string name = "NewBaseType";
-            return Task.FromResult(new OmniSharpExtractClassOptions($"{name}.cs", name, true, memberAnalysisResults));
+            return new OmniSharpExtractClassOptions($"{name}.cs", name, true, memberAnalysisResults);
         }
     }
 }

@@ -13,14 +13,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" PrivateAssets="All" />
     <PackageReference Include="Microsoft.Extensions.Options" />
     <PackageReference Include="Microsoft.Build" ExcludeAssets="Runtime" PrivateAssets="all" />
     <PackageReference Include="Microsoft.Build.Framework" ExcludeAssets="Runtime" PrivateAssets="all" />
     <PackageReference Include="Microsoft.Build.Tasks.Core" ExcludeAssets="Runtime" PrivateAssets="all" />
     <PackageReference Include="Microsoft.Build.Utilities.Core" ExcludeAssets="Runtime" PrivateAssets="all" />
     <PackageReference Include="Newtonsoft.Json" />
-    <PackageReference Include="NuGet.Packaging.Core" />
     <PackageReference Include="NuGet.ProjectModel" />
     <PackageReference Include="NuGet.Versioning" />
     <PackageReference Include="System.Threading.Tasks.Dataflow" />

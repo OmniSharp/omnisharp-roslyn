@@ -117,7 +117,7 @@ namespace OmniSharp.DotNetTest.Tests
                 }
                 else
                 {
-                    Assert.True(false, "Did not find test method.");
+                    Assert.Fail("Did not find test method.");
                 }
             }
         }

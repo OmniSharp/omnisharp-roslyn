@@ -20,7 +20,6 @@ using OmniSharp.Mef;
 using OmniSharp.Models;
 using OmniSharp.Models.V2.CodeActions;
 using OmniSharp.Options;
-using OmniSharp.Roslyn.CodeActions;
 using OmniSharp.Roslyn.CSharp.Helpers;
 using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
 using OmniSharp.Roslyn.CSharp.Workers.Diagnostics;
@@ -137,8 +136,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
         private async Task AppendFixesAsync(Document document, TextSpan span, IEnumerable<Diagnostic> diagnostics, List<(CodeAction CodeAction, string CodeActionKind)> codeActions)
         {
-            var codeActionOptions = CodeActionOptionsFactory.Create(Options);
-
             foreach (var codeFixProvider in GetSortedCodeFixProviders(document))
             {
                 var fixableDiagnostics = diagnostics.Where(d => HasFix(codeFixProvider, d.Id)).ToImmutableArray();
@@ -150,7 +147,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
                         span,
                         fixableDiagnostics,
                         (a, _) => codeActions.Add((a, CodeActionKind.QuickFix)),
-                        codeActionOptions,
                         CancellationToken.None);
 
                     try
@@ -184,7 +180,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
         private async Task CollectRefactoringActions(Document document, TextSpan span, List<(CodeAction CodeAction, string CodeActionKind)> codeActions)
         {
-            var codeActionOptions = CodeActionOptionsFactory.Create(Options);
             var availableRefactorings = OrderedCodeRefactoringProviders.Value;
 
             foreach (var codeRefactoringProvider in availableRefactorings)
@@ -211,7 +206,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
                             }
                             codeActions.Add((a, kind));
                         },
-                        codeActionOptions,
                         CancellationToken.None);
 
                     await codeRefactoringProvider.ComputeRefactoringsAsync(context);
@@ -227,7 +221,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
         {
             return actions.SelectMany(action =>
             {
-                var nestedActions = action.CodeAction.GetNestedCodeActions();
+                var nestedActions = action.CodeAction.NestedActions;
                 if (!nestedActions.IsDefaultOrEmpty)
                 {
                     return nestedActions.Select(nestedAction => new AvailableCodeAction(nestedAction, action.CodeActionKind, action.CodeAction));

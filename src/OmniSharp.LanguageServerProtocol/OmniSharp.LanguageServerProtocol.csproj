@@ -13,14 +13,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" PrivateAssets="All" />
         <PackageReference Include="OmniSharp.Extensions.LanguageServer" />
-
-        <!-- The two references below can be deleted once OmniSharp.Extensions.LanguageServer
-        references Nerdbank.Streams version >= 2.9. The updated versions are needed for compatibility
-        with Razor. -->
-        <PackageReference Include="Microsoft.VisualStudio.Threading" />
-        <PackageReference Include="Microsoft.VisualStudio.Validation" />
     </ItemGroup>
 
     <ItemGroup>

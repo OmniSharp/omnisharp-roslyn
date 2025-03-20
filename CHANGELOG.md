@@ -1,6 +1,42 @@
 # Changelog
 All changes to the project will be documented in this file.
 
+## [1.39.13] - 2024-12-31
+* Update Roslyn to 4.13.0-3.24620.4 (PR: [#2642](https://github.com/OmniSharp/omnisharp-roslyn/pull/2642))
+
+## [1.39.12] - 2024-07-26
+* Update .NET SDKs (PR: [#2621](https://github.com/OmniSharp/omnisharp-roslyn/pull/2621))
+* Update Roslyn to 4.12.0-1.24358.3 (PR: [#2619](https://github.com/OmniSharp/omnisharp-roslyn/pull/2619))
+* Fix code fix construction (PR: [#2620](https://github.com/OmniSharp/omnisharp-roslyn/pull/2620))
+* Remove NuGet.Packaging.Core, as it's an assembly that only contains forwarders  (PR: [#2610](https://github.com/OmniSharp/omnisharp-roslyn/pull/2610))
+* Fix inlay hints lambdas parameter type null reference exception (PR: [#2604](https://github.com/OmniSharp/omnisharp-roslyn/pull/2604))
+* Update SDKs and Roslyn (PR: [#2603](https://github.com/OmniSharp/omnisharp-roslyn/pull/2603))
+* Pass project path when performing a restore (PR: [#2593](https://github.com/OmniSharp/omnisharp-roslyn/pull/2593))
+
+## [1.39.11] - 2023-12-19
+* Update changelog (PR: [#2591](https://github.com/OmniSharp/omnisharp-roslyn/pull/2591))
+* Update Readme text and fix broken link. ([#2581](https://github.com/OmniSharp/omnisharp-roslyn/issues/2581), PR: [#2582](https://github.com/OmniSharp/omnisharp-roslyn/pull/2582))
+* Update SDKs and dependencies ([#2586](https://github.com/OmniSharp/omnisharp-roslyn/issues/2586), PR: [#2588](https://github.com/OmniSharp/omnisharp-roslyn/pull/2588))
+* Updated to latest dotnet-script 1.5.0 (PR: [#2585](https://github.com/OmniSharp/omnisharp-roslyn/pull/2585))
+
+## [1.39.10] - 2023-10-05
+* Add RazorComplier EA to support razor generators (PR: [#2572](https://github.com/OmniSharp/omnisharp-roslyn/pull/2572))
+
+## [1.39.9] - 2023-10-04
+* Add Kind parameter to InlayHint (PR: [#2570](https://github.dev/OmniSharp/omnisharp-roslyn/pull/2570))
+* Do not include commit characters if the typed span is empty (PR: [#2569](https://github.com/OmniSharp/omnisharp-roslyn/pull/2569))
+* Update Roslyn to version 4.9.0-1.23504.3 (PR: [#2567](https://github.com/OmniSharp/omnisharp-roslyn/pull/2567))
+* Async diagnostics analyzer work queue (PR: [#2351](https://github.com/OmniSharp/omnisharp-roslyn/pull/2351))
+* Add InlayHint implementation to OmniSharp.LSP (PR: [#2566](https://github.com/OmniSharp/omnisharp-roslyn/pull/2566))
+* Include the project file name when invoking `dotnet build` (PR: [#2565](https://github.com/OmniSharp/omnisharp-roslyn/pull/2565))
+* feat: ignore diagnostics for generated code (PR: [#2509](https://github.com/OmniSharp/omnisharp-roslyn/pull/2509))
+* Update documentation to reflect --stdio flag deprecation (#2439) (PR: [#2554](https://github.com/OmniSharp/omnisharp-roslyn/pull/2554))
+* Update Roslyn to version 4.8.0-1.23374.10 (PR: [#2555](https://github.com/OmniSharp/omnisharp-roslyn/pull/2555))
+* Use double quote when quoting un script path (PR: [#2553](https://github.com/OmniSharp/omnisharp-roslyn/pull/2553))
+
+## [1.39.8] - 2023-07-17
+* Use core LSP TokenTypes where possible and validate token names (PR: [#2548](https://github.com/OmniSharp/omnisharp-roslyn/pull/2548))
+
 ## [1.39.7] - 2023-06-16
 * Respond to breaking change in VSCode 1.79.2 in completion (PR:[#2542](https://github.com/OmniSharp/omnisharp-roslyn/pull/2542))
 * Use dotnet-cake for build (PR:[#2537](https://github.com/OmniSharp/omnisharp-roslyn/pull/2537))

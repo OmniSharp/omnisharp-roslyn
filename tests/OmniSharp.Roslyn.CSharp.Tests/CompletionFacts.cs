@@ -304,7 +304,7 @@ namespace N2
             Assert.Single(resolved.Item.AdditionalTextEdits);
             var additionalEdit = resolved.Item.AdditionalTextEdits[0];
             Assert.Equal(NormalizeNewlines("using System;\n\n"),
-                         additionalEdit.NewText);
+                         NormalizeNewlines(additionalEdit.NewText));
             Assert.Equal(0, additionalEdit.StartLine);
             Assert.Equal(0, additionalEdit.StartColumn);
             Assert.Equal(0, additionalEdit.EndLine);
@@ -395,12 +395,12 @@ namespace N3
 
             Assert.Single(resolved.Item.AdditionalTextEdits);
             var additionalEdit = resolved.Item.AdditionalTextEdits[0];
-            Assert.Equal(NormalizeNewlines("N2;\nusing "),
+            Assert.Equal(NormalizeNewlines("using N2;\n"),
                          additionalEdit.NewText);
             Assert.Equal(1, additionalEdit.StartLine);
-            Assert.Equal(6, additionalEdit.StartColumn);
+            Assert.Equal(0, additionalEdit.StartColumn);
             Assert.Equal(1, additionalEdit.EndLine);
-            Assert.Equal(6, additionalEdit.EndColumn);
+            Assert.Equal(0, additionalEdit.EndColumn);
             VerifySortOrders(completions.Items);
         }
 
@@ -588,13 +588,7 @@ namespace N3
             var item = completions.Items.First(c => c.Label == "text:");
             Assert.NotNull(item);
             Assert.Equal("text", item.TextEdit.NewText);
-            Assert.All(completions.Items, c =>
-            {
-                if (c.Label == "ToString")
-                    Assert.True(c.Preselect);
-                else
-                    Assert.False(c.Preselect);
-            });
+            Assert.All(completions.Items, c => Assert.False(c.Preselect));
         }
 
         [Theory]
@@ -1364,8 +1358,8 @@ public class Derived : Base
             Assert.Equal(4, item.TextEdit.StartColumn);
             Assert.Equal(8, item.TextEdit.EndLine);
             Assert.Equal(13, item.TextEdit.EndColumn);
-            Assert.Equal("public override string Prop => throw new NotImplementedException();", item.TextEdit.NewText);
-            Assert.Equal(InsertTextFormat.PlainText, item.InsertTextFormat);
+            Assert.Equal("public override string Prop => throw new NotImplementedException()$0;", item.TextEdit.NewText);
+            Assert.Equal(InsertTextFormat.Snippet, item.InsertTextFormat);
             Assert.Equal("override Prop", item.FilterText);
         }
 
@@ -2225,20 +2219,20 @@ class Program
         [InlineData("dummy.csx")]
         public async Task TestOverrideWithTrailingWhitespacePrior(string filename)
         {
-            const string input = @"
-namespace N
-{
-    internal class C
-    {	
-// The trailing tabs on the previous line and the next line are integral to this bug
-	
-        override $$
-        public C()
-        {
-        }
-    }
-}
-";
+            string input = $$"""
+                namespace N
+                {
+                    internal class C
+                    {{{'\t'}}
+                // The trailing tabs on the previous line and the next line are integral to this bug
+                {{'\t'}}
+                        override $$
+                        public C()
+                        {
+                        }
+                    }
+                }
+                """;
 
             var completions = await FindCompletionsAsync(filename, input, SharedOmniSharpTestHost);
 
@@ -2268,12 +2262,40 @@ pub$$class";
             });
         }
 
+        [Theory]
+        [InlineData("dummy.cs", true)]
+        [InlineData("dummy.cs", false)]
+        [InlineData("dummy.csx", true)]
+        [InlineData("dummy.csx", false)]
+        public async Task SoftSelectionWhenFilterTextIsEmpty(string filename, bool useAsyncCompletion)
+        {
+            const string input = @"
+using System;
+using System.Text;
+public class A
+{
+    public void M(string someText)
+    {
+        var x = new StringBuilder();
+        x.Append($$
+    }
+}";
+
+            using var host = useAsyncCompletion ? GetAsyncCompletionAndImportCompletionHost() : GetImportCompletionHost();
+
+            var completions = await FindCompletionsAsync(filename, input, host, '(');
+            var someTextItem = completions.Items.First(item => item.Label == "someText");
+
+            Assert.Null(someTextItem.CommitCharacters);
+            Assert.False(someTextItem.Preselect);
+        }
+
         private CompletionService GetCompletionService(OmniSharpTestHost host)
             => host.GetRequestHandler<CompletionService>(EndpointName);
 
         protected async Task<CompletionResponse> FindCompletionsAsync(string filename, string source, OmniSharpTestHost testHost, char? triggerChar = null, TestFile[] additionalFiles = null, bool forceExpandedCompletionIndexCreation = false)
         {
-            var testFile = new TestFile(filename, source);
+            var testFile = new TestFile(filename, NormalizeNewlines(source));
 
             var files = new[] { testFile };
             if (additionalFiles is object)
@@ -2331,7 +2353,7 @@ pub$$class";
         }
 
         private static string NormalizeNewlines(string str)
-            => str.Replace("\r\n", Environment.NewLine);
+            => str.Replace("\r\n", "\n");
 
         private static void VerifySortOrders(IReadOnlyList<CompletionItem> items)
         {

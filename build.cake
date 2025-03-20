@@ -49,8 +49,10 @@ Task("Cleanup")
 Task("GitVersion")
     .WithCriteria(!BuildSystem.IsLocalBuild)
     .WithCriteria(!AzurePipelines.IsRunningOnAzurePipelines)
-    .Does(() => {
-        GitVersion(new GitVersionSettings{
+    .Does(() =>
+    {
+        GitVersion(new GitVersionSettings
+        {
             OutputType = GitVersionOutput.BuildServer
         });
     });
@@ -77,7 +79,7 @@ void InstallDotNetSdk(BuildEnvironment env, BuildPlan plan, string version, stri
 
     if (!Platform.Current.IsWindows)
     {
-        Run("chmod", $"+x '{scriptFilePath}'");
+        Run("chmod", $"+x \"{scriptFilePath}\"");
     }
 
     var argList = new List<string>();
@@ -153,24 +155,22 @@ Task("PrepareTestAssets:CommonTestAssets")
 
         var folder = CombinePaths(env.Folders.TestAssets, "test-projects", project);
 
-        try {
+        try
+        {
             DotNetBuild(folder, new DotNetBuildSettings()
             {
-                ToolPath = env.DotNetCommand,
+                WorkingDirectory = folder,
+                Verbosity = DotNetVerbosity.Minimal,
+            });
+        }
+        catch when (project == "ExternAlias")
+        {
+            // ExternalAlias has issues once in a while, try building again to get it working.
+            DotNetBuild(folder, new DotNetBuildSettings()
+            {
                 WorkingDirectory = folder,
                 Verbosity = DotNetVerbosity.Minimal
             });
-        } catch {
-            // ExternalAlias has issues once in a while, try building again to get it working.
-            if (project == "ExternAlias") {
-
-                DotNetBuild(folder, new DotNetBuildSettings()
-                {
-                    ToolPath = env.DotNetCommand,
-                    WorkingDirectory = folder,
-                    Verbosity = DotNetVerbosity.Minimal
-                });
-            }
         }
     });
 
@@ -184,7 +184,6 @@ Task("PrepareTestAssets:RestoreOnlyTestAssets")
 
         DotNetRestore(new DotNetRestoreSettings()
         {
-            ToolPath = env.DotNetCommand,
             WorkingDirectory = folder,
             Verbosity = DotNetVerbosity.Minimal
         });
@@ -201,7 +200,6 @@ Task("PrepareTestAssets:WindowsOnlyTestAssets")
 
         DotNetBuild(folder, new DotNetBuildSettings()
         {
-            ToolPath = env.DotNetCommand,
             WorkingDirectory = folder,
             Verbosity = DotNetVerbosity.Minimal
         });
@@ -216,7 +214,8 @@ Task("PrepareTestAssets:CakeTestAssets")
         var toolsFolder = CombinePaths(env.Folders.TestAssets, "test-projects", project, "tools");
         var packagesConfig = CombinePaths(toolsFolder, "packages.config");
 
-        NuGetInstallFromConfig(packagesConfig, new NuGetInstallSettings {
+        NuGetInstallFromConfig(packagesConfig, new NuGetInstallSettings
+        {
             OutputDirectory = toolsFolder,
             Prerelease = true,
             Verbosity = NuGetVerbosity.Quiet,
@@ -244,10 +243,12 @@ void BuildWithDotNetCli(BuildEnvironment env, string configuration)
                 .Append($"/bl:{logFileNameBase}.binlog;ProjectImports={projectImports}")
                 .Append($"/v:{Verbosity.Minimal.GetMSBuildVerbosityName()}")
                 .Append("/tl")
+                .Append("/graphBuild")
     };
 
     settings.AddFileLogger(
-        new MSBuildFileLoggerSettings {
+        new MSBuildFileLoggerSettings
+        {
             AppendToLogFile = false,
             LogFile = logFileNameBase + ".log",
             ShowTimestamp = true,
@@ -293,51 +294,51 @@ Task("Test")
     .IsDependentOn("PrepareTestAssets")
     .Does(() =>
 {
-        var testTargetFramework = useDotNetTest ? "net7.0" : "net472";
-        var testProjects = string.IsNullOrEmpty(testProjectArgument) ? buildPlan.TestProjects : testProjectArgument.Split(',');
-        foreach (var testProject in testProjects)
+    var testTargetFramework = useDotNetTest ? "net8.0" : "net472";
+    var testProjects = string.IsNullOrEmpty(testProjectArgument) ? buildPlan.TestProjects : testProjectArgument.Split(',');
+    foreach (var testProject in testProjects)
+    {
+        PrintBlankLine();
+        var instanceFolder = CombinePaths(env.Folders.Bin, configuration, testProject, testTargetFramework);
+        var targetPath = CombinePaths(instanceFolder, $"{testProject}.dll");
+
+        if (useDotNetTest)
         {
-            PrintBlankLine();
-            var instanceFolder = CombinePaths(env.Folders.Bin, configuration, testProject, testTargetFramework);
-            var targetPath = CombinePaths(instanceFolder, $"{testProject}.dll");
+            var logFile = CombinePaths(env.Folders.ArtifactsLogs, $"{testProject}-netsdk-result.xml");
+            var arguments = $"test \"{targetPath}\" --logger \"console;verbosity=normal\" --logger \"trx;LogFileName={logFile}\" --blame-hang-timeout 60sec";
 
-            if (useDotNetTest)
+            Console.WriteLine($"Executing: dotnet {arguments}");
+
+            Run("dotnet", arguments, instanceFolder)
+                .ExceptionOnError($"Test {testProject} failed for {testTargetFramework}");
+        }
+        else
+        {
+            var logFile = CombinePaths(env.Folders.ArtifactsLogs, $"{testProject}-desktop-result.xml");
+
+            // Copy xunit executable to test folder to solve path errors
+            var xunitToolsFolder = CombinePaths(env.Folders.Tools, "xunit.runner.console", "tools", "net452");
+            var xunitInstancePath = CombinePaths(instanceFolder, "xunit.console.exe");
+            FileHelper.Copy(CombinePaths(xunitToolsFolder, "xunit.console.exe"), xunitInstancePath, overwrite: true);
+            FileHelper.Copy(CombinePaths(xunitToolsFolder, "xunit.runner.utility.net452.dll"), CombinePaths(instanceFolder, "xunit.runner.utility.net452.dll"), overwrite: true);
+            var arguments = $"\"{targetPath}\" -noshadow -parallel none -xml \"{logFile}\" -notrait category=failing";
+
+            if (Platform.Current.IsWindows)
             {
-                var logFile = CombinePaths(env.Folders.ArtifactsLogs, $"{testProject}-netsdk-result.xml");
-                var arguments = $"test \"{targetPath}\" --logger \"console;verbosity=normal\" --logger \"trx;LogFileName={logFile}\" --blame-hang-timeout 60sec";
-
-                Console.WriteLine($"Executing: dotnet {arguments}");
-
-                Run("dotnet", arguments, instanceFolder)
+                Run(xunitInstancePath, arguments, instanceFolder)
                     .ExceptionOnError($"Test {testProject} failed for {testTargetFramework}");
             }
             else
             {
-                var logFile = CombinePaths(env.Folders.ArtifactsLogs, $"{testProject}-desktop-result.xml");
+                // Copy the Mono-built Microsoft.Build.* binaries to the test folder.
+                // This is necessary to work around a Mono bug that is exasperated by xUnit.
+                CopyMonoMSBuildBinaries(instanceFolder);
 
-                // Copy xunit executable to test folder to solve path errors
-                var xunitToolsFolder = CombinePaths(env.Folders.Tools, "xunit.runner.console", "tools", "net452");
-                var xunitInstancePath = CombinePaths(instanceFolder, "xunit.console.exe");
-                FileHelper.Copy(CombinePaths(xunitToolsFolder, "xunit.console.exe"), xunitInstancePath, overwrite: true);
-                FileHelper.Copy(CombinePaths(xunitToolsFolder, "xunit.runner.utility.net452.dll"), CombinePaths(instanceFolder, "xunit.runner.utility.net452.dll"), overwrite: true);
-                var arguments = $"\"{targetPath}\" -noshadow -parallel none -xml \"{logFile}\" -notrait category=failing";
-
-                if (Platform.Current.IsWindows)
-                {
-                    Run(xunitInstancePath, arguments, instanceFolder)
-                        .ExceptionOnError($"Test {testProject} failed for {testTargetFramework}");
-                }
-                else
-                {
-                    // Copy the Mono-built Microsoft.Build.* binaries to the test folder.
-                    // This is necessary to work around a Mono bug that is exasperated by xUnit.
-                    CopyMonoMSBuildBinaries(instanceFolder);
-
-                    Run("mono", $"\"{xunitInstancePath}\" {arguments}", instanceFolder)
-                        .ExceptionOnError($"Test {testProject} failed for net472");
-                }
+                Run("mono", $"\"{xunitInstancePath}\" {arguments}", instanceFolder)
+                    .ExceptionOnError($"Test {testProject} failed for net472");
             }
         }
+    }
 });
 
 void CopyMonoMSBuildBinaries(string outputFolder)
@@ -369,7 +370,7 @@ void CopyExtraDependencies(BuildEnvironment env, string outputFolder)
     FileHelper.Copy(CombinePaths(env.WorkingDirectory, "license.md"), CombinePaths(outputFolder, "license.md"), overwrite: true);
 }
 
-void AddOmniSharpBindingRedirects(string omnisharpFolder)
+void UpdateBindingRedirects(string omnisharpFolder)
 {
     var appConfig = CombinePaths(omnisharpFolder, "OmniSharp.exe.config");
     if (!FileHelper.Exists(appConfig))
@@ -389,6 +390,17 @@ void AddOmniSharpBindingRedirects(string omnisharpFolder)
     foreach (var filePath in System.IO.Directory.GetFiles(omnisharpFolder, "OmniSharp.*.dll"))
     {
         // Read assembly name from OmniSharp library
+        var assemblyName = AssemblyName.GetAssemblyName(filePath);
+
+        // Create binding redirect and add to bindings
+        var redirect = CreateBindingRedirect(document, assemblyName);
+        assemblyBinding.AppendChild(redirect);
+    }
+
+    // Find Roslyn libraries
+    foreach (var filePath in System.IO.Directory.GetFiles(omnisharpFolder, "Microsoft.CodeAnalysis.*.dll"))
+    {
+        // Read assembly name from Roslyn library
         var assemblyName = AssemblyName.GetAssemblyName(filePath);
 
         // Create binding redirect and add to bindings
@@ -432,7 +444,7 @@ string PublishMonoBuild(string project, BuildEnvironment env, BuildPlan plan, st
     DirectoryHelper.Copy(buildFolder, outputFolder, copySubDirectories: false);
 
     CopyExtraDependencies(env, outputFolder);
-    AddOmniSharpBindingRedirects(outputFolder);
+    UpdateBindingRedirects(outputFolder);
 
     // Copy dependencies of Mono build
     FileHelper.Copy(
@@ -466,10 +478,10 @@ string PublishMonoBuildForPlatform(string project, MonoRuntime monoRuntime, Buil
 
     var runScriptFile = CombinePaths(env.Folders.MonoPackaging, "run");
     FileHelper.Copy(runScriptFile, CombinePaths(outputFolder, "run"), overwrite: true);
-    Run("chmod", $"+x '{CombinePaths(outputFolder, "run")}'");
+    Run("chmod", $"+x \"{CombinePaths(outputFolder, "run")}\"");
 
     CopyExtraDependencies(env, outputFolder);
-    AddOmniSharpBindingRedirects(omnisharpFolder);
+    UpdateBindingRedirects(omnisharpFolder);
 
     Package(project, monoRuntime.PlatformName, outputFolder, env.Folders.ArtifactsPackage, env.Folders.DeploymentPackage);
 
@@ -554,7 +566,6 @@ Task("PublishNet6Builds")
                 PublishBuild(project, env, buildPlan, configuration, "linux-musl-arm64", "net6.0");
             }
         }
-
     }
 });
 
@@ -596,7 +607,7 @@ string PublishBuild(string project, BuildEnvironment env, BuildPlan plan, string
     }
 
     CopyExtraDependencies(env, outputFolder);
-    AddOmniSharpBindingRedirects(outputFolder);
+    UpdateBindingRedirects(outputFolder);
 
     var platformFolder = framework != "net472" ? $"{rid}-{framework}" : rid;
     Package(project, platformFolder, outputFolder, env.Folders.ArtifactsPackage, env.Folders.DeploymentPackage);
@@ -644,8 +655,10 @@ Task("PublishWindowsBuilds")
 
 Task("PublishNuGet")
     .IsDependentOn("InstallDotNetSdk")
-    .Does(() => {
-        DotNetPack(".", new DotNetPackSettings() {
+    .Does(() =>
+    {
+        DotNetPack(".", new DotNetPackSettings()
+        {
             Configuration = "Release",
             OutputDirectory = "./artifacts/nuget/",
             MSBuildSettings = new DotNetMSBuildSettings()

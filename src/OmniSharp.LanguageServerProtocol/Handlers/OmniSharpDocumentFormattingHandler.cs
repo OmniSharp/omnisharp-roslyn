@@ -24,9 +24,9 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
         }
 
         private readonly Mef.IRequestHandler<CodeFormatRequest, CodeFormatResponse> _codeFormatHandler;
-        private readonly DocumentSelector _documentSelector;
+        private readonly TextDocumentSelector _documentSelector;
 
-        public OmniSharpDocumentFormattingHandler(Mef.IRequestHandler<CodeFormatRequest, CodeFormatResponse> codeFormatHandler, DocumentSelector documentSelector)
+        public OmniSharpDocumentFormattingHandler(Mef.IRequestHandler<CodeFormatRequest, CodeFormatResponse> codeFormatHandler, TextDocumentSelector documentSelector)
         {
             _codeFormatHandler = codeFormatHandler;
             _documentSelector = documentSelector;
