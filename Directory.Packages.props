@@ -7,11 +7,11 @@
         <OmniSharpExtensionsPackageVersion>0.19.9</OmniSharpExtensionsPackageVersion>
         <MicrosoftExtensionPackageVersion>9.0.0</MicrosoftExtensionPackageVersion>
         <MicrosoftBaseCommonLibraryVersion>9.0.0</MicrosoftBaseCommonLibraryVersion>
-        <MicrosoftTestPackageVersion>17.8.0</MicrosoftTestPackageVersion>
+        <MicrosoftTestPackageVersion>17.12.0</MicrosoftTestPackageVersion>
         <MSBuildPackageVersion>17.3.2</MSBuildPackageVersion>
         <NuGetPackageVersion>6.14.0-preview.1.45</NuGetPackageVersion>
         <RoslynPackageVersion>4.14.0-3.25168.13</RoslynPackageVersion>
-        <XunitPackageVersion>2.6.1</XunitPackageVersion>
+        <XunitPackageVersion>2.9.3</XunitPackageVersion>
     </PropertyGroup>
 
     <ItemGroup>
@@ -91,12 +91,12 @@
         <PackageVersion Include="System.Reflection.Metadata" Version="$(MicrosoftBaseCommonLibraryVersion)" />
         <PackageVersion Include="System.Text.Json" Version="$(MicrosoftBaseCommonLibraryVersion)" />
         <PackageVersion Include="System.Threading.Tasks.Dataflow" Version="$(MicrosoftBaseCommonLibraryVersion)" />
-        <PackageVersion Include="System.ValueTuple" Version="4.5.0" />
+        <PackageVersion Include="System.ValueTuple" Version="4.6.1" />
 
-        <PackageVersion Include="System.Reactive" Version="6.0.0" />
+        <PackageVersion Include="System.Reactive" Version="6.0.1" />
 
         <PackageVersion Include="xunit.abstractions" Version="2.0.3" />
-        <PackageVersion Include="xunit.runner.visualstudio" Version="2.5.4" />
+        <PackageVersion Include="xunit.runner.visualstudio" Version="3.0.2" />
         <PackageVersion Include="xunit" Version="$(XunitPackageVersion)" />
     </ItemGroup>
     <ItemGroup>
