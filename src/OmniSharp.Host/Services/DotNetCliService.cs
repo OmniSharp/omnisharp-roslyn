@@ -87,7 +87,7 @@ namespace OmniSharp.Services
                 lock (restoreLock)
                 {
                     var exitStatus = new ProcessExitStatus(-1);
-                    _eventEmitter.RestoreStarted(workingDirectory);
+                    _eventEmitter.RestoreStartedAsync(workingDirectory);
                     _semaphore.Wait();
                     try
                     {
@@ -102,7 +102,7 @@ namespace OmniSharp.Services
 
                         _locks.TryRemove(workingDirectory, out _);
 
-                        _eventEmitter.RestoreFinished(workingDirectory, exitStatus.Succeeded);
+                        _eventEmitter.RestoreFinishedAsync(workingDirectory, exitStatus.Succeeded);
 
                         if (exitStatus.Failed && onFailure != null)
                         {

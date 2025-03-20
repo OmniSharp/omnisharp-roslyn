@@ -136,15 +136,15 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                         .ToImmutableArray();
                     var projectCount = documentsGroupedByProjects.Length;
 
-                    EventIfBackgroundWork(workType, BackgroundDiagnosticStatus.Started, projectCount, documentCount, documentCountRemaining);
+                    await EventIfBackgroundWorkAsync(workType, BackgroundDiagnosticStatus.Started, projectCount, documentCount, documentCountRemaining);
 
-                    void decrementDocumentCountRemaining()
+                    async Task decrementDocumentCountRemaining()
                     {
                         var remaining = Interlocked.Decrement(ref documentCountRemaining);
                         var done = documentCount - remaining;
                         if (done % eventEvery == 0)
                         {
-                            EventIfBackgroundWork(workType, BackgroundDiagnosticStatus.Progress, projectCount, documentCount, remaining);
+                            await EventIfBackgroundWorkAsync(workType, BackgroundDiagnosticStatus.Progress, projectCount, documentCount, remaining);
                         }
                     }
 
@@ -163,7 +163,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                     }
                     finally
                     {
-                        EventIfBackgroundWork(workType, BackgroundDiagnosticStatus.Finished, projectCount, documentCount, documentCountRemaining);
+                        await EventIfBackgroundWorkAsync(workType, BackgroundDiagnosticStatus.Finished, projectCount, documentCount, documentCountRemaining);
                     }
 
                     _workQueue.WorkComplete(workType);
@@ -177,10 +177,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             }
         }
 
-        private void EventIfBackgroundWork(AnalyzerWorkType workType, BackgroundDiagnosticStatus status, int numberProjects, int numberFiles, int numberFilesRemaining)
+        private async Task EventIfBackgroundWorkAsync(AnalyzerWorkType workType, BackgroundDiagnosticStatus status, int numberProjects, int numberFiles, int numberFilesRemaining, CancellationToken cancellationToken = default)
         {
             if (workType == AnalyzerWorkType.Background)
-                _forwarder.BackgroundDiagnosticsStatus(status, numberProjects, numberFiles, numberFilesRemaining);
+                await _forwarder.BackgroundDiagnosticsStatusAsync(status, numberProjects, numberFiles, numberFilesRemaining, cancellationToken);
         }
 
         private void QueueForAnalysis(ImmutableArray<DocumentId> documentIds, AnalyzerWorkType workType)
@@ -266,7 +266,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             return diagnostics;
         }
 
-        private async Task AnalyzeProject(Solution solution, IGrouping<ProjectId, DocumentId> documentsGroupedByProject, Action decrementRemaining)
+        private async Task AnalyzeProject(Solution solution, IGrouping<ProjectId, DocumentId> documentsGroupedByProject, Func<Task> decrementRemaining)
         {
             try
             {
@@ -287,7 +287,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                             var document = project.GetDocument(documentId);
                             var diagnostics = await AnalyzeDocument(project, allAnalyzers, compilation, workspaceAnalyzerOptions, document);
                             UpdateCurrentDiagnostics(project, document, diagnostics);
-                            decrementRemaining();
+                            await decrementRemaining();
                         }
                         finally
                         {
@@ -384,7 +384,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
         private void EmitDiagnostics(DocumentDiagnostics results)
         {
-            _forwarder.Forward(new DiagnosticMessage
+            _forwarder.ForwardAsync(new DiagnosticMessage
             {
                 Results = new[]
                 {

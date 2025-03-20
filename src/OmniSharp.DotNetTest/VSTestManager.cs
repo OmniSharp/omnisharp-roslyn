@@ -30,7 +30,7 @@ namespace OmniSharp.DotNetTest
         {
         }
 
-        private object LoadRunSettingsOrDefault(string runSettingsPath, string targetFrameworkVersion)
+        private async ValueTask<object> LoadRunSettingsOrDefaultAsync(string runSettingsPath, string targetFrameworkVersion, CancellationToken cancellationToken = default)
         {
             if (runSettingsPath != null)
             {
@@ -40,11 +40,11 @@ namespace OmniSharp.DotNetTest
                 }
                 catch (FileNotFoundException)
                 {
-                    EmitTestMessage(TestMessageLevel.Warning, $"RunSettings file {runSettingsPath} not found. Continuing with default settings...");
+                    await EmitTestMessageAsync(TestMessageLevel.Warning, $"RunSettings file {runSettingsPath} not found. Continuing with default settings...", cancellationToken);
                 }
                 catch (Exception e)
                 {
-                    EmitTestMessage(TestMessageLevel.Warning, $"There was an error loading runsettings at {runSettingsPath}: {e}. Continuing with default settings...");
+                    await EmitTestMessageAsync(TestMessageLevel.Warning, $"There was an error loading runsettings at {runSettingsPath}: {e}. Continuing with default settings...", cancellationToken);
                 }
             }
 
@@ -98,14 +98,14 @@ namespace OmniSharp.DotNetTest
 
             var process = DotNetCli.Start(arguments, WorkingDirectory);
 
-            process.OutputDataReceived += (_, e) =>
+            process.OutputDataReceived += async (_, e) =>
             {
-                EmitTestMessage(TestMessageLevel.Informational, e.Data ?? string.Empty);
+                await EmitTestMessageAsync(TestMessageLevel.Informational, e.Data ?? string.Empty);
             };
 
-            process.ErrorDataReceived += (_, e) =>
+            process.ErrorDataReceived += async (_, e) =>
             {
-                EmitTestMessage(TestMessageLevel.Error, e.Data ?? string.Empty);
+                await EmitTestMessageAsync(TestMessageLevel.Error, e.Data ?? string.Empty);
             };
 
             process.BeginOutputReadLine();
@@ -183,7 +183,7 @@ namespace OmniSharp.DotNetTest
                 new
                 {
                     TestCases = testCases,
-                    RunSettings = LoadRunSettingsOrDefault(runSettings, targetFrameworkVersion)
+                    RunSettings = await LoadRunSettingsOrDefaultAsync(runSettings, targetFrameworkVersion, cancellationToken)
                 });
 
             bool done = false;
@@ -199,7 +199,7 @@ namespace OmniSharp.DotNetTest
                 switch (message.MessageType)
                 {
                     case MessageType.TestMessage:
-                        EmitTestMessage(message.DeserializePayload<TestMessagePayload>());
+                        await EmitTestMessageAsync(message.DeserializePayload<TestMessagePayload>(), cancellationToken);
                         break;
 
                     case MessageType.CustomTestHostLaunch:
@@ -237,7 +237,7 @@ namespace OmniSharp.DotNetTest
                 switch (message.MessageType)
                 {
                     case MessageType.TestMessage:
-                        EmitTestMessage(message.DeserializePayload<TestMessagePayload>());
+                        await EmitTestMessageAsync(message.DeserializePayload<TestMessagePayload>(), cancellationToken);
                         break;
 
                     case MessageType.ExecutionComplete:
@@ -383,7 +383,7 @@ namespace OmniSharp.DotNetTest
                     new
                     {
                         TestCases = testCases,
-                        RunSettings = LoadRunSettingsOrDefault(runSettings, targetFrameworkVersion)
+                        RunSettings = await LoadRunSettingsOrDefaultAsync(runSettings, targetFrameworkVersion, cancellationToken)
                     });
 
                 var done = false;
@@ -395,7 +395,7 @@ namespace OmniSharp.DotNetTest
                     switch (message.MessageType)
                     {
                         case MessageType.TestMessage:
-                            EmitTestMessage(message.DeserializePayload<TestMessagePayload>());
+                            await EmitTestMessageAsync(message.DeserializePayload<TestMessagePayload>(), cancellationToken);
                             break;
 
                         case MessageType.TestRunStatsChange:
@@ -405,7 +405,7 @@ namespace OmniSharp.DotNetTest
                             results.AddRange(newResults);
                             foreach (var result in newResults)
                             {
-                                EmitTestComletedEvent(result);
+                                await EmitTestCompletedEventAsync(result, cancellationToken);
                             }
                             break;
 
@@ -418,7 +418,7 @@ namespace OmniSharp.DotNetTest
                                 results.AddRange(lastRunResults);
                                 foreach (var result in lastRunResults)
                                 {
-                                    EmitTestComletedEvent(result);
+                                    await EmitTestCompletedEventAsync(result, cancellationToken);
                                 }
                             }
                             done = true;
@@ -460,7 +460,7 @@ namespace OmniSharp.DotNetTest
                     {
                         Project.OutputFilePath
                     },
-                    RunSettings = LoadRunSettingsOrDefault(runSettings, targetFrameworkVersion)
+                    RunSettings = await LoadRunSettingsOrDefaultAsync(runSettings, targetFrameworkVersion, cancellationToken)
                 });
 
             var testCases = new List<TestCase>();
@@ -482,7 +482,7 @@ namespace OmniSharp.DotNetTest
                 switch (message.MessageType)
                 {
                     case MessageType.TestMessage:
-                        EmitTestMessage(message.DeserializePayload<TestMessagePayload>());
+                        await EmitTestMessageAsync(message.DeserializePayload<TestMessagePayload>(), cancellationToken);
                         break;
 
                     case MessageType.TestCasesFound:

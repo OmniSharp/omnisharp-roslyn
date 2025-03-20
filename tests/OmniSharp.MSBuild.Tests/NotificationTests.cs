@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Composition.Hosting.Core;
+using System.Threading;
 using System.Threading.Tasks;
 using OmniSharp.Mef;
 using OmniSharp.MSBuild.Notification;
@@ -26,14 +27,14 @@ namespace OmniSharp.MSBuild.Tests
                 _onLoaded = onLoaded;
             }
 
-            public void ProjectLoaded(ProjectLoadedEventArgs e)
+            public Task ProjectLoadedAsync(ProjectLoadedEventArgs e, CancellationToken cancellationToken = default)
             {
                 _onLoaded(e);
+                return Task.CompletedTask;
             }
 
-            public void ProjectLoadingStarted(string projectPath)
-            {
-            }
+            public ValueTask ProjectLoadingStartedAsync(string projectPath, CancellationToken cancellationToken = default) =>
+                new();
         }
 
         [Fact]

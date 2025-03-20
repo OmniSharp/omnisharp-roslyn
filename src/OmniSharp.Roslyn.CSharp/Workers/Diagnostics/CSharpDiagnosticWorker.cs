@@ -104,7 +104,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
 
         private IObservable<Unit> ProcessQueue(IEnumerable<string> filePaths)
         {
-            return Observable.FromAsync(async () =>
+            return Observable.FromAsync(async (ct) =>
             {
                 var results = await Task.WhenAll(filePaths.Distinct().Select(ProcessNextItem));
                 var message = new DiagnosticMessage()
@@ -112,7 +112,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
                     Results = results
                 };
 
-                _forwarder.Forward(message);
+                await _forwarder.ForwardAsync(message, ct);
             });
         }
 

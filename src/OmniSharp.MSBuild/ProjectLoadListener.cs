@@ -4,6 +4,8 @@ using System.Composition;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Build.Execution;
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
@@ -33,10 +35,10 @@ namespace OmniSharp.MSBuild
             _eventEmitter = eventEmitter;
         }
 
-        public void ProjectLoadingStarted(string projectPath) =>
-            _eventEmitter.ProjectLoadingStarted(projectPath);
+        public ValueTask ProjectLoadingStartedAsync(string projectPath, CancellationToken cancellationToken = default) =>
+            _eventEmitter.ProjectLoadingStartedAsync(projectPath, cancellationToken);
 
-        public void ProjectLoaded(ProjectLoadedEventArgs args)
+        public async Task ProjectLoadedAsync(ProjectLoadedEventArgs args, CancellationToken cancellationToken = default)
         {
             try
             {
@@ -56,7 +58,7 @@ namespace OmniSharp.MSBuild
                 var (hashedFileExtensions, fileCounts) = GetUniqueHashedFileExtensionsAndCounts(args);
 
                 var sdkStyleProject = IsSdkStyleProject(args);
-                _eventEmitter.ProjectInformation(
+                await _eventEmitter.ProjectInformationAsync(
                         projectId,
                         sessionId,
                         (int)outputKind,
@@ -66,8 +68,8 @@ namespace OmniSharp.MSBuild
                         hashedReferences,
                         hashedFileExtensions,
                         fileCounts,
-                        sdkStyleProject,
-                        args.Project.ProjectFileLocation.File);
+                        sdkStyleProject);
+                await _eventEmitter.ProjectLoadingFinishedAsync(args.Project.ProjectFileLocation.File);
             }
             catch (Exception ex)
             {

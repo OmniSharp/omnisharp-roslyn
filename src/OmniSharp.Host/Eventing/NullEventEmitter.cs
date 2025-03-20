@@ -1,3 +1,6 @@
+using System.Threading;
+using System.Threading.Tasks;
+
 namespace OmniSharp.Eventing
 {
     public class NullEventEmitter : IEventEmitter
@@ -6,9 +9,8 @@ namespace OmniSharp.Eventing
 
         private NullEventEmitter() { }
 
-        public void Emit(string kind, object args)
-        {
+        public ValueTask EmitAsync(string kind, object args, CancellationToken cancellationToken = default) =>
             // nothing
-        }
+            new();
     }
 }

@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using OmniSharp.Eventing;
 using OmniSharp.Services;
 
@@ -19,11 +21,11 @@ namespace OmniSharp.DotNetTest.Services
             LoggerFactory = loggerFactory;
         }
 
-        protected TestManager CreateTestManager(string fileName, bool noBuild)
+        protected async Task<TestManager> CreateTestManagerAsync(string fileName, bool noBuild, CancellationToken cancellationToken = default)
         {
             var document = Workspace.GetDocument(fileName);
 
-            return TestManager.Start(document.Project, DotNetCli, EventEmitter, LoggerFactory, noBuild);
+            return await TestManager.Start(document.Project, DotNetCli, EventEmitter, LoggerFactory, noBuild, cancellationToken);
         }
     }
 }

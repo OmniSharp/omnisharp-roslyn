@@ -1,6 +1,8 @@
+using System;
 using System.Collections.Generic;
 using System.Composition;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using OmniSharp.Eventing;
@@ -60,22 +62,25 @@ namespace OmniSharp.Roslyn
                     var removed = _queue.Remove(e);
                     _queue.Add(e);
                     if (!removed)
+                    if (removed)
                     {
-                        Task.Factory.StartNew(async () =>
-                        {
-                            object payload = null;
-                            if (e.EventType != EventTypes.ProjectRemoved)
-                            {
-                                payload = await GetProjectInformationAsync(e.FileName);
-                            }
-
-                            lock (_lock)
-                            {
-                                _queue.Remove(e);
-                                _emitter.Emit(e.EventType, payload);
-                            }
-                        });
+                        return;
                     }
+
+                    Task.Factory.StartNew(async () =>
+                    {
+                        object payload = null;
+                        if (e.EventType != EventTypes.ProjectRemoved)
+                        {
+                            payload = await GetProjectInformationAsync(e.FileName);
+                        }
+
+                        lock (_lock)
+                        {
+                            _queue.Remove(e);
+                        }
+                        await _emitter.EmitAsync(e.EventType, payload);
+                    });
                 }
             }
         }

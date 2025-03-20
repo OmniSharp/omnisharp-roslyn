@@ -1,8 +1,11 @@
-﻿namespace OmniSharp.MSBuild.Notification
+﻿using System.Threading;
+using System.Threading.Tasks;
+
+namespace OmniSharp.MSBuild.Notification
 {
     public interface IMSBuildEventSink
     {
-        void ProjectLoadingStarted(string projectPath);
-        void ProjectLoaded(ProjectLoadedEventArgs e);
+        ValueTask ProjectLoadingStartedAsync(string projectPath, CancellationToken cancellationToken = default);
+        Task ProjectLoadedAsync(ProjectLoadedEventArgs e, CancellationToken cancellationToken = default);
     }
 }

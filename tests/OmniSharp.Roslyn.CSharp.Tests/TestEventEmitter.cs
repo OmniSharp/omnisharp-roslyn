@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading;
 using System.Threading.Tasks;
 using OmniSharp.Eventing;
 
@@ -35,12 +36,14 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 Messages = ImmutableArray<T>.Empty;
             }
 
-            public void Emit(string kind, object args)
+            public ValueTask EmitAsync(string kind, object args, CancellationToken cancellationToken = default)
             {
                 if(args is T asT)
                 {
                     Messages = Messages.Add(asT);
                 }
+
+                return new();
             }
         }
 }
