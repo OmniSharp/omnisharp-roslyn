@@ -135,7 +135,7 @@ namespace OmniSharp.MSBuild.Tests
             var dotnetCliService = host.GetExport<IDotNetCliService>();
             await dotnetCliService.RestoreAsync(testProject.Directory);
             Assert.Single(emitter.ReceivedMessages);
-            Assert.NotEmpty(emitter.ReceivedMessages[0].References.Where(reference => reference == GetHashedReference("system.core")));
+            Assert.Contains(emitter.ReceivedMessages[0].References, reference => reference == GetHashedReference("system.core"));
         }
 
 
