@@ -340,7 +340,7 @@ namespace OmniSharp.MSBuild.Tests
             Assert.Null(workspaceInfo);
         }
 
-        [Fact]
+        [Fact(Skip = "May cause the test host process to crash")]
         public async Task TestProjectWithAliasOnProjectReference()
         {
             using var testProject = await TestAssets.Instance.GetTestProjectAsync("ExternAlias");

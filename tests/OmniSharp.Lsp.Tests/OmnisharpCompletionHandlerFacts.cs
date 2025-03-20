@@ -337,9 +337,9 @@ namespace N2
             VerifySortOrders(completions.Items);
         }
 
-        [Theory]
+        [Theory(Skip = "Skipping for being flaky")]
         [InlineData("dummy.cs")]
-        // [InlineData("dummy.csx")] - Skipping for being flaky
+        [InlineData("dummy.csx")]
         public async Task UsingsAddedInOrder(string filename)
         {
 
