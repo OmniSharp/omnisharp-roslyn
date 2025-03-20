@@ -61,7 +61,6 @@ namespace OmniSharp.Roslyn
                 {
                     var removed = _queue.Remove(e);
                     _queue.Add(e);
-                    if (!removed)
                     if (removed)
                     {
                         return;
