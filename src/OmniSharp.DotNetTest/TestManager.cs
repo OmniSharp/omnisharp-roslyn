@@ -49,14 +49,14 @@ namespace OmniSharp.DotNetTest
             Logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        public static TestManager Start(Project project, IDotNetCliService dotNetCli, IEventEmitter eventEmitter, ILoggerFactory loggerFactory, bool noBuild)
+        public static async Task<TestManager> Start(Project project, IDotNetCliService dotNetCli, IEventEmitter eventEmitter, ILoggerFactory loggerFactory, bool noBuild, CancellationToken cancellationToken = default)
         {
-            var manager = Create(project, dotNetCli, eventEmitter, loggerFactory);
+            var manager = await CreateAsync(project, dotNetCli, eventEmitter, loggerFactory, cancellationToken);
             manager.Connect(noBuild);
             return manager;
         }
 
-        public static TestManager Create(Project project, IDotNetCliService dotNetCli, IEventEmitter eventEmitter, ILoggerFactory loggerFactory)
+        public static async Task<TestManager> CreateAsync(Project project, IDotNetCliService dotNetCli, IEventEmitter eventEmitter, ILoggerFactory loggerFactory, CancellationToken cancellationToken = default)
         {
             var workingDirectory = Path.GetDirectoryName(project.FilePath);
 
@@ -64,7 +64,7 @@ namespace OmniSharp.DotNetTest
 
             if (version.HasError)
             {
-                EmitTestMessage(eventEmitter, TestMessageLevel.Error, version.ErrorMessage);
+                await EmitTestMessageAsync(eventEmitter, TestMessageLevel.Error, version.ErrorMessage, cancellationToken);
                 throw new Exception(version.ErrorMessage);
             }
 
@@ -205,30 +205,22 @@ namespace OmniSharp.DotNetTest
             }
         }
 
-        protected void EmitTestComletedEvent(DotNetTestResult result)
-        {
-            EventEmitter.Emit("TestCompleted", result);
-        }
+        protected ValueTask EmitTestCompletedEventAsync(DotNetTestResult result, CancellationToken cancellationToken = default) =>
+            EventEmitter.EmitAsync("TestCompleted", result, cancellationToken);
 
-        private static void EmitTestMessage(IEventEmitter eventEmitter, TestMessageLevel messageLevel, string message)
-        {
-            eventEmitter.Emit(TestMessageEvent.Id,
+        private static ValueTask EmitTestMessageAsync(IEventEmitter eventEmitter, TestMessageLevel messageLevel, string message, CancellationToken cancellationToken = default) =>
+            eventEmitter.EmitAsync(TestMessageEvent.Id,
                 new TestMessageEvent
                 {
                     MessageLevel = messageLevel.ToString().ToLowerInvariant(),
                     Message = message
-                });
-        }
+                }, cancellationToken);
 
-        protected void EmitTestMessage(TestMessageLevel messageLevel, string message)
-        {
-            EmitTestMessage(EventEmitter, messageLevel, message);
-        }
+        protected ValueTask EmitTestMessageAsync(TestMessageLevel messageLevel, string message, CancellationToken cancellationToken = default) =>
+            EmitTestMessageAsync(EventEmitter, messageLevel, message, cancellationToken);
 
-        protected void EmitTestMessage(TestMessagePayload testMessage)
-        {
-            EmitTestMessage(testMessage.MessageLevel, testMessage.Message);
-        }
+        protected ValueTask EmitTestMessageAsync(TestMessagePayload testMessage, CancellationToken cancellationToken = default) =>
+            EmitTestMessageAsync(testMessage.MessageLevel, testMessage.Message, cancellationToken);
 
         protected Message ReadMessage()
         {

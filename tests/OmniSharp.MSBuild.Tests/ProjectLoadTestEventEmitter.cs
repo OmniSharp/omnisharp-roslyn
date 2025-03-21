@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Composition.Hosting.Core;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace OmniSharp.MSBuild.Tests
 {
@@ -34,13 +35,15 @@ namespace OmniSharp.MSBuild.Tests
                 };
             }
 
-            public void Emit(string kind, object args)
+            public ValueTask EmitAsync(string kind, object args, CancellationToken cancellationToken = default)
             {
                 if(args is ProjectConfigurationMessage)
                 {
                     ReceivedMessages = ReceivedMessages.Add((ProjectConfigurationMessage)args);
                     _messageEvent.Set();
                 }
+
+                return new();
             }
         }
     }

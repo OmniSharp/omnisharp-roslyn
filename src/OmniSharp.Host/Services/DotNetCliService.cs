@@ -84,14 +84,14 @@ namespace OmniSharp.Services
 
         private Task RestoreAsync((string WorkingDirectory, string Arguments) key, Action onFailure = null)
         {
-            return Task.Factory.StartNew(() =>
+            return Task.Factory.StartNew(async () =>
             {
                 var (workingDirectory, arguments) = key;
 
                 _logger.LogInformation($"Begin dotnet restore in '{workingDirectory}'");
 
                 var exitStatus = new ProcessExitStatus(-1);
-                _eventEmitter.RestoreStarted(workingDirectory);
+                await _eventEmitter.RestoreStartedAsync(workingDirectory);
                 _semaphore.Wait();
                 try
                 {
@@ -106,7 +106,7 @@ namespace OmniSharp.Services
 
                     _restoreTasks.TryRemove(key, out _);
 
-                    _eventEmitter.RestoreFinished(workingDirectory, exitStatus.Succeeded);
+                    await _eventEmitter.RestoreFinishedAsync(workingDirectory, exitStatus.Succeeded);
 
                     if (exitStatus.Failed && onFailure != null)
                     {

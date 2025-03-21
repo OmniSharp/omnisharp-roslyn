@@ -55,7 +55,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 _messages.Clear();
         }
 
-        public void Emit(string kind, object args)
+        public ValueTask EmitAsync(string kind, object args, CancellationToken cancellationToken = default)
         {
             if (args is T asT)
             {
@@ -70,6 +70,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     }
                 }
             }
+
+            return new();
         }
     }
 }

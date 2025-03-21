@@ -1,4 +1,6 @@
 using System.Composition;
+using System.Threading;
+using System.Threading.Tasks;
 using OmniSharp.Eventing;
 using OmniSharp.Models.Diagnostics;
 using OmniSharp.Models.Events;
@@ -18,21 +20,19 @@ namespace OmniSharp.Roslyn
 
         public bool IsEnabled { get; set; }
 
-        public void Forward(DiagnosticMessage message)
-        {
-            _emitter.Emit(EventTypes.Diagnostic, message);
-        }
+        public ValueTask ForwardAsync(DiagnosticMessage message, CancellationToken cancellationToken = default) =>
+            _emitter.EmitAsync(EventTypes.Diagnostic, message, cancellationToken);
 
-        public void BackgroundDiagnosticsStatus(BackgroundDiagnosticStatus status, int numberProjects, int numberFiles, int numberFilesRemaining)
+        public async Task BackgroundDiagnosticsStatusAsync(BackgroundDiagnosticStatus status, int numberProjects, int numberFiles, int numberFilesRemaining, CancellationToken cancellationToken = default)
         {
             // New type of background diagnostic event, allows more control of visualization in clients:
-            _emitter.Emit(EventTypes.BackgroundDiagnosticStatus, new BackgroundDiagnosticStatusMessage
+            await _emitter.EmitAsync(EventTypes.BackgroundDiagnosticStatus, new BackgroundDiagnosticStatusMessage
             {
                 Status = status,
                 NumberProjects = numberProjects,
                 NumberFilesTotal = numberFiles,
                 NumberFilesRemaining = numberFilesRemaining
-            });
+            }, cancellationToken);
 
             // Old type of event emitted as a shim for older clients:
             double percentComplete = 0;
@@ -43,7 +43,7 @@ namespace OmniSharp.Roslyn
                     : (numberFiles - numberFilesRemaining) / (double)numberFiles;
             }
 
-            _emitter.Emit(EventTypes.ProjectDiagnosticStatus, new ProjectDiagnosticStatusMessage
+            await _emitter.EmitAsync(EventTypes.ProjectDiagnosticStatus, new ProjectDiagnosticStatusMessage
             {
                 // There is no current project file being analyzed anymore since all the analysis
                 // executes concurrently, but we have to supply some value for the ProjectFilePath
@@ -53,7 +53,7 @@ namespace OmniSharp.Roslyn
                 Status = status == BackgroundDiagnosticStatus.Finished ?
                     ProjectDiagnosticStatus.Ready :
                     ProjectDiagnosticStatus.Started
-            });
+            }, cancellationToken);
         }
     }
 }

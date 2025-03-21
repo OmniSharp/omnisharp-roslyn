@@ -22,7 +22,7 @@ namespace OmniSharp.DotNetTest.Services
 
         public async Task<TResponse> Handle(TRequest request)
         {
-            using (var testManager = CreateTestManager(request.FileName, request.NoBuild))
+            using (var testManager = await CreateTestManagerAsync(request.FileName, request.NoBuild))
             {
                 return await HandleRequest(request, testManager);
             }

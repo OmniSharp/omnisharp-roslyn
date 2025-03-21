@@ -47,12 +47,12 @@ namespace OmniSharp.MSBuild
             {
                 _dotNetCli.RestoreAsync(projectFile.Directory, projectFile.FilePath, onFailure: () =>
                 {
-                    _eventEmitter.UnresolvedDepdendencies(projectFile.FilePath, unresolvedDependencies);
+                    _eventEmitter.UnresolvedDependenciesAsync(projectFile.FilePath, unresolvedDependencies);
                 });
             }
             else
             {
-                _eventEmitter.UnresolvedDepdendencies(projectFile.FilePath, unresolvedDependencies);
+                _eventEmitter.UnresolvedDependenciesAsync(projectFile.FilePath, unresolvedDependencies);
             }
         }
 

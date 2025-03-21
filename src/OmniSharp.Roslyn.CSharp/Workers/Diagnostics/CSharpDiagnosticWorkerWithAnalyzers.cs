@@ -127,11 +127,11 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                         var eventEvery = Math.Max(10, documentCount / 100);
 
                         if (documentCount == remaining + 1)
-                            EventIfBackgroundWork(workType, BackgroundDiagnosticStatus.Started, _projectCount, documentCount, remaining);
+                            await EventIfBackgroundWorkAsync(workType, BackgroundDiagnosticStatus.Started, _projectCount, documentCount, remaining, cancellationToken ?? default);
 
                         var done = documentCount - remaining;
                         if (done % eventEvery == 0 || remaining == 0)
-                            EventIfBackgroundWork(workType, BackgroundDiagnosticStatus.Progress, _projectCount, documentCount, remaining);
+                            await EventIfBackgroundWorkAsync(workType, BackgroundDiagnosticStatus.Progress, _projectCount, documentCount, remaining, cancellationToken ?? default);
                     }
 
                     var solution = _workspace.CurrentSolution;
@@ -145,7 +145,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                     finally
                     {
                         if (remaining == 0)
-                            EventIfBackgroundWork(workType, BackgroundDiagnosticStatus.Finished, _projectCount, documentCount, remaining);
+                            await EventIfBackgroundWorkAsync(workType, BackgroundDiagnosticStatus.Finished, _projectCount, documentCount, remaining, cancellationToken ?? default);
                     }
                 }
                 catch (OperationCanceledException) when (cancellationToken != null && cancellationToken.Value.IsCancellationRequested)
@@ -164,10 +164,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             }
         }
 
-        private void EventIfBackgroundWork(AnalyzerWorkType workType, BackgroundDiagnosticStatus status, int numberProjects, int numberFiles, int numberFilesRemaining)
+        private async ValueTask EventIfBackgroundWorkAsync(AnalyzerWorkType workType, BackgroundDiagnosticStatus status, int numberProjects, int numberFiles, int numberFilesRemaining, CancellationToken cancellationToken = default)
         {
             if (workType == AnalyzerWorkType.Background)
-                _forwarder.BackgroundDiagnosticsStatus(status, numberProjects, numberFiles, numberFilesRemaining);
+                await _forwarder.BackgroundDiagnosticsStatusAsync(status, numberProjects, numberFiles, numberFilesRemaining, cancellationToken);
         }
 
         private void QueueForAnalysis(ImmutableArray<DocumentId> documentIds, AnalyzerWorkType workType)
@@ -251,13 +251,13 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             {
                 var project = solution.GetProject(projectId);
                 var allAnalyzers = GetAnalyzersForProject(project);
-                var compilation = await project.GetCompilationAsync();
+                var compilation = await project.GetCompilationAsync(cancellationToken);
                 var workspaceAnalyzerOptions = CreateAnalyzerOptions(project);
                 var document = project.GetDocument(documentId);
 
                 var diagnostics = await AnalyzeDocument(project, allAnalyzers, compilation, workspaceAnalyzerOptions, document, cancellationToken);
 
-                UpdateCurrentDiagnostics(project, document, diagnostics);
+                await UpdateCurrentDiagnostics(project, document, diagnostics, cancellationToken);
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
@@ -358,16 +358,15 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                 $"\n            exception: {ex.Message}");
         }
 
-        private void UpdateCurrentDiagnostics(Project project, Document document, ImmutableArray<Diagnostic> diagnostics)
+        private async Task UpdateCurrentDiagnostics(Project project, Document document, ImmutableArray<Diagnostic> diagnostics, CancellationToken cancellationToken = default)
         {
             var documentDiagnostics = new DocumentDiagnostics(document.Id, document.FilePath, project.Id, project.Name, diagnostics);
             _currentDiagnosticResultLookup[document.Id] = documentDiagnostics;
-            EmitDiagnostics(documentDiagnostics);
+            await EmitDiagnostics(documentDiagnostics, cancellationToken);
         }
 
-        private void EmitDiagnostics(DocumentDiagnostics results)
-        {
-            _forwarder.Forward(new DiagnosticMessage
+        private ValueTask EmitDiagnostics(DocumentDiagnostics results, CancellationToken cancellationToken = default) =>
+            _forwarder.ForwardAsync(new DiagnosticMessage
             {
                 Results = new[]
                 {
@@ -378,8 +377,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                             .ToList()
                     }
                 }
-            });
-        }
+            }, cancellationToken);
 
         public override async Task<ImmutableArray<DocumentDiagnostics>> GetAllDiagnosticsAsync()
         {

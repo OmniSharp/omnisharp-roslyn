@@ -50,6 +50,7 @@ namespace OmniSharp.LanguageServerProtocol
         private CompositionHost _compositionHost;
         private IServiceProvider _serviceProvider;
         private readonly Action<ILoggingBuilder> _configureLogging;
+        private IObserver<WorkDoneProgressReport> _workDoneObserver;
 
         public LanguageServerHost(
             Stream input,
@@ -65,6 +66,7 @@ namespace OmniSharp.LanguageServerProtocol
                 .ConfigureLogging(AddLanguageProtocolLogging(application.LogLevel))
                 .OnInitialize(Initialize)
                 .OnInitialized(Initialized)
+                .OnStarted(Started)
                 .WithServices(ConfigureServices);
 
             _application = application;
@@ -136,6 +138,19 @@ namespace OmniSharp.LanguageServerProtocol
             var logger = _compositionHost.GetExport<ILoggerFactory>().CreateLogger<LanguageServerHost>();
 
             logger.LogInformation($"Omnisharp server running using Lsp at location '{environment.TargetDirectory}' on host {environment.HostProcessId}.");
+
+            await Task.WhenAll(
+                _compositionHost
+                    .GetExports<IProjectSystem>()
+                    .Select(ps => ps.WaitForIdleAsync())
+                    .ToArray());
+
+            _workDoneObserver?.OnNext(new WorkDoneProgressReport
+            {
+                Message = "Language Server ready",
+                Percentage = 100,
+            });
+            _workDoneObserver?.OnCompleted();
 
             Console.CancelKeyPress += (sender, e) =>
             {
@@ -330,6 +345,7 @@ namespace OmniSharp.LanguageServerProtocol
         private Task Initialize(ILanguageServer server, InitializeParams initializeParams,
             CancellationToken cancellationToken)
         {
+            _workDoneObserver = server.WorkDoneManager.For(initializeParams, new WorkDoneProgressBegin { Message = "Initialize Language Server" });
             (_serviceProvider, _compositionHost) =
                 CreateCompositionHost(server, initializeParams, _application, _services, _configureLogging);
             var handlers = ConfigureCompositionHost(server, _compositionHost);
@@ -342,18 +358,25 @@ namespace OmniSharp.LanguageServerProtocol
                         _serviceProvider.GetRequiredService<IFileSystemNotifier>()));
             });
 
+            _workDoneObserver.OnNext(new WorkDoneProgressReport { Message = "Initialized handlers", Percentage = 10 });
             return Task.CompletedTask;
         }
 
-        public async Task Initialized(ILanguageServer server, InitializeParams request, InitializeResult response, CancellationToken cancellationToken)
+        public Task Initialized(ILanguageServer server, InitializeParams request, InitializeResult response, CancellationToken cancellationToken)
         {
+            _workDoneObserver.OnNext(new WorkDoneProgressReport { Message = "Initialize workspace", Percentage = 20 });
             WorkspaceInitializer.Initialize(_serviceProvider, _compositionHost);
+            return Task.CompletedTask;
+        }
 
-            await Task.WhenAll(
-                _compositionHost
-                    .GetExports<IProjectSystem>()
-                    .Select(ps => ps.WaitForIdleAsync())
-                    .ToArray());
+        public Task Started(ILanguageServer server, CancellationToken cancellationToken)
+        {
+            _workDoneObserver.OnNext(new WorkDoneProgressReport
+            {
+                Message = "Language Server started",
+                Percentage = 30,
+            });
+            return Task.CompletedTask;
         }
 
         internal void UnderTest(IServiceProvider serviceProvider, CompositionHost compositionHost)

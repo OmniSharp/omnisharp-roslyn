@@ -34,7 +34,7 @@ namespace OmniSharp.DotNetTest.Services
                 };
             }
 
-            using var testManager = TestManager.Create(document.Project, DotNetCli, EventEmitter, LoggerFactory);
+            using var testManager = await TestManager.CreateAsync(document.Project, DotNetCli, EventEmitter, LoggerFactory);
 
             var (methodNames, testFramework) = await testManager.GetContextTestMethodNames(request.Line, request.Column, document, CancellationToken.None);
 
