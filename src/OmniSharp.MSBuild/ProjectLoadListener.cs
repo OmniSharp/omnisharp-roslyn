@@ -35,8 +35,8 @@ namespace OmniSharp.MSBuild
             _eventEmitter = eventEmitter;
         }
 
-        public ValueTask ProjectLoadingStartedAsync(string projectPath, CancellationToken cancellationToken = default) =>
-            _eventEmitter.ProjectLoadingStartedAsync(projectPath, cancellationToken);
+        public ValueTask ProjectLoadStartedAsync(string projectPath, CancellationToken cancellationToken = default) =>
+            _eventEmitter.ProjectLoadStartedAsync(projectPath, cancellationToken);
 
         public async Task ProjectLoadedAsync(ProjectLoadedEventArgs args, CancellationToken cancellationToken = default)
         {
@@ -69,7 +69,7 @@ namespace OmniSharp.MSBuild
                         hashedFileExtensions,
                         fileCounts,
                         sdkStyleProject);
-                await _eventEmitter.ProjectLoadingFinishedAsync(args.Project.ProjectFileLocation.File);
+                await _eventEmitter.ProjectLoadFinishedAsync(args.Project.ProjectFileLocation.File);
             }
             catch (Exception ex)
             {

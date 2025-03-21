@@ -314,7 +314,7 @@ namespace OmniSharp.MSBuild
             {
                 try
                 {
-                    await eventSink.ProjectLoadingStartedAsync(projectFilePath, cancellationToken);
+                    await eventSink.ProjectLoadStartedAsync(projectFilePath, cancellationToken);
                 }
                 catch (Exception ex)
                 {

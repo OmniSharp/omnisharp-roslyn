@@ -33,7 +33,7 @@ namespace OmniSharp.MSBuild.Tests
                 return Task.CompletedTask;
             }
 
-            public ValueTask ProjectLoadingStartedAsync(string projectPath, CancellationToken cancellationToken = default) =>
+            public ValueTask ProjectLoadStartedAsync(string projectPath, CancellationToken cancellationToken = default) =>
                 new();
         }
 

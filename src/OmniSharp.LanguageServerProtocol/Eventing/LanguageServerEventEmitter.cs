@@ -52,7 +52,7 @@ namespace OmniSharp.LanguageServerProtocol.Eventing
                         }
                     }
                     break;
-                case EventTypes.ProjectLoadingStarted:
+                case EventTypes.ProjectLoadStarted:
                 {
                     string projectPath = (string)args;
                     IWorkDoneObserver projectObserver = await _server.WorkDoneManager
@@ -60,7 +60,7 @@ namespace OmniSharp.LanguageServerProtocol.Eventing
                     _projectObservers.TryAdd(projectPath, projectObserver);
                     break;
                 }
-                case EventTypes.ProjectLoadingFinished:
+                case EventTypes.ProjectLoadFinished:
                 {
                     string projectPath = (string)args;
                     if (_projectObservers.TryGetValue(projectPath, out IWorkDoneObserver obs))

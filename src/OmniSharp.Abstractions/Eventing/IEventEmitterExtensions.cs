@@ -42,15 +42,15 @@ namespace OmniSharp.Eventing
                 },
                 cancellationToken);
 
-        public static ValueTask ProjectLoadingStartedAsync(this IEventEmitter emitter, string projectPath, CancellationToken cancellationToken = default) =>
+        public static ValueTask ProjectLoadStartedAsync(this IEventEmitter emitter, string projectPath, CancellationToken cancellationToken = default) =>
             emitter.EmitAsync(
-                    EventTypes.ProjectLoadingStarted,
+                    EventTypes.ProjectLoadStarted,
                     projectPath,
                     cancellationToken);
 
-        public static ValueTask ProjectLoadingFinishedAsync(this IEventEmitter emitter, string projectPath, CancellationToken cancellationToken = default) =>
+        public static ValueTask ProjectLoadFinishedAsync(this IEventEmitter emitter, string projectPath, CancellationToken cancellationToken = default) =>
             emitter.EmitAsync(
-                    EventTypes.ProjectLoadingFinished,
+                    EventTypes.ProjectLoadFinished,
                     projectPath,
                     cancellationToken);
 
