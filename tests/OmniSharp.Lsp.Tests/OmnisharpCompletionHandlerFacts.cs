@@ -1533,9 +1533,6 @@ class Foo
             }
 
             OmniSharpTestHost.AddFilesToWorkspace(files);
-
-            await Task.Delay(1000);
-
             var point = testFile.Content.GetPointFromPosition();
 
             var request = new CompletionParams
