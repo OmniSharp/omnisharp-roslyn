@@ -620,7 +620,7 @@ class C
 }";
 
             var completions = await FindCompletionsAsync(filename, input, wantSnippet: true, triggerChar: " ");
-            Assert.NotEmpty(completions.Where(completion => completion.Preselect == true));
+            Assert.Contains(completions, completion => completion.Preselect == true);
         }
 
         [Theory]
