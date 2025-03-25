@@ -9,7 +9,7 @@ env:
   Artifacts: ${{ github.workspace }}/artifacts/
   Coverage: ${{ github.workspace }}/coverage/
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: "true"
-  VSTEST_TESTHOST_SHUTDOWN_TIMEOUT: "250"
+  VSTEST_TESTHOST_SHUTDOWN_TIMEOUT: "1000"
 defaults:
   run:
     shell: pwsh
