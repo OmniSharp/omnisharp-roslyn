@@ -7,11 +7,11 @@
         <OmniSharpExtensionsPackageVersion>0.19.9</OmniSharpExtensionsPackageVersion>
         <MicrosoftExtensionPackageVersion>9.0.0</MicrosoftExtensionPackageVersion>
         <MicrosoftBaseCommonLibraryVersion>9.0.0</MicrosoftBaseCommonLibraryVersion>
-        <MicrosoftTestPackageVersion>17.13.0</MicrosoftTestPackageVersion>
+        <MicrosoftTestPackageVersion>17.14.0-preview-25107-01</MicrosoftTestPackageVersion>
         <MSBuildPackageVersion>17.3.2</MSBuildPackageVersion>
         <NuGetPackageVersion>6.14.0-preview.1.45</NuGetPackageVersion>
         <RoslynPackageVersion>4.14.0-3.25168.13</RoslynPackageVersion>
-        <XunitPackageVersion>2.6.1</XunitPackageVersion>
+        <XunitPackageVersion>2.8.1</XunitPackageVersion>
     </PropertyGroup>
 
     <ItemGroup>
