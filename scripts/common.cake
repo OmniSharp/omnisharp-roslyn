@@ -129,7 +129,6 @@ public class Folders
     public string Source { get; }
     public string Tests { get; }
     public string TestAssets { get; }
-    public string MonoPackaging { get; }
 
     public string Artifacts { get; }
     public string ArtifactsPublish { get; }
@@ -147,7 +146,6 @@ public class Folders
         this.Source = PathHelper.Combine(workingDirectory, "src");
         this.Tests = PathHelper.Combine(workingDirectory, "tests");
         this.TestAssets = PathHelper.Combine(workingDirectory, "test-assets");
-        this.MonoPackaging = PathHelper.Combine(workingDirectory, "mono-packaging");
 
         this.Artifacts = PathHelper.Combine(workingDirectory, "artifacts");
         this.ArtifactsPublish = PathHelper.Combine(this.Artifacts, "publish");
@@ -155,18 +153,6 @@ public class Folders
         this.ArtifactsPackage = PathHelper.Combine(this.Artifacts, "package");
         this.DeploymentPackage = PathHelper.Combine(this.Artifacts, "deployment");
         this.ArtifactsScripts = PathHelper.Combine(this.Artifacts, "scripts");
-    }
-}
-
-public class MonoRuntime
-{
-    public string PlatformName { get; }
-    public string RuntimeFile { get; }
-
-    public MonoRuntime(string platformName, string runtimeFile)
-    {
-        this.PlatformName = platformName;
-        this.RuntimeFile = runtimeFile;
     }
 }
 
@@ -180,10 +166,6 @@ public class BuildEnvironment
     public string ShellCommand { get; }
     public string ShellArgument { get; }
     public string ShellScriptFileExtension { get; }
-
-    public MonoRuntime[] MonoRuntimes { get; }
-    public MonoRuntime[] BuildMonoRuntimes { get; }
-    public MonoRuntime CurrentMonoRuntime { get; }
 
     public GitVersion VersionInfo { get; }
 
@@ -200,35 +182,6 @@ public class BuildEnvironment
         this.ShellCommand = Platform.Current.IsWindows ? "powershell" : "bash";
         this.ShellArgument = Platform.Current.IsWindows ? "-NoProfile -ExecutionPolicy Bypass /Command" : "-C";
         this.ShellScriptFileExtension = Platform.Current.IsWindows ? "ps1" : "sh";
-        this.MonoRuntimes = new []
-        {
-            new MonoRuntime("osx", "mono"),
-            new MonoRuntime("linux-x86", "mono"),
-            new MonoRuntime("linux-x64", "mono"),
-            new MonoRuntime("linux-arm64", "mono")
-        };
-
-        if (Platform.Current.IsMacOS)
-        {
-            this.CurrentMonoRuntime = this.MonoRuntimes[0];
-            this.BuildMonoRuntimes = new [] { this.CurrentMonoRuntime };
-        }
-        else if (Platform.Current.IsLinux)
-        {
-            if (Platform.Current.IsX86)
-            {
-                this.CurrentMonoRuntime = this.MonoRuntimes[1];
-            }
-            else if (Platform.Current.IsX64)
-            {
-                this.CurrentMonoRuntime = this.MonoRuntimes[2];
-            }
-            else if (Platform.Current.IsArm64)
-            {
-                this.CurrentMonoRuntime = this.MonoRuntimes[3];
-            }
-            this.BuildMonoRuntimes = this.MonoRuntimes.Skip(1).ToArray();
-        }
 
         VersionInfo = GetGitVersionFromEnvironment(context);
     }
@@ -339,7 +292,6 @@ public class BuildPlan
     public string DotNetInstallScriptURL { get; set; }
     public string DotNetChannel { get; set; }
     public string[] DotNetVersions { get; set; }
-    public string RequiredMonoVersion { get; set; }
     public string DownloadURL { get; set; }
     public string[] HostProjects { get; set; }
     public string[] TestProjects { get; set; }

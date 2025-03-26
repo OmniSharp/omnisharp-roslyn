@@ -21,7 +21,6 @@ variables:
   CakeVersion: "4.2.0"
   NuGetVersion: "6.5.0"
   GitVersionVersion: "5.0.1"
-  MonoVersion: "6.12.0"
   Coverage: "$(Agent.BuildDirectory)/c"
   VstsCoverage: "$(Coverage)"
   Artifacts: $(Build.SourcesDirectory)/artifacts/
@@ -100,7 +99,6 @@ stages:
               CakeVersion: $(CakeVersion)
               DotNetVersion: $(DotNetVersion)
               NuGetVersion: $(NuGetVersion)
-              MonoVersion: $(MonoVersion)
           - script: |
               echo $PATH
               chmod 755 ./build.sh
@@ -121,7 +119,6 @@ stages:
               CakeVersion: $(CakeVersion)
               DotNetVersion: $(DotNetVersion)
               NuGetVersion: $(NuGetVersion)
-              MonoVersion: $(MonoVersion)
           - script: |
               chmod 755 ./build.sh
               ./build.sh --configuration Release --verbosity Verbose --target CI --publish-all --archive

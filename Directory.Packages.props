@@ -15,9 +15,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageVersion Include="BenchmarkDotNet" Version="0.13.10" />
-        <PackageVersion Include="BenchmarkDotNet.Diagnostics.Windows" Version="0.13.10" />
-
         <PackageVersion Include="Cake.Scripting.Transport" Version="0.16.0" />
 
         <PackageVersion Include="DiffPlex" Version="1.7.2" />
@@ -101,11 +98,5 @@
     </ItemGroup>
     <ItemGroup>
         <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
-    </ItemGroup>
-    <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
-        <PackageVersion Include="Microsoft.AspNetCore.Diagnostics" Version="2.2.0" />
-        <PackageVersion Include="Microsoft.AspNetCore.Hosting" Version="2.2.0" />
-        <PackageVersion Include="Microsoft.AspNetCore.Http.Features" Version="2.2.0" />
-        <PackageVersion Include="Microsoft.AspNetCore.Server.Kestrel" Version="2.2.0" />
     </ItemGroup>
 </Project>
