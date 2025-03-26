@@ -2,13 +2,9 @@
     "DotNetInstallScriptURL": "https://dot.net/v1",
     "DotNetChannel": "Preview",
     "DotNetVersions": [
-        "6.0.203",
-        "6.0.428",
-        "8.0.415",
-        "9.0.306",
-        "10.0.400"
+        "8.0.303",
+        "9.0.101"
     ],
-    "RequiredMonoVersion": "6.6.0",
     "DownloadURL": "https://roslynomnisharp.blob.core.windows.net/ext",
     "HostProjects": ["OmniSharp.Stdio.Driver", "OmniSharp.Http.Driver"],
     "TestProjects": [
@@ -44,7 +40,13 @@
         "ProjectWithParentEditorConfig",
         "TwoProjectsWithAnalyzerSuppressor"
     ],
-    "CakeTestAssets": ["CakeProject"],
-    "WindowsOnlyTestAssets": ["AntlrGeneratedFiles"],
-    "RestoreOnlyTestAssets": ["ProjectWithMissingType"]
+    "CakeTestAssets": [
+        "CakeProject"
+    ],
+    "WindowsOnlyTestAssets": [
+        "AntlrGeneratedFiles"
+    ],
+    "RestoreOnlyTestAssets": [
+        "ProjectWithMissingType"
+    ]
 }

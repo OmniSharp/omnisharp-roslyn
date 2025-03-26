@@ -1,24 +1,8 @@
 # Requirements
 
-## Windows
-
-In order to build OmniSharp, the [.NET 4.7.2 targeting pack](https://dotnet.microsoft.com/download/dotnet-framework/thank-you/net472-developer-pack-offline-installer) must be installed if it isn't already.
-
-## macOS
-
-**Mono 6.6.0** or greater is required. You can install this using the latest [.pkg](http://www.mono-project.com/download/#download-mac) or install it view [Homebrew](https://brew.sh/):
-
-```
-brew update
-brew install mono
-brew install homebrew/cask/mono-mdk
-```
-
 ## Linux
 
 Because OmniSharp uses the .NET Core SDK as part of the build, not all Linux distros are supported. A good rule of thumb is to check the list [here](https://docs.microsoft.com/dotnet/core/install/dependencies?pivots=os-linux) to see if your particular distro is supported.
-
-**Mono 6.6.0** or greater is required. Each distro or derivative has its own set of instructions for installing Mono which you can find [here](http://www.mono-project.com/download/#download-lin). Be sure to install `msbuild` as well, which may be a separate package.
 
 # Usage
 
@@ -42,7 +26,7 @@ Defaults to `Debug`.
 `-install-path Path`: Path used for the **Install** target.
 Defaults to `(%USERPROFILE%|$HOME)/.omnisharp`
 
-`-publish-all`: Publishes all platforms for the current OS. On Windows, specifying this argument would produce win7-x86, win7-x64, and win10-arm64 builds. On OSX/Linux, this argument causes osx, linux-arm64, linux-x64, linux-musl-x64, linux-musl-arm64 and linux-bionic-arm64 builds to be published.
+`-publish-all`: Publishes all platforms for the current OS. On Windows, specifying this argument would produce win7-x86, win7-x64, and win10-arm64 builds. On OSX/Linux, this argument causes osx, linux-x86, linux-x64, linux-musl-x64, linux-musl-arm64 and linux-arm64 builds to be published.
 
 `-archive`: Enable the generation of publishable archives after a build.
 
