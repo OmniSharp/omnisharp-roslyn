@@ -14,35 +14,10 @@ namespace OmniSharp.MSBuild.Discovery
             var minimumMSBuildVersion = GetSdkMinimumMSBuildVersion(dotNetInfo, logger);
             logger.LogDebug($".NET SDK requires MSBuild instances version {minimumMSBuildVersion} or higher");
 
-            var bestInstanceFound = GetBestInstance(msbuildLocator, minimumMSBuildVersion, logger, out var invalidVSFound, out var vsWithoutSdkResolver);
+            var bestInstanceFound = GetBestInstance(msbuildLocator, minimumMSBuildVersion, logger);
 
             if (bestInstanceFound != null)
             {
-                if (bestInstanceFound.Version < minimumMSBuildVersion)
-                {
-                    if (bestInstanceFound.DiscoveryType == DiscoveryType.Mono)
-                    {
-                        logger.LogWarning(
-                            $@"It looks like you have Mono installed which contains a MSBuild lower than {minimumMSBuildVersion} which is the minimum supported by the configured .NET Core Sdk.
- Try updating Mono to the latest stable or preview version to enable better .NET Core Sdk support."
-                        );
-                    }
-                    else if (bestInstanceFound.DiscoveryType == DiscoveryType.VisualStudioSetup)
-                    {
-                        logger.LogWarning(
-                            $@"It looks like you have Visual Studio 2019 installed which contains a MSBuild lower than {minimumMSBuildVersion} which is the minimum supported by the configured .NET Core Sdk.
- Try updating Visual Studio to version {minimumMSBuildVersion} or higher to enable better .NET Core Sdk support."
-                        );
-                    }
-                    else if (bestInstanceFound.DiscoveryType == DiscoveryType.UserOverride)
-                    {
-                        logger.LogWarning(
-                            $@"It looks like you have overridden the version of MSBuild with a version lower than {minimumMSBuildVersion} which is the minimum supported by the configured .NET Core Sdk.
- Try updating your MSBuild to version {minimumMSBuildVersion} or higher to enable better .NET Core Sdk support."
-                        );
-                    }
-                }
-
                 msbuildLocator.RegisterInstance(bestInstanceFound);
             }
             else
@@ -74,10 +49,8 @@ namespace OmniSharp.MSBuild.Discovery
                 && (instance.DiscoveryType == DiscoveryType.DeveloperConsole
                     || instance.DiscoveryType == DiscoveryType.VisualStudioSetup);
 
-        public static MSBuildInstance GetBestInstance(this IMSBuildLocator msbuildLocator, Version minimumMSBuildVersion, ILogger logger, out bool invalidVSFound, out bool vsWithoutSdkResolver)
+        public static MSBuildInstance GetBestInstance(this IMSBuildLocator msbuildLocator, Version minimumMSBuildVersion, ILogger logger)
         {
-            invalidVSFound = false;
-            vsWithoutSdkResolver = false;
             MSBuildInstance bestMatchInstance = null;
             var bestMatchScore = 0;
 
@@ -86,9 +59,6 @@ namespace OmniSharp.MSBuild.Discovery
                 var score = GetInstanceFeatureScore(instance, minimumMSBuildVersion);
 
                 logger.LogDebug($"MSBuild instance {instance.Name} {instance.Version} scored at {score}");
-
-                invalidVSFound = invalidVSFound || instance.IsInvalidVisualStudio();
-                vsWithoutSdkResolver = vsWithoutSdkResolver || (!instance.IsInvalidVisualStudio() && !instance.HasDotNetSdksResolvers());
 
                 if (bestMatchInstance == null ||
                     score > bestMatchScore ||

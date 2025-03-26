@@ -3,8 +3,6 @@ parameters:
   Verbosity: Normal
   DotNetVersion: "10.0.105"
   CakeVersion: "1.1.0"
-  NuGetVersion: "5.7.0"
-  MonoVersion: ""
 steps:
   - task: DownloadBuildArtifacts@0
     displayName: "Download GitVersion Variables"
@@ -45,13 +43,3 @@ steps:
       workingDirectory: "$(Build.ArtifactStagingDirectory)"
     env:
       CakeVersion: ${{ parameters.CakeVersion }}
-  - task: NuGetToolInstaller@0
-    displayName: "Get NuGet"
-    inputs:
-      versionSpec: ${{ parameters.NuGetVersion }}
-  - task: NuGetCommand@2
-    displayName: "Cake restore packages.config"
-    inputs:
-      command: custom
-      feedsToUse: config
-      arguments: install tools/packages.config -ExcludeVersion -OutputDirectory tools

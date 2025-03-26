@@ -1,12 +1,9 @@
 name: "Tests net6.0"
 env:
-  DotNetVersion: "10.0.105"
-  DotNetVersion2: "9.0.306"
-  DotNetVersion3: "8.0.415"
-  DotNetVersion4: "6.0.428"
-  DotNetVersion5: "6.0.203" # This is the last version Mono supports. It is used for our Mono CI tests.
-  NuGetVersion: "6.5.0"
-  MonoVersion: ""
+  DotNetVersion: "9.0.101"
+  DotNetVersion2: "8.0.303"
+  DotNetVersion3: "7.0.410"
+  DotNetVersion4: "6.0.203" # This is the last version Mono supports. It is used for our Mono CI tests.
   Artifacts: ${{ github.workspace }}/artifacts/
   Coverage: ${{ github.workspace }}/coverage/
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: "true"
@@ -62,14 +59,6 @@ jobs:
         uses: nuget/setup-nuget@v1
         with:
           nuget-version: ${{ env.NuGetVersion }}
-
-      - name: 🎁 nuget install
-        run: |
-          nuget install tools/packages.config -ExcludeVersion -OutputDirectory tools
-
-      - name: 🎁 dotnet tool restore
-        run: |
-          dotnet tool restore
 
       - name: 🍰 Run Cake
         uses: nick-invision/retry@v2
