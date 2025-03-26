@@ -1,6 +1,6 @@
-﻿using System;
+using System;
 
-namespace ProjectAndSolution
+namespace Net110Project
 {
     class Program
     {

@@ -115,6 +115,18 @@ namespace OmniSharp
         {
             services ??= new ServiceCollection();
 
+            ConfigureDefaultServices(environment, configuration, eventEmitter, services, configureLogging);
+
+            return services.BuildServiceProvider();
+        }
+
+        public static void ConfigureDefaultServices(
+            IOmniSharpEnvironment environment,
+            IConfigurationRoot configuration,
+            IEventEmitter eventEmitter,
+            IServiceCollection services,
+            Action<ILoggingBuilder> configureLogging = null)
+        {
             services.TryAddSingleton(_ => new ManualFileSystemWatcher());
             services.TryAddSingleton<IFileSystemNotifier>(sp => sp.GetRequiredService<ManualFileSystemWatcher>());
             services.TryAddSingleton<IFileSystemWatcher>(sp => sp.GetRequiredService<ManualFileSystemWatcher>());
@@ -150,8 +162,6 @@ namespace OmniSharp
 
                 configureLogging?.Invoke(builder);
             });
-
-            return services.BuildServiceProvider();
         }
 
         public CompositionHostBuilder WithOmniSharpAssemblies()

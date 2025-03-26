@@ -132,7 +132,7 @@ namespace OmniSharp.MSBuild
                     solutionPlatform = "Any CPU";
                 }
 
-                var solutionSelector = $"{solutionConfiguration}|{solutionPlatform}.ActiveCfg";
+                var solutionSelector = $"{solutionConfiguration}|{solutionPlatform}";
                 _logger.LogDebug($"Found configuration `{solutionSelector}` in solution for '{filePath}'.");
 
                 if (projectConfigurationsInSolution.TryGetValue(solutionSelector, out var projectSelector))
