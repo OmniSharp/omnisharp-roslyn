@@ -29,7 +29,7 @@ public sealed class Platform
         this.IsMusl = isMusl;
     }
 
-    public string Name => _os switch
+    public string RID => _os switch
     {
         "Windows" =>  $"win-{_architecture}",
         "MacOS" => $"osx-{_architecture}",

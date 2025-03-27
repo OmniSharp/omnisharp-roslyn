@@ -161,6 +161,8 @@ public class BuildEnvironment
     public string WorkingDirectory { get; }
     public Folders Folders { get; }
 
+    public string TargetFramework { get; }
+
     public string DotNetCommand { get; }
 
     public string ShellCommand { get; }
@@ -173,6 +175,8 @@ public class BuildEnvironment
     {
         this.WorkingDirectory = context.Environment.WorkingDirectory.FullPath;
         this.Folders = new Folders(this.WorkingDirectory);
+
+        this.TargetFramework = "net8.0";
 
         this.DotNetCommand = useGlobalDotNetSdk
             ? "dotnet"
