@@ -1,7 +1,7 @@
 parameters:
   # Configuration: Release
   Verbosity: Normal
-  DotNetVersion: "10.0.105"
+  DotNetVersion: "8.0.404"
   CakeVersion: "1.1.0"
 steps:
   - task: DownloadBuildArtifacts@0

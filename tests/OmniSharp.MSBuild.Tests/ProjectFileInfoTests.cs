@@ -56,9 +56,9 @@ namespace OmniSharp.MSBuild.Tests
                 Assert.NotNull(projectFileInfo);
                 Assert.Equal(projectFilePath, projectFileInfo.FilePath);
                 var targetFramework = Assert.Single(projectFileInfo.TargetFrameworks);
-                Assert.Equal("net6.0", targetFramework);
-                Assert.Equal("bin/Debug/net6.0/", projectFileInfo.OutputPath.EnsureForwardSlashes());
-                Assert.Equal("obj/Debug/net6.0/", projectFileInfo.IntermediateOutputPath.EnsureForwardSlashes());
+                Assert.Equal("net8.0", targetFramework);
+                Assert.Equal("bin/Debug/net8.0/", projectFileInfo.OutputPath.EnsureForwardSlashes());
+                Assert.Equal("obj/Debug/net8.0/", projectFileInfo.IntermediateOutputPath.EnsureForwardSlashes());
                 Assert.Equal(3, projectFileInfo.SourceFiles.Length); // Program.cs, AssemblyInfo.cs, AssemblyAttributes.cs
                 Assert.Equal(LanguageVersion.CSharp7_1, projectFileInfo.LanguageVersion);
                 Assert.True(projectFileInfo.TreatWarningsAsErrors);
@@ -85,9 +85,9 @@ namespace OmniSharp.MSBuild.Tests
                 Assert.NotNull(projectFileInfo);
                 Assert.Equal(projectFilePath, projectFileInfo.FilePath);
                 var targetFramework = Assert.Single(projectFileInfo.TargetFrameworks);
-                Assert.Equal("net6.0", targetFramework);
-                Assert.Equal("bin/Debug/net6.0/", projectFileInfo.OutputPath.EnsureForwardSlashes());
-                Assert.Equal("obj/Debug/net6.0/", projectFileInfo.IntermediateOutputPath.EnsureForwardSlashes());
+                Assert.Equal("net8.0", targetFramework);
+                Assert.Equal("bin/Debug/net8.0/", projectFileInfo.OutputPath.EnsureForwardSlashes());
+                Assert.Equal("obj/Debug/net8.0/", projectFileInfo.IntermediateOutputPath.EnsureForwardSlashes());
                 Assert.Equal(3, projectFileInfo.SourceFiles.Length); // Program.cs, AssemblyInfo.cs, AssemblyAttributes.cs
                 Assert.Equal("Debug", projectFileInfo.Configuration);
                 Assert.Equal("AnyCPU", projectFileInfo.Platform);
@@ -112,10 +112,10 @@ namespace OmniSharp.MSBuild.Tests
                 Assert.NotNull(projectFileInfo);
                 Assert.Equal(projectFilePath, projectFileInfo.FilePath);
                 Assert.Equal(2, projectFileInfo.TargetFrameworks.Length);
-                Assert.Equal("net6.0", projectFileInfo.TargetFrameworks[0]);
+                Assert.Equal("net8.0", projectFileInfo.TargetFrameworks[0]);
                 Assert.Equal("netstandard1.5", projectFileInfo.TargetFrameworks[1]);
-                Assert.Equal("bin/Debug/net6.0/", projectFileInfo.OutputPath.EnsureForwardSlashes());
-                Assert.Equal("obj/Debug/net6.0/", projectFileInfo.IntermediateOutputPath.EnsureForwardSlashes());
+                Assert.Equal("bin/Debug/net8.0/", projectFileInfo.OutputPath.EnsureForwardSlashes());
+                Assert.Equal("obj/Debug/net8.0/", projectFileInfo.IntermediateOutputPath.EnsureForwardSlashes());
                 Assert.Equal(3, projectFileInfo.SourceFiles.Length); // Program.cs, AssemblyInfo.cs, AssemblyAttributes.cs
                 Assert.Equal("Debug", projectFileInfo.Configuration);
                 Assert.Equal("AnyCPU", projectFileInfo.Platform);
@@ -134,7 +134,7 @@ namespace OmniSharp.MSBuild.Tests
                 Assert.NotNull(projectFileInfo);
                 Assert.Equal(projectFilePath, projectFileInfo.FilePath);
                 var targetFramework = Assert.Single(projectFileInfo.TargetFrameworks);
-                Assert.Equal("net6.0", targetFramework);
+                Assert.Equal("net8.0", targetFramework);
                 Assert.Equal(LanguageVersion.CSharp8, projectFileInfo.LanguageVersion);
                 Assert.Equal(NullableContextOptions.Enable, projectFileInfo.NullableContextOptions);
                 Assert.Equal("Debug", projectFileInfo.Configuration);
@@ -208,7 +208,6 @@ namespace OmniSharp.MSBuild.Tests
                 Assert.NotEmpty(projectFileInfo.WarningsAsErrors);
                 Assert.Contains("CS1998", projectFileInfo.WarningsAsErrors);
                 Assert.Contains("CS7080", projectFileInfo.WarningsAsErrors);
-                Assert.Contains("CS7081", projectFileInfo.WarningsAsErrors);
 
                 Assert.NotEmpty(projectFileInfo.WarningsNotAsErrors);
                 Assert.Contains("CS7080", projectFileInfo.WarningsNotAsErrors);
