@@ -254,7 +254,7 @@ void BuildWithDotNetCli(BuildEnvironment env, string configuration)
         .WithProperty("AssemblyVersion", env.VersionInfo.AssemblySemVer)
         .WithProperty("FileVersion", env.VersionInfo.AssemblySemVer)
         .WithProperty("InformationalVersion", env.VersionInfo.InformationalVersion)
-        .WithProperty("RuntimeFrameworkVersion", "6.0.0-preview.7.21317.1") // Set the minimum runtime to a .NET 6 prerelease so that prerelease SDKs will be considered during rollForward.
+        .WithProperty("RuntimeFrameworkVersion", "8.0.0-rc.1.23371.1") // Set the minimum runtime to a .NET 6 prerelease so that prerelease SDKs will be considered during rollForward.
         .WithProperty("RollForward", "LatestMajor");
 
     DotNetMSBuild("OmniSharp.sln", settings);
@@ -381,41 +381,26 @@ Task("PublishNet6Builds")
         {
             if (Platform.Current.IsWindows)
             {
-                PublishBuild(project, env, buildPlan, configuration, "win7-x86", "net6.0");
-                PublishBuild(project, env, buildPlan, configuration, "win7-x64", "net6.0");
-                PublishBuild(project, env, buildPlan, configuration, "win10-arm64", "net6.0");
+                PublishBuild(project, env, buildPlan, configuration, "win-x86", "net8.0");
+                PublishBuild(project, env, buildPlan, configuration, "win-x64", "net8.0");
+                PublishBuild(project, env, buildPlan, configuration, "win-arm64", "net8.0");
             }
             else if (Platform.Current.IsMacOS)
             {
-                PublishBuild(project, env, buildPlan, configuration, "osx-x64", "net6.0");
-                PublishBuild(project, env, buildPlan, configuration, "osx-arm64", "net6.0");
+                PublishBuild(project, env, buildPlan, configuration, "osx-x64", "net8.0");
+                PublishBuild(project, env, buildPlan, configuration, "osx-arm64", "net8.0");
             }
             else
             {
-                PublishBuild(project, env, buildPlan, configuration, "linux-x64", "net6.0");
-                PublishBuild(project, env, buildPlan, configuration, "linux-arm64", "net6.0");
-                PublishBuild(project, env, buildPlan, configuration, "linux-musl-x64", "net6.0");
-                PublishBuild(project, env, buildPlan, configuration, "linux-musl-arm64", "net6.0");
-            }
-        }
-        else if (Platform.Current.IsWindows)
-        {
-            if (Platform.Current.IsX86)
-            {
-                PublishBuild(project, env, buildPlan, configuration, "win7-x86", "net6.0");
-            }
-            else if (Platform.Current.IsX64)
-            {
-                PublishBuild(project, env, buildPlan, configuration, "win7-x64", "net6.0");
-            }
-            else
-            {
-                PublishBuild(project, env, buildPlan, configuration, "win10-arm64", "net6.0");
+                PublishBuild(project, env, buildPlan, configuration, "linux-x64", "net8.0");
+                PublishBuild(project, env, buildPlan, configuration, "linux-arm64", "net8.0");
+                PublishBuild(project, env, buildPlan, configuration, "linux-musl-x64", "net8.0");
+                PublishBuild(project, env, buildPlan, configuration, "linux-musl-arm64", "net8.0");
             }
         }
         else
         {
-            PublishBuild(project, env, buildPlan, configuration, Platform.Current.Name, "net6.0");
+            PublishBuild(project, env, buildPlan, configuration, Platform.Current.Name, "net8.0");
         }
     }
 });
@@ -443,7 +428,7 @@ string PublishBuild(string project, BuildEnvironment env, BuildPlan plan, string
                 .WithProperty("AssemblyVersion", env.VersionInfo.AssemblySemVer)
                 .WithProperty("FileVersion", env.VersionInfo.AssemblySemVer)
                 .WithProperty("InformationalVersion", env.VersionInfo.InformationalVersion)
-                .WithProperty("RuntimeFrameworkVersion", "6.0.0-preview.7.21317.1") // Set the minimum runtime to a .NET 6 prerelease so that prerelease SDKs will be considered during rollForward.
+                .WithProperty("RuntimeFrameworkVersion", "8.0.0-rc.1.23371.1") // Set the minimum runtime to a .NET 6 prerelease so that prerelease SDKs will be considered during rollForward.
                 .WithProperty("RollForward", "LatestMajor"),
             ToolPath = env.DotNetCommand,
             WorkingDirectory = env.WorkingDirectory,
@@ -539,19 +524,7 @@ Task("Install")
 {
     foreach (var project in buildPlan.HostProjects)
     {
-        string platform;
-        if (Platform.Current.IsWindows)
-        {
-            platform = Platform.Current.IsX86
-                ? "win7-x86"
-                : Platform.Current.IsX64
-                    ? "win7-x64"
-                    : "win10-arm64";
-        }
-        else
-        {
-            platform = Platform.Current.Name;
-        }
+        string platform = Platform.Current.Name;
         var outputFolder = PathHelper.GetFullPath(CombinePaths(env.Folders.ArtifactsPublish, project, platform));
         var targetFolder = PathHelper.GetFullPath(CombinePaths(installFolder));
 

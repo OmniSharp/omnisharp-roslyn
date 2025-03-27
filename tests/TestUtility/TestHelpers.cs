@@ -114,11 +114,7 @@ namespace TestUtility
                 AssemblyHelpers.FromType(typeof(Stack<>)),
                 AssemblyHelpers.FromType(typeof(Lazy<,>)),
                 AssemblyHelpers.FromName("System.Runtime"),
-#if NETCOREAPP
                 AssemblyHelpers.FromType(typeof(Console)),
-#else
-                AssemblyHelpers.FromName("mscorlib")
-#endif
             };
 
             _references = assemblies

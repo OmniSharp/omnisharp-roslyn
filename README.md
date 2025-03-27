@@ -100,10 +100,6 @@ This will print the OmniSharp process ID in the VS Code OmniSharp output panel a
 
 OmniSharp provides a rich set of hierarchical configuration options, controlled via startup arguments, environment variables and `omnisharp.json` file. For more details please visit the [Configuration Options](https://github.com/OmniSharp/omnisharp-roslyn/wiki/Configuration-Options) section of the wiki.
 
-## Help wanted!
-
-We have slack room as well. [Get yourself invited](https://omnisharp.herokuapp.com/): [here](https://omnisharp.herokuapp.com/)
-
 ## License
 
 Copyright © .NET Foundation, and contributors.

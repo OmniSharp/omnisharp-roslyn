@@ -129,13 +129,9 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 {
                     ("Fix formatting", CodeActionKind.QuickFix),
                     ("using System;", CodeActionKind.QuickFix),
-#if NETCOREAPP
                     ("using Internal;", CodeActionKind.QuickFix),
                     ("Fully qualify 'Console' -> Internal.Console", CodeActionKind.QuickFix),
                     ("Fully qualify 'Console' -> System.Console", CodeActionKind.QuickFix),
-#else
-                    ("System.Console", CodeActionKind.QuickFix),
-#endif
                     ("Generate variable 'Console' -> Generate property 'Console'", CodeActionKind.QuickFix),
                     ("Generate variable 'Console' -> Generate field 'Console'", CodeActionKind.QuickFix),
                     ("Generate variable 'Console' -> Generate read-only field 'Console'", CodeActionKind.QuickFix),
@@ -152,13 +148,9 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 : new List<(string Name, string CodeActionKind)>
                 {
                     ("using System;", CodeActionKind.QuickFix),
-#if NETCOREAPP
                     ("using Internal;", CodeActionKind.QuickFix),
                     ("Fully qualify 'Console' -> Internal.Console", CodeActionKind.QuickFix),
                     ("Fully qualify 'Console' -> System.Console", CodeActionKind.QuickFix),
-#else
-                    ("System.Console", CodeActionKind.QuickFix),
-#endif
                     ("Generate variable 'Console' -> Generate property 'Console'", CodeActionKind.QuickFix),
                     ("Generate variable 'Console' -> Generate field 'Console'", CodeActionKind.QuickFix),
                     ("Generate variable 'Console' -> Generate read-only field 'Console'", CodeActionKind.QuickFix),
