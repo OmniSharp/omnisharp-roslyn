@@ -284,7 +284,6 @@ Task("Test")
     .IsDependentOn("PrepareTestAssets")
     .Does(() =>
 {
-    var testTargetFramework = "net8.0";
     var testProjects = string.IsNullOrEmpty(testProjectArgument) ? buildPlan.TestProjects : testProjectArgument.Split(',');
     var environment = new Dictionary<string, string>();
 
@@ -296,7 +295,7 @@ Task("Test")
     foreach (var testProject in testProjects)
     {
         PrintBlankLine();
-        var instanceFolder = CombinePaths(env.Folders.Bin, configuration, testProject, testTargetFramework);
+        var instanceFolder = CombinePaths(env.Folders.Bin, configuration, testProject, env.TargetFramework);
         var targetPath = CombinePaths(instanceFolder, $"{testProject}.dll");
 
         var logFile = CombinePaths(env.Folders.ArtifactsLogs, $"{testProject}-netsdk-result.xml");
@@ -305,7 +304,7 @@ Task("Test")
         Console.WriteLine($"Executing: dotnet {arguments}");
 
         Run("dotnet", arguments, instanceFolder)
-            .ExceptionOnError($"Test {testProject} failed for {testTargetFramework}");
+            .ExceptionOnError($"Test {testProject} failed for {env.TargetFramework}");
     }
 });
 
@@ -384,30 +383,33 @@ Task("PublishNet6Builds")
 {
     foreach (var project in buildPlan.HostProjects)
     {
+        var outputFolder = CombinePaths(env.Folders.ArtifactsPublish, project, Platform.Current.RID, env.TargetFramework);
+        CreateRunScript(project, outputFolder, env.Folders.ArtifactsScripts);
+
         if (publishAll)
         {
             if (Platform.Current.IsWindows)
             {
-                PublishBuild(project, env, buildPlan, configuration, "win-x86", "net8.0");
-                PublishBuild(project, env, buildPlan, configuration, "win-x64", "net8.0");
-                PublishBuild(project, env, buildPlan, configuration, "win-arm64", "net8.0");
+                PublishBuild(project, env, buildPlan, configuration, "win-x86", env.TargetFramework);
+                PublishBuild(project, env, buildPlan, configuration, "win-x64", env.TargetFramework);
+                PublishBuild(project, env, buildPlan, configuration, "win-arm64", env.TargetFramework);
             }
             else if (Platform.Current.IsMacOS)
             {
-                PublishBuild(project, env, buildPlan, configuration, "osx-x64", "net8.0");
-                PublishBuild(project, env, buildPlan, configuration, "osx-arm64", "net8.0");
+                PublishBuild(project, env, buildPlan, configuration, "osx-x64", env.TargetFramework);
+                PublishBuild(project, env, buildPlan, configuration, "osx-arm64", env.TargetFramework);
             }
             else
             {
-                PublishBuild(project, env, buildPlan, configuration, "linux-x64", "net8.0");
-                PublishBuild(project, env, buildPlan, configuration, "linux-arm64", "net8.0");
-                PublishBuild(project, env, buildPlan, configuration, "linux-musl-x64", "net8.0");
-                PublishBuild(project, env, buildPlan, configuration, "linux-musl-arm64", "net8.0");
+                PublishBuild(project, env, buildPlan, configuration, "linux-x64", env.TargetFramework);
+                PublishBuild(project, env, buildPlan, configuration, "linux-arm64", env.TargetFramework);
+                PublishBuild(project, env, buildPlan, configuration, "linux-musl-x64", env.TargetFramework);
+                PublishBuild(project, env, buildPlan, configuration, "linux-musl-arm64", env.TargetFramework);
             }
         }
         else
         {
-            PublishBuild(project, env, buildPlan, configuration, Platform.Current.Name, "net8.0");
+            PublishBuild(project, env, buildPlan, configuration, Platform.Current.RID, env.TargetFramework);
         }
     }
 });
@@ -531,8 +533,7 @@ Task("Install")
 {
     foreach (var project in buildPlan.HostProjects)
     {
-        string platform = Platform.Current.Name;
-        var outputFolder = PathHelper.GetFullPath(CombinePaths(env.Folders.ArtifactsPublish, project, platform));
+        var outputFolder = PathHelper.GetFullPath(CombinePaths(env.Folders.ArtifactsPublish, project, Platform.Current.RID));
         var targetFolder = PathHelper.GetFullPath(CombinePaths(installFolder));
 
         DirectoryHelper.Copy(outputFolder, targetFolder);
