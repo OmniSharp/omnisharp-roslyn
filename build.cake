@@ -254,7 +254,7 @@ void BuildWithDotNetCli(BuildEnvironment env, string configuration)
         .WithProperty("AssemblyVersion", env.VersionInfo.AssemblySemVer)
         .WithProperty("FileVersion", env.VersionInfo.AssemblySemVer)
         .WithProperty("InformationalVersion", env.VersionInfo.InformationalVersion)
-        .WithProperty("RuntimeFrameworkVersion", "8.0.0-rc.1.23371.1") // Set the minimum runtime to a .NET 6 prerelease so that prerelease SDKs will be considered during rollForward.
+        .WithProperty("RuntimeFrameworkVersion", "8.0.0-rc.1.23371.2") // Set the minimum runtime to a .NET 8 prerelease so that prerelease SDKs will be considered during rollForward.
         .WithProperty("RollForward", "LatestMajor");
 
     DotNetMSBuild("OmniSharp.sln", settings);
@@ -428,7 +428,7 @@ string PublishBuild(string project, BuildEnvironment env, BuildPlan plan, string
                 .WithProperty("AssemblyVersion", env.VersionInfo.AssemblySemVer)
                 .WithProperty("FileVersion", env.VersionInfo.AssemblySemVer)
                 .WithProperty("InformationalVersion", env.VersionInfo.InformationalVersion)
-                .WithProperty("RuntimeFrameworkVersion", "8.0.0-rc.1.23371.1") // Set the minimum runtime to a .NET 6 prerelease so that prerelease SDKs will be considered during rollForward.
+                .WithProperty("RuntimeFrameworkVersion", "8.0.0-rc.1.23371.2") // Set the minimum runtime to a .NET 6 prerelease so that prerelease SDKs will be considered during rollForward.
                 .WithProperty("RollForward", "LatestMajor"),
             ToolPath = env.DotNetCommand,
             WorkingDirectory = env.WorkingDirectory,
