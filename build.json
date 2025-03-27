@@ -2,7 +2,7 @@
     "DotNetInstallScriptURL": "https://dot.net/v1",
     "DotNetChannel": "Preview",
     "DotNetVersions": [
-        "8.0.303",
+        "8.0.404",
         "9.0.101"
     ],
     "DownloadURL": "https://roslynomnisharp.blob.core.windows.net/ext",

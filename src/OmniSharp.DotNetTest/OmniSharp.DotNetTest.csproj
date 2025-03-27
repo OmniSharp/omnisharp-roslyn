@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net6.0</TargetFramework>
+        <TargetFramework>net8.0</TargetFramework>
         <PlatformTarget>AnyCPU</PlatformTarget>
     </PropertyGroup>
 
@@ -17,7 +17,7 @@
     <!-- New VSTest 'dotnet test' support -->
     <ItemGroup>
         <PackageReference Include="Microsoft.TestPlatform.TranslationLayer" />
-        <PackageReference Condition="'$(TargetFramework)' == 'net6.0'" Include="Microsoft.TestPlatform.ObjectModel" />
+        <PackageReference Include="Microsoft.TestPlatform.ObjectModel" />
     </ItemGroup>
 
 </Project>
