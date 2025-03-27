@@ -469,7 +469,7 @@ class C
 
             TestHelpers.AddProjectToWorkspace(SharedOmniSharpTestHost.Workspace,
                 "project.csproj",
-                new[] { "net6.0" },
+                new[] { "net8.0" },
                 new[] { testFile },
                 analyzerRefs: ImmutableArray.Create<AnalyzerReference>(new TestGeneratorReference(
                     context => context.AddSource("GeneratedFile", generatedTestFile.Content.Code))));

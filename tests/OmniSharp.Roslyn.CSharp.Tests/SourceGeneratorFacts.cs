@@ -45,7 +45,7 @@ class GeneratedCode
             TestFile testFile = new TestFile(Path, Code);
             TestHelpers.AddProjectToWorkspace(SharedOmniSharpTestHost.Workspace,
                 "project.csproj",
-                new[] { "net6.0" },
+                new[] { "net8.0" },
                 new[] { testFile },
                 otherFiles: null,
                 ImmutableArray.Create<AnalyzerReference>(reference));

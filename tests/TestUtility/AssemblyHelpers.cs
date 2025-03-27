@@ -5,12 +5,7 @@ namespace TestUtility
 {
     public static class AssemblyHelpers
     {
-        public const string CorLibName =
-#if NETCOREAPP
-        "System.Private.CoreLib";
-#else
-        "mscorlib";
-#endif
+        public const string CorLibName = "System.Private.CoreLib";
 
         public static Assembly FromType(Type type)
         {

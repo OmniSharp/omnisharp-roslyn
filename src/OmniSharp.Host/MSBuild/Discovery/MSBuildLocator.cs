@@ -42,20 +42,12 @@ namespace OmniSharp.MSBuild.Discovery
                 logger.LogWarning("The MSBuild option 'UseBundledOnly' is no longer supported. Please update your OmniSharp configuration files.");
             }
 
-#if NETCOREAPP
             var sdkConfiguration = configuration?.GetSection("sdk");
 
             return new MSBuildLocator(loggerFactory, assemblyLoader,
                 ImmutableArray.Create<MSBuildInstanceProvider>(
                     new SdkInstanceProvider(loggerFactory, sdkConfiguration),
                     new SdkOverrideInstanceProvider(loggerFactory, sdkConfiguration)));
-#else
-            return new MSBuildLocator(loggerFactory, assemblyLoader,
-                ImmutableArray.Create<MSBuildInstanceProvider>(
-                    new MicrosoftBuildLocatorInstanceProvider(loggerFactory),
-                    new MonoInstanceProvider(loggerFactory),
-                    new UserOverrideInstanceProvider(loggerFactory, msbuildConfiguration)));
-#endif
         }
 
         public void RegisterInstance(MSBuildInstance instance)

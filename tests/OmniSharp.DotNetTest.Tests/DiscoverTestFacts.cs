@@ -21,8 +21,8 @@ namespace OmniSharp.DotNetTest.Tests
             await DiscoverTestsAsync(
                 XunitTestProject,
                 testFramework: "xunit",
-                targetFrameworkVersion: ".NETCoreApp,Version=v3.0",
-                new Test 
+                targetFrameworkVersion: ".NETCoreApp,Version=v8.0",
+                new Test
                 {
                     FullyQualifiedName = "Main.Test.MainTest.UsesDisplayName",
                     DisplayName = "My Test Name",
@@ -36,7 +36,7 @@ namespace OmniSharp.DotNetTest.Tests
             await DiscoverTestsAsync(
                 NUnitTestProject,
                 testFramework: "nunit",
-                targetFrameworkVersion: ".NETCoreApp,Version=v3.0",
+                targetFrameworkVersion: ".NETCoreApp,Version=v8.0",
                 new Test
                 {
                     FullyQualifiedName = "Main.Test.MainTest.Test",
@@ -51,7 +51,7 @@ namespace OmniSharp.DotNetTest.Tests
             await DiscoverTestsAsync(
                 MSTestProject,
                 testFramework: "mstest",
-                targetFrameworkVersion: ".NETCoreApp,Version=v3.0",
+                targetFrameworkVersion: ".NETCoreApp,Version=v8.0",
                 new Test
                 {
                     FullyQualifiedName = "Main.Test.MainTest.CheckStandardOutput",

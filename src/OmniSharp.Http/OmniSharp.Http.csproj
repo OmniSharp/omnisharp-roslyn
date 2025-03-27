@@ -1,11 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFrameworks>net6.0;net472</TargetFrameworks>
+        <TargetFramework>net8.0</TargetFramework>
         <PlatformTarget>AnyCPU</PlatformTarget>
     </PropertyGroup>
 
-    <ItemGroup Condition="'$(TargetFramework)' != 'net472'">
+    <ItemGroup>
         <FrameworkReference Include="Microsoft.AspNetCore.App" />
     </ItemGroup>
 
@@ -16,13 +16,6 @@
         <ProjectReference Include="..\OmniSharp.Script\OmniSharp.Script.csproj" />
         <ProjectReference Include="..\OmniSharp.Roslyn.CSharp\OmniSharp.Roslyn.CSharp.csproj" />
         <ProjectReference Include="..\OmniSharp.Cake\OmniSharp.Cake.csproj" />
-    </ItemGroup>
-
-    <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
-        <PackageReference Include="Microsoft.AspNetCore.Diagnostics" />
-        <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" />
-        <PackageReference Include="Microsoft.AspNetCore.Hosting" />
-        <PackageReference Include="Microsoft.AspNetCore.Http.Features" />
     </ItemGroup>
 
 </Project>

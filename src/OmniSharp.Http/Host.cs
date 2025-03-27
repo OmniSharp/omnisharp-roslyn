@@ -1,9 +1,7 @@
 using System;
 using System.Diagnostics;
 using Microsoft.AspNetCore.Hosting;
-#if NETCOREAPP
 using Microsoft.Extensions.Hosting;
-#endif
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using OmniSharp.Eventing;
@@ -41,13 +39,9 @@ namespace OmniSharp.Http
                 .AddCommandLine(new[] { "--server.urls", $"http://{_serverInterface}:{_serverPort}" });
 
             var builder = new WebHostBuilder()
-#if NETCOREAPP
                 .UseKestrel(config => {
                     config.AllowSynchronousIO = true;
                 })
-#else
-                .UseKestrel()
-#endif
                 .ConfigureServices(serviceCollection =>
                 {
                     serviceCollection.AddSingleton(_environment);
@@ -65,11 +59,7 @@ namespace OmniSharp.Http
             {
                 app.Start();
 
-#if NETCOREAPP
                 var appLifeTime = app.Services.GetRequiredService<IHostApplicationLifetime>();
-#else
-                var appLifeTime = app.Services.GetRequiredService<IApplicationLifetime>();
-#endif
 
                 Console.CancelKeyPress += (sender, e) =>
                 {

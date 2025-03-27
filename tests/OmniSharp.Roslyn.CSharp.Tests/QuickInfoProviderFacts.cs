@@ -195,11 +195,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         {
             var response = await GetTypeLookUpResponse(line: 6, column: 35);
 
-#if NETCOREAPP
             Assert.Equal("```csharp\nvoid Console.WriteLine(string? value) (+ 18 overloads)\n```", response.Markdown);
-#else
-            Assert.Equal("```csharp\nvoid Console.WriteLine(string value) (+ 18 overloads)\n```", response.Markdown);
-#endif
         }
 
         [Fact]

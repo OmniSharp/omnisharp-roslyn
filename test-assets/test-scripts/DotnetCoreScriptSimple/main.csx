@@ -1,2 +1,2 @@
-#! "net6.0"
+#! "net8.0"
 Console.WriteLine("Hello world!");

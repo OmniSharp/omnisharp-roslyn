@@ -129,13 +129,9 @@ namespace OmniSharp.Lsp.Tests
                 {
                     "Fix formatting",
                     "using System;",
-#if NETCOREAPP
                     "using Internal;",
                     "Fully qualify 'Console' -> Internal.Console",
                     "Fully qualify 'Console' -> System.Console",
-#else
-                    "System.Console",
-#endif
                     "Generate variable 'Console' -> Generate property 'Console'",
                     "Generate variable 'Console' -> Generate field 'Console'",
                     "Generate variable 'Console' -> Generate read-only field 'Console'",
@@ -152,13 +148,9 @@ namespace OmniSharp.Lsp.Tests
                 : new List<string>
                 {
                     "using System;",
-#if NETCOREAPP
                     "using Internal;",
                     "Fully qualify 'Console' -> Internal.Console",
                     "Fully qualify 'Console' -> System.Console",
-#else
-                    "System.Console",
-#endif
                     "Generate variable 'Console' -> Generate property 'Console'",
                     "Generate variable 'Console' -> Generate field 'Console'",
                     "Generate variable 'Console' -> Generate read-only field 'Console'",

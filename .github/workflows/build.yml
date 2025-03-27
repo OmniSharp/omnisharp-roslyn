@@ -1,11 +1,7 @@
 name: "Build"
 env:
   DotNetVersion: "9.0.101"
-  DotNetVersion2: "8.0.303"
-  DotNetVersion3: "7.0.410"
-  DotNetVersion4: "6.0.203" # This is the last version Mono supports. It is used for our Mono CI tests.
-  NuGetVersion: "6.5.0"
-  MonoVersion: "6.12.0"
+  DotNetVersion2: "8.0.404"
   Artifacts: ${{ github.workspace }}/artifacts/
   Coverage: ${{ github.workspace }}/coverage/
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: "true"
@@ -35,27 +31,16 @@ jobs:
           clean: "false"
           fetch-depth: "0"
 
-      - name: Setup NuGet.exe
-        uses: nuget/setup-nuget@v1
-        with:
-          nuget-version: ${{ env.NuGetVersion }}
-
       - name: 🔨 Use .NET Core SDKs
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: |
-            ${{ env.DotNetVersion4 }}
-            ${{ env.DotNetVersion3 }}
             ${{ env.DotNetVersion2 }}
             ${{ env.DotNetVersion }}
 
       - name: 🎁 dotnet tool restore
         run: |
           dotnet tool restore
-
-      - name: 🎁 nuget install
-        run: |
-          nuget install tools/packages.config -ExcludeVersion -OutputDirectory tools
 
       - name: 🍰 Run Cake
         run: |

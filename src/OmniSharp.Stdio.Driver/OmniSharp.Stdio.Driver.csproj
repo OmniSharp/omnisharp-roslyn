@@ -1,17 +1,17 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFrameworks>net6.0;net472</TargetFrameworks>
+        <TargetFramework>net8.0</TargetFramework>
         <PlatformTarget>AnyCPU</PlatformTarget>
         <AssemblyName>OmniSharp</AssemblyName>
         <OutputType>Exe</OutputType>
         <PreserveCompilationContext>true</PreserveCompilationContext>
-        <RuntimeIdentifiers>win7-x64;win7-x86;win10-arm64</RuntimeIdentifiers>
+        <RuntimeIdentifiers>win-x64;win-x86;win-arm64</RuntimeIdentifiers>
 
         <!-- Always run on the latest runtime installed. -->
-        <RuntimeFrameworkVersion>6.0.0-preview.7.21317.1</RuntimeFrameworkVersion>
+        <RuntimeFrameworkVersion>8.0.0-rc.1.23371.2</RuntimeFrameworkVersion>
         <RollForward>LatestMajor</RollForward>
-        <SkipHostDlls Condition="'$(TargetFramework)' != 'net472'">true</SkipHostDlls>
+        <SkipHostDlls>true</SkipHostDlls>
     </PropertyGroup>
 
     <ItemGroup>

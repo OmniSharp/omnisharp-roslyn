@@ -45,13 +45,7 @@ namespace OmniSharp.Cake.Services
                 _logger.LogInformation($"Using Cake.Bakery at {serverExecutablePath}");
 
                 _generationService =
-#if NET472_OR_GREATER
-                    PlatformHelper.IsMono ?
-                        new ScriptGenerationClient(new MonoScriptGenerationProcess(serverExecutablePath, _environment, _loggerFactory), _environment.TargetDirectory, _loggerFactory) :
-                        new ScriptGenerationClient(serverExecutablePath, _environment.TargetDirectory, _loggerFactory);
-#else
                     new ScriptGenerationClient(new DotnetScriptGenerationProcess(serverExecutablePath, _environment, _loggerFactory), _environment.TargetDirectory, _loggerFactory);
-#endif
             }
             else if (!string.IsNullOrEmpty(serverExecutablePath))
             {

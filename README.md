@@ -6,9 +6,7 @@
 
 OmniSharp is a .NET development platform based on [Roslyn](https://github.com/dotnet/roslyn) workspaces. It provides project dependencies and C# language services to various IDEs and plugins.
 
-OmniSharp is built with the [.NET Core SDK](https://dot.net/) on Windows and [Mono](http://www.mono-project.com/) on OSX/Linux. It targets both the _net6.0_ and _net472_ target frameworks. The _net6.0_ build requires a .NET SDK version _>=6.0_. When using the _net472_ build on OSX/Linux, _Mono_ version _>=6.4.0_ is required and must be globally installed on the system.
-
-For Arch Linux users, you need package [mono-msbuild](https://archlinux.org/packages/extra/x86_64/mono-msbuild/) (>= 16.3).
+OmniSharp is built with the [.NET Core SDK](https://dot.net/).
 
 In addition, if you need the HTTP interface and you want to run on Linux, you'll also need to make sure that you have [libuv](http://libuv.org) installed. See also https://github.com/OmniSharp/omnisharp-roslyn/issues/1202#issuecomment-421543905 .
 
@@ -49,8 +47,8 @@ Every merge to `master` is automatically published to this feed and individual r
     -   `linux-musl-x64`
     -   `linux-arm64`
     -   `linux-musl-arm64`
-    -   `osx`
-    -   `mono` (Requires global mono installed)
+    -   `osx-x64`
+    -   `osx-arm64`
 -   Extensions are archive specific, windows will be `zip` and all others will be `tar.gz`.
 
 ### Building
@@ -101,10 +99,6 @@ This will print the OmniSharp process ID in the VS Code OmniSharp output panel a
 ### Configuration
 
 OmniSharp provides a rich set of hierarchical configuration options, controlled via startup arguments, environment variables and `omnisharp.json` file. For more details please visit the [Configuration Options](https://github.com/OmniSharp/omnisharp-roslyn/wiki/Configuration-Options) section of the wiki.
-
-## Help wanted!
-
-We have slack room as well. [Get yourself invited](https://omnisharp.herokuapp.com/): [here](https://omnisharp.herokuapp.com/)
 
 ## License
 

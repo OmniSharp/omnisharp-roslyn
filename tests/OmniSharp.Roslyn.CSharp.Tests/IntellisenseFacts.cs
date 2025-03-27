@@ -323,11 +323,7 @@ public class MyClass
                 ";
 
             var completions = await FindCompletionsAsync(filename, source);
-#if NETCOREAPP
             ContainsCompletions(completions.Select(c => c.CompletionText), "Equals(object? obj)", "GetHashCode()", "Test(string text)", "Test(string text, string moreText)", "ToString()");
-#else
-            ContainsCompletions(completions.Select(c => c.CompletionText), "Equals(object obj)", "GetHashCode()", "Test(string text)", "Test(string text, string moreText)", "ToString()");
-#endif
         }
 
         [Theory]

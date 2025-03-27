@@ -26,7 +26,7 @@ namespace OmniSharp.MSBuild.Tests
             // prerelease version so that our .NET 7 tests will pass.
             var configuration = new Dictionary<string, string>
             {
-                ["sdk:IncludePrereleases"] = bool.TrueString
+                ["sdk:IncludePrereleases"] = bool.FalseString
             }.ToConfiguration();
 
             _msbuildLocator = MSBuildLocator.CreateDefault(this.LoggerFactory, _assemblyLoader, configuration);

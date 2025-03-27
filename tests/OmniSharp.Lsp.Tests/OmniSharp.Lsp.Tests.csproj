@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net8.0;net472</TargetFrameworks>
+    <TargetFramework>net8.0</TargetFramework>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
   </PropertyGroup>
@@ -18,13 +18,7 @@
     <PackageReference Include="xunit.runner.visualstudio" />
     <PackageReference Include="xunit" />
 
-    <!--
-        Mono's MSBuild does not include the SQLitePCLRaw libraries.
-        We include them when packaging our non-windows .NET Framework builds.
-        Simulate that behavior for these tests.
-    -->
-    <PackageReference Include="SQLitePCLRaw.bundle_green" Condition="'$(TargetFramework)' == 'net472'" />
-    <PackageReference Include="SQLitePCLRaw.bundle_green" PrivateAssets="all" Condition="'$(TargetFramework)' != 'net472'" />
+    <PackageReference Include="SQLitePCLRaw.bundle_green" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
