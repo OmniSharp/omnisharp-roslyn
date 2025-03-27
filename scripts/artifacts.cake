@@ -70,11 +70,11 @@ private string[] GetScriptContent(string omniSharpPath)
 
     if (Platform.Current.IsWindows)
     {
-        lines.Add("SET DOTNET_ROLL_FORWARD_TO_PRERELEASE=1")
+        lines.Add("SET DOTNET_ROLL_FORWARD_TO_PRERELEASE=1");
     }
     else
     {
-        lines.Add("export DOTNET_ROLL_FORWARD_TO_PRERELEASE=1")
+        lines.Add("export DOTNET_ROLL_FORWARD_TO_PRERELEASE=1");
     }
 
     var arguments = Platform.Current.IsWindows
