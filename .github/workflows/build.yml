@@ -9,6 +9,7 @@ env:
   Artifacts: ${{ github.workspace }}/artifacts/
   Coverage: ${{ github.workspace }}/coverage/
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: "true"
+  CLR_OPENSSL_VERSION_OVERRIDE: 1.1
 defaults:
   run:
     shell: pwsh
@@ -26,7 +27,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-20.04, windows-2022, macos-13]
+        os: [ubuntu-22.04, windows-latest, macos-13]
     name: "Build"
     steps:
       - name: Checkout
