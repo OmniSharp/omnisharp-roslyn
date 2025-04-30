@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿using System.Globalization;
+using System.Linq;
+using TestUtility;
 using Xunit;
 
 namespace OmniSharp.Tests
@@ -23,6 +25,49 @@ namespace OmniSharp.Tests
 
             Assert.Single(app.OtherArgs);
             Assert.Equal("a=b", app.OtherArgs.First());
+        }
+
+        [Fact]
+        [UseCulture("de-DE", "de-DE")]
+        public void PassingLocaleSetsRuntimeLocale()
+        {
+            const string expectedLocale = "es-ES";
+
+            var app = new CommandLineApplication();
+            var runtimeLocale = string.Empty;
+            app.OnExecute(() => { runtimeLocale = CultureInfo.CurrentUICulture.Name; return 0; });
+            app.Execute(["--locale", expectedLocale]);
+
+            Assert.Equal(expectedLocale, runtimeLocale);
+        }
+
+        [Fact]
+        [UseCulture("de-DE", "de-DE")]
+        public void PassingInvalidLocaleUsesSystemLocale()
+        {
+            const string expectedLocale = "de-DE";
+            const string invalidLocale = "zz~ZZ";
+
+            var app = new CommandLineApplication();
+            var runtimeLocale = string.Empty;
+            app.OnExecute(() => { runtimeLocale = CultureInfo.CurrentUICulture.Name; return 0; });
+            app.Execute(["--locale", invalidLocale]);
+
+            Assert.Equal(expectedLocale, runtimeLocale);
+        }
+
+        [Fact]
+        [UseCulture("de-DE", "de-DE")]
+        public void NotPassingLocaleUsesSystemLocale()
+        {
+            const string expectedLocale = "de-DE";
+
+            var app = new CommandLineApplication();
+            var runtimeLocale = string.Empty;
+            app.OnExecute(() => { runtimeLocale = CultureInfo.CurrentUICulture.Name; return 0; });
+            app.Execute([]);
+
+            Assert.Equal(expectedLocale, runtimeLocale);
         }
     }
 }
