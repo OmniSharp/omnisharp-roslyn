@@ -9,6 +9,7 @@ env:
   Artifacts: ${{ github.workspace }}/artifacts/
   Coverage: ${{ github.workspace }}/coverage/
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: "true"
+  CLR_OPENSSL_VERSION_OVERRIDE: 1.1
 defaults:
   run:
     shell: pwsh
