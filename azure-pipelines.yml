@@ -112,7 +112,7 @@ stages:
 
       - job: Linux
         pool:
-          vmImage: "ubuntu-20.04"
+          vmImage: "ubuntu-latest"
         dependsOn: GitVersion
         steps:
           - template: ./.pipelines/init.yml
@@ -132,7 +132,7 @@ stages:
 
       - job: Windows
         pool:
-          vmImage: "windows-2022"
+          vmImage: "windows-latest"
         dependsOn: GitVersion
         steps:
           - template: ./.pipelines/init.yml
