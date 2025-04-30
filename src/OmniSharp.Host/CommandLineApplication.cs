@@ -134,7 +134,11 @@ namespace OmniSharp
                 {
                     CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo(Locale);
                 }
-                catch (CultureNotFoundException) { }
+                catch (CultureNotFoundException)
+                {
+                    // We couldn't find the culture, log a warning and fallback to the OS configured value.
+                    Console.Error.WriteLine($"Culture {Locale} was not found, falling back to OS culture.");
+                }
             }
         }
     }
