@@ -46,7 +46,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Decompilation
             throw new NotSupportedException();
         }
 
-        public PEFile Resolve(IAssemblyReference name)
+        public MetadataFile Resolve(IAssemblyReference name)
         {
             Log("Resolving: {0}", name.FullName);
 
@@ -67,7 +67,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Decompilation
                 {
                     Log("Mismatch in assembly versions. Expectted: {0}, Got: {1}", name.Version, assemblies[0].Identity.Version);
                 }
-                return MakePEFile(assemblies[0]);
+                return MakeMetadataFile(assemblies[0]);
             }
 
             // There are multiple assemblies
@@ -98,9 +98,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Decompilation
 
             var chosen = exactMatch ?? highestVersion;
             Log("Chosen version match: {0}", chosen);
-            return MakePEFile(chosen);
+            return MakeMetadataFile(chosen);
 
-            PEFile MakePEFile(IAssemblySymbol assembly)
+            MetadataFile MakeMetadataFile(IAssemblySymbol assembly)
             {
                 // reference assemblies should be fine here, we only need the metadata of references.
                 var reference = _parentCompilation.GetMetadataReference(assembly);
@@ -109,7 +109,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Decompilation
             }
         }
 
-        public PEFile ResolveModule(PEFile mainModule, string moduleName)
+        public MetadataFile ResolveModule(MetadataFile mainModule, string moduleName)
         {
             Log("Resolving module {0}, of {1}", moduleName, mainModule.FullName);
 
@@ -127,12 +127,12 @@ namespace OmniSharp.Roslyn.CSharp.Services.Decompilation
             return new PEFile(moduleFileName, PEStreamOptions.PrefetchMetadata);
         }
 
-        public Task<PEFile> ResolveAsync(IAssemblyReference name)
+        public Task<MetadataFile> ResolveAsync(IAssemblyReference name)
         {
             return Task.Run(() => Resolve(name));
         }
 
-        public Task<PEFile> ResolveModuleAsync(PEFile mainModule, string moduleName)
+        public Task<MetadataFile> ResolveModuleAsync(MetadataFile mainModule, string moduleName)
         {
             return Task.Run(() => ResolveModule(mainModule, moduleName));
         }
