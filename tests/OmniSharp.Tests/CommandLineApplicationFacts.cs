@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿using System.Globalization;
+using System.Linq;
+using TestUtility;
 using Xunit;
 
 namespace OmniSharp.Tests
@@ -23,6 +25,34 @@ namespace OmniSharp.Tests
 
             Assert.Single(app.OtherArgs);
             Assert.Equal("a=b", app.OtherArgs.First());
+        }
+
+        [Fact]
+        [UseCulture("de-DE", "de-DE")]
+        public void PassingLocaleSetsRuntimeLocale()
+        {
+            const string locale = "es-ES";
+            var runtimeLocale = string.Empty;
+
+            var app = new CommandLineApplication();
+            app.OnExecute(() => { runtimeLocale = CultureInfo.CurrentUICulture.Name; return 0; });
+            app.Execute(["--locale", locale]);
+
+            Assert.Equal(locale, runtimeLocale);
+        }
+
+        [Fact]
+        [UseCulture("de-DE", "de-DE")]
+        public void NotPassingLocaleUsesSystemLocale()
+        {
+            const string locale = "de-DE";
+            var runtimeLocale = string.Empty;
+
+            var app = new CommandLineApplication();
+            app.OnExecute(() => { runtimeLocale = CultureInfo.CurrentUICulture.Name; return 0; });
+            app.Execute([]);
+
+            Assert.Equal(locale, runtimeLocale);
         }
     }
 }
