@@ -18,6 +18,16 @@ container_definition: &CONTAINER_DEFINITION
   docker_arguments:
     CIRRUS_AWS_ACCOUNT: ${CIRRUS_AWS_ACCOUNT}
 
+compute_project_version_script_definition: &COMPUTE_PROJECT_VERSION_SCRIPT_DEFINITION |
+  source cirrus-env BUILD
+
+  # Read the version from the root pom
+  sonarProjectVersion=$(maven_expression "project.version" | sed 's/-SNAPSHOT//')
+  echo "Sonar project version is '${sonarProjectVersion}'"
+
+  # Set the variable so it can be used by other tasks
+  echo "SONAR_PROJECT_VERSION=${sonarProjectVersion}" >> $CIRRUS_ENV
+
 ec2_instance_definition: &INSTANCE_DEFINITION
   region: eu-central-1
   type: c6i.xlarge
@@ -50,3 +60,26 @@ build_windows_task:
   windows_artifacts:
     path: artifacts/package/**/omnisharp-*.*
   <<: *NOTIFY_SLACK_ON_FAILURE
+
+mend_scan_task:
+  eks_container:
+    <<: *CONTAINER_DEFINITION
+    cpu: 3
+    memory: 1G
+  only_if: $CIRRUS_USER_COLLABORATOR == 'true' && ($CIRRUS_BRANCH == "master" || $CIRRUS_BRANCH =~ "branch-.*" || $CIRRUS_BRANCH =~ "mend-.*")
+  depends_on:
+    - build_windows_task
+    - build_linux_task
+  env:
+    WS_APIKEY: VAULT[development/kv/data/mend data.apikey]
+  compute_project_version_script: *COMPUTE_PROJECT_VERSION_SCRIPT_DEFINITION
+  mend_scan_dotnet_script: |
+    source cirrus-env QA
+    export WS_PRODUCTNAME="SonarLint/OmniSharp-Roslyn"
+    export WS_PROJECTNAME="${CIRRUS_REPO_FULL_NAME} ${SONAR_PROJECT_VERSION}"
+    export WS_PROJECTVERSION=${SONAR_PROJECT_VERSION}
+    ws_scan.sh
+  allow_failures: true
+  always:
+    ws_artifacts:
+      path: "whitesource/**/*"
