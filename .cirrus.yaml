@@ -19,10 +19,9 @@ container_definition: &CONTAINER_DEFINITION
     CIRRUS_AWS_ACCOUNT: ${CIRRUS_AWS_ACCOUNT}
 
 calculate_version_script_definition: &CALCULATE_VERSION_SCRIPT_DEFINITION |
-  versionProps=$(cat build/Version.props)
-  sonarProjectVersion=$(echo "$versionProps" | sed -n 's:.*<MainVersion>\(.*\)</MainVersion>.*:\1:p')
-  echo "SHORT_VERSION=${sonarProjectVersion}" >> $CIRRUS_ENV
-  echo "PROJECT_VERSION=${sonarProjectVersion}.${CI_BUILD_NUMBER}" >> $CIRRUS_ENV
+  semVer=$(cat scripts/common.cake | grep ' SemVer = "' | sed -nre 's/.*([0-9]+\.[0-9]+\.[0-9]+).*$/\1/p')
+  echo "SHORT_VERSION=${semVer}" >> $CIRRUS_ENV
+  echo "PROJECT_VERSION=${semVer}.${CI_BUILD_NUMBER}" >> $CIRRUS_ENV
 
 ec2_instance_definition: &INSTANCE_DEFINITION
   region: eu-central-1
@@ -63,6 +62,9 @@ mend_scan_task:
     <<: *CONTAINER_DEFINITION
     cpu: 4
     memory: 4G
+  depends:
+    build_linux
+    build_windows
   env:
     WS_APIKEY: VAULT[development/kv/data/mend data.apikey]
   calculate_version_script: *CALCULATE_VERSION_SCRIPT_DEFINITION
