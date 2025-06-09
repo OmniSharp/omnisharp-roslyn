@@ -1,7 +1,7 @@
 parameters:
   # Configuration: Release
   Verbosity: Normal
-  DotNetVersion: "8.0.408"
+  DotNetVersion: "10.0.100-preview.4.25258.110"
   CakeVersion: "1.1.0"
   NuGetVersion: "5.7.0"
   MonoVersion: ""

@@ -1,8 +1,8 @@
 name: "Tests"
 env:
-  DotNetVersion: "10.0.100-preview.3.25201.16"
-  DotNetVersion2: "9.0.203"
-  DotNetVersion3: "8.0.408"
+  DotNetVersion: "10.0.100-preview.4.25258.110"
+  DotNetVersion2: "9.0.300"
+  DotNetVersion3: "8.0.410"
   DotNetVersion4: "6.0.203" # This is the last version Mono supports. It is used for our Mono CI tests.
   NuGetVersion: "6.5.0"
   MonoVersion: "6.12.0"
