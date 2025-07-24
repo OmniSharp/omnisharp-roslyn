@@ -248,7 +248,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 var testRulesUpdated = CreateRules(testAnalyzerRef.Id.ToString(), ReportDiagnostic.Suppress);
 
                 var workspaceUpdatedCheck = new AutoResetEvent(false);
-                host.Workspace.WorkspaceChanged += (_, e) => { if (e.Kind == WorkspaceChangeKind.ProjectChanged) { workspaceUpdatedCheck.Set(); } };
+                host.Workspace.RegisterWorkspaceChangedHandler((e) => { if (e.Kind == WorkspaceChangeKind.ProjectChanged) { workspaceUpdatedCheck.Set(); } });
                 host.Workspace.UpdateDiagnosticOptionsForProject(projectId, testRulesUpdated.ToImmutableDictionary());
 
                 Assert.True(workspaceUpdatedCheck.WaitOne(timeout: TimeSpan.FromSeconds(15)));

@@ -1,0 +1,43 @@
+<Project>
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+
+  <!--
+      Because the Roslyn's OmniSharp.ExternalAccess libraries are compiled against .NET Standard 2.0,
+      we need to reference the .NET Standard 2.0 versions of the Roslyn assemblies. Since our test projects
+      are built against .NET 10, they will pick up the .NET version of the Roslyn assemblies by default.
+    -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.Common" ExcludeAssets="Compile" GeneratePathProperty="true" />
+    <Reference Include="Microsoft.CodeAnalysis">
+      <HintPath>$(PkgMicrosoft_CodeAnalysis_Common)\lib\netstandard2.0\Microsoft.CodeAnalysis.dll</HintPath>
+    </Reference>
+    <PackageReference Include="Microsoft.CodeAnalysis.Features" ExcludeAssets="Compile" GeneratePathProperty="true" />
+    <Reference Include="Microsoft.CodeAnalysis.Features">
+      <HintPath>$(PkgMicrosoft_CodeAnalysis_Features)\lib\netstandard2.0\Microsoft.CodeAnalysis.Features.dll</HintPath>
+    </Reference>
+    <PackageReference Include="Microsoft.CodeAnalysis.Scripting" ExcludeAssets="Compile" GeneratePathProperty="true" />
+    <Reference Include="Microsoft.CodeAnalysis.Scripting">
+      <HintPath>$(PkgMicrosoft_CodeAnalysis_Scripting)\lib\netstandard2.0\Microsoft.CodeAnalysis.Scripting.dll</HintPath>
+    </Reference>
+    <PackageReference Include="Microsoft.CodeAnalysis.Workspaces.Common" ExcludeAssets="Compile" GeneratePathProperty="true" />
+    <Reference Include="Microsoft.CodeAnalysis.Workspaces">
+      <HintPath>$(PkgMicrosoft_CodeAnalysis_Workspaces_Common)\lib\netstandard2.0\Microsoft.CodeAnalysis.Workspaces.dll</HintPath>
+    </Reference>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" ExcludeAssets="Compile" GeneratePathProperty="true" />
+    <Reference Include="Microsoft.CodeAnalysis.CSharp">
+      <HintPath>$(PkgMicrosoft_CodeAnalysis_CSharp)\lib\netstandard2.0\Microsoft.CodeAnalysis.CSharp.dll</HintPath>
+    </Reference>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Features" ExcludeAssets="Compile" GeneratePathProperty="true" />
+    <Reference Include="Microsoft.CodeAnalysis.CSharp.Features">
+      <HintPath>$(PkgMicrosoft_CodeAnalysis_CSharp_Features)\lib\netstandard2.0\Microsoft.CodeAnalysis.CSharp.Features.dll</HintPath>
+    </Reference>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" ExcludeAssets="Compile" GeneratePathProperty="true" />
+    <Reference Include="Microsoft.CodeAnalysis.CSharp.Scripting">
+      <HintPath>$(PkgMicrosoft_CodeAnalysis_CSharp_Scripting)\lib\netstandard2.0\Microsoft.CodeAnalysis.CSharp.Scripting.dll</HintPath>
+    </Reference>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" ExcludeAssets="Compile" GeneratePathProperty="true" />
+    <Reference Include="Microsoft.CodeAnalysis.CSharp.Workspaces">
+      <HintPath>$(PkgMicrosoft_CodeAnalysis_CSharp_Workspaces)\lib\netstandard2.0\Microsoft.CodeAnalysis.CSharp.Workspaces.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+</Project>

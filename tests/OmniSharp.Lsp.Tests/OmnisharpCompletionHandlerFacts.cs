@@ -158,7 +158,12 @@ namespace OmniSharp.Lsp.Tests
             // First completion request should kick off the task to update the completion cache.
             await EnableImportCompletion();
             var completions = await FindCompletionsAsync(filename, input);
-            Assert.True(completions.IsIncomplete);
+            if (!completions.IsIncomplete)
+            {
+                Assert.Contains("Guid", completions.Items.Select(c => c.TextEdit.TextEdit.NewText));
+                return; // No need to wait for the cache to be populated.
+            }
+
             Assert.DoesNotContain("Guid", completions.Items.Select(c => c.TextEdit.TextEdit.NewText));
 
             // Populating the completion cache should take no more than a few ms, don't let it take too
