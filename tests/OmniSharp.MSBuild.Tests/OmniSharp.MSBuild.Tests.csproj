@@ -19,6 +19,8 @@
     <PackageReference Include="Microsoft.Build.Locator" />
     <PackageReference Include="Microsoft.Build" ExcludeAssets="Runtime" PrivateAssets="all" />
 
+    <PackageReference Include="Microsoft.IO.Redist" Condition="'$(TargetFramework)' == 'net472'" />
+
     <!--
         Mono's MSBuild does not include the SQLitePCLRaw libraries.
         We include them when packaging our non-windows .NET Framework builds.

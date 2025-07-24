@@ -31,6 +31,7 @@
 
         <PackageVersion Include="Microsoft.Build" Version="$(MSBuildPackageVersion)" />
         <PackageVersion Include="Microsoft.Build.Framework" Version="$(MSBuildPackageVersion)" />
+        <PackageVersion Include="Microsoft.Build.Locator" Version="1.6.10" />
         <PackageVersion Include="Microsoft.Build.Tasks.Core" Version="$(MSBuildPackageVersion)" />
         <PackageVersion Include="Microsoft.Build.Utilities.Core" Version="$(MSBuildPackageVersion)" />
 
@@ -59,7 +60,7 @@
         <PackageVersion Include="Microsoft.Extensions.Options" Version="$(MicrosoftExtensionPackageVersion)" />
         <PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="$(MicrosoftExtensionPackageVersion)" />
 
-        <PackageVersion Include="Microsoft.Build.Locator" Version="1.6.10" />
+        <PackageVersion Include="Microsoft.IO.Redist" Version="6.1.0" />
 
         <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftTestPackageVersion)" />
         <PackageVersion Include="Microsoft.TestPlatform.TranslationLayer" Version="$(MicrosoftTestPackageVersion)" />
