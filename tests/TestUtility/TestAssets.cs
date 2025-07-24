@@ -112,8 +112,7 @@ namespace TestUtility
             }
             else if (!File.Exists(Path.Combine(baseDirectory, "global.json")))
             {
-                // If running on .NET Core, ensure global.json is copied to the base directory.
-                var globalJsonFileInfo = new FileInfo(Path.Combine(testProjectsFolder, "global.json"));
+                var globalJsonFileInfo = new FileInfo(Path.Combine(RootFolder, "global.json"));
                 await CopyFileAsync(globalJsonFileInfo, new DirectoryInfo(baseDirectory));
             }
 
