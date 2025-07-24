@@ -3,6 +3,7 @@
     "DotNetChannel": "Preview",
     "DotNetVersions": [
         "6.0.203",
+        "6.0.428",
         "8.0.412",
         "9.0.303",
         "10.0.100-preview.6.25358.103"
