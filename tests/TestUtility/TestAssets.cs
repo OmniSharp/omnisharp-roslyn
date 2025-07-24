@@ -62,7 +62,7 @@ namespace TestUtility
 
             foreach (var file in sourceDirectory.GetFiles())
             {
-                await CopyFileAsync(file, destDirectory);
+                await CopyFileAsync(file, destDirectory, file.Name);
             }
 
             if (recursive)
@@ -75,11 +75,11 @@ namespace TestUtility
             }
         }
 
-        private static async Task CopyFileAsync(FileInfo file, DirectoryInfo destDirectory)
+        private static async Task CopyFileAsync(FileInfo file, DirectoryInfo destDirectory, string destFileName)
         {
-            var destFileName = Path.Combine(destDirectory.FullName, file.Name);
+            var destFilePath = Path.Combine(destDirectory.FullName, destFileName);
             using (var sourceStream = File.OpenRead(file.FullName))
-            using (var destStream = File.Create(destFileName))
+            using (var destStream = File.Create(destFilePath))
                 await sourceStream.CopyToAsync(destStream);
         }
 
@@ -104,17 +104,25 @@ namespace TestUtility
 
             await CopyDirectoryAsync(new DirectoryInfo(sourceDirectory), new DirectoryInfo(targetDirectory));
 
+#if NET
+            if (!File.Exists(Path.Combine(baseDirectory, "global.json")))
+            {
+                var globalJsonFileInfo = new FileInfo(Path.Combine(testProjectsFolder, "global.net.json"));
+                await CopyFileAsync(globalJsonFileInfo, new DirectoryInfo(baseDirectory), "global.json");
+            }
+#else
             if (PlatformHelper.IsMono)
             {
                 // Copy global.json to the base directory when running on Mono to ensure a compatible SDK is used.
-                var globalJsonFileInfo = new FileInfo(Path.Combine(testProjectsFolder, "global.json"));
-                await CopyFileAsync(globalJsonFileInfo, new DirectoryInfo(baseDirectory));
+                var globalJsonFileInfo = new FileInfo(Path.Combine(testProjectsFolder, "global.mono.json"));
+                await CopyFileAsync(globalJsonFileInfo, new DirectoryInfo(baseDirectory), "global.json");
             }
-            else if (!File.Exists(Path.Combine(baseDirectory, "global.json")))
+            else
             {
-                var globalJsonFileInfo = new FileInfo(Path.Combine(RootFolder, "global.json"));
-                await CopyFileAsync(globalJsonFileInfo, new DirectoryInfo(baseDirectory));
+                var globalJsonFileInfo = new FileInfo(Path.Combine(testProjectsFolder, "global.netfx.json"));
+                await CopyFileAsync(globalJsonFileInfo, new DirectoryInfo(baseDirectory), "global.json");
             }
+#endif
 
             return new TestProject(name, baseDirectory, targetDirectory, shadowCopied: true);
         }
