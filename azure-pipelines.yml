@@ -112,7 +112,7 @@ stages:
 
       - job: Linux
         pool:
-          vmImage: "ubuntu-latest"
+          vmImage: "ubuntu-22.04"
         dependsOn: GitVersion
         steps:
           - template: ./.pipelines/init.yml
