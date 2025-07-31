@@ -8,6 +8,6 @@
     <RestorePackagesPath>./nugets/</RestorePackagesPath>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="StyleCop.Analyzers" Version="1.0.2" />
+    <PackageReference Include="StyleCop.Analyzers" Version="1.1.118" />
   </ItemGroup>
 </Project>
