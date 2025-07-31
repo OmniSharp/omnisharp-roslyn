@@ -8,7 +8,7 @@
         <MicrosoftExtensionPackageVersion>9.0.0</MicrosoftExtensionPackageVersion>
         <MicrosoftBaseCommonLibraryVersion>9.0.0</MicrosoftBaseCommonLibraryVersion>
         <MicrosoftTestPackageVersion>17.14.0-preview-25107-01</MicrosoftTestPackageVersion>
-        <MSBuildPackageVersion>17.3.2</MSBuildPackageVersion>
+        <MSBuildPackageVersion>17.3.4</MSBuildPackageVersion>
         <NuGetPackageVersion>6.15.0-preview.1.86</NuGetPackageVersion>
         <RoslynPackageVersion>5.0.0-2.25373.17</RoslynPackageVersion>
         <XunitPackageVersion>2.8.1</XunitPackageVersion>
