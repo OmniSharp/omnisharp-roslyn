@@ -32,10 +32,10 @@ namespace OmniSharp.Roslyn
 
         public void Initialize()
         {
-            _workspace.WorkspaceChanged += OnWorkspaceChanged;
+            _workspace.RegisterWorkspaceChangedHandler(OnWorkspaceChanged);
         }
 
-        private void OnWorkspaceChanged(object source, WorkspaceChangeEventArgs args)
+        private void OnWorkspaceChanged(WorkspaceChangeEventArgs args)
         {
             SimpleWorkspaceEvent e = null;
 

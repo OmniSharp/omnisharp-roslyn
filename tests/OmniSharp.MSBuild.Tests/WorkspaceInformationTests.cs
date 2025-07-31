@@ -101,20 +101,6 @@ namespace OmniSharp.MSBuild.Tests
         }
 
         [ConditionalFact(typeof(NonMonoRuntimeOnly))]
-        public async Task Net70Project()
-        {
-            using var testProject = await TestAssets.Instance.GetTestProjectAsync("Net70Project");
-            using var host = CreateMSBuildTestHost(testProject.Directory);
-            var workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
-
-            Assert.NotNull(workspaceInfo.Projects);
-            var project = Assert.Single(workspaceInfo.Projects);
-            Assert.Equal("Net70Project", project.AssemblyName);
-            Assert.Equal(".NETCoreApp,Version=v7.0", project.TargetFramework);
-            Assert.Contains(project.TargetFrameworks[0].ShortName, new[] { "net70", "net7.0" });
-        }
-
-        [ConditionalFact(typeof(NonMonoRuntimeOnly))]
         public async Task Net80Project()
         {
             using var testProject = await TestAssets.Instance.GetTestProjectAsync("Net80Project");
@@ -140,6 +126,20 @@ namespace OmniSharp.MSBuild.Tests
             Assert.Equal("Net90Project", project.AssemblyName);
             Assert.Equal(".NETCoreApp,Version=v9.0", project.TargetFramework);
             Assert.Contains(project.TargetFrameworks[0].ShortName, new[] { "net79", "net9.0" });
+        }
+
+        [ConditionalFact(typeof(NonMonoRuntimeOnly))]
+        public async Task Net100Project()
+        {
+            using var testProject = await TestAssets.Instance.GetTestProjectAsync("Net100Project");
+            using var host = CreateMSBuildTestHost(testProject.Directory);
+            var workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
+
+            Assert.NotNull(workspaceInfo.Projects);
+            var project = Assert.Single(workspaceInfo.Projects);
+            Assert.Equal("Net100Project", project.AssemblyName);
+            Assert.Equal(".NETCoreApp,Version=v10.0", project.TargetFramework);
+            Assert.Contains(project.TargetFrameworks[0].ShortName, new[] { "net100", "net10.0" });
         }
 
         [Fact]

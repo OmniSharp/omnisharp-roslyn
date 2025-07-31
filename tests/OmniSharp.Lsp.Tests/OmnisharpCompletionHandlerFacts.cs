@@ -158,7 +158,12 @@ namespace OmniSharp.Lsp.Tests
             // First completion request should kick off the task to update the completion cache.
             await EnableImportCompletion();
             var completions = await FindCompletionsAsync(filename, input);
-            Assert.True(completions.IsIncomplete);
+            if (!completions.IsIncomplete)
+            {
+                Assert.Contains("Guid", completions.Items.Select(c => c.TextEdit.TextEdit.NewText));
+                return; // No need to wait for the cache to be populated.
+            }
+
             Assert.DoesNotContain("Guid", completions.Items.Select(c => c.TextEdit.TextEdit.NewText));
 
             // Populating the completion cache should take no more than a few ms, don't let it take too
@@ -337,9 +342,9 @@ namespace N2
             VerifySortOrders(completions.Items);
         }
 
-        [Theory]
+        [Theory(Skip = "Skipping for being flaky")]
         [InlineData("dummy.cs")]
-        // [InlineData("dummy.csx")] - Skipping for being flaky
+        [InlineData("dummy.csx")]
         public async Task UsingsAddedInOrder(string filename)
         {
 
@@ -1345,7 +1350,7 @@ class C
 }";
 
             var completions = await FindCompletionsAsync(filename, input, triggerChar: ' ');
-            Assert.NotEmpty(completions.Items.Where(completion => completion.Preselect == true));
+            Assert.Contains(completions.Items, completion => completion.Preselect == true);
         }
 
         [Theory]

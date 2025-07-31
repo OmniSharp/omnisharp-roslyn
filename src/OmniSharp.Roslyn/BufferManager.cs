@@ -26,7 +26,7 @@ namespace OmniSharp.Roslyn
         public BufferManager(OmniSharpWorkspace workspace, ILoggerFactory loggerFactory, IFileSystemWatcher fileSystemWatcher)
         {
             _workspace = workspace;
-            _workspace.WorkspaceChanged += OnWorkspaceChanged;
+            _workspace.RegisterWorkspaceChangedHandler(OnWorkspaceChanged);
             _fileSystemWatcher = fileSystemWatcher;
             _logger = loggerFactory.CreateLogger<BufferManager>();
         }
@@ -227,7 +227,7 @@ namespace OmniSharp.Roslyn
                 .ToImmutableArray();
         }
 
-        private void OnWorkspaceChanged(object sender, WorkspaceChangeEventArgs args)
+        private void OnWorkspaceChanged(WorkspaceChangeEventArgs args)
         {
             string fileName = null;
             if (args.Kind == WorkspaceChangeKind.DocumentAdded)

@@ -32,6 +32,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
         private readonly OmniSharpOptions _options;
         private readonly OmniSharpWorkspace _workspace;
 
+        private WorkspaceEventRegistration _workspaceChangedRegistration;
+
         private int _projectCount = 0;
 
         public CSharpDiagnosticWorkerWithAnalyzers(
@@ -53,7 +55,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             _workspace = workspace;
             AnalyzersEnabled = enableAnalyzers;
 
-            _workspace.WorkspaceChanged += OnWorkspaceChanged;
+            _workspaceChangedRegistration = _workspace.RegisterWorkspaceChangedHandler(OnWorkspaceChanged);
             _workspace.OnInitialized += OnWorkspaceInitialized;
 
             for (var i = 0; i < options.RoslynExtensionsOptions.DiagnosticWorkersThreadCount; i++)
@@ -182,7 +184,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             _workQueue.PutWork(documentIds, workType);
         }
 
-        private void OnWorkspaceChanged(object sender, WorkspaceChangeEventArgs changeEvent)
+        private void OnWorkspaceChanged(WorkspaceChangeEventArgs changeEvent)
         {
             switch (changeEvent.Kind)
             {
@@ -389,7 +391,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
         public void Dispose()
         {
-            _workspace.WorkspaceChanged -= OnWorkspaceChanged;
+            _workspaceChangedRegistration?.Dispose();
+            _workspaceChangedRegistration = null;
             _workspace.OnInitialized -= OnWorkspaceInitialized;
         }
 

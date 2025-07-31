@@ -294,7 +294,7 @@ Task("Test")
     .IsDependentOn("PrepareTestAssets")
     .Does(() =>
 {
-    var testTargetFramework = useDotNetTest ? "net8.0" : "net472";
+    var testTargetFramework = useDotNetTest ? "net10.0" : "net472";
     var testProjects = string.IsNullOrEmpty(testProjectArgument) ? buildPlan.TestProjects : testProjectArgument.Split(',');
     foreach (var testProject in testProjects)
     {
