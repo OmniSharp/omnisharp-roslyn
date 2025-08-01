@@ -4,11 +4,13 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using OmniSharp.Eventing;
@@ -18,15 +20,13 @@ using OmniSharp.MSBuild.Logging;
 using OmniSharp.MSBuild.Models.Events;
 using OmniSharp.MSBuild.Notification;
 using OmniSharp.MSBuild.ProjectFile;
+using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
 using OmniSharp.Roslyn.CSharp.Services.Refactoring.V2;
-using OmniSharp.Options;
+using OmniSharp.Roslyn.EditorConfig;
 using OmniSharp.Roslyn.Utilities;
 using OmniSharp.Services;
 using OmniSharp.Utilities;
-using System.Reflection;
-using Microsoft.CodeAnalysis.Diagnostics;
-using OmniSharp.Roslyn.EditorConfig;
 
 namespace OmniSharp.MSBuild
 {
@@ -182,7 +182,7 @@ namespace OmniSharp.MSBuild
                 try
                 {
                     await Task.Delay(LoopDelay, cancellationToken);
-                    ProcessQueue(cancellationToken);
+                    await ProcessQueueAsync(cancellationToken);
                 }
                 catch (Exception ex)
                 {
@@ -191,7 +191,7 @@ namespace OmniSharp.MSBuild
             }
         }
 
-        private void ProcessQueue(CancellationToken cancellationToken)
+        private async Task ProcessQueueAsync(CancellationToken cancellationToken)
         {
             _processingQueue = true;
             try
@@ -237,7 +237,7 @@ namespace OmniSharp.MSBuild
 
                     if (_projectFiles.TryGetValue(currentProject.FilePath, out ProjectFileInfo projectFileInfo))
                     {
-                        (projectFileInfo, loadedEventArgs) = ReloadProject(projectFileInfo);
+                        (projectFileInfo, loadedEventArgs) = await ReloadProjectAsync(projectFileInfo, cancellationToken);
                         if (projectFileInfo == null)
                         {
                             _failedToLoadProjectFiles.Add(currentProject.FilePath);
@@ -249,7 +249,7 @@ namespace OmniSharp.MSBuild
                     }
                     else
                     {
-                        (projectFileInfo, loadedEventArgs) = LoadProject(currentProject.FilePath, currentProject.ProjectIdInfo);
+                        (projectFileInfo, loadedEventArgs) = await LoadProjectAsync(currentProject.FilePath, currentProject.ProjectIdInfo, cancellationToken);
                         if (projectFileInfo == null)
                         {
                             _failedToLoadProjectFiles.Add(currentProject.FilePath);
@@ -274,7 +274,7 @@ namespace OmniSharp.MSBuild
                             {
                                 try
                                 {
-                                    eventSink.ProjectLoaded(project.LoadedEventArgs);
+                                    await eventSink.ProjectLoadedAsync(project.LoadedEventArgs, cancellationToken);
                                 }
                                 catch (Exception ex)
                                 {
@@ -301,15 +301,26 @@ namespace OmniSharp.MSBuild
             _fileSystemWatcher.Watch(".cs", _onDirectoryFileChanged);
         }
 
-        private (ProjectFileInfo, ProjectLoadedEventArgs) LoadProject(string projectFilePath, ProjectIdInfo idInfo)
-            => LoadOrReloadProject(projectFilePath, () => ProjectFileInfo.Load(projectFilePath, idInfo, _projectLoader, _sessionId, _dotNetInfo));
+        private Task<(ProjectFileInfo, ProjectLoadedEventArgs)> LoadProjectAsync(string projectFilePath, ProjectIdInfo idInfo, CancellationToken cancellationToken = default)
+            => LoadOrReloadProjectAsync(projectFilePath, () => ProjectFileInfo.Load(projectFilePath, idInfo, _projectLoader, _sessionId, _dotNetInfo), cancellationToken);
 
-        private (ProjectFileInfo, ProjectLoadedEventArgs) ReloadProject(ProjectFileInfo projectFileInfo)
-            => LoadOrReloadProject(projectFileInfo.FilePath, () => projectFileInfo.Reload(_projectLoader));
+        private Task<(ProjectFileInfo, ProjectLoadedEventArgs)> ReloadProjectAsync(ProjectFileInfo projectFileInfo, CancellationToken cancellationToken = default)
+            => LoadOrReloadProjectAsync(projectFileInfo.FilePath, () => projectFileInfo.Reload(_projectLoader), cancellationToken);
 
-        private (ProjectFileInfo, ProjectLoadedEventArgs) LoadOrReloadProject(string projectFilePath, Func<(ProjectFileInfo, ImmutableArray<MSBuildDiagnostic>, ProjectLoadedEventArgs)> loader)
+        private async Task<(ProjectFileInfo, ProjectLoadedEventArgs)> LoadOrReloadProjectAsync(string projectFilePath, Func<(ProjectFileInfo, ImmutableArray<MSBuildDiagnostic>, ProjectLoadedEventArgs)> loader, CancellationToken cancellationToken = default)
         {
             _logger.LogInformation($"Loading project: {projectFilePath}");
+            foreach (IMSBuildEventSink eventSink in _eventSinks)
+            {
+                try
+                {
+                    await eventSink.ProjectLoadStartedAsync(projectFilePath, cancellationToken);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Exception thrown while calling event sinks");
+                }
+            }
 
             try
             {
@@ -324,14 +335,14 @@ namespace OmniSharp.MSBuild
                     _logger.LogWarning($"Failed to load project file '{projectFilePath}'.");
                 }
 
-                _eventEmitter.MSBuildProjectDiagnostics(projectFilePath, diagnostics);
+                await _eventEmitter.MSBuildProjectDiagnosticsAsync(projectFilePath, diagnostics, cancellationToken);
 
                 return (projectFileInfo, eventArgs);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Failed to load project file '{projectFilePath}'.");
-                _eventEmitter.Error(ex, fileName: projectFilePath);
+                await _eventEmitter.ErrorAsync(ex, fileName: projectFilePath, cancellationToken);
                 return (null, null);
             }
         }

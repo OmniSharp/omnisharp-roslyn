@@ -1,51 +1,60 @@
 ﻿using System;
 using System.Collections.Generic;
 using OmniSharp.Models.Events;
-using OmniSharp;
 using OmniSharp.Models;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace OmniSharp.Eventing
 {
     public static class IEventEmitterExtensions
     {
-        public static void Error(this IEventEmitter emitter, Exception ex, string fileName = null)
-        {
-            emitter.Emit(
+        public static ValueTask ErrorAsync(this IEventEmitter emitter, Exception ex, string fileName = null, CancellationToken cancellationToken = default) =>
+            emitter.EmitAsync(
                 EventTypes.Error,
-                new ErrorMessage { FileName = fileName, Text = ex.ToString() });
-        }
+                new ErrorMessage { FileName = fileName, Text = ex.ToString() },
+                cancellationToken);
 
-        public static void RestoreStarted(this IEventEmitter emitter, string projectPath)
-        {
-            emitter.Emit(
+        public static ValueTask RestoreStartedAsync(this IEventEmitter emitter, string projectPath, CancellationToken cancellationToken = default) =>
+            emitter.EmitAsync(
                 EventTypes.PackageRestoreStarted,
-                new PackageRestoreMessage { FileName = projectPath });
-        }
+                new PackageRestoreMessage { FileName = projectPath },
+                cancellationToken);
 
-        public static void RestoreFinished(this IEventEmitter emitter, string projectPath, bool succeeded)
-        {
-            emitter.Emit(
+        public static ValueTask RestoreFinishedAsync(this IEventEmitter emitter, string projectPath, bool succeeded, CancellationToken cancellationToken = default) =>
+            emitter.EmitAsync(
                 EventTypes.PackageRestoreFinished,
                 new PackageRestoreMessage
                 {
                     FileName = projectPath,
                     Succeeded = succeeded
-                });
-        }
+                },
+                cancellationToken);
 
-        public static void UnresolvedDepdendencies(this IEventEmitter emitter, string projectFilePath, IEnumerable<PackageDependency> unresolvedDependencies)
-        {
-            emitter.Emit(
+        public static ValueTask UnresolvedDependenciesAsync(this IEventEmitter emitter, string projectFilePath, IEnumerable<PackageDependency> unresolvedDependencies, CancellationToken cancellationToken = default) =>
+            emitter.EmitAsync(
                 EventTypes.UnresolvedDependencies,
                 new UnresolvedDependenciesMessage
                 {
                     FileName = projectFilePath,
                     UnresolvedDependencies = unresolvedDependencies
-                });
-        }
+                },
+                cancellationToken);
 
-        public static void ProjectInformation(this IEventEmitter emitter,
+        public static ValueTask ProjectLoadStartedAsync(this IEventEmitter emitter, string projectPath, CancellationToken cancellationToken = default) =>
+            emitter.EmitAsync(
+                    EventTypes.ProjectLoadStarted,
+                    projectPath,
+                    cancellationToken);
+
+        public static ValueTask ProjectLoadFinishedAsync(this IEventEmitter emitter, string projectPath, CancellationToken cancellationToken = default) =>
+            emitter.EmitAsync(
+                    EventTypes.ProjectLoadFinished,
+                    projectPath,
+                    cancellationToken);
+
+        public static async Task ProjectInformationAsync(this IEventEmitter emitter,
                                               HashedString projectId,
                                               HashedString sessionId,
                                               int outputKind,
@@ -55,7 +64,8 @@ namespace OmniSharp.Eventing
                                               IEnumerable<HashedString> references,
                                               IEnumerable<HashedString> fileExtensions,
                                               IEnumerable<int> fileCounts,
-                                              bool sdkStyleProject)
+                                              bool sdkStyleProject,
+                                              CancellationToken cancellationToken = default)
         {
             var projectConfiguration = new ProjectConfigurationMessage()
             {
@@ -71,9 +81,10 @@ namespace OmniSharp.Eventing
                 SdkStyleProject = sdkStyleProject
             };
 
-            emitter.Emit(
+            await emitter.EmitAsync(
                 EventTypes.ProjectConfiguration,
-                projectConfiguration);
+                projectConfiguration,
+                cancellationToken);
         }
     }
 }

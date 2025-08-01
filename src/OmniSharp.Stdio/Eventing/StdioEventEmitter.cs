@@ -1,3 +1,5 @@
+using System.Threading;
+using System.Threading.Tasks;
 using OmniSharp.Eventing;
 using OmniSharp.Protocol;
 using OmniSharp.Services;
@@ -13,7 +15,7 @@ namespace OmniSharp.Stdio.Eventing
             _writer = writer;
         }
 
-        public void Emit(string kind, object args)
+        public ValueTask EmitAsync(string kind, object args, CancellationToken cancellationToken = default)
         {
             var packet = new EventPacket
             {
@@ -22,6 +24,7 @@ namespace OmniSharp.Stdio.Eventing
             };
 
             _writer.WriteLine(packet);
+            return new();
         }
     }
 }
