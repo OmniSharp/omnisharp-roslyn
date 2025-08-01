@@ -39,7 +39,7 @@ stages:
     jobs:
       - job: GitVersion
         pool:
-          vmImage: "windows-2019"
+          vmImage: "windows-latest"
         steps:
           - template: gitversion/store.yml@rsg
             parameters:
@@ -82,7 +82,7 @@ stages:
     jobs:
       - job: GitVersion
         pool:
-          vmImage: "windows-2019"
+          vmImage: "windows-latest"
         steps:
           - template: gitversion/store.yml@rsg
             parameters:
@@ -151,7 +151,7 @@ stages:
 
       - job: Release
         pool:
-          vmImage: "ubuntu-latest"
+          vmImage: "windows-latest"
         dependsOn:
           - macOS
           - Linux
