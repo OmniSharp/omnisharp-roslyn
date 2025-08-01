@@ -115,7 +115,7 @@ stages:
           vmImage: "ubuntu-22.04"
         dependsOn: GitVersion
         variables:
-          CLR_OPENSSL_VERSION_OVERRIDE: 1
+          CLR_OPENSSL_VERSION_OVERRIDE: 1.1
         steps:
           - template: ./.pipelines/init.yml
             parameters:
