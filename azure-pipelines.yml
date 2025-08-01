@@ -48,7 +48,7 @@ stages:
 
       - job: CreateTag
         pool:
-          vmImage: "ubuntu-latest"
+          vmImage: "ubuntu-22.04"
         dependsOn: GitVersion
         steps:
           - checkout: self
