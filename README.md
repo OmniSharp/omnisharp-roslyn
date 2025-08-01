@@ -8,7 +8,7 @@ OmniSharp is a .NET development platform based on [Roslyn](https://github.com/do
 
 OmniSharp is built with the [.NET Core SDK](https://dot.net/) on Windows and [Mono](http://www.mono-project.com/) on OSX/Linux. It targets both the _net6.0_ and _net472_ target frameworks. The _net6.0_ build requires a .NET SDK version _>=6.0_. When using the _net472_ build on OSX/Linux, _Mono_ version _>=6.4.0_ is required and must be globally installed on the system.
 
-For Arch Linux users, you need package [mono-msbuild](https://archlinux.org/packages/extra/x86_64/mono-msbuild/) (>= 16.3).
+For Arch Linux users, you can build against the dotnet SDK using the AUR package: [omnisharp-roslyn (AUR)](https://aur.archlinux.org/packages/omnisharp-roslyn).
 
 In addition, if you need the HTTP interface and you want to run on Linux, you'll also need to make sure that you have [libuv](http://libuv.org) installed. See also https://github.com/OmniSharp/omnisharp-roslyn/issues/1202#issuecomment-421543905 .
 
