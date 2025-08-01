@@ -192,15 +192,16 @@ stages:
               packagesToPush: "$(System.ArtifactsDirectory)/nuget/**/*.nupkg"
               publishVstsFeed: Builds/omnisharp
               allowPackageConflicts: true
-          - task: NuGetCommand@2
-            displayName: "Push NuGet packages to nuget.org"
-            inputs:
-              command: push
-              nuGetFeedType: external
-              packagesToPush: "$(System.ArtifactsDirectory)/nuget/**/*.nupkg"
-              publishFeedCredentials: nuget.org
-              allowPackageConflicts: true
-            condition: and(succeeded(), eq(variables.IsOfficialRelease, true))
+          # Re-enable once we have an updated PAT
+          # - task: NuGetCommand@2
+          #   displayName: "Push NuGet packages to nuget.org"
+          #   inputs:
+          #     command: push
+          #     nuGetFeedType: external
+          #     packagesToPush: "$(System.ArtifactsDirectory)/nuget/**/*.nupkg"
+          #     publishFeedCredentials: nuget.org
+          #     allowPackageConflicts: true
+          #   condition: and(succeeded(), eq(variables.IsOfficialRelease, true))
           - task: GitHubRelease@1
             displayName: "GitHub release (edit)"
             inputs:
