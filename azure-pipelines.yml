@@ -39,7 +39,7 @@ stages:
     jobs:
       - job: GitVersion
         pool:
-          vmImage: "windows-2019"
+          vmImage: "windows-latest"
         steps:
           - template: gitversion/store.yml@rsg
             parameters:
@@ -48,7 +48,7 @@ stages:
 
       - job: CreateTag
         pool:
-          vmImage: "ubuntu-latest"
+          vmImage: "ubuntu-22.04"
         dependsOn: GitVersion
         steps:
           - checkout: self
@@ -82,7 +82,7 @@ stages:
     jobs:
       - job: GitVersion
         pool:
-          vmImage: "windows-2019"
+          vmImage: "windows-latest"
         steps:
           - template: gitversion/store.yml@rsg
             parameters:
@@ -114,6 +114,8 @@ stages:
         pool:
           vmImage: "ubuntu-22.04"
         dependsOn: GitVersion
+        variables:
+          CLR_OPENSSL_VERSION_OVERRIDE: 1.1
         steps:
           - template: ./.pipelines/init.yml
             parameters:
@@ -149,7 +151,7 @@ stages:
 
       - job: Release
         pool:
-          vmImage: "ubuntu-latest"
+          vmImage: "windows-latest"
         dependsOn:
           - macOS
           - Linux
@@ -190,15 +192,16 @@ stages:
               packagesToPush: "$(System.ArtifactsDirectory)/nuget/**/*.nupkg"
               publishVstsFeed: Builds/omnisharp
               allowPackageConflicts: true
-          - task: NuGetCommand@2
-            displayName: "Push NuGet packages to nuget.org"
-            inputs:
-              command: push
-              nuGetFeedType: external
-              packagesToPush: "$(System.ArtifactsDirectory)/nuget/**/*.nupkg"
-              publishFeedCredentials: nuget.org
-              allowPackageConflicts: true
-            condition: and(succeeded(), eq(variables.IsOfficialRelease, true))
+          # Re-enable once we have an updated PAT
+          # - task: NuGetCommand@2
+          #   displayName: "Push NuGet packages to nuget.org"
+          #   inputs:
+          #     command: push
+          #     nuGetFeedType: external
+          #     packagesToPush: "$(System.ArtifactsDirectory)/nuget/**/*.nupkg"
+          #     publishFeedCredentials: nuget.org
+          #     allowPackageConflicts: true
+          #   condition: and(succeeded(), eq(variables.IsOfficialRelease, true))
           - task: GitHubRelease@1
             displayName: "GitHub release (edit)"
             inputs:

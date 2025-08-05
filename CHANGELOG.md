@@ -1,6 +1,9 @@
 # Changelog
 All changes to the project will be documented in this file.
 
+## [1.39.14] - 2025-09-01
+* Update Roslyn to 4.14.0-3.25168.13 (PR: [#2664](https://github.com/OmniSharp/omnisharp-roslyn/pull/2664))
+
 ## [1.39.13] - 2024-12-31
 * Update Roslyn to 4.13.0-3.24620.4 (PR: [#2642](https://github.com/OmniSharp/omnisharp-roslyn/pull/2642))
 
