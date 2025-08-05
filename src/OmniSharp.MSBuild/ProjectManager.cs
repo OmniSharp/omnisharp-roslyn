@@ -9,8 +9,8 @@ using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json.Linq;
 using OmniSharp.Eventing;
 using OmniSharp.FileWatching;
 using OmniSharp.Models.UpdateBuffer;
@@ -18,15 +18,11 @@ using OmniSharp.MSBuild.Logging;
 using OmniSharp.MSBuild.Models.Events;
 using OmniSharp.MSBuild.Notification;
 using OmniSharp.MSBuild.ProjectFile;
-using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
-using OmniSharp.Roslyn.CSharp.Services.Refactoring.V2;
 using OmniSharp.Options;
+using OmniSharp.Roslyn.EditorConfig;
 using OmniSharp.Roslyn.Utilities;
 using OmniSharp.Services;
 using OmniSharp.Utilities;
-using System.Reflection;
-using Microsoft.CodeAnalysis.Diagnostics;
-using OmniSharp.Roslyn.EditorConfig;
 
 namespace OmniSharp.MSBuild
 {
@@ -184,7 +180,7 @@ namespace OmniSharp.MSBuild
                     await Task.Delay(LoopDelay, cancellationToken);
                     ProcessQueue(cancellationToken);
                 }
-                catch (Exception ex)
+                catch (Exception ex) when (ex is not TaskCanceledException)
                 {
                     _logger.LogError(ex, "Error occurred while processing project updates");
                 }

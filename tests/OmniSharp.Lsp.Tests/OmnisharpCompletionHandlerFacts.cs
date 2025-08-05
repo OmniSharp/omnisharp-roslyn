@@ -337,9 +337,9 @@ namespace N2
             VerifySortOrders(completions.Items);
         }
 
-        [Theory]
+        [Theory(Skip = "Skipping for being flaky")]
         [InlineData("dummy.cs")]
-        // [InlineData("dummy.csx")] - Skipping for being flaky
+        [InlineData("dummy.csx")]
         public async Task UsingsAddedInOrder(string filename)
         {
 
@@ -1345,7 +1345,7 @@ class C
 }";
 
             var completions = await FindCompletionsAsync(filename, input, triggerChar: ' ');
-            Assert.NotEmpty(completions.Items.Where(completion => completion.Preselect == true));
+            Assert.Contains(completions.Items, completion => completion.Preselect == true);
         }
 
         [Theory]

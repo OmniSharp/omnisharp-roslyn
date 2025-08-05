@@ -294,22 +294,29 @@ Task("Test")
     .IsDependentOn("PrepareTestAssets")
     .Does(() =>
 {
-    var testTargetFramework = useDotNetTest ? "net8.0" : "net472";
+    var testTargetFramework = useDotNetTest ? "net10.0" : "net472";
     var testProjects = string.IsNullOrEmpty(testProjectArgument) ? buildPlan.TestProjects : testProjectArgument.Split(',');
+    var environment = new Dictionary<string, string>();
+
+    if (!useDotNetTest && Platform.Current.IsWindows)
+    {
+        environment.Add("DOTNET_PATH", env.Folders.DotNetSdk);
+    }
+
     foreach (var testProject in testProjects)
     {
         PrintBlankLine();
         var instanceFolder = CombinePaths(env.Folders.Bin, configuration, testProject, testTargetFramework);
         var targetPath = CombinePaths(instanceFolder, $"{testProject}.dll");
 
-        if (useDotNetTest)
+        if (useDotNetTest || Platform.Current.IsWindows)
         {
             var logFile = CombinePaths(env.Folders.ArtifactsLogs, $"{testProject}-netsdk-result.xml");
             var arguments = $"test \"{targetPath}\" --logger \"console;verbosity=normal\" --logger \"trx;LogFileName={logFile}\" --blame-hang-timeout 60sec";
 
             Console.WriteLine($"Executing: dotnet {arguments}");
 
-            Run("dotnet", arguments, instanceFolder)
+            Run("dotnet", arguments, new RunOptions(workingDirectory: instanceFolder, environment: environment))
                 .ExceptionOnError($"Test {testProject} failed for {testTargetFramework}");
         }
         else
@@ -317,7 +324,7 @@ Task("Test")
             var logFile = CombinePaths(env.Folders.ArtifactsLogs, $"{testProject}-desktop-result.xml");
 
             // Copy xunit executable to test folder to solve path errors
-            var xunitToolsFolder = CombinePaths(env.Folders.Tools, "xunit.runner.console", "tools", "net452");
+            var xunitToolsFolder = CombinePaths(env.Folders.Tools, "xunit.runner.console", "tools", "net472");
             var xunitInstancePath = CombinePaths(instanceFolder, "xunit.console.exe");
             FileHelper.Copy(CombinePaths(xunitToolsFolder, "xunit.console.exe"), xunitInstancePath, overwrite: true);
             FileHelper.Copy(CombinePaths(xunitToolsFolder, "xunit.runner.utility.net452.dll"), CombinePaths(instanceFolder, "xunit.runner.utility.net452.dll"), overwrite: true);

@@ -7,11 +7,11 @@
         <OmniSharpExtensionsPackageVersion>0.19.9</OmniSharpExtensionsPackageVersion>
         <MicrosoftExtensionPackageVersion>9.0.0</MicrosoftExtensionPackageVersion>
         <MicrosoftBaseCommonLibraryVersion>9.0.0</MicrosoftBaseCommonLibraryVersion>
-        <MicrosoftTestPackageVersion>17.8.0</MicrosoftTestPackageVersion>
+        <MicrosoftTestPackageVersion>17.14.0-preview-25107-01</MicrosoftTestPackageVersion>
         <MSBuildPackageVersion>17.3.2</MSBuildPackageVersion>
-        <NuGetPackageVersion>6.14.0-rc.116</NuGetPackageVersion>
+        <NuGetPackageVersion>6.15.0-preview.1.86</NuGetPackageVersion>
         <RoslynPackageVersion>4.14.0-3.25168.13</RoslynPackageVersion>
-        <XunitPackageVersion>2.6.1</XunitPackageVersion>
+        <XunitPackageVersion>2.8.1</XunitPackageVersion>
     </PropertyGroup>
 
     <ItemGroup>
@@ -31,6 +31,7 @@
 
         <PackageVersion Include="Microsoft.Build" Version="$(MSBuildPackageVersion)" />
         <PackageVersion Include="Microsoft.Build.Framework" Version="$(MSBuildPackageVersion)" />
+        <PackageVersion Include="Microsoft.Build.Locator" Version="1.6.10" />
         <PackageVersion Include="Microsoft.Build.Tasks.Core" Version="$(MSBuildPackageVersion)" />
         <PackageVersion Include="Microsoft.Build.Utilities.Core" Version="$(MSBuildPackageVersion)" />
 
@@ -59,7 +60,7 @@
         <PackageVersion Include="Microsoft.Extensions.Options" Version="$(MicrosoftExtensionPackageVersion)" />
         <PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="$(MicrosoftExtensionPackageVersion)" />
 
-        <PackageVersion Include="Microsoft.Build.Locator" Version="1.6.10" />
+        <PackageVersion Include="Microsoft.IO.Redist" Version="6.1.0" />
 
         <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftTestPackageVersion)" />
         <PackageVersion Include="Microsoft.TestPlatform.TranslationLayer" Version="$(MicrosoftTestPackageVersion)" />
@@ -87,7 +88,7 @@
         <PackageVersion Include="System.ComponentModel.Composition" Version="$(MicrosoftBaseCommonLibraryVersion)" />
         <PackageVersion Include="System.Composition" Version="$(MicrosoftBaseCommonLibraryVersion)" />
         <PackageVersion Include="System.Configuration.ConfigurationManager" Version="$(MicrosoftBaseCommonLibraryVersion)" />
-        <PackageVersion Include="System.Memory" Version="4.5.5" />
+        <PackageVersion Include="System.Memory" Version="4.6.0" />
         <PackageVersion Include="System.Reflection.Metadata" Version="$(MicrosoftBaseCommonLibraryVersion)" />
         <PackageVersion Include="System.Text.Json" Version="$(MicrosoftBaseCommonLibraryVersion)" />
         <PackageVersion Include="System.Threading.Tasks.Dataflow" Version="$(MicrosoftBaseCommonLibraryVersion)" />
@@ -96,7 +97,7 @@
         <PackageVersion Include="System.Reactive" Version="6.0.0" />
 
         <PackageVersion Include="xunit.abstractions" Version="2.0.3" />
-        <PackageVersion Include="xunit.runner.visualstudio" Version="2.5.4" />
+        <PackageVersion Include="xunit.runner.visualstudio" Version="2.8.2" />
         <PackageVersion Include="xunit" Version="$(XunitPackageVersion)" />
     </ItemGroup>
     <ItemGroup>

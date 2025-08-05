@@ -1917,7 +1917,7 @@ class C
 }";
 
             var completions = await FindCompletionsAsync(filename, input, SharedOmniSharpTestHost, triggerChar: ' ');
-            Assert.NotEmpty(completions.Items.Where(completion => completion.Preselect == true));
+            Assert.Contains(completions.Items, completion => completion.Preselect == true);
         }
 
         [Theory]
