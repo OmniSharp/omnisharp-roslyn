@@ -124,7 +124,7 @@ namespace OmniSharp.Cake.Tests
                 }";
 
             var refactorings = await FindRefactoringNamesAsync(code);
-            Assert.Empty(refactorings.Where(x => x.Name.StartsWith("Rename file to")));
+            Assert.DoesNotContain(refactorings, x => x.Name.StartsWith("Rename file to"));
         }
 
         private async Task<RunCodeActionResponse> RunRefactoringAsync(string code, string refactoringName)

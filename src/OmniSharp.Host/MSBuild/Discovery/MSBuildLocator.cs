@@ -108,7 +108,17 @@ namespace OmniSharp.MSBuild.Discovery
                 return;
             }
 
-            MicrosoftBuildLocator.RegisterMSBuildPath(instance.MSBuildPath);
+            // Find and load NuGet assemblies if msbuildPath is in a VS installation. This mimics what
+            // Microsoft.Build.Locator does when calling RegisterInstance.
+            var nugetPath = Path.GetFullPath(Path.Combine(instance.MSBuildPath, "..", "..", "..", "Common7", "IDE", "CommonExtensions", "Microsoft", "NuGet"));
+            if (Directory.Exists(nugetPath))
+            {
+                MicrosoftBuildLocator.RegisterMSBuildPath([nugetPath, instance.MSBuildPath]);
+            }
+            else
+            {
+                MicrosoftBuildLocator.RegisterMSBuildPath(instance.MSBuildPath);
+            }
         }
 
         public ImmutableArray<MSBuildInstance> GetInstances()
