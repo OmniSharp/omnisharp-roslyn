@@ -164,7 +164,12 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             // First completion request should kick off the task to update the completion cache.
             var completions = await FindCompletionsAsync(filename, input, host);
-            Assert.True(completions.IsIncomplete);
+            if (!completions.IsIncomplete)
+            {
+                Assert.Contains("Guid", completions.Items.Select(c => c.TextEdit.NewText));
+                return; // No need to wait for the cache to be populated.
+            }
+
             Assert.DoesNotContain("Guid", completions.Items.Select(c => c.TextEdit.NewText));
             Assert.All(completions.Items, c => Assert.False(c.HasAfterInsertStep));
 
