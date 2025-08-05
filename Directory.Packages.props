@@ -60,7 +60,7 @@
         <PackageVersion Include="Microsoft.Extensions.Options" Version="$(MicrosoftExtensionPackageVersion)" />
         <PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="$(MicrosoftExtensionPackageVersion)" />
 
-        <PackageVersion Include="Microsoft.IO.Redist" Version="6.0.0" />
+        <PackageVersion Include="Microsoft.IO.Redist" Version="6.1.0" />
 
         <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftTestPackageVersion)" />
         <PackageVersion Include="Microsoft.TestPlatform.TranslationLayer" Version="$(MicrosoftTestPackageVersion)" />
@@ -88,7 +88,7 @@
         <PackageVersion Include="System.ComponentModel.Composition" Version="$(MicrosoftBaseCommonLibraryVersion)" />
         <PackageVersion Include="System.Composition" Version="$(MicrosoftBaseCommonLibraryVersion)" />
         <PackageVersion Include="System.Configuration.ConfigurationManager" Version="$(MicrosoftBaseCommonLibraryVersion)" />
-        <PackageVersion Include="System.Memory" Version="4.5.5" />
+        <PackageVersion Include="System.Memory" Version="4.6.0" />
         <PackageVersion Include="System.Reflection.Metadata" Version="$(MicrosoftBaseCommonLibraryVersion)" />
         <PackageVersion Include="System.Text.Json" Version="$(MicrosoftBaseCommonLibraryVersion)" />
         <PackageVersion Include="System.Threading.Tasks.Dataflow" Version="$(MicrosoftBaseCommonLibraryVersion)" />
