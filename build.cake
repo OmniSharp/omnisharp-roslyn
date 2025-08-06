@@ -541,6 +541,7 @@ Task("PublishNet6Builds")
                 PublishBuild(project, env, buildPlan, configuration, "linux-arm64", "net6.0");
                 PublishBuild(project, env, buildPlan, configuration, "linux-musl-x64", "net6.0");
                 PublishBuild(project, env, buildPlan, configuration, "linux-musl-arm64", "net6.0");
+                PublishBuild(project, env, buildPlan, configuration, "linux-bionic-arm64", "net6.0");
             }
         }
         else if (Platform.Current.IsWindows)
