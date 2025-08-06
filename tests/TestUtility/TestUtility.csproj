@@ -18,8 +18,6 @@
 
   <ItemGroup>
     <PackageReference Include="DiffPlex" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" />
     <PackageReference Include="xunit" />
   </ItemGroup>
 

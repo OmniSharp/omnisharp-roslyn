@@ -10,7 +10,7 @@
         <MicrosoftTestPackageVersion>17.14.0-preview-25107-01</MicrosoftTestPackageVersion>
         <MSBuildPackageVersion>17.3.2</MSBuildPackageVersion>
         <NuGetPackageVersion>6.15.0-preview.1.86</NuGetPackageVersion>
-        <RoslynPackageVersion>4.14.0-3.25168.13</RoslynPackageVersion>
+        <RoslynPackageVersion>5.0.0-2.25404.8</RoslynPackageVersion>
         <XunitPackageVersion>2.8.1</XunitPackageVersion>
     </PropertyGroup>
 
@@ -20,7 +20,7 @@
 
         <PackageVersion Include="Cake.Scripting.Transport" Version="0.16.0" />
 
-        <PackageVersion Include="DiffPlex" Version="1.7.2" />
+        <PackageVersion Include="DiffPlex" Version="1.8.0" />
 
         <PackageVersion Include="Dotnet.Script.DependencyModel" Version="1.5.0" />
         <PackageVersion Include="Dotnet.Script.DependencyModel.NuGet" Version="1.5.0" />
@@ -40,6 +40,8 @@
         <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Features" Version="$(RoslynPackageVersion)" />
         <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="$(RoslynPackageVersion)" />
         <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="$(RoslynPackageVersion)" />
+        <PackageVersion Include="Microsoft.CodeAnalysis.Features" Version="$(RoslynPackageVersion)" />
+        <PackageVersion Include="Microsoft.CodeAnalysis.Scripting" Version="$(RoslynPackageVersion)" />
         <PackageVersion Include="Microsoft.CodeAnalysis.Workspaces.Common" Version="$(RoslynPackageVersion)" />
         <PackageVersion Include="Microsoft.CodeAnalysis.ExternalAccess.AspNetCore" Version="$(RoslynPackageVersion)" />
         <PackageVersion Include="Microsoft.CodeAnalysis.ExternalAccess.OmniSharp" Version="$(RoslynPackageVersion)" />
@@ -82,7 +84,7 @@
         <PackageVersion Include="OmniSharp.Extensions.LanguageProtocol.Testing" Version="$(OmniSharpExtensionsPackageVersion)" />
         <PackageVersion Include="OmniSharp.Extensions.JsonRpc" Version="$(OmniSharpExtensionsPackageVersion)" />
 
-        <PackageVersion Include="SQLitePCLRaw.bundle_green" Version="2.1.8" />
+        <PackageVersion Include="SQLitePCLRaw.bundle_green" Version="2.1.11" />
 
         <PackageVersion Include="System.Collections.Immutable" Version="$(MicrosoftBaseCommonLibraryVersion)" />
         <PackageVersion Include="System.ComponentModel.Composition" Version="$(MicrosoftBaseCommonLibraryVersion)" />
@@ -94,7 +96,7 @@
         <PackageVersion Include="System.Threading.Tasks.Dataflow" Version="$(MicrosoftBaseCommonLibraryVersion)" />
         <PackageVersion Include="System.ValueTuple" Version="4.5.0" />
 
-        <PackageVersion Include="System.Reactive" Version="6.0.0" />
+        <PackageVersion Include="System.Reactive" Version="6.0.1" />
 
         <PackageVersion Include="xunit.abstractions" Version="2.0.3" />
         <PackageVersion Include="xunit.runner.visualstudio" Version="2.8.2" />
