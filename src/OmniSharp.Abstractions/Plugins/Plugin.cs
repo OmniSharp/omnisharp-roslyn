@@ -100,7 +100,7 @@ namespace OmniSharp.Plugins
             _cancellation.Cancel();
         }
 
-        public void Initalize(IConfiguration configuration)
+        public void Initialize(IConfiguration configuration)
         {
             if (Initialized) return;
             Initialized = true;
