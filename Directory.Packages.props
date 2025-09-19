@@ -15,8 +15,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageVersion Include="BenchmarkDotNet" Version="0.13.10" />
-        <PackageVersion Include="BenchmarkDotNet.Diagnostics.Windows" Version="0.13.10" />
+        <PackageVersion Include="BenchmarkDotNet" Version="0.13.12" />
+        <PackageVersion Include="BenchmarkDotNet.Diagnostics.Windows" Version="0.13.12" />
 
         <PackageVersion Include="Cake.Scripting.Transport" Version="0.16.0" />
 
