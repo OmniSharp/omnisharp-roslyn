@@ -17,7 +17,7 @@ namespace OmniSharp.Script.Tests
             var scriptProjectProvider = new ScriptProjectProvider(new ScriptOptions(), new OmniSharpEnvironment(), new LoggerFactory(), true, false);
             var scriptProjectInfo = scriptProjectProvider.CreateProject("test.csx", Enumerable.Empty<MetadataReference>(), Path.GetTempPath(), typeof(CommandLineScriptGlobals));
             Assert.Equal(LanguageVersion.Latest, ((CSharpParseOptions)scriptProjectInfo.ParseOptions).SpecifiedLanguageVersion);
-            Assert.Equal(LanguageVersion.CSharp13, ((CSharpParseOptions)scriptProjectInfo.ParseOptions).LanguageVersion);
+            Assert.Equal(LanguageVersion.CSharp14, ((CSharpParseOptions)scriptProjectInfo.ParseOptions).LanguageVersion);
         }
     }
 }
