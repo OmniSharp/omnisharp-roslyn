@@ -1,5 +1,5 @@
 #addin "nuget:?package=Newtonsoft.Json&version=11.0.2"
-#tool "nuget:?package=GitVersion.CommandLine&prerelease&version=5.0.1"
+#tool "nuget:?package=GitVersion.Tool&version=5.12.0"
 
 #load "platform.cake"
 
@@ -200,7 +200,7 @@ public class BuildEnvironment
         this.ShellCommand = Platform.Current.IsWindows ? "powershell" : "bash";
         this.ShellArgument = Platform.Current.IsWindows ? "-NoProfile -ExecutionPolicy Bypass /Command" : "-C";
         this.ShellScriptFileExtension = Platform.Current.IsWindows ? "ps1" : "sh";
-        this.MonoRuntimes = new []
+        this.MonoRuntimes = new[]
         {
             new MonoRuntime("osx", "mono"),
             new MonoRuntime("linux-x86", "mono"),
@@ -211,7 +211,7 @@ public class BuildEnvironment
         if (Platform.Current.IsMacOS)
         {
             this.CurrentMonoRuntime = this.MonoRuntimes[0];
-            this.BuildMonoRuntimes = new [] { this.CurrentMonoRuntime };
+            this.BuildMonoRuntimes = new[] { this.CurrentMonoRuntime };
         }
         else if (Platform.Current.IsLinux)
         {
