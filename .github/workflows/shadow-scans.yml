@@ -1,0 +1,71 @@
+name: Shadow scans
+on:
+  schedule:
+    # Run the workflow every day at 04:00 UTC
+    - cron: '0 4 * * *'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: github-windows-latest-s
+    name: Scan project on shadow platforms
+    permissions:
+      id-token: write
+      contents: write
+    steps:
+    - uses: jdx/mise-action@c37c93293d6b742fc901e1406b8f764f6fb19dac # v2.4.4
+      with:
+        version: 2025.7.12
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        clean: "false"
+        fetch-depth: "0"
+    - name: 🎁 Get Repox Credentials from Vault
+      id: secrets
+      uses: SonarSource/vault-action-wrapper@v3
+      with:
+        secrets: |
+          development/kv/data/next url | SQS_NEXT_URL;
+          development/kv/data/next token | SQS_NEXT_TOKEN;
+          development/kv/data/sonarcloud url | SQC_EU_URL;
+          development/kv/data/sonarcloud token | SQC_EU_TOKEN;
+          development/kv/data/sonarqube-us url | SQC_US_URL;
+          development/kv/data/sonarqube-us token | SQC_US_TOKEN;
+    - name: 🎁 Install SonarScanner
+      run: |
+        dotnet tool install --global dotnet-sonarscanner
+    - name: 🎁 Build and analyze dotnet project on SQS Next
+      env:
+        SONAR_URL: ${{ fromJSON(steps.secrets.outputs.vault).SQS_NEXT_URL }}
+        SONAR_TOKEN: ${{ fromJSON(steps.secrets.outputs.vault).SQS_NEXT_TOKEN }}
+      run: |
+        bash .github/workflows/build_scan_dotnet.sh
+    - name: 🎁 Build and analyze dotnet project on SQC EU
+      env:
+        SONAR_URL: ${{ fromJSON(steps.secrets.outputs.vault).SQC_EU_URL }}
+        SONAR_TOKEN: ${{ fromJSON(steps.secrets.outputs.vault).SQC_EU_TOKEN }}
+      run: |
+        bash .github/workflows/build_scan_dotnet.sh
+    - name: 🎁 Build and analyze dotnet project on SQC US
+      env:
+        SONAR_URL: ${{ fromJSON(steps.secrets.outputs.vault).SQC_US_URL }}
+        SONAR_TOKEN: ${{ fromJSON(steps.secrets.outputs.vault).SQC_US_TOKEN }}
+      run: |
+        bash .github/workflows/build_scan_dotnet.sh
+  iris-sync:
+    runs-on: github-ubuntu-latest-s
+    name: Run IRIS sync
+    needs: build
+    permissions:
+      id-token: write
+      contents: write
+    steps:
+    - uses: SonarSource/unified-dogfooding-actions/run-iris@v1
+      with:
+        primary_project_key: "SonarSource_omnisharp-roslyn"
+        primary_platform: "Next"
+        shadow1_project_key: "SonarSource_omnisharp-roslyn"
+        shadow1_platform: "SQC-EU"
+        shadow2_project_key: "SonarSource_omnisharp-roslyn"
+        shadow2_platform: "SQC-US"
