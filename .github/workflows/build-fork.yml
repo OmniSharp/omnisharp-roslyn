@@ -1,0 +1,49 @@
+name: Build (Fork)
+
+on:
+  push:
+    branches:
+      - master
+      - branch-*
+      - dogfood-*
+  pull_request:
+  merge_group:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: github-windows-latest-s
+    name: Build
+    permissions:
+      id-token: write
+      contents: write
+    steps:
+
+    - uses: jdx/mise-action@c37c93293d6b742fc901e1406b8f764f6fb19dac # v2.4.4
+      with:
+        version: 2025.7.12
+
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        clean: "false"
+        fetch-depth: "0"
+
+    - name: 🎁 Get Repox Credentials from Vault
+      id: secrets
+      uses: SonarSource/vault-action-wrapper@v3
+      with:
+        secrets: |
+          development/kv/data/next url | SQS_NEXT_URL;
+          development/kv/data/next token | SQS_NEXT_TOKEN;
+
+    - name: 🎁 Install SonarScanner
+      run: |
+        dotnet tool install --global dotnet-sonarscanner
+
+    - name: ⚙️ Build and analyze dotnet project on SQS Next
+      env:
+        SONAR_URL: ${{ fromJSON(steps.secrets.outputs.vault).SQS_NEXT_URL }}
+        SONAR_TOKEN: ${{ fromJSON(steps.secrets.outputs.vault).SQS_NEXT_TOKEN }}
+      run: |
+        bash .github/workflows/build_scan_dotnet.sh
