@@ -1119,6 +1119,7 @@ class C
             var completions = await FindCompletionsAsync(filename, source);
             Assert.Equal(new[] { "<!--$0-->",
                                  "<![CDATA[$0]]>",
+                                 "b",
                                  "c",
                                  "code",
                                  "<inheritdoc$0/>",
