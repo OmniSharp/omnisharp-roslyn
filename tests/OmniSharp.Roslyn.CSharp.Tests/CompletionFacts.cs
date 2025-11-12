@@ -1699,11 +1699,15 @@ class C
                                  "b",
                                  "c",
                                  "code",
+                                 "em",
+                                 "i",
                                  "<inheritdoc$0/>",
                                  "<list type=\"$0\"",
                                  "para",
                                  "<see cref=\"$0\"/>",
-                                 "<seealso cref=\"$0\"/>"
+                                 "<seealso cref=\"$0\"/>",
+                                 "strong",
+                                 "tt"
                          },
                          completions.Items.Select(c => c.TextEdit.NewText));
             Assert.All(completions.Items, c =>
