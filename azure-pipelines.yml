@@ -17,7 +17,7 @@ resources:
 
 variables:
   Verbosity: Diagnostic
-  DotNetVersion: "10.0.100-rc.2.25502.107"
+  DotNetVersion: "10.0.100-preview.6.25358.103"
   CakeVersion: "4.2.0"
   NuGetVersion: "6.5.0"
   GitVersionVersion: "5.0.1"

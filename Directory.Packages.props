@@ -9,7 +9,7 @@
         <MicrosoftBaseCommonLibraryVersion>9.0.0</MicrosoftBaseCommonLibraryVersion>
         <MicrosoftTestPackageVersion>17.14.0-preview-25107-01</MicrosoftTestPackageVersion>
         <MSBuildPackageVersion>17.3.2</MSBuildPackageVersion>
-        <NuGetPackageVersion>7.0.0-rc.306</NuGetPackageVersion>
+        <NuGetPackageVersion>6.15.0-preview.1.86</NuGetPackageVersion>
         <RoslynPackageVersion>5.3.0-2.25557.5</RoslynPackageVersion>
         <XunitPackageVersion>2.8.1</XunitPackageVersion>
     </PropertyGroup>
