@@ -10,7 +10,7 @@
         <MicrosoftTestPackageVersion>17.14.0-preview-25107-01</MicrosoftTestPackageVersion>
         <MSBuildPackageVersion>17.3.2</MSBuildPackageVersion>
         <NuGetPackageVersion>6.15.0-preview.1.86</NuGetPackageVersion>
-        <RoslynPackageVersion>5.1.0-1.25475.3</RoslynPackageVersion>
+        <RoslynPackageVersion>5.3.0-2.25557.5</RoslynPackageVersion>
         <XunitPackageVersion>2.8.1</XunitPackageVersion>
     </PropertyGroup>
 
@@ -62,7 +62,7 @@
         <PackageVersion Include="Microsoft.Extensions.Options" Version="$(MicrosoftExtensionPackageVersion)" />
         <PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="$(MicrosoftExtensionPackageVersion)" />
 
-        <PackageVersion Include="Microsoft.IO.Redist" Version="6.1.0" />
+        <PackageVersion Include="Microsoft.IO.Redist" Version="6.1.3" />
 
         <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftTestPackageVersion)" />
         <PackageVersion Include="Microsoft.TestPlatform.TranslationLayer" Version="$(MicrosoftTestPackageVersion)" />
@@ -90,7 +90,7 @@
         <PackageVersion Include="System.ComponentModel.Composition" Version="$(MicrosoftBaseCommonLibraryVersion)" />
         <PackageVersion Include="System.Composition" Version="$(MicrosoftBaseCommonLibraryVersion)" />
         <PackageVersion Include="System.Configuration.ConfigurationManager" Version="$(MicrosoftBaseCommonLibraryVersion)" />
-        <PackageVersion Include="System.Memory" Version="4.6.0" />
+        <PackageVersion Include="System.Memory" Version="4.6.3" />
         <PackageVersion Include="System.Reflection.Metadata" Version="$(MicrosoftBaseCommonLibraryVersion)" />
         <PackageVersion Include="System.Text.Json" Version="$(MicrosoftBaseCommonLibraryVersion)" />
         <PackageVersion Include="System.Threading.Tasks.Dataflow" Version="$(MicrosoftBaseCommonLibraryVersion)" />
@@ -106,9 +106,10 @@
         <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
     </ItemGroup>
     <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
-        <PackageVersion Include="Microsoft.AspNetCore.Diagnostics" Version="2.2.0" />
-        <PackageVersion Include="Microsoft.AspNetCore.Hosting" Version="2.2.0" />
-        <PackageVersion Include="Microsoft.AspNetCore.Http.Features" Version="2.2.0" />
-        <PackageVersion Include="Microsoft.AspNetCore.Server.Kestrel" Version="2.2.0" />
+        <PackageVersion Include="Microsoft.AspNetCore.Diagnostics" Version="2.3.0" />
+        <PackageVersion Include="Microsoft.AspNetCore.Hosting" Version="2.3.0" />
+        <PackageVersion Include="Microsoft.AspNetCore.Http.Features" Version="2.3.0" />
+        <PackageVersion Include="Microsoft.AspNetCore.Server.Kestrel" Version="2.3.0" />
+        <PackageVersion Include="Microsoft.AspNetCore.Server.Kestrel.Core" Version="2.3.6" />
     </ItemGroup>
 </Project>
