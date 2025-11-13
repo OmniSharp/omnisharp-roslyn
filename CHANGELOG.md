@@ -1,6 +1,14 @@
 # Changelog
 All changes to the project will be documented in this file.
 
+## [1.39.15] - 2025-11-13
+* fix: document version reset on textDocument/didSave (PR: [#2695](https://github.com/OmniSharp/omnisharp-roslyn/pull/2695))
+* Update Roslyn to 5.3.0-2.25557.5 (PR: [#2696](https://github.com/OmniSharp/omnisharp-roslyn/pull/2696))
+* Update Roslyn to 5.1.0-1.25475.3 (PR: [#2692](https://github.com/OmniSharp/omnisharp-roslyn/pull/2692))
+* Update SDKs (PR: [#2652](https://github.com/OmniSharp/omnisharp-roslyn/pull/2652))
+* Add linux-bionic-arm64 build (PR: [#2653](https://github.com/OmniSharp/omnisharp-roslyn/pull/2653))
+* Update README to explain preferred Arch build process (PR: [#2684](https://github.com/OmniSharp/omnisharp-roslyn/pull/2684))
+
 ## [1.39.14] - 2025-09-01
 * Update Roslyn to 4.14.0-3.25168.13 (PR: [#2664](https://github.com/OmniSharp/omnisharp-roslyn/pull/2664))
 
