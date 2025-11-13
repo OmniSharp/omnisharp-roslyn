@@ -154,8 +154,6 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                     FileName = Helpers.FromUri(notification.TextDocument.Uri),
                     Buffer = notification.Text
                 });
-
-                _documentVersions.Reset(notification.TextDocument);
             }
             return Unit.Value;
         }
