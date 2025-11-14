@@ -60,7 +60,7 @@ namespace OmniSharp
                 }
             }
 
-            builder.Add(typeof(OmniSharpSymbolRenamedCodeActionOperationFactoryWorkspaceService).Assembly);
+            builder.Add(typeof(PickMemberWorkspaceService).Assembly);
             _assemblies = builder.ToImmutableArray();
             _options = options;
         }
