@@ -44,7 +44,7 @@ steps:
       arguments: install tools/packages.config -ExcludeVersion -OutputDirectory tools
   - ${{ if ne(parameters.MonoVersion, '') }}:
       - script: |
-          curl -o mono.pkg https://download.mono-project.com/archive/$MONO_VERSION/macos-10-universal/MonoFramework-MDK-$MONO_VERSION.182.macos10.xamarin.universal.pkg
+          curl -o mono.pkg https://download.mono-project.com/archive/$MONO_VERSION/macos-10-universal/MonoFramework-MDK-$MONO_VERSION.206.macos10.xamarin.universal.pkg
           sudo installer -pkg mono.pkg -target /
           sudo cp -rf /Library/Frameworks/Mono.framework/Versions/$MONO_VERSION/ /Library/Frameworks/Mono.framework/Versions/Current/
           MONOPREFIX=/Library/Frameworks/Mono.framework/Versions/$MONO_VERSION
