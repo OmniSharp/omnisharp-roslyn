@@ -36,7 +36,6 @@ steps:
     inputs:
       packageType: "sdk"
       version: ${{ parameters.DotNetVersion }}
-      installationPath: $(System.DefaultWorkingDirectory)/.dotnet
   - task: DotNetCoreCLI@2
     displayName: "dotnet install cake"
     inputs:
