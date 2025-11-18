@@ -92,7 +92,7 @@ namespace OmniSharp.Http.Tests
                 throw new NotImplementedException();
             }
 
-            public void Initalize(IConfiguration configuration) { }
+            public void Initialize(IConfiguration configuration) { }
         }
 
         private class PlugInHost : DisposableObject

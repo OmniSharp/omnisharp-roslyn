@@ -21,7 +21,7 @@ namespace OmniSharp.Services
         /// Initialize the project system.
         /// </summary>
         /// <param name="configuration">The configuration to use.</param>
-        void Initalize(IConfiguration configuration);
+        void Initialize(IConfiguration configuration);
 
         /// <summary>
         /// Wait until the project system is not busy.

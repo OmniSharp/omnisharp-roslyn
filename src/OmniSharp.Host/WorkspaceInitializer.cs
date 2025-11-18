@@ -55,7 +55,7 @@ namespace OmniSharp
                     var enabledProjectFlag = projectConfiguration.GetValue("enabled", defaultValue: projectSystem.EnabledByDefault);
                     if (enabledProjectFlag)
                     {
-                        projectSystem.Initalize(projectConfiguration);
+                        projectSystem.Initialize(projectConfiguration);
                     }
                     else
                     {

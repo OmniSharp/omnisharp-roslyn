@@ -50,7 +50,7 @@ namespace OmniSharp.Script
         public bool EnabledByDefault { get; } = true;
         public bool Initialized { get; private set; }
 
-        public void Initalize(IConfiguration configuration)
+        public void Initialize(IConfiguration configuration)
         {
             if (Initialized) return;
 
