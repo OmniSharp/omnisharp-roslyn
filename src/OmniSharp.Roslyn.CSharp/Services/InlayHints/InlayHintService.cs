@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Composition;
 using System.Diagnostics.CodeAnalysis;
@@ -56,8 +57,17 @@ internal class InlayHintService :
             return InlayHintResponse.None;
         }
 
-        var sourceText = await document.GetTextAsync();
-        var mappedSpan = sourceText.GetSpanFromRange(request.Location.Range);
+        SourceText sourceText;
+        TextSpan mappedSpan;
+        try
+        {
+            sourceText = await document.GetTextAsync();
+            mappedSpan = sourceText.GetSpanFromRange(request.Location.Range);
+        }
+        catch (ArgumentOutOfRangeException)
+        {
+            return InlayHintResponse.None;
+        }
 
         var inlayHintsOptions = _omniSharpOptions.CurrentValue.RoslynExtensionsOptions.InlayHintsOptions;
         var options = new OmniSharpInlineHintsOptions
