@@ -27,7 +27,10 @@ nuget.exe
 debugSettings.json
 buildlog
 /.vs
-*.lock.json
+# Ignore old project.lock.json but keep packages.lock.*.json for reproducible builds
+project.lock.json
+!packages.lock.windows.json
+!packages.lock.linux.json
 /omnisharp*.tar.gz
 scripts/Omnisharp*
 .msbuild-*/

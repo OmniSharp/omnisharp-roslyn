@@ -260,11 +260,12 @@ void BuildWithDotNetCli(BuildEnvironment env, string configuration)
 
     settings
         .SetConfiguration(configuration)
+        .WithProperty("RestoreLockedMode", "true") // Enforce NuGet package lock files
         .WithProperty("PackageVersion", env.VersionInfo.NuGetVersion)
         .WithProperty("AssemblyVersion", env.VersionInfo.AssemblySemVer)
         .WithProperty("FileVersion", env.VersionInfo.AssemblySemVer)
         .WithProperty("InformationalVersion", env.VersionInfo.InformationalVersion)
-        .WithProperty("RuntimeFrameworkVersion", "6.0.0-preview.7.21317.1") // Set the minimum runtime to a .NET 6 prerelease so that prerelease SDKs will be considered during rollForward.
+        .WithProperty("RuntimeFrameworkVersion", "6.0.36") // Set the minimum runtime to a .NET 6
         .WithProperty("RollForward", "LatestMajor");
 
     DotNetMSBuild("OmniSharp.sln", settings);
@@ -545,11 +546,12 @@ string PublishBuild(string project, BuildEnvironment env, BuildPlan plan, string
             Configuration = configuration,
             OutputDirectory = outputFolder,
             MSBuildSettings = new DotNetMSBuildSettings()
+                .WithProperty("RestoreLockedMode", "true") // Enforce NuGet package lock files
                 .WithProperty("PackageVersion", env.VersionInfo.NuGetVersion)
                 .WithProperty("AssemblyVersion", env.VersionInfo.AssemblySemVer)
                 .WithProperty("FileVersion", env.VersionInfo.AssemblySemVer)
                 .WithProperty("InformationalVersion", env.VersionInfo.InformationalVersion)
-                .WithProperty("RuntimeFrameworkVersion", "6.0.0-preview.7.21317.1") // Set the minimum runtime to a .NET 6 prerelease so that prerelease SDKs will be considered during rollForward.
+                .WithProperty("RuntimeFrameworkVersion", "6.0.36") // Set the minimum runtime to a .NET 6
                 .WithProperty("RollForward", "LatestMajor"),
             ToolPath = env.DotNetCommand,
             WorkingDirectory = env.WorkingDirectory,
@@ -593,6 +595,7 @@ Task("PublishNuGet")
             OutputDirectory = "./artifacts/nuget/",
             MSBuildSettings = new DotNetMSBuildSettings()
                 .SetConfiguration(configuration)
+                .WithProperty("RestoreLockedMode", "true") // Enforce NuGet package lock files
                 .WithProperty("PackageVersion", env.VersionInfo.NuGetVersion)
                 .WithProperty("AssemblyVersion", env.VersionInfo.AssemblySemVer)
                 .WithProperty("FileVersion", env.VersionInfo.AssemblySemVer)

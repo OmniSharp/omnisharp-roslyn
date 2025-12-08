@@ -3,6 +3,13 @@
     <RepositoryRootDirectory>$(MSBuildThisFileDirectory)</RepositoryRootDirectory>
 
     <RestoreUseStaticGraphEvaluation>true</RestoreUseStaticGraphEvaluation>
+
+    <!-- Enable NuGet package lock files for reproducible builds -->
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+
+    <!-- Use platform-specific lock files -->
+    <NuGetLockFilePath Condition="$([MSBuild]::IsOSPlatform('Windows'))">$(MSBuildProjectDirectory)\packages.lock.windows.json</NuGetLockFilePath>
+    <NuGetLockFilePath Condition="!$([MSBuild]::IsOSPlatform('Windows'))">$(MSBuildProjectDirectory)\packages.lock.linux.json</NuGetLockFilePath>
   </PropertyGroup>
 
   <Import Project="build\Settings.props" />

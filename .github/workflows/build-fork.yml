@@ -10,40 +10,112 @@ on:
   merge_group:
   workflow_dispatch:
 
+permissions:
+  id-token: write
+  contents: write
+
+env:
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: "true"
+  DOTNET_CLI_TELEMETRY_OPTOUT: "true"
+
 jobs:
-  build:
+  build_windows:
     runs-on: github-windows-latest-s
-    name: Build
-    permissions:
-      id-token: write
-      contents: write
+    name: Build Windows (net472 + net6)
     steps:
+      - uses: jdx/mise-action@c37c93293d6b742fc901e1406b8f764f6fb19dac # v2.4.4
+        with:
+          version: 2025.7.12
 
-    - uses: jdx/mise-action@c37c93293d6b742fc901e1406b8f764f6fb19dac # v2.4.4
-      with:
-        version: 2025.7.12
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          clean: "false"
+          fetch-depth: "0"
 
-    - name: Checkout
-      uses: actions/checkout@v2
-      with:
-        clean: "false"
-        fetch-depth: "0"
+      - name: 🎁 Get Repox Credentials from Vault
+        id: secrets
+        uses: SonarSource/vault-action-wrapper@v3
+        with:
+          secrets: |
+            development/artifactory/token/{REPO_OWNER_NAME_DASH}-private-reader username | ARTIFACTORY_USER;
+            development/artifactory/token/{REPO_OWNER_NAME_DASH}-private-reader access_token | ARTIFACTORY_ACCESS_TOKEN;
+            development/kv/data/next url | SQS_NEXT_URL;
+            development/kv/data/next token | SQS_NEXT_TOKEN;
 
-    - name: 🎁 Get Repox Credentials from Vault
-      id: secrets
-      uses: SonarSource/vault-action-wrapper@v3
-      with:
-        secrets: |
-          development/kv/data/next url | SQS_NEXT_URL;
-          development/kv/data/next token | SQS_NEXT_TOKEN;
+      - name: 🔨 Build and Package
+        env:
+          ARTIFACTORY_USER: ${{ fromJSON(steps.secrets.outputs.vault).ARTIFACTORY_USER }}
+          ARTIFACTORY_PASSWORD: ${{ fromJSON(steps.secrets.outputs.vault).ARTIFACTORY_ACCESS_TOKEN }}
+        run: |
+          powershell -File build.ps1 -target Quick -configuration Release
 
-    - name: 🎁 Install SonarScanner
-      run: |
-        dotnet tool install --global dotnet-sonarscanner
+      - name: ⬆️ Upload Windows Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: omnisharp-windows
+          path: artifacts/package/**/omnisharp-*.*
+          if-no-files-found: error
 
-    - name: ⚙️ Build and analyze dotnet project on SQS Next
-      env:
-        SONAR_URL: ${{ fromJSON(steps.secrets.outputs.vault).SQS_NEXT_URL }}
-        SONAR_TOKEN: ${{ fromJSON(steps.secrets.outputs.vault).SQS_NEXT_TOKEN }}
-      run: |
-        bash .github/workflows/build_scan_dotnet.sh
+      - name: 🎁 Install SonarScanner
+        env:
+          ARTIFACTORY_USER: ${{ fromJSON(steps.secrets.outputs.vault).ARTIFACTORY_USER }}
+          ARTIFACTORY_PASSWORD: ${{ fromJSON(steps.secrets.outputs.vault).ARTIFACTORY_ACCESS_TOKEN }}
+        run: |
+          dotnet tool install --global dotnet-sonarscanner
+
+      - name: ⚙️ Analyze on SQS Next
+        env:
+          ARTIFACTORY_USER: ${{ fromJSON(steps.secrets.outputs.vault).ARTIFACTORY_USER }}
+          ARTIFACTORY_PASSWORD: ${{ fromJSON(steps.secrets.outputs.vault).ARTIFACTORY_ACCESS_TOKEN }}
+          SONAR_URL: ${{ fromJSON(steps.secrets.outputs.vault).SQS_NEXT_URL }}
+          SONAR_TOKEN: ${{ fromJSON(steps.secrets.outputs.vault).SQS_NEXT_TOKEN }}
+        run: |
+          bash .github/workflows/build_scan_dotnet.sh
+
+  build_linux:
+    runs-on: github-ubuntu-latest-s
+    name: Build Linux (mono + net6)
+    steps:
+      - uses: jdx/mise-action@c37c93293d6b742fc901e1406b8f764f6fb19dac # v2.4.4
+        with:
+          version: 2025.7.12
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          clean: "false"
+          fetch-depth: "0"
+
+      - name: Install Mono
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ca-certificates gnupg
+          sudo gpg --homedir /tmp --no-default-keyring --keyring /usr/share/keyrings/mono-official-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF
+          echo "deb [signed-by=/usr/share/keyrings/mono-official-archive-keyring.gpg] https://download.mono-project.com/repo/ubuntu stable-focal main" | sudo tee /etc/apt/sources.list.d/mono-official-stable.list
+          sudo apt-get update
+          sudo apt-get install -y mono-complete mono-roslyn msbuild
+          sudo rm -rf /var/lib/apt/lists/*
+
+      - name: 🎁 Get Repox Credentials from Vault
+        id: secrets
+        uses: SonarSource/vault-action-wrapper@v3
+        with:
+          secrets: |
+            development/artifactory/token/{REPO_OWNER_NAME_DASH}-private-reader username | ARTIFACTORY_USER;
+            development/artifactory/token/{REPO_OWNER_NAME_DASH}-private-reader access_token | ARTIFACTORY_ACCESS_TOKEN;
+
+      - name: 🔨 Build and Package
+        env:
+          ARTIFACTORY_USER: ${{ fromJSON(steps.secrets.outputs.vault).ARTIFACTORY_USER }}
+          ARTIFACTORY_PASSWORD: ${{ fromJSON(steps.secrets.outputs.vault).ARTIFACTORY_ACCESS_TOKEN }}
+        run: |
+          chmod +x ./build.sh
+          ./build.sh --target Quick --configuration Release
+
+      - name: ⬆️ Upload Linux Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: omnisharp-linux
+          path: artifacts/package/**/omnisharp-*.*
+          if-no-files-found: error
