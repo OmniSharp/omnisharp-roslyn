@@ -56,14 +56,14 @@ namespace OmniSharp
         {
             if (!string.IsNullOrEmpty(preReleaseLabel))
             {
-                if (!Regex.IsMatch(preReleaseLabel, LabelUnitRegEx)) throw new FormatException(nameof(preReleaseLabel));
+                if (!Regex.IsMatch(preReleaseLabel, LabelUnitRegEx, RegexOptions.None, TimeSpan.FromMilliseconds(500))) throw new FormatException(nameof(preReleaseLabel));
 
                 PreReleaseLabel = preReleaseLabel;
             }
 
             if (!string.IsNullOrEmpty(buildLabel))
             {
-                if (!Regex.IsMatch(buildLabel, LabelUnitRegEx)) throw new FormatException(nameof(buildLabel));
+                if (!Regex.IsMatch(buildLabel, LabelUnitRegEx, RegexOptions.None, TimeSpan.FromMilliseconds(500))) throw new FormatException(nameof(buildLabel));
 
                 BuildLabel = buildLabel;
             }
@@ -88,7 +88,7 @@ namespace OmniSharp
             // 2) 'label' starts with letter or digit.
             if (!string.IsNullOrEmpty(label))
             {
-                var match = Regex.Match(label, LabelRegEx);
+                var match = Regex.Match(label, LabelRegEx, RegexOptions.None, TimeSpan.FromMilliseconds(500));
                 if (!match.Success) throw new FormatException(nameof(label));
 
                 PreReleaseLabel = match.Groups["preLabel"].Value;
@@ -282,7 +282,7 @@ namespace OmniSharp
                 return false;
             }
 
-            var match = Regex.Match(versionSansLabel, VersionSansRegEx);
+            var match = Regex.Match(versionSansLabel, VersionSansRegEx, RegexOptions.None, TimeSpan.FromMilliseconds(500));
             if (!match.Success)
             {
                 result.SetFailure(ParseFailureKind.FormatException);
@@ -307,8 +307,8 @@ namespace OmniSharp
                 return false;
             }
 
-            if (preLabel != null && !Regex.IsMatch(preLabel, LabelUnitRegEx) ||
-               (buildLabel != null && !Regex.IsMatch(buildLabel, LabelUnitRegEx)))
+            if (preLabel != null && !Regex.IsMatch(preLabel, LabelUnitRegEx, RegexOptions.None, TimeSpan.FromMilliseconds(500)) ||
+               (buildLabel != null && !Regex.IsMatch(buildLabel, LabelUnitRegEx, RegexOptions.None, TimeSpan.FromMilliseconds(500))))
             {
                 result.SetFailure(ParseFailureKind.FormatException);
                 return false;

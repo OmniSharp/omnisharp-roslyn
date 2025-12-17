@@ -57,7 +57,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
                 return new RunFixAllResponse();
             }
 
-            var cancellationSource = new CancellationTokenSource(TimeSpan.FromMilliseconds(request.Timeout));
+            using var cancellationSource = new CancellationTokenSource(TimeSpan.FromMilliseconds(request.Timeout));
             switch (request)
             {
                 case { Scope: FixAllScope.Document, FixAllFilter: null }:

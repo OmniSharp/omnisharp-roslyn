@@ -95,7 +95,7 @@ namespace OmniSharp.Services
                 }
                 else if (string.IsNullOrEmpty(sdkVersion))
                 {
-                    var getSdkVersionAndPath = new Regex(@"^\s*(\d+\.\d+\.\d+)\s\[(.*)\]\s*$", RegexOptions.Multiline);
+                    var getSdkVersionAndPath = new Regex(@"^\s*(\d+\.\d+\.\d+)\s\[(.*)\]\s*$", RegexOptions.Multiline, TimeSpan.FromMilliseconds(500));
                     var match = getSdkVersionAndPath.Match(line);
 
                     if (match.Success)

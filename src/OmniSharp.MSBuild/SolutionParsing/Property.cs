@@ -17,7 +17,8 @@ namespace OmniSharp.MSBuild.SolutionParsing
                 + "\\s*=\\s*" // Any amount of whitespace plus "=" plus any amount of whitespace
                 + "(?<PROPERTYVALUE>.*)"
                 + "$", // End-of-line
-                RegexOptions.Compiled)
+                RegexOptions.Compiled,
+                TimeSpan.FromMilliseconds(500))
             );
 
         public string Name { get; }

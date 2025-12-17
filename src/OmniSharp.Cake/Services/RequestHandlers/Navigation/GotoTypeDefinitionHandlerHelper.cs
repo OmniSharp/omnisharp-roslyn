@@ -90,15 +90,15 @@ namespace OmniSharp.Cake.Services.RequestHandlers.Navigation
                     continue;
                 }
 
-                var cancellationSource = new CancellationTokenSource(TimeSpan.FromMilliseconds(timeout));
+                using var cancellationSource = new CancellationTokenSource(TimeSpan.FromMilliseconds(timeout));
                 var (metadataDocument, _) = await externalSourceService.GetAndAddExternalSymbolDocument(document.Project, typeSymbol, cancellationSource.Token);
                 if (metadataDocument == null)
                 {
                     continue;
                 }
 
-                cancellationSource = new CancellationTokenSource(TimeSpan.FromMilliseconds(timeout));
-                var metadataLocation = await externalSourceService.GetExternalSymbolLocation(typeSymbol, metadataDocument, cancellationSource.Token);
+                using var cancellationSource2 = new CancellationTokenSource(TimeSpan.FromMilliseconds(timeout));
+                var metadataLocation = await externalSourceService.GetExternalSymbolLocation(typeSymbol, metadataDocument, cancellationSource2.Token);
                 var lineSpan = metadataLocation.GetMappedLineSpan();
 
                 result.Add(new Alias

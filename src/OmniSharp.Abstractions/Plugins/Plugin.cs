@@ -97,7 +97,9 @@ namespace OmniSharp.Plugins
 
         public void Dispose()
         {
-            _cancellation.Cancel();
+            _cancellation?.Cancel();
+            _cancellation?.Dispose();
+            _process?.Dispose();
         }
 
         public void Initalize(IConfiguration configuration)
