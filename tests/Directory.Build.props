@@ -1,6 +1,10 @@
 <Project>
   <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
 
+  <PropertyGroup>
+    <NoWarn>$(NoWarn);MSB3277</NoWarn>
+  </PropertyGroup>
+
   <!--
       Because the Roslyn's OmniSharp.ExternalAccess libraries are compiled against .NET Standard 2.0,
       we need to reference the .NET Standard 2.0 versions of the Roslyn assemblies. Since our test projects
