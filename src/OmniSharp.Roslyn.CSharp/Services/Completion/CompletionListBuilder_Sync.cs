@@ -46,7 +46,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                 var completion = completions.ItemsList[i];
                 var providerName = completion.GetProviderName();
                 if (providerName is TypeImportCompletionProvider or
-                                    ExtensionMethodImportCompletionProvider)
+                                    ExtensionMemberImportCompletionProvider)
                 {
                     completionTasksAndProviderNamesBuilder.Add((null, providerName));
                 }
@@ -77,7 +77,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                 var (changeTask, providerName) = completionTasksAndProviderNames[i];
                 switch (providerName)
                 {
-                    case TypeImportCompletionProvider or ExtensionMethodImportCompletionProvider:
+                    case TypeImportCompletionProvider or ExtensionMemberImportCompletionProvider:
                         changeSpan = typedSpan;
                         insertText = completion.DisplayText;
                         seenUnimportedCompletions = true;
