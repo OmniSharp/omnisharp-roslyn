@@ -41,7 +41,7 @@ jobs:
 
       - name: Install boots (MacOS only)
         if: matrix.os == 'macos-latest'
-        run: dotnet tool update -v:n boots --version 1.1.0.36 --add-source "https://api.nuget.org/v3/index.json" --global
+        run: dotnet tool install -v:n boots --version 1.1.0.36 --add-source "https://api.nuget.org/v3/index.json" --global
 
       - name: Install Mono (MacOS only)
         if: matrix.os == 'macos-latest'
