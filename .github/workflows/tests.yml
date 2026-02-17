@@ -39,6 +39,16 @@ jobs:
           clean: "false"
           fetch-depth: "0"
 
+      - name: 🔨 Use .NET Core SDKs
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: |
+            ${{ env.DotNetVersion5 }}
+            ${{ env.DotNetVersion4 }}
+            ${{ env.DotNetVersion3 }}
+            ${{ env.DotNetVersion2 }}
+            ${{ env.DotNetVersion }}
+
       - name: Install boots (MacOS only)
         if: matrix.os == 'macos-latest'
         run: dotnet tool install -v:n boots --version 1.1.0.36 --add-source "https://api.nuget.org/v3/index.json" --global
@@ -52,23 +62,13 @@ jobs:
         with:
           nuget-version: ${{ env.NuGetVersion }}
 
-      - name: 🔨 Use .NET Core SDKs
-        uses: actions/setup-dotnet@v3
-        with:
-          dotnet-version: |
-            ${{ env.DotNetVersion5 }}
-            ${{ env.DotNetVersion4 }}
-            ${{ env.DotNetVersion3 }}
-            ${{ env.DotNetVersion2 }}
-            ${{ env.DotNetVersion }}
+      - name: 🎁 nuget install
+        run: |
+          nuget install tools/packages.config -ExcludeVersion -OutputDirectory tools
 
       - name: 🎁 dotnet tool restore
         run: |
           dotnet tool restore
-
-      - name: 🎁 nuget install
-        run: |
-          nuget install tools/packages.config -ExcludeVersion -OutputDirectory tools
 
       - name: 🍰 Run Cake
         uses: nick-invision/retry@v2
