@@ -27,7 +27,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04, windows-latest, macos-13]
+        os: [ubuntu-22.04, windows-latest, macos-latest]
         testProjects:
           - OmniSharp.MSBuild.Tests,OmniSharp.Roslyn.CSharp.Tests,OmniSharp.DotNetTest.Tests,OmniSharp.Cake.Tests
           - OmniSharp.Lsp.Tests,OmniSharp.Script.Tests,OmniSharp.Tests,OmniSharp.Stdio.Tests,OmniSharp.Http.Tests
@@ -38,6 +38,14 @@ jobs:
         with:
           clean: "false"
           fetch-depth: "0"
+
+      - name: Install boots (MacOS only)
+        if: matrix.os == 'macos-latest'
+        run: dotnet tool update -v:n boots --version 1.1.0.36 --add-source "https://api.nuget.org/v3/index.json" --global
+
+      - name: Install Mono (MacOS only)
+        if: matrix.os == 'macos-latest'
+        run: boots https://download.mono-project.com/archive/6.12.0/macos-10-universal/MonoFramework-MDK-6.12.0.188.macos10.xamarin.universal.pkg
 
       - name: Setup NuGet.exe
         uses: nuget/setup-nuget@v1
