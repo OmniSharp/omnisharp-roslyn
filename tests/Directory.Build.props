@@ -9,7 +9,7 @@
       We want the test projects to use the version of NuGet from the SDK
       which we are using for project loading.
     -->
-  <ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' != 'net472'">
     <PackageReference Update="NuGet.Common" ExcludeAssets="all" PrivateAssets="all" />
     <PackageReference Update="NuGet.Configuration" ExcludeAssets="all" PrivateAssets="all" />
     <PackageReference Update="NuGet.DependencyResolver.Core" ExcludeAssets="all" PrivateAssets="all" />
