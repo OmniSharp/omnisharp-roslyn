@@ -54,6 +54,10 @@ jobs:
         if: matrix.os == 'macos-latest'
         run: dotnet tool install -v:n boots --version 1.1.0.36 --add-source "https://api.nuget.org/v3/index.json" --global
 
+      - name: Install x64 .NET SDK (MacOS only)
+        if: matrix.os == 'macos-latest'
+        run: boots https://download.visualstudio.microsoft.com/download/pr/1b9c8e5c-7a0d-4f1e-9b3c-2a0e5d8f1c6b/1b9c8e5c7a0d4f1e9b3c2a0e5d8f1c6b/dotnet-sdk-${{ env.DotNetVersion }}-osx-x64.pkg
+
       - name: Install Mono (MacOS only)
         if: matrix.os == 'macos-latest'
         run: boots https://download.mono-project.com/archive/6.12.0/macos-10-universal/MonoFramework-MDK-6.12.0.188.macos10.xamarin.universal.pkg
