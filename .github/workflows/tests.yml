@@ -55,7 +55,7 @@ jobs:
 
       - name: Install x64 .NET SDK (MacOS only)
         if: matrix.os == 'macos-latest'
-        run: boots https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/sdk-6.0.203-macos-x64-installer
+        run: boots https://builds.dotnet.microsoft.com/dotnet/Sdk/6.0.203/dotnet-sdk-6.0.203-osx-x64.pkg
 
       - name: Install Mono (MacOS only)
         if: matrix.os == 'macos-latest'
