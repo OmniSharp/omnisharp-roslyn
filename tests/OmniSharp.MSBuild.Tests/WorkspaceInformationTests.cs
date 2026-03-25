@@ -73,6 +73,127 @@ namespace OmniSharp.MSBuild.Tests
         }
 
         [Fact]
+        public async Task TestProjectAndSolutionSlnx()
+        {
+            using var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectAndSolutionSlnx");
+            using var host = CreateMSBuildTestHost(testProject.Directory);
+            var workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
+
+            Assert.Equal("ProjectAndSolutionSlnx.slnx", Path.GetFileName(workspaceInfo.SolutionPath));
+            Assert.NotNull(workspaceInfo.Projects);
+            var project = Assert.Single(workspaceInfo.Projects);
+
+            Assert.Equal("Project", project.AssemblyName);
+            Assert.Equal("bin/Debug/net6.0/", project.OutputPath.EnsureForwardSlashes());
+            Assert.Equal("obj/Debug/net6.0/", project.IntermediateOutputPath.EnsureForwardSlashes());
+            var expectedTargetPath = $"{testProject.Directory}/Project/{project.OutputPath}Project.dll".EnsureForwardSlashes();
+            Assert.Equal(expectedTargetPath, project.TargetPath.EnsureForwardSlashes());
+            Assert.Equal("Debug", project.Configuration);
+            Assert.Equal("AnyCPU", project.Platform);
+            Assert.False(project.IsExe);
+            Assert.False(project.IsUnityProject);
+
+            Assert.Equal(".NETCoreApp,Version=v6.0", project.TargetFramework);
+            var targetFramework = Assert.Single(project.TargetFrameworks);
+            Assert.Equal("net6.0", targetFramework.ShortName);
+        }
+
+        [Fact]
+        public async Task TestProjectAndSolutionFilterWithSlnx()
+        {
+            using var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectAndSolutionFilterWithSlnx");
+            using var host = CreateMSBuildTestHost(testProject.Directory);
+            var workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
+
+            Assert.Equal("ProjectAndSolutionFilterWithSlnx.slnf", Path.GetFileName(workspaceInfo.SolutionPath));
+            Assert.NotNull(workspaceInfo.Projects);
+            var project = Assert.Single(workspaceInfo.Projects);
+
+            Assert.Equal("Project1", project.AssemblyName);
+            Assert.Equal("bin/Debug/net6.0/", project.OutputPath.EnsureForwardSlashes());
+            Assert.Equal("obj/Debug/net6.0/", project.IntermediateOutputPath.EnsureForwardSlashes());
+            var expectedTargetPath = $"{testProject.Directory}/Project1/{project.OutputPath}Project1.dll".EnsureForwardSlashes();
+            Assert.Equal(expectedTargetPath, project.TargetPath.EnsureForwardSlashes());
+            Assert.Equal("Debug", project.Configuration);
+            Assert.Equal("AnyCPU", project.Platform);
+            Assert.False(project.IsExe);
+            Assert.False(project.IsUnityProject);
+
+            Assert.Equal(".NETCoreApp,Version=v6.0", project.TargetFramework);
+            var targetFramework = Assert.Single(project.TargetFrameworks);
+            Assert.Equal("net6.0", targetFramework.ShortName);
+        }
+
+        [Fact]
+        public async Task TestTwoProjectsWithSolutionSlnx()
+        {
+            using var testProject = await TestAssets.Instance.GetTestProjectAsync("TwoProjectsWithSolutionSlnx");
+            using var host = CreateMSBuildTestHost(testProject.Directory);
+            var workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
+
+            Assert.Equal("TwoProjectsWithSolutionSlnx.slnx", Path.GetFileName(workspaceInfo.SolutionPath));
+            Assert.NotNull(workspaceInfo.Projects);
+            Assert.Equal(2, workspaceInfo.Projects.Count);
+
+            var firstProject = workspaceInfo.Projects[0];
+            Assert.Equal("App.csproj", Path.GetFileName(firstProject.Path));
+            Assert.Equal(".NETCoreApp,Version=v6.0", firstProject.TargetFramework);
+            Assert.Equal("net6.0", firstProject.TargetFrameworks[0].ShortName);
+
+            var secondProject = workspaceInfo.Projects[1];
+            Assert.Equal("Lib.csproj", Path.GetFileName(secondProject.Path));
+            Assert.Equal(".NETStandard,Version=v2.0", secondProject.TargetFramework);
+            Assert.Equal("netstandard2.0", secondProject.TargetFrameworks[0].ShortName);
+        }
+
+        [Fact]
+        public async Task TestProjectAndSolutionSlnxWithFolders()
+        {
+            using var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectAndSolutionSlnxWithFolders");
+            using var host = CreateMSBuildTestHost(testProject.Directory);
+            var workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
+
+            Assert.Equal("ProjectAndSolutionSlnxWithFolders.slnx", Path.GetFileName(workspaceInfo.SolutionPath));
+            Assert.NotNull(workspaceInfo.Projects);
+            Assert.Equal(2, workspaceInfo.Projects.Count);
+
+            var firstProject = workspaceInfo.Projects[0];
+            Assert.Equal("App.csproj", Path.GetFileName(firstProject.Path));
+            Assert.Equal(".NETCoreApp,Version=v6.0", firstProject.TargetFramework);
+            Assert.Equal("net6.0", firstProject.TargetFrameworks[0].ShortName);
+
+            var secondProject = workspaceInfo.Projects[1];
+            Assert.Equal("Lib.csproj", Path.GetFileName(secondProject.Path));
+            Assert.Equal(".NETStandard,Version=v2.0", secondProject.TargetFramework);
+            Assert.Equal("netstandard2.0", secondProject.TargetFrameworks[0].ShortName);
+        }
+
+        [Fact]
+        public async Task TestProjectAndSolutionSlnxPriority()
+        {
+            using var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectAndSolutionSlnxPriority");
+            using var host = CreateMSBuildTestHost(testProject.Directory);
+            var workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
+
+            // .slnx takes priority over .sln when both exist with the same stem
+            Assert.Equal("ProjectAndSolutionSlnxPriority.slnx", Path.GetFileName(workspaceInfo.SolutionPath));
+            Assert.NotNull(workspaceInfo.Projects);
+            var project = Assert.Single(workspaceInfo.Projects);
+
+            Assert.Equal("Project", project.AssemblyName);
+            Assert.Equal("bin/Debug/net6.0/", project.OutputPath.EnsureForwardSlashes());
+            Assert.Equal("obj/Debug/net6.0/", project.IntermediateOutputPath.EnsureForwardSlashes());
+            Assert.Equal("Debug", project.Configuration);
+            Assert.Equal("AnyCPU", project.Platform);
+            Assert.False(project.IsExe);
+            Assert.False(project.IsUnityProject);
+
+            Assert.Equal(".NETCoreApp,Version=v6.0", project.TargetFramework);
+            var targetFramework = Assert.Single(project.TargetFrameworks);
+            Assert.Equal("net6.0", targetFramework.ShortName);
+        }
+
+        [Fact]
         public async Task ProjectAndSolutionWithProjectSection()
         {
             using var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectAndSolutionWithProjectSection");
