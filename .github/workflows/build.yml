@@ -68,9 +68,13 @@ jobs:
         run: |
           dotnet tool restore
 
-      - name: 🍰 Run Cake
+      - name: 🍰 Run Build
         run: |
-          dotnet cake --configuration=Release --verbosity=Verbose --target=CI --publish-all --archive
+          dotnet cake --configuration=Release --verbosity=Verbose --target=CI-Build --publish-all --archive
+
+      - name: 🍰 Run Publish
+        run: |
+          dotnet cake --configuration=Release --verbosity=Verbose --target=CI-Publish --publish-all --archive
 
       - name: ⬆ Publish Logs
         uses: actions/upload-artifact@v4
