@@ -532,7 +532,7 @@ Task("PublishNet6Builds")
             }
             else if (Platform.Current.IsMacOS)
             {
-                //PublishBuild(project, env, buildPlan, configuration, "osx-x64", "net6.0");
+                PublishBuild(project, env, buildPlan, configuration, "osx-x64", "net6.0");
                 PublishBuild(project, env, buildPlan, configuration, "osx-arm64", "net6.0");
             }
             else
