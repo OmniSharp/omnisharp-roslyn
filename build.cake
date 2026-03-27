@@ -781,18 +781,9 @@ Task("Default")
 ///  Task aliases for CI (excluding tests) as they are parallelized
 /// </summary>
 Task("CI")
-    .IsDependentOn("CI-Build")
-    .IsDependentOn("CI-Publish");
-
-Task("CI-Build")
     .IsDependentOn("Cleanup")
-    .IsDependentOn("Build");
-
-Task("CI-Publish")
-    .IsDependentOn("PublishMonoBuilds")
-    .IsDependentOn("PublishNet6Builds")
-    .IsDependentOn("PublishWindowsBuilds")
-    .IsDependentOn("PublishNuGet")
+    .IsDependentOn("Build")
+    .IsDependentOn("Publish")
     .IsDependentOn("ExecuteRunScript");
 
 Teardown(context =>
