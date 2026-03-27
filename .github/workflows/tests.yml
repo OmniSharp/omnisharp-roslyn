@@ -1,6 +1,6 @@
 name: "Tests"
 env:
-  DotNetVersion: "10.0.201"
+  DotNetVersion: "10.0.105"
   DotNetVersion2: "9.0.306"
   DotNetVersion3: "8.0.415"
   DotNetVersion4: "6.0.428"
