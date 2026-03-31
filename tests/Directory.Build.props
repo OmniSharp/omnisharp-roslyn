@@ -6,22 +6,6 @@
   </PropertyGroup>
 
   <!--
-      We want the test projects to use the version of NuGet from the SDK
-      which we are using for project loading.
-    -->
-  <ItemGroup>
-    <PackageReference Update="NuGet.Common" ExcludeAssets="all" PrivateAssets="all" />
-    <PackageReference Update="NuGet.Configuration" ExcludeAssets="all" PrivateAssets="all" />
-    <PackageReference Update="NuGet.DependencyResolver.Core" ExcludeAssets="all" PrivateAssets="all" />
-    <PackageReference Update="NuGet.Frameworks" ExcludeAssets="all" PrivateAssets="all" />
-    <PackageReference Update="NuGet.LibraryModel" ExcludeAssets="all" PrivateAssets="all" />
-    <PackageReference Update="NuGet.Packaging" ExcludeAssets="all" PrivateAssets="all" />
-    <PackageReference Update="NuGet.ProjectModel" ExcludeAssets="all" PrivateAssets="all" />
-    <PackageReference Update="NuGet.Protocol" ExcludeAssets="all" PrivateAssets="all" />
-    <PackageReference Update="NuGet.Versioning" ExcludeAssets="all" PrivateAssets="all" />
-  </ItemGroup>
-
-  <!--
       Because the Roslyn's OmniSharp.ExternalAccess libraries are compiled against .NET Standard 2.0,
       we need to reference the .NET Standard 2.0 versions of the Roslyn assemblies. Since our test projects
       are built against .NET 10, they will pick up the .NET version of the Roslyn assemblies by default.
