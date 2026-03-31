@@ -27,7 +27,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04, windows-latest, macos-15-intel]
+        os: [ubuntu-22.04, windows-2025-vs2026, macos-15-intel]
         testProjects:
           - OmniSharp.MSBuild.Tests,OmniSharp.Roslyn.CSharp.Tests,OmniSharp.DotNetTest.Tests,OmniSharp.Cake.Tests
           - OmniSharp.Lsp.Tests,OmniSharp.Script.Tests,OmniSharp.Tests,OmniSharp.Stdio.Tests,OmniSharp.Http.Tests
