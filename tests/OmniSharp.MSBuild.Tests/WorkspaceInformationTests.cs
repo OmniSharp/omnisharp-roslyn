@@ -125,7 +125,7 @@ namespace OmniSharp.MSBuild.Tests
             var project = Assert.Single(workspaceInfo.Projects);
             Assert.Equal("Net90Project", project.AssemblyName);
             Assert.Equal(".NETCoreApp,Version=v9.0", project.TargetFramework);
-            Assert.Contains(project.TargetFrameworks[0].ShortName, new[] { "net79", "net9.0" });
+            Assert.Contains(project.TargetFrameworks[0].ShortName, new[] { "net90", "net9.0" });
         }
 
         [ConditionalFact(typeof(NonMonoRuntimeOnly))]

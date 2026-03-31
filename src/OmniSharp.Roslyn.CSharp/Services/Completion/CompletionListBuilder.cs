@@ -57,16 +57,16 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
             { WellKnownTags.Warning, CompletionItemKind.Text },
         };
 
+        internal const string AggregateEmbeddedLanguageCompletionProvider = "Microsoft.CodeAnalysis.CSharp.Completion.Providers.AggregateEmbeddedLanguageCompletionProvider";
         internal const string AwaitCompletionProvider = "Microsoft.CodeAnalysis.CSharp.Completion.Providers.AwaitCompletionProvider";
+        internal const string ExtensionMemberImportCompletionProvider = "Microsoft.CodeAnalysis.CSharp.Completion.Providers.ExtensionMemberImportCompletionProvider";
+        internal const string InternalsVisibleToCompletionProvider = "Microsoft.CodeAnalysis.CSharp.Completion.Providers.InternalsVisibleToCompletionProvider";
         internal const string ObjectCreationCompletionProvider = "Microsoft.CodeAnalysis.CSharp.Completion.Providers.ObjectCreationCompletionProvider";
         internal const string OverrideCompletionProvider = "Microsoft.CodeAnalysis.CSharp.Completion.Providers.OverrideCompletionProvider";
         internal const string PartialMethodCompletionProvider = "Microsoft.CodeAnalysis.CSharp.Completion.Providers.PartialMethodCompletionProvider";
-        internal const string InternalsVisibleToCompletionProvider = "Microsoft.CodeAnalysis.CSharp.Completion.Providers.InternalsVisibleToCompletionProvider";
-        internal const string XmlDocCommentCompletionProvider = "Microsoft.CodeAnalysis.CSharp.Completion.Providers.XmlDocCommentCompletionProvider";
-        internal const string TypeImportCompletionProvider = "Microsoft.CodeAnalysis.CSharp.Completion.Providers.TypeImportCompletionProvider";
-        internal const string ExtensionMethodImportCompletionProvider = "Microsoft.CodeAnalysis.CSharp.Completion.Providers.ExtensionMethodImportCompletionProvider";
-        internal const string AggregateEmbeddedLanguageCompletionProvider = "Microsoft.CodeAnalysis.CSharp.Completion.Providers.AggregateEmbeddedLanguageCompletionProvider";
         internal const string SnippetCompletionProvider = "Microsoft.CodeAnalysis.CSharp.Completion.CompletionProviders.Snippets.CSharpSnippetCompletionProvider";
+        internal const string TypeImportCompletionProvider = "Microsoft.CodeAnalysis.CSharp.Completion.Providers.TypeImportCompletionProvider";
+        internal const string XmlDocCommentCompletionProvider = "Microsoft.CodeAnalysis.CSharp.Completion.Providers.XmlDocCommentCompletionProvider";
 
         internal static async Task<(IReadOnlyList<CompletionItem>, bool)> BuildCompletionItems(
             Document document,
