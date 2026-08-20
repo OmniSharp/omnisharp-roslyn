@@ -168,70 +168,27 @@ namespace OmniSharp.MSBuild
             if (SolutionFilterReader.IsSolutionFilterFilename(solutionOrFilterFilePath) &&
                 !SolutionFilterReader.TryRead(solutionOrFilterFilePath, out solutionFilePath, out projectFilter))
             {
-                throw new InvalidSolutionFileException($"Solution filter file was invalid.");
+                throw new InvalidSolutionFileException("Solution filter file was invalid.");
             }
 
-            var solutionFolder = Path.GetDirectoryName(solutionFilePath);
-            var solutionFile = SolutionFile.ParseFile(solutionFilePath);
-            var processedProjects = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var projects = ImmutableArray<SolutionFileProjectInfo>.Empty;
+            if(!SolutionFileReader.TryRead(solutionFilePath, projectFilter, out projects))
+            {
+                throw new InvalidSolutionFileException("Solution file was invalid.");
+            }
+
             var result = new List<(string, ProjectIdInfo)>();
-
-            var solutionConfigurations = new Dictionary<ProjectId, Dictionary<string, string>>();
-            foreach (var globalSection in solutionFile.GlobalSections)
+            foreach (var project in projects)
             {
-                // Try parse project configurations if they are remapped in solution file
-                if (globalSection.Name == "ProjectConfigurationPlatforms")
+                var projectIdInfo = new ProjectIdInfo(ProjectId.CreateFromSerialized(new Guid(project.ProjectGuid)), true);
+
+                var convertedConfigurations = new Dictionary<string, string>();
+                foreach(var configuration in project.SolutionConfigurations)
                 {
-                    _logger.LogDebug($"Parsing ProjectConfigurationPlatforms of '{solutionFilePath}'.");
-                    foreach (var entry in globalSection.Properties)
-                    {
-                        var guid = Guid.Parse(entry.Name.Substring(0, 38));
-                        var projId = ProjectId.CreateFromSerialized(guid);
-                        var solutionConfig = entry.Name.Substring(39);
-
-                        if (!solutionConfigurations.TryGetValue(projId, out var dict))
-                        {
-                            dict = new Dictionary<string, string>();
-                            solutionConfigurations.Add(projId, dict);
-                        }
-                        dict.Add(solutionConfig, entry.Value);
-                    }
+                    convertedConfigurations.Add(configuration, configuration);
                 }
-            }
-
-            foreach (var project in solutionFile.Projects)
-            {
-                if (project.IsNotSupported)
-                {
-                    continue;
-                }
-
-                // Solution files contain relative paths to project files with Windows-style slashes.
-                var relativeProjectfilePath = project.RelativePath.Replace('\\', Path.DirectorySeparatorChar);
-                var projectFilePath = Path.GetFullPath(Path.Combine(solutionFolder, relativeProjectfilePath));
-                if (!projectFilter.IsEmpty &&
-                    !projectFilter.Contains(projectFilePath))
-                {
-                    continue;
-                }
-
-                // Have we seen this project? If so, move on.
-                if (processedProjects.Contains(projectFilePath))
-                {
-                    continue;
-                }
-
-                if (string.Equals(Path.GetExtension(projectFilePath), ".csproj", StringComparison.OrdinalIgnoreCase))
-                {
-                    var projectIdInfo = new ProjectIdInfo(ProjectId.CreateFromSerialized(new Guid(project.ProjectGuid)), true);
-                    if (solutionConfigurations.TryGetValue(projectIdInfo.Id, out var configurations))
-                    {
-                        projectIdInfo.SolutionConfiguration = configurations;
-                    }
-                    result.Add((projectFilePath, projectIdInfo));
-                }
-
-                processedProjects.Add(projectFilePath);
+                projectIdInfo.SolutionConfiguration = convertedConfigurations;
+                result.Add((project.ProjectName, projectIdInfo));
             }
 
             return result;
@@ -239,11 +196,17 @@ namespace OmniSharp.MSBuild
 
         private static string FindSolutionFilePath(string rootPath, ILogger logger)
         {
-            // currently, Directory.GetFiles on Windows collects files that the file extension has 'sln' prefix, while
-            // GetFiles on Mono looks for an exact match. Use an approach that works for both.
-            // see https://docs.microsoft.com/en-us/dotnet/api/system.io.directory.getfiles?view=netframework-4.7.2 ('Note' description)
-            var solutionsFilePaths = Directory.GetFiles(rootPath, "*.sln").Where(x => Path.GetExtension(x).Equals(".sln", StringComparison.OrdinalIgnoreCase)).ToArray();
-            var solutionFiltersFilePaths = Directory.GetFiles(rootPath, "*.slnf").Where(x => Path.GetExtension(x).Equals(".slnf", StringComparison.OrdinalIgnoreCase)).ToArray();
+            // Currently, Directory.GetFiles on Windows has a special case for a pattern
+            // containing a wildcard followed by a 3-letter extension. This results in
+            // inconsistency between Windows and Mono. Therefore avoid using this
+            // Windows-specific behavior.
+            // See https://docs.microsoft.com/en-us/dotnet/api/system.io.directory.getfiles?view=netframework-4.7.2 ('Note' description)
+            var solutionsFilePaths = Directory.EnumerateFiles(rootPath).Where(x => {
+                var extension = Path.GetExtension(x);
+                return extension.Equals(".sln", StringComparison.OrdinalIgnoreCase) || extension.Equals(".slnx", StringComparison.OrdinalIgnoreCase);
+            }).ToArray();
+            // Windows specific behaviour does not apply here, as slnf contains 4 letters
+            var solutionFiltersFilePaths = Directory.GetFiles(rootPath, "*.slnf").ToArray();
             var result = SolutionSelector.Pick(solutionsFilePaths.Concat(solutionFiltersFilePaths).ToArray(), rootPath);
 
             if (result.Message != null)

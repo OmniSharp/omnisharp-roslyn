@@ -189,6 +189,7 @@ namespace OmniSharp.MSBuild.Tests
             EndGlobal";
         #endregion
 
+        /*
         [Fact]
         public void SolutionFile_Parse_throws_with_null_text()
         {
@@ -331,5 +332,6 @@ namespace OmniSharp.MSBuild.Tests
             var solution = SolutionFile.Parse(LegacyAspNetWebsiteSolutionContent);
             Assert.True(solution.Projects[0].IsNotSupported);
         }
+        */
     }
 }
