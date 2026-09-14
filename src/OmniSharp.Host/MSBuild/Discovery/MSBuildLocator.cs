@@ -51,10 +51,13 @@ namespace OmniSharp.MSBuild.Discovery
                     new SdkOverrideInstanceProvider(loggerFactory, sdkConfiguration)));
 #else
             return new MSBuildLocator(loggerFactory, assemblyLoader,
-                ImmutableArray.Create<MSBuildInstanceProvider>(
-                    new MicrosoftBuildLocatorInstanceProvider(loggerFactory),
+                [
+                    .. PlatformHelper.IsWindows
+                        ? [new MicrosoftBuildLocatorInstanceProvider(loggerFactory)]
+                        : Array.Empty<MSBuildInstanceProvider>(),
                     new MonoInstanceProvider(loggerFactory),
-                    new UserOverrideInstanceProvider(loggerFactory, msbuildConfiguration)));
+                    new UserOverrideInstanceProvider(loggerFactory, msbuildConfiguration),
+                ]);
 #endif
         }
 
