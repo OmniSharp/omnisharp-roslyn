@@ -1,9 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Composition;
 using System.Reflection;
 using Microsoft.CodeAnalysis.Host.Mef;
 
-namespace OmniSharp
+namespace OmniSharp.Roslyn.WorkspaceServices
 {
     [MetadataAttribute]
     [AttributeUsage(AttributeTargets.Class)]
@@ -11,6 +12,7 @@ namespace OmniSharp
     {
         public string ServiceType { get; }
         public string Layer { get; }
+        public IReadOnlyList<string> WorkspaceKinds { get; } = Array.Empty<string>();
 
         // There is a built-in public attribute for this, but since we target internal types
         // this is needed to build the service. MEF doesn't care if it is internal or not.

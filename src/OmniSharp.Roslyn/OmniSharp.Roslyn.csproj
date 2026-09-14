@@ -15,9 +15,9 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.Common" />
     <PackageReference Include="Microsoft.CodeAnalysis.Workspaces.Common" />
-    <PackageReference Include="Microsoft.CodeAnalysis.ExternalAccess.OmniSharp" />
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" />
     <PackageReference Include="System.ComponentModel.Composition" />
+    <PackageReference Include="System.Reflection.Emit" />
   </ItemGroup>
 
   <ItemGroup>

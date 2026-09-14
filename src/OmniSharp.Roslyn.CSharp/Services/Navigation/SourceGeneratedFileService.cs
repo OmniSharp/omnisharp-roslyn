@@ -5,7 +5,8 @@ using System.Composition;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.Workspace;
+using OmniSharp.Roslyn.Utilities;
+using OmniSharp.Roslyn.RoslynInternals.Workspace;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Mef;
 using OmniSharp.Models.v1.SourceGeneratedFile;
@@ -101,7 +102,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
             return SourceGeneratedFileClosedResponse.Instance;
         }
 
-        private static DocumentId GetId(SourceGeneratedFileInfo info) => OmniSharpDocumentId.CreateFromSerialized(
+        private static DocumentId GetId(SourceGeneratedFileInfo info) => RoslynDocumentId.CreateFromSerialized(
             ProjectId.CreateFromSerialized(info.ProjectGuid),
             info.DocumentGuid,
             isSourceGenerated: true,

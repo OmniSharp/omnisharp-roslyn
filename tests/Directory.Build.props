@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <!--
-      Because the Roslyn's OmniSharp.ExternalAccess libraries are compiled against .NET Standard 2.0,
+      Because Roslyn's workspace libraries are compiled against .NET Standard 2.0,
       we need to reference the .NET Standard 2.0 versions of the Roslyn assemblies. Since our test projects
       are built against .NET 10, they will pick up the .NET version of the Roslyn assemblies by default.
     -->
