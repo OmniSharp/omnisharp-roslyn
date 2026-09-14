@@ -3,10 +3,13 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Composition;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.VisualStudio.SolutionPersistence.Model;
+using Microsoft.VisualStudio.SolutionPersistence.Serializer;
 using OmniSharp.Eventing;
 using OmniSharp.FileSystem;
 using OmniSharp.FileWatching;
@@ -171,43 +174,27 @@ namespace OmniSharp.MSBuild
                 throw new InvalidSolutionFileException($"Solution filter file was invalid.");
             }
 
-            var solutionFolder = Path.GetDirectoryName(solutionFilePath);
-            var solutionFile = SolutionFile.ParseFile(solutionFilePath);
+            var serializer = SolutionSerializers.GetSerializerByMoniker(solutionFilePath);
+            if (serializer == null)
+            {
+                throw new InvalidSolutionFileException($"Solution file '{solutionFilePath}' is not a supported format.");
+            }
+
+            var solutionFolder = Path.GetDirectoryName(solutionFilePath) ?? "";
+            var solutionModel = serializer.OpenAsync(solutionFilePath, CancellationToken.None).Result;
+
             var processedProjects = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             var result = new List<(string, ProjectIdInfo)>();
 
-            var solutionConfigurations = new Dictionary<ProjectId, Dictionary<string, string>>();
-            foreach (var globalSection in solutionFile.GlobalSections)
+            foreach (var projectModel in solutionModel.SolutionProjects)
             {
-                // Try parse project configurations if they are remapped in solution file
-                if (globalSection.Name == "ProjectConfigurationPlatforms")
-                {
-                    _logger.LogDebug($"Parsing ProjectConfigurationPlatforms of '{solutionFilePath}'.");
-                    foreach (var entry in globalSection.Properties)
-                    {
-                        var guid = Guid.Parse(entry.Name.Substring(0, 38));
-                        var projId = ProjectId.CreateFromSerialized(guid);
-                        var solutionConfig = entry.Name.Substring(39);
-
-                        if (!solutionConfigurations.TryGetValue(projId, out var dict))
-                        {
-                            dict = new Dictionary<string, string>();
-                            solutionConfigurations.Add(projId, dict);
-                        }
-                        dict.Add(solutionConfig, entry.Value);
-                    }
-                }
-            }
-
-            foreach (var project in solutionFile.Projects)
-            {
-                if (project.IsNotSupported)
+                var relativeProjectfilePath = projectModel.FilePath;
+                if (string.IsNullOrEmpty(relativeProjectfilePath))
                 {
                     continue;
                 }
-
                 // Solution files contain relative paths to project files with Windows-style slashes.
-                var relativeProjectfilePath = project.RelativePath.Replace('\\', Path.DirectorySeparatorChar);
+                relativeProjectfilePath = relativeProjectfilePath.Replace('\\', Path.DirectorySeparatorChar);
                 var projectFilePath = Path.GetFullPath(Path.Combine(solutionFolder, relativeProjectfilePath));
                 if (!projectFilter.IsEmpty &&
                     !projectFilter.Contains(projectFilePath))
@@ -223,11 +210,14 @@ namespace OmniSharp.MSBuild
 
                 if (string.Equals(Path.GetExtension(projectFilePath), ".csproj", StringComparison.OrdinalIgnoreCase))
                 {
-                    var projectIdInfo = new ProjectIdInfo(ProjectId.CreateFromSerialized(new Guid(project.ProjectGuid)), true);
-                    if (solutionConfigurations.TryGetValue(projectIdInfo.Id, out var configurations))
+                    var projectIdInfo = new ProjectIdInfo(ProjectId.CreateFromSerialized(projectModel.Id), true);
+
+                    var configurations = BuildSolutionConfigurationMap(solutionModel, projectModel);
+                    if (configurations.Count > 0)
                     {
                         projectIdInfo.SolutionConfiguration = configurations;
                     }
+
                     result.Add((projectFilePath, projectIdInfo));
                 }
 
@@ -237,14 +227,41 @@ namespace OmniSharp.MSBuild
             return result;
         }
 
+        private static Dictionary<string, string> BuildSolutionConfigurationMap(SolutionModel solutionModel, SolutionProjectModel projectModel)
+        {
+            var configurations = new Dictionary<string, string>();
+
+            foreach (var buildType in solutionModel.BuildTypes)
+            {
+                foreach (var platform in solutionModel.Platforms)
+                {
+                    var (projBuildType, projPlatform, build, deploy) = projectModel.GetProjectConfiguration(buildType, platform);
+                    var solKey = $"{buildType}|{platform}";
+                    configurations[$"{solKey}.ActiveCfg"] = $"{projBuildType ?? buildType}|{projPlatform ?? platform}";
+                    if (build)
+                    {
+                        configurations[$"{solKey}.Build.0"] = $"{projBuildType ?? buildType}|{projPlatform ?? platform}";
+                    }
+                }
+            }
+
+            return configurations;
+        }
+
         private static string FindSolutionFilePath(string rootPath, ILogger logger)
         {
             // currently, Directory.GetFiles on Windows collects files that the file extension has 'sln' prefix, while
             // GetFiles on Mono looks for an exact match. Use an approach that works for both.
             // see https://docs.microsoft.com/en-us/dotnet/api/system.io.directory.getfiles?view=netframework-4.7.2 ('Note' description)
             var solutionsFilePaths = Directory.GetFiles(rootPath, "*.sln").Where(x => Path.GetExtension(x).Equals(".sln", StringComparison.OrdinalIgnoreCase)).ToArray();
+            var solutionSlnxFilePaths = Directory.GetFiles(rootPath, "*.slnx").Where(x => Path.GetExtension(x).Equals(".slnx", StringComparison.OrdinalIgnoreCase)).ToArray();
+
+            // .slnx takes priority over .sln when both exist with the same stem (migration scenario).
+            // Filter out any .sln that has a matching .slnx sibling.
+            var slnxStems = new HashSet<string>(solutionSlnxFilePaths.Select(x => Path.GetFileNameWithoutExtension(x)), StringComparer.OrdinalIgnoreCase);
+            solutionsFilePaths = solutionsFilePaths.Where(x => !slnxStems.Contains(Path.GetFileNameWithoutExtension(x))).ToArray();
             var solutionFiltersFilePaths = Directory.GetFiles(rootPath, "*.slnf").Where(x => Path.GetExtension(x).Equals(".slnf", StringComparison.OrdinalIgnoreCase)).ToArray();
-            var result = SolutionSelector.Pick(solutionsFilePaths.Concat(solutionFiltersFilePaths).ToArray(), rootPath);
+            var result = SolutionSelector.Pick(solutionsFilePaths.Concat(solutionSlnxFilePaths).Concat(solutionFiltersFilePaths).ToArray(), rootPath);
 
             if (result.Message != null)
             {
