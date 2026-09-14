@@ -2,8 +2,9 @@
     "DotNetInstallScriptURL": "https://dot.net/v1",
     "DotNetChannel": "Preview",
     "DotNetVersions": [
-        "8.0.404",
-        "9.0.101"
+        "8.0.415",
+        "9.0.306",
+        "10.0.105"
     ],
     "DownloadURL": "https://roslynomnisharp.blob.core.windows.net/ext",
     "HostProjects": ["OmniSharp.Stdio.Driver", "OmniSharp.Http.Driver"],

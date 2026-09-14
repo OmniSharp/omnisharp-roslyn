@@ -5,16 +5,19 @@
         <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
 
         <OmniSharpExtensionsPackageVersion>0.19.9</OmniSharpExtensionsPackageVersion>
-        <MicrosoftExtensionPackageVersion>9.0.0</MicrosoftExtensionPackageVersion>
-        <MicrosoftBaseCommonLibraryVersion>9.0.0</MicrosoftBaseCommonLibraryVersion>
-        <MicrosoftTestPackageVersion>17.8.0</MicrosoftTestPackageVersion>
-        <MSBuildPackageVersion>17.8.3</MSBuildPackageVersion>
-        <NuGetPackageVersion>6.14.0-preview.1.45</NuGetPackageVersion>
-        <RoslynPackageVersion>4.14.0-3.25168.13</RoslynPackageVersion>
-        <XunitPackageVersion>2.6.1</XunitPackageVersion>
+        <MicrosoftExtensionPackageVersion>10.0.1</MicrosoftExtensionPackageVersion>
+        <MicrosoftBaseCommonLibraryVersion>10.0.1</MicrosoftBaseCommonLibraryVersion>
+        <MicrosoftTestPackageVersion>17.14.0-preview-25107-01</MicrosoftTestPackageVersion>
+        <MSBuildPackageVersion>17.3.2</MSBuildPackageVersion>
+        <NuGetPackageVersion>6.15.0-preview.1.86</NuGetPackageVersion>
+        <RoslynPackageVersion>5.12.0-1.26463.1</RoslynPackageVersion>
+        <XunitPackageVersion>2.8.1</XunitPackageVersion>
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageVersion Include="BenchmarkDotNet" Version="0.13.12" />
+        <PackageVersion Include="BenchmarkDotNet.Diagnostics.Windows" Version="0.13.12" />
+
         <PackageVersion Include="Cake.Scripting.Transport" Version="0.16.0" />
 
         <PackageVersion Include="DiffPlex" Version="1.8.0" />
