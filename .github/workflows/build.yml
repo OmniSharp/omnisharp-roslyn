@@ -49,7 +49,7 @@ jobs:
 
       - name: Install boots (MacOS only)
         if: matrix.os == 'macos-15-intel'
-        run: dotnet tool install -v:n boots --version 1.1.0.36 --add-source "https://api.nuget.org/v3/index.json" --global
+        run: dotnet tool install -v:n boots --version 1.1.0.36 --global
 
       - name: Install Mono (MacOS only)
         if: matrix.os == 'macos-15-intel'
