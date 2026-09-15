@@ -1,10 +1,10 @@
 ﻿using System;
+using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using OmniSharp.MSBuild.Discovery;
 using OmniSharp.MSBuild.ProjectFile;
 using OmniSharp.Options;
 using OmniSharp.Services;
@@ -28,15 +28,12 @@ namespace OmniSharp.MSBuild.Tests
 
         private ProjectFileInfo CreateProjectFileInfo(OmniSharpTestHost host, ITestProject testProject, string projectFilePath)
         {
-            var msbuildLocator = host.GetExport<IMSBuildLocator>();
-            var sdksPathResolver = host.GetExport<SdksPathResolver>();
-
-            var loader = new ProjectLoader(
+            using var loader = new ProjectLoader(
                 options: new MSBuildOptions(),
                 solutionDirectory: testProject.Directory,
-                propertyOverrides: msbuildLocator.RegisteredInstance.PropertyOverrides,
+                propertyOverrides: ImmutableDictionary<string, string>.Empty,
                 loggerFactory: LoggerFactory,
-                sdksPathResolver: sdksPathResolver);
+                dotNetPath: host.GetExport<IDotNetCliService>().DotNetPath);
 
             var projectIdInfo = new ProjectIdInfo(ProjectId.CreateNewId(), false);
             var (projectFileInfo, _, _) = ProjectFileInfo.Load(projectFilePath, projectIdInfo, loader, sessionId: Guid.NewGuid(), DotNetInfo.Empty);
