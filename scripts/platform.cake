@@ -129,7 +129,7 @@ public sealed class Platform
             {
                 var key = line.Substring(0, equalsIndex).Trim();
                 var value = line.Substring(equalsIndex + 1).Trim();
-                value = value.Trim('"');
+                value = value.Trim('"').Trim('\'');
 
                 if (key == "ID")
                 {
@@ -144,7 +144,7 @@ public sealed class Platform
                     }
                     version = new Version(value);
                 }
-                
+
                 if (distroName != null && version != null)
                 {
                     break;
