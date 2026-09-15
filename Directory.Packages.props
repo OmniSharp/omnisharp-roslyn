@@ -44,8 +44,6 @@
         <PackageVersion Include="Microsoft.CodeAnalysis.Scripting" Version="$(RoslynPackageVersion)" />
         <PackageVersion Include="Microsoft.CodeAnalysis.Workspaces.Common" Version="$(RoslynPackageVersion)" />
         <PackageVersion Include="Microsoft.CodeAnalysis.ExternalAccess.AspNetCore" Version="$(RoslynPackageVersion)" />
-        <PackageVersion Include="Microsoft.CodeAnalysis.ExternalAccess.OmniSharp" Version="$(RoslynPackageVersion)" />
-        <PackageVersion Include="Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.CSharp" Version="$(RoslynPackageVersion)" />
 
         <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="$(MicrosoftExtensionPackageVersion)" />
         <PackageVersion Include="Microsoft.Extensions.Configuration" Version="$(MicrosoftExtensionPackageVersion)" />
@@ -98,6 +96,7 @@
         <PackageVersion Include="System.ValueTuple" Version="4.6.1" />
 
         <PackageVersion Include="System.Reactive" Version="6.0.1" />
+        <PackageVersion Include="System.Reflection.Emit" Version="4.7.0" />
 
         <PackageVersion Include="xunit.abstractions" Version="2.0.3" />
         <PackageVersion Include="xunit.runner.visualstudio" Version="2.8.2" />

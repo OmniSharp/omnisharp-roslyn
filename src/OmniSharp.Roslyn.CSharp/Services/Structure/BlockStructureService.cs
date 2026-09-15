@@ -4,7 +4,8 @@ using System.Composition;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.Structure;
+using OmniSharp.Roslyn.RoslynInternals.Structure;
+using OmniSharp.Roslyn.Utilities;
 using OmniSharp.Extensions;
 using OmniSharp.Mef;
 using OmniSharp.Models.V2;
@@ -37,7 +38,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
                 ShowBlockStructureGuidesForCommentsAndPreprocessorRegions: true,
                 ShowOutliningForCommentsAndPreprocessorRegions: true);
 
-            var structure = await OmniSharpBlockStructureService.GetBlockStructureAsync(document, options, CancellationToken.None);
+            var structure = await RoslynBlockStructureService.GetBlockStructureAsync(document, options, CancellationToken.None);
 
             var outliningSpans = new List<CodeFoldingBlock>();
             foreach (var span in structure.Spans)

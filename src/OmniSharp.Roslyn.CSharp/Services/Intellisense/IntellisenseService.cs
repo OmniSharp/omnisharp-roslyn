@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using System.Composition;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.Completion;
+using OmniSharp.Roslyn.RoslynInternals.Completion;
+using OmniSharp.Roslyn.Utilities;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Completion;
 using Microsoft.CodeAnalysis.Recommendations;
@@ -51,7 +52,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
                 var options = new OmniSharpCompletionOptions(
                     ShowItemsFromUnimportedNamespaces: _omniSharpOptions.RoslynExtensionsOptions.EnableImportCompletion,
                     ForceExpandedCompletionIndexCreation: false);
-                var completionList = await OmniSharpCompletionService.GetCompletionsAsync(service, document, position, trigger: default, roles: null, options, CancellationToken.None);
+                var completionList = await RoslynCompletionService.GetCompletionsAsync(service, document, position, trigger: default, roles: null, options, CancellationToken.None);
 
                 if (completionList != null)
                 {

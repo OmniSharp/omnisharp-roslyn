@@ -3,10 +3,11 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.MetadataAsSource;
+using OmniSharp.Roslyn.Utilities;
 using OmniSharp.Extensions;
 using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Workers.Formatting;
+using OmniSharp.Roslyn.RoslynInternals.MetadataAsSource;
 
 namespace OmniSharp.Roslyn
 {
@@ -54,7 +55,7 @@ namespace OmniSharp.Roslyn
                 var temporaryDocument = metadataProject.AddDocument(fileName, string.Empty);
                 var formattingOptions = await FormattingWorker.GetFormattingOptionsAsync(temporaryDocument, _omnisharpOptions);
 
-                document = await OmniSharpMetadataAsSourceService.AddSourceToAsync(
+                document = await RoslynMetadataAsSourceService.AddSourceToAsync(
                     temporaryDocument,
                     await metadataProject.GetCompilationAsync(),
                     topLevelSymbol,

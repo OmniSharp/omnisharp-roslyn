@@ -1,5 +1,5 @@
 ﻿using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.Analyzers;
+using OmniSharp.Roslyn.RoslynInternals.Analyzers;
 
 namespace OmniSharp.Roslyn.Utilities
 {
@@ -7,6 +7,6 @@ namespace OmniSharp.Roslyn.Utilities
     {
         public static readonly IAnalyzerAssemblyLoader Instance = CreateShadowCopyLoader();
 
-        public static IAnalyzerAssemblyLoader CreateShadowCopyLoader() => OmnisharpAnalyzerAssemblyLoaderFactory.CreateShadowCopyAnalyzerAssemblyLoader();
+        public static IAnalyzerAssemblyLoader CreateShadowCopyLoader() => RoslynAnalyzerAssemblyLoaderFactory.CreateShadowCopyAnalyzerAssemblyLoader();
     }
 }
