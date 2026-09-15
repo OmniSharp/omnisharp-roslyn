@@ -4,7 +4,6 @@
   <PropertyGroup>
     <NoWarn>$(NoWarn);MSB3277</NoWarn>
 
-    <SkipHostDlls>true</SkipHostDlls>
   </PropertyGroup>
 
   <!--
@@ -12,7 +11,7 @@
       we need to reference the .NET Standard 2.0 versions of the Roslyn assemblies. Since our test projects
       are built against .NET 10, they will pick up the .NET version of the Roslyn assemblies by default.
     -->
-  <ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
     <PackageReference Include="Microsoft.CodeAnalysis.Common" ExcludeAssets="Compile" GeneratePathProperty="true" />
     <Reference Include="Microsoft.CodeAnalysis">
       <HintPath>$(PkgMicrosoft_CodeAnalysis_Common)\lib\netstandard2.0\Microsoft.CodeAnalysis.dll</HintPath>
@@ -53,28 +52,28 @@
 
   <ItemGroup Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'">
     <SuggestedBindingRedirects Include="Microsoft.CodeAnalysis, Culture=neutral, PublicKeyToken=31bf3856ad364e35">
-      <MaxVersion>5.6.0.0</MaxVersion>
+      <MaxVersion>5.12.0.0</MaxVersion>
     </SuggestedBindingRedirects>
     <SuggestedBindingRedirects Include="Microsoft.CodeAnalysis.Features, Culture=neutral, PublicKeyToken=31bf3856ad364e35">
-      <MaxVersion>5.6.0.0</MaxVersion>
+      <MaxVersion>5.12.0.0</MaxVersion>
     </SuggestedBindingRedirects>
     <SuggestedBindingRedirects Include="Microsoft.CodeAnalysis.Scripting, Culture=neutral, PublicKeyToken=31bf3856ad364e35">
-      <MaxVersion>5.6.0.0</MaxVersion>
+      <MaxVersion>5.12.0.0</MaxVersion>
     </SuggestedBindingRedirects>
     <SuggestedBindingRedirects Include="Microsoft.CodeAnalysis.Workspaces, Culture=neutral, PublicKeyToken=31bf3856ad364e35">
-      <MaxVersion>5.6.0.0</MaxVersion>
+      <MaxVersion>5.12.0.0</MaxVersion>
     </SuggestedBindingRedirects>
     <SuggestedBindingRedirects Include="Microsoft.CodeAnalysis.CSharp, Culture=neutral, PublicKeyToken=31bf3856ad364e35">
-      <MaxVersion>5.6.0.0</MaxVersion>
+      <MaxVersion>5.12.0.0</MaxVersion>
     </SuggestedBindingRedirects>
     <SuggestedBindingRedirects Include="Microsoft.CodeAnalysis.CSharp.Features, Culture=neutral, PublicKeyToken=31bf3856ad364e35">
-      <MaxVersion>5.6.0.0</MaxVersion>
+      <MaxVersion>5.12.0.0</MaxVersion>
     </SuggestedBindingRedirects>
     <SuggestedBindingRedirects Include="Microsoft.CodeAnalysis.CSharp.Scripting, Culture=neutral, PublicKeyToken=31bf3856ad364e35">
-      <MaxVersion>5.6.0.0</MaxVersion>
+      <MaxVersion>5.12.0.0</MaxVersion>
     </SuggestedBindingRedirects>
     <SuggestedBindingRedirects Include="Microsoft.CodeAnalysis.CSharp.Workspaces, Culture=neutral, PublicKeyToken=31bf3856ad364e35">
-      <MaxVersion>5.6.0.0</MaxVersion>
+      <MaxVersion>5.12.0.0</MaxVersion>
     </SuggestedBindingRedirects>
   </ItemGroup>
 </Project>
