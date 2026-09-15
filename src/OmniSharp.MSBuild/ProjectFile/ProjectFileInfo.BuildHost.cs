@@ -20,6 +20,11 @@ namespace OmniSharp.MSBuild.ProjectFile
         {
             public static ProjectData Create(BuildHostProject project, Guid projectGuid)
             {
+                if (projectGuid == Guid.Empty)
+                {
+                    projectGuid = GetDeclaredProjectGuid(project.FilePath);
+                }
+
                 var projectDirectory = Path.GetDirectoryName(project.FilePath);
                 var commandLine = CSharpCommandLineParser.Default.Parse(
                     project.CommandLineArgs,
@@ -178,6 +183,13 @@ namespace OmniSharp.MSBuild.ProjectFile
                 var value = XDocument.Load(projectFilePath).Descendants()
                     .LastOrDefault(element => element.Name.LocalName == propertyName)?.Value;
                 return bool.TryParse(value, out var result) ? result : defaultValue;
+            }
+
+            private static Guid GetDeclaredProjectGuid(string projectFilePath)
+            {
+                var value = XDocument.Load(projectFilePath).Descendants()
+                    .LastOrDefault(element => element.Name.LocalName == PropertyNames.ProjectGuid)?.Value;
+                return Guid.TryParse(value, out var projectGuid) ? projectGuid : Guid.Empty;
             }
 
             private static ImmutableArray<ProjectFileGlob> CreateGlobs(
