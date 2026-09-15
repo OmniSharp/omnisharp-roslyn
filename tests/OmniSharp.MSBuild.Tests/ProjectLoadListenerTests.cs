@@ -3,8 +3,6 @@ using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.Build.Construction;
-using Microsoft.Build.Execution;
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Services;
@@ -25,71 +23,12 @@ namespace OmniSharp.MSBuild.Tests
             _referenceHashingAlgorithm = new VsReferenceHashingAlgorithm();
         }
 
-        [Fact]
-        public void GetTargetFramework_ReturnsTargetFramework()
-        {
-            // Arrange
-
-            const string targetFramework = "net461";
-            var projectInstance = new ProjectInstance(ProjectRootElement.Create());
-            projectInstance.SetProperty(ProjectLoadListener.TargetFramework, targetFramework);
-
-            // Act
-            var tfm = ProjectLoadListener.GetTargetFrameworks(projectInstance);
-
-            // Assert
-            Assert.Equal(targetFramework, tfm.First());
-        }
-
-        [Fact]
-        public void GetTargetFramework_NoTFM_ReturnsTargetFrameworkVersion()
-        {
-            // Arrange
-            const string targetFramework = "v4.6.1";
-            var projectInstance = new ProjectInstance(ProjectRootElement.Create());
-            projectInstance.SetProperty(ProjectLoadListener.TargetFrameworkVersion, targetFramework);
-
-            // Act
-            var tfm = ProjectLoadListener.GetTargetFrameworks(projectInstance);
-
-            // Assert
-            Assert.Equal(targetFramework, tfm.First());
-        }
-
-        [Fact]
-        public void GetTargetFramework_PrioritizesTargetFrameworkOverVersion()
-        {
-            // Arrange
-            const string targetFramework = "v4.6.1";
-            var projectInstance = new ProjectInstance(ProjectRootElement.Create());
-            projectInstance.SetProperty(ProjectLoadListener.TargetFramework, targetFramework);
-            projectInstance.SetProperty(ProjectLoadListener.TargetFrameworkVersion, "Unexpected");
-
-            // Act
-            var tfm = ProjectLoadListener.GetTargetFrameworks(projectInstance);
-
-            // Assert
-            Assert.Equal(targetFramework, tfm.First());
-        }
-
-        [Fact]
-        public void GetTargetFramework_NoTFM_ReturnsEmpty()
-        {
-            // Arrange
-            var projectInstance = new ProjectInstance(ProjectRootElement.Create());
-
-            // Act
-            var tfm = ProjectLoadListener.GetTargetFrameworks(projectInstance);
-
-            // Assert
-            Assert.Empty(tfm);
-        }
 
         [Fact]
         public async Task The_target_framework_is_emitted()
         {
             // Arrange
-            var expectedTFM = "net6.0";
+            var expectedTFM = "net8.0";
             var emitter = new ProjectLoadTestEventEmitter();
 
             using var testProject = await TestAssets.Instance.GetTestProjectAsync("HelloWorld");
@@ -130,12 +69,11 @@ namespace OmniSharp.MSBuild.Tests
         {
             var emitter = new ProjectLoadTestEventEmitter();
 
-            using var testProject = await TestAssets.Instance.GetTestProjectAsync("HelloWorld");
+            using var testProject = await TestAssets.Instance.GetTestProjectAsync("Net80Project");
+            await RestoreProject(testProject);
             using var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory));
-            var dotnetCliService = host.GetExport<IDotNetCliService>();
-            await dotnetCliService.RestoreAsync(testProject.Directory);
             Assert.Single(emitter.ReceivedMessages);
-            Assert.Contains(emitter.ReceivedMessages[0].References, reference => reference == GetHashedReference("system.core"));
+            Assert.Contains(emitter.ReceivedMessages[0].References, reference => reference == GetHashedReference("system.runtime"));
         }
 
 
@@ -172,7 +110,7 @@ namespace OmniSharp.MSBuild.Tests
             // Arrange
             var emitter = new ProjectLoadTestEventEmitter();
 
-            using var testProject = await TestAssets.Instance.GetTestProjectAsync("Net60Project");
+            using var testProject = await TestAssets.Instance.GetTestProjectAsync("Net80Project");
             using var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory));
             Assert.Single(emitter.ReceivedMessages);
             Assert.Equal((int)OutputKind.ConsoleApplication, emitter.ReceivedMessages[0].OutputKind);
@@ -203,23 +141,11 @@ namespace OmniSharp.MSBuild.Tests
                     "Pack",
                 };
 
-            using var testProject = await TestAssets.Instance.GetTestProjectAsync("Net60Project");
+            using var testProject = await TestAssets.Instance.GetTestProjectAsync("Net80Project");
             using var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory));
             Assert.Single(emitter.ReceivedMessages);
 
             Assert.ProperSuperset(expectedCapabilities, emitter.ReceivedMessages[0].ProjectCapabilities.ToHashSet());
-        }
-
-        [ConditionalFact(typeof(NonMonoRuntimeOnly))]
-        public async Task The_correct_sdk_version_is_emitted_NET6()
-        {
-            // Arrange
-            var emitter = new ProjectLoadTestEventEmitter();
-
-            using var testProject = await TestAssets.Instance.GetTestProjectAsync("Net60Project");
-            using var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory));
-            Assert.Single(emitter.ReceivedMessages);
-            Assert.Equal(GetHashedFileExtension("6.0.203"), emitter.ReceivedMessages[0].SdkVersion);
         }
 
         [ConditionalFact(typeof(DotnetRuntimeOnly))]
@@ -230,8 +156,9 @@ namespace OmniSharp.MSBuild.Tests
 
             using var testProject = await TestAssets.Instance.GetTestProjectAsync("Net80Project");
             using var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory));
+            var sdkVersion = host.GetExport<IDotNetCliService>().GetVersion(testProject.Directory).Version.ToString();
             Assert.Single(emitter.ReceivedMessages);
-            Assert.Equal(GetHashedFileExtension("8.0.415"), emitter.ReceivedMessages[0].SdkVersion);
+            Assert.Equal(GetHashedFileExtension(sdkVersion), emitter.ReceivedMessages[0].SdkVersion);
         }
 
         [ConditionalFact(typeof(DotnetRuntimeOnly))]
@@ -242,8 +169,9 @@ namespace OmniSharp.MSBuild.Tests
 
             using var testProject = await TestAssets.Instance.GetTestProjectAsync("Net90Project");
             using var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory));
+            var sdkVersion = host.GetExport<IDotNetCliService>().GetVersion(testProject.Directory).Version.ToString();
             Assert.Single(emitter.ReceivedMessages);
-            Assert.Equal(GetHashedFileExtension("9.0.306"), emitter.ReceivedMessages[0].SdkVersion);
+            Assert.Equal(GetHashedFileExtension(sdkVersion), emitter.ReceivedMessages[0].SdkVersion);
         }
 
         [ConditionalFact(typeof(DotnetRuntimeOnly))]
@@ -254,8 +182,9 @@ namespace OmniSharp.MSBuild.Tests
 
             using var testProject = await TestAssets.Instance.GetTestProjectAsync("Net100Project");
             using var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory));
+            var sdkVersion = host.GetExport<IDotNetCliService>().GetVersion(testProject.Directory).Version.ToString();
             Assert.Single(emitter.ReceivedMessages);
-            Assert.Equal(GetHashedFileExtension("10.0.105"), emitter.ReceivedMessages[0].SdkVersion);
+            Assert.Equal(GetHashedFileExtension(sdkVersion), emitter.ReceivedMessages[0].SdkVersion);
         }
 
         private string GetHashedFileExtension(string fileExtension)
@@ -265,6 +194,23 @@ namespace OmniSharp.MSBuild.Tests
         private string GetHashedReference(string reference)
         {
             return _referenceHashingAlgorithm.HashInput(reference).Value;
+        }
+
+        private static async Task RestoreProject(ITestProject testProject)
+        {
+            var options = new OmniSharp.Options.DotNetCliOptions
+            {
+                LocationPaths = new[]
+                {
+                    Path.Combine(TestAssets.Instance.RootFolder, DotNetCliVersion.Current.GetFolderName())
+                }
+            };
+
+            await new DotNetCliService(
+                new LoggerFactory(),
+                OmniSharp.Eventing.NullEventEmitter.Instance,
+                Microsoft.Extensions.Options.Options.Create(options),
+                new OmniSharpEnvironment(testProject.Directory)).RestoreAsync(testProject.Directory);
         }
     }
 }

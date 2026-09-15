@@ -127,7 +127,8 @@ namespace OmniSharp.MSBuild.ProjectFile
 
         public static VersionRange ToVersionRange(string propertyValue)
         {
-            if (VersionRange.TryParse(propertyValue.Trim(), out var version))
+            if (!string.IsNullOrWhiteSpace(propertyValue) &&
+                VersionRange.TryParse(propertyValue.Trim(), out var version))
             {
                 return version;
             }

@@ -14,7 +14,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using OmniSharp;
 using OmniSharp.FileWatching;
-using OmniSharp.MSBuild.Discovery;
 using OmniSharp.Roslyn.EditorConfig;
 using OmniSharp.Script;
 using OmniSharp.Services;
@@ -114,11 +113,7 @@ namespace TestUtility
                 AssemblyHelpers.FromType(typeof(Stack<>)),
                 AssemblyHelpers.FromType(typeof(Lazy<,>)),
                 AssemblyHelpers.FromName("System.Runtime"),
-#if NETCOREAPP
                 AssemblyHelpers.FromType(typeof(Console)),
-#else
-                AssemblyHelpers.FromName("mscorlib")
-#endif
             };
 
             _references = assemblies
@@ -129,23 +124,6 @@ namespace TestUtility
                 .ToImmutableArray();
 
             return _references;
-        }
-
-        public static MSBuildInstance AddDotNetCoreToFakeInstance(this MSBuildInstance instance)
-        {
-            const string dotnetSdkResolver = "Microsoft.DotNet.MSBuildSdkResolver";
-
-            var directory = Path.Combine(
-                instance.MSBuildPath,
-                "SdkResolvers",
-                dotnetSdkResolver
-            );
-
-            Directory.CreateDirectory(directory);
-
-            TestIO.TouchFakeFile(Path.Combine(directory, dotnetSdkResolver + ".dll"));
-
-            return instance;
         }
 
         public static IConfiguration GetConfigurationDataWithAnalyzerConfig(

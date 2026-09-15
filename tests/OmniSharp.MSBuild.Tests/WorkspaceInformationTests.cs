@@ -30,8 +30,8 @@ namespace OmniSharp.MSBuild.Tests
             var project = Assert.Single(workspaceInfo.Projects);
 
             Assert.Equal("ProjectAndSolution", project.AssemblyName);
-            Assert.Equal("bin/Debug/net6.0/", project.OutputPath.EnsureForwardSlashes());
-            Assert.Equal("obj/Debug/net6.0/", project.IntermediateOutputPath.EnsureForwardSlashes());
+            Assert.Equal("bin/Debug/net8.0/", project.OutputPath.EnsureForwardSlashes());
+            Assert.Equal("obj/Debug/net8.0/", project.IntermediateOutputPath.EnsureForwardSlashes());
             var expectedTargetPath = $"{testProject.Directory}/{project.OutputPath}ProjectAndSolution.dll".EnsureForwardSlashes();
             Assert.Equal(expectedTargetPath, project.TargetPath.EnsureForwardSlashes());
             Assert.Equal("Debug", project.Configuration);
@@ -39,9 +39,9 @@ namespace OmniSharp.MSBuild.Tests
             Assert.True(project.IsExe);
             Assert.False(project.IsUnityProject);
 
-            Assert.Equal(".NETCoreApp,Version=v6.0", project.TargetFramework);
+            Assert.Equal(".NETCoreApp,Version=v8.0", project.TargetFramework);
             var targetFramework = Assert.Single(project.TargetFrameworks);
-            Assert.Equal("net6.0", targetFramework.ShortName);
+            Assert.Equal("net8.0", targetFramework.ShortName);
         }
 
         [Fact]
@@ -57,8 +57,8 @@ namespace OmniSharp.MSBuild.Tests
                 var project = Assert.Single(workspaceInfo.Projects);
 
                 Assert.Equal("ProjectAndSolutionFilter", project.AssemblyName);
-                Assert.Equal("bin/Debug/net6.0/", project.OutputPath.EnsureForwardSlashes());
-                Assert.Equal("obj/Debug/net6.0/", project.IntermediateOutputPath.EnsureForwardSlashes());
+                Assert.Equal("bin/Debug/net8.0/", project.OutputPath.EnsureForwardSlashes());
+                Assert.Equal("obj/Debug/net8.0/", project.IntermediateOutputPath.EnsureForwardSlashes());
                 var expectedTargetPath = $"{testProject.Directory}/Project/{project.OutputPath}ProjectAndSolutionFilter.dll".EnsureForwardSlashes();
                 Assert.Equal(expectedTargetPath, project.TargetPath.EnsureForwardSlashes());
                 Assert.Equal("Debug", project.Configuration);
@@ -66,9 +66,9 @@ namespace OmniSharp.MSBuild.Tests
                 Assert.True(project.IsExe);
                 Assert.False(project.IsUnityProject);
 
-                Assert.Equal(".NETCoreApp,Version=v6.0", project.TargetFramework);
+                Assert.Equal(".NETCoreApp,Version=v8.0", project.TargetFramework);
                 var targetFramework = Assert.Single(project.TargetFrameworks);
-                Assert.Equal("net6.0", targetFramework.ShortName);
+                Assert.Equal("net8.0", targetFramework.ShortName);
             }
         }
 
@@ -82,22 +82,8 @@ namespace OmniSharp.MSBuild.Tests
             Assert.Equal("ProjectAndSolutionWithProjectSection.sln", Path.GetFileName(workspaceInfo.SolutionPath));
             Assert.NotNull(workspaceInfo.Projects);
             var project = Assert.Single(workspaceInfo.Projects);
-            Assert.Equal(".NETCoreApp,Version=v6.0", project.TargetFramework);
-            Assert.Equal("net6.0", project.TargetFrameworks[0].ShortName);
-        }
-
-        [ConditionalFact(typeof(NonMonoRuntimeOnly))]
-        public async Task Net60Project()
-        {
-            using var testProject = await TestAssets.Instance.GetTestProjectAsync("Net60Project");
-            using var host = CreateMSBuildTestHost(testProject.Directory);
-            var workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
-
-            Assert.NotNull(workspaceInfo.Projects);
-            var project = Assert.Single(workspaceInfo.Projects);
-            Assert.Equal("Net60Project", project.AssemblyName);
-            Assert.Equal(".NETCoreApp,Version=v6.0", project.TargetFramework);
-            Assert.Contains(project.TargetFrameworks[0].ShortName, new[] { "net60", "net6.0" });
+            Assert.Equal(".NETCoreApp,Version=v8.0", project.TargetFramework);
+            Assert.Equal("net8.0", project.TargetFrameworks[0].ShortName);
         }
 
         [ConditionalFact(typeof(NonMonoRuntimeOnly))]
@@ -155,16 +141,18 @@ namespace OmniSharp.MSBuild.Tests
 
             var firstProject = workspaceInfo.Projects[0];
             Assert.Equal("App.csproj", Path.GetFileName(firstProject.Path));
-            Assert.Equal(".NETCoreApp,Version=v6.0", firstProject.TargetFramework);
-            Assert.Equal("net6.0", firstProject.TargetFrameworks[0].ShortName);
+            Assert.Equal(new Guid("632DFE45-B56E-4158-8F27-45E2BA0BAFCF"), firstProject.ProjectGuid);
+            Assert.Equal(".NETCoreApp,Version=v8.0", firstProject.TargetFramework);
+            Assert.Equal("net8.0", firstProject.TargetFrameworks[0].ShortName);
 
             var secondProject = workspaceInfo.Projects[1];
             Assert.Equal("Lib.csproj", Path.GetFileName(secondProject.Path));
+            Assert.Equal(new Guid("CE41561B-5D13-4688-8686-EEFF744BE8B5"), secondProject.ProjectGuid);
             Assert.Equal(".NETStandard,Version=v2.0", secondProject.TargetFramework);
             Assert.Equal("netstandard2.0", secondProject.TargetFrameworks[0].ShortName);
         }
 
-        [Fact(Skip = "https://github.com/dotnet/msbuild/pull/7642")]
+        [Fact]
         public async Task TwoProjectsWithSolutionAndCustomConfigurations()
         {
             var configData = new Dictionary<string, string> { [$"MsBuild:{nameof(Options.MSBuildOptions.Configuration)}"] = "ReleaseSln" };
@@ -178,12 +166,14 @@ namespace OmniSharp.MSBuild.Tests
 
             var firstProject = workspaceInfo.Projects[0];
             Assert.Equal("App.csproj", Path.GetFileName(firstProject.Path));
-            Assert.Equal(".NETCoreApp,Version=v6.0", firstProject.TargetFramework);
-            Assert.Equal("net6.0", firstProject.TargetFrameworks[0].ShortName);
+            Assert.Equal("Release1", firstProject.Configuration);
+            Assert.Equal(".NETCoreApp,Version=v8.0", firstProject.TargetFramework);
+            Assert.Equal("net8.0", firstProject.TargetFrameworks[0].ShortName);
 
             var secondProject = workspaceInfo.Projects[1];
             Assert.Equal("Lib.csproj", Path.GetFileName(secondProject.Path));
-            Assert.Equal(".NETStandard,Version=v1.5", secondProject.TargetFramework);
+            Assert.Equal("Release2", secondProject.Configuration);
+            Assert.Equal(".NETStandard,Version=v2.0", secondProject.TargetFramework);
             Assert.Equal("netstandard2.0", secondProject.TargetFrameworks[0].ShortName);
         }
 

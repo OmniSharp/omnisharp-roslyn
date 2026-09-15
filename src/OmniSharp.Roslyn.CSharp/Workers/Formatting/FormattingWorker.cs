@@ -16,6 +16,7 @@ using OmniSharp.Extensions;
 using OmniSharp.Models;
 using OmniSharp.Options;
 using OmniSharp.Roslyn.Utilities;
+using OmniSharp.Utilities;
 
 namespace OmniSharp.Roslyn.CSharp.Workers.Formatting
 {
@@ -203,13 +204,11 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Formatting
           => new(autoXmlDocCommentGeneration: true, CreateLineFormattingOptions(options));
 
         private static OmniSharpLineFormattingOptions CreateLineFormattingOptions(OmniSharp.Options.FormattingOptions options)
-            => new()
-            {
-                IndentationSize = options.IndentationSize,
-                TabSize = options.TabSize,
-                UseTabs = options.UseTabs,
-                NewLine = options.NewLine,
-            };
+            => new OmniSharpLineFormattingOptions()
+                .WithProperty(nameof(OmniSharpLineFormattingOptions.IndentationSize), options.IndentationSize)
+                .WithProperty(nameof(OmniSharpLineFormattingOptions.TabSize), options.TabSize)
+                .WithProperty(nameof(OmniSharpLineFormattingOptions.UseTabs), options.UseTabs)
+                .WithProperty(nameof(OmniSharpLineFormattingOptions.NewLine), options.NewLine);
 
         internal static OmniSharpLabelPositionOptions LabelPositionOptionForStringValue(string value)
             => value.ToUpper() switch

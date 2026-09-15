@@ -301,7 +301,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             return TestHelpers.AddProjectToWorkspace(
                             host.Workspace,
                             "project.csproj",
-                            new[] { "net6.0" },
+                            new[] { "net8.0" },
                             new[] { testFile },
                             analyzerRefs: analyzerReferences)
                     .Single();

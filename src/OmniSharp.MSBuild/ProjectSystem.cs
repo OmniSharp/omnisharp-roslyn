@@ -12,7 +12,6 @@ using OmniSharp.FileSystem;
 using OmniSharp.FileWatching;
 using OmniSharp.Mef;
 using OmniSharp.Models.WorkspaceInformation;
-using OmniSharp.MSBuild.Discovery;
 using OmniSharp.MSBuild.Models;
 using OmniSharp.MSBuild.Notification;
 using OmniSharp.MSBuild.ProjectFile;
@@ -30,9 +29,8 @@ namespace OmniSharp.MSBuild
     {
         private readonly IOmniSharpEnvironment _environment;
         private readonly OmniSharpWorkspace _workspace;
-        private readonly ImmutableDictionary<string, string> _propertyOverrides;
+        private ImmutableDictionary<string, string> _propertyOverrides;
         private readonly IDotNetCliService _dotNetCli;
-        private readonly SdksPathResolver _sdksPathResolver;
         private readonly MetadataFileReferenceCache _metadataFileReferenceCache;
         private readonly IEventEmitter _eventEmitter;
         private readonly IFileSystemWatcher _fileSystemWatcher;
@@ -57,9 +55,7 @@ namespace OmniSharp.MSBuild
         public ProjectSystem(
             IOmniSharpEnvironment environment,
             OmniSharpWorkspace workspace,
-            IMSBuildLocator msbuildLocator,
             IDotNetCliService dotNetCliService,
-            SdksPathResolver sdksPathResolver,
             MetadataFileReferenceCache metadataFileReferenceCache,
             IEventEmitter eventEmitter,
             IFileSystemWatcher fileSystemWatcher,
@@ -72,9 +68,8 @@ namespace OmniSharp.MSBuild
         {
             _environment = environment;
             _workspace = workspace;
-            _propertyOverrides = msbuildLocator.RegisteredInstance?.PropertyOverrides ?? ImmutableDictionary.Create<string, string>();
+            _propertyOverrides = ImmutableDictionary<string, string>.Empty;
             _dotNetCli = dotNetCliService;
-            _sdksPathResolver = sdksPathResolver;
             _metadataFileReferenceCache = metadataFileReferenceCache;
             _eventEmitter = eventEmitter;
             _fileSystemWatcher = fileSystemWatcher;
@@ -92,18 +87,11 @@ namespace OmniSharp.MSBuild
 
             _options = new MSBuildOptions();
             ConfigurationBinder.Bind(configuration, _options);
-
-            _sdksPathResolver.Enabled = _options.UseLegacySdkResolver;
-            _sdksPathResolver.OverridePath = _options.MSBuildSDKsPath;
-
-            if (_environment.LogLevel < LogLevel.Information)
-            {
-                var buildEnvironmentInfo = MSBuildHelpers.GetBuildEnvironmentInfo();
-                _logger.LogDebug($"MSBuild environment: {Environment.NewLine}{buildEnvironmentInfo}");
-            }
+            _propertyOverrides = configuration.GetSection("sdk").GetSection("PropertyOverrides").GetChildren()
+                .ToImmutableDictionary(child => child.Key, child => child.Value, StringComparer.OrdinalIgnoreCase);
 
             _packageDependencyChecker = new PackageDependencyChecker(_loggerFactory, _eventEmitter, _dotNetCli, _options);
-            _loader = new ProjectLoader(_options, _environment.TargetDirectory, _propertyOverrides, _loggerFactory, _sdksPathResolver);
+            _loader = new ProjectLoader(_options, _environment.TargetDirectory, _propertyOverrides, _loggerFactory, _dotNetCli.DotNetPath);
 
             _manager = new ProjectManager(_loggerFactory, _options, _eventEmitter, _fileSystemWatcher, _metadataFileReferenceCache, _packageDependencyChecker, _loader, _workspace, _assemblyLoader, _eventSinks, _dotNetInfo);
             Initialized = true;
@@ -239,9 +227,6 @@ namespace OmniSharp.MSBuild
 
         private static string FindSolutionFilePath(string rootPath, ILogger logger)
         {
-            // currently, Directory.GetFiles on Windows collects files that the file extension has 'sln' prefix, while
-            // GetFiles on Mono looks for an exact match. Use an approach that works for both.
-            // see https://docs.microsoft.com/en-us/dotnet/api/system.io.directory.getfiles?view=netframework-4.7.2 ('Note' description)
             var solutionsFilePaths = Directory.GetFiles(rootPath, "*.sln").Where(x => Path.GetExtension(x).Equals(".sln", StringComparison.OrdinalIgnoreCase)).ToArray();
             var solutionFiltersFilePaths = Directory.GetFiles(rootPath, "*.slnf").Where(x => Path.GetExtension(x).Equals(".slnf", StringComparison.OrdinalIgnoreCase)).ToArray();
             var result = SolutionSelector.Pick(solutionsFilePaths.Concat(solutionFiltersFilePaths).ToArray(), rootPath);

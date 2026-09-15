@@ -5,12 +5,11 @@
         <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
 
         <OmniSharpExtensionsPackageVersion>0.19.9</OmniSharpExtensionsPackageVersion>
-        <MicrosoftExtensionPackageVersion>10.0.1</MicrosoftExtensionPackageVersion>
-        <MicrosoftBaseCommonLibraryVersion>10.0.1</MicrosoftBaseCommonLibraryVersion>
+        <MicrosoftExtensionPackageVersion>10.0.10</MicrosoftExtensionPackageVersion>
+        <MicrosoftBaseCommonLibraryVersion>10.0.10</MicrosoftBaseCommonLibraryVersion>
         <MicrosoftTestPackageVersion>17.14.0-preview-25107-01</MicrosoftTestPackageVersion>
-        <MSBuildPackageVersion>17.3.2</MSBuildPackageVersion>
         <NuGetPackageVersion>6.15.0-preview.1.86</NuGetPackageVersion>
-        <RoslynPackageVersion>5.6.0-2.26173.1</RoslynPackageVersion>
+        <RoslynPackageVersion>5.12.0-1.26463.1</RoslynPackageVersion>
         <XunitPackageVersion>2.8.1</XunitPackageVersion>
     </PropertyGroup>
 
@@ -29,12 +28,6 @@
 
         <PackageVersion Include="McMaster.Extensions.CommandLineUtils" Version="4.1.0" />
 
-        <PackageVersion Include="Microsoft.Build" Version="$(MSBuildPackageVersion)" />
-        <PackageVersion Include="Microsoft.Build.Framework" Version="$(MSBuildPackageVersion)" />
-        <PackageVersion Include="Microsoft.Build.Locator" Version="1.6.10" />
-        <PackageVersion Include="Microsoft.Build.Tasks.Core" Version="$(MSBuildPackageVersion)" />
-        <PackageVersion Include="Microsoft.Build.Utilities.Core" Version="$(MSBuildPackageVersion)" />
-
         <PackageVersion Include="Microsoft.CodeAnalysis.Common" Version="$(RoslynPackageVersion)" />
         <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="$(RoslynPackageVersion)" />
         <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Features" Version="$(RoslynPackageVersion)" />
@@ -43,6 +36,7 @@
         <PackageVersion Include="Microsoft.CodeAnalysis.Features" Version="$(RoslynPackageVersion)" />
         <PackageVersion Include="Microsoft.CodeAnalysis.Scripting" Version="$(RoslynPackageVersion)" />
         <PackageVersion Include="Microsoft.CodeAnalysis.Workspaces.Common" Version="$(RoslynPackageVersion)" />
+        <PackageVersion Include="Microsoft.CodeAnalysis.Workspaces.MSBuild" Version="$(RoslynPackageVersion)" />
         <PackageVersion Include="Microsoft.CodeAnalysis.ExternalAccess.AspNetCore" Version="$(RoslynPackageVersion)" />
         <PackageVersion Include="Microsoft.CodeAnalysis.ExternalAccess.OmniSharp" Version="$(RoslynPackageVersion)" />
         <PackageVersion Include="Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.CSharp" Version="$(RoslynPackageVersion)" />
@@ -105,12 +99,5 @@
     </ItemGroup>
     <ItemGroup>
         <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
-    </ItemGroup>
-    <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
-        <PackageVersion Include="Microsoft.AspNetCore.Diagnostics" Version="2.3.0" />
-        <PackageVersion Include="Microsoft.AspNetCore.Hosting" Version="2.3.0" />
-        <PackageVersion Include="Microsoft.AspNetCore.Http.Features" Version="2.3.0" />
-        <PackageVersion Include="Microsoft.AspNetCore.Server.Kestrel" Version="2.3.0" />
-        <PackageVersion Include="Microsoft.AspNetCore.Server.Kestrel.Core" Version="2.3.6" />
     </ItemGroup>
 </Project>
