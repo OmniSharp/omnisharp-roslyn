@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Reflection;
 using System.Text;
-using OmniSharp.Utilities;
 
 namespace OmniSharp.MSBuild
 {
@@ -11,7 +10,6 @@ namespace OmniSharp.MSBuild
 
         private static Type s_BuildEnvironmentHelperType;
         private static Type s_BuildEnvironmentType;
-        private static Type s_VisualStudioLocationHelperType;
 
         static MSBuildHelpers()
         {
@@ -19,7 +17,14 @@ namespace OmniSharp.MSBuild
 
             s_BuildEnvironmentHelperType = s_MicrosoftBuildAssembly.GetType("Microsoft.Build.Shared.BuildEnvironmentHelper");
             s_BuildEnvironmentType = s_MicrosoftBuildAssembly.GetType("Microsoft.Build.Shared.BuildEnvironment");
-            s_VisualStudioLocationHelperType = s_MicrosoftBuildAssembly.GetType("Microsoft.Build.Shared.VisualStudioLocationHelper");
+
+            if (s_BuildEnvironmentHelperType is null)
+            {
+                s_MicrosoftBuildAssembly = Assembly.Load(new AssemblyName("Microsoft.Build.Framework"));
+
+                s_BuildEnvironmentHelperType = s_MicrosoftBuildAssembly.GetType("Microsoft.Build.Shared.BuildEnvironmentHelper");
+                s_BuildEnvironmentType = s_MicrosoftBuildAssembly.GetType("Microsoft.Build.Shared.BuildEnvironment");
+            }
         }
 
         public static string GetBuildEnvironmentInfo()
@@ -64,28 +69,6 @@ namespace OmniSharp.MSBuild
         {
             var propInfo = type.GetProperty(name, bindingFlags);
             return propInfo.GetMethod.Invoke(instance, null);
-        }
-
-        public static bool CanInitializeVisualStudioBuildEnvironment()
-        {
-            if (!PlatformHelper.IsWindows)
-            {
-                return false;
-            }
-
-            // Call Microsoft.Build.Shared.BuildEnvironmentHelper.Initialze(...), which attempts to compute a build environment..
-            var initializeMethod = s_BuildEnvironmentHelperType.GetMethod("Initialize", BindingFlags.NonPublic | BindingFlags.Static);
-            var buildEnvironment = initializeMethod.Invoke(null, null);
-
-            if (buildEnvironment == null)
-            {
-                return false;
-            }
-
-            var mode = GetPropertyValue("Mode", buildEnvironment, s_BuildEnvironmentType, BindingFlags.NonPublic | BindingFlags.Instance);
-
-            // return mode?.ToString() == "VisualStudio";
-            return false;
         }
     }
 }

@@ -194,7 +194,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
             var providerName = lastCompletionItem.GetProviderName();
             switch (providerName)
             {
-                case CompletionListBuilder.ExtensionMethodImportCompletionProvider:
+                case CompletionListBuilder.ExtensionMemberImportCompletionProvider:
                 case CompletionListBuilder.TypeImportCompletionProvider:
                     var sourceText = await document.GetTextAsync();
                     var change = await completionService.GetChangeAsync(document, lastCompletionItem);
