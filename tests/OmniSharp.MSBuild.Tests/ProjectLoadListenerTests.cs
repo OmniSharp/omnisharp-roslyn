@@ -130,12 +130,11 @@ namespace OmniSharp.MSBuild.Tests
         {
             var emitter = new ProjectLoadTestEventEmitter();
 
-            using var testProject = await TestAssets.Instance.GetTestProjectAsync("HelloWorld");
+            using var testProject = await TestAssets.Instance.GetTestProjectAsync("Net80Project");
+            await RestoreProject(testProject);
             using var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory));
-            var dotnetCliService = host.GetExport<IDotNetCliService>();
-            await dotnetCliService.RestoreAsync(testProject.Directory);
             Assert.Single(emitter.ReceivedMessages);
-            Assert.Contains(emitter.ReceivedMessages[0].References, reference => reference == GetHashedReference("system.core"));
+            Assert.Contains(emitter.ReceivedMessages[0].References, reference => reference == GetHashedReference("system.runtime"));
         }
 
 
@@ -218,8 +217,9 @@ namespace OmniSharp.MSBuild.Tests
 
             using var testProject = await TestAssets.Instance.GetTestProjectAsync("Net80Project");
             using var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory));
+            var sdkVersion = host.GetExport<IDotNetCliService>().GetVersion(testProject.Directory).Version.ToString();
             Assert.Single(emitter.ReceivedMessages);
-            Assert.Equal(GetHashedFileExtension("8.0.404"), emitter.ReceivedMessages[0].SdkVersion);
+            Assert.Equal(GetHashedFileExtension(sdkVersion), emitter.ReceivedMessages[0].SdkVersion);
         }
 
         [ConditionalFact(typeof(DotnetRuntimeOnly))]
@@ -230,8 +230,9 @@ namespace OmniSharp.MSBuild.Tests
 
             using var testProject = await TestAssets.Instance.GetTestProjectAsync("Net90Project");
             using var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory));
+            var sdkVersion = host.GetExport<IDotNetCliService>().GetVersion(testProject.Directory).Version.ToString();
             Assert.Single(emitter.ReceivedMessages);
-            Assert.Equal(GetHashedFileExtension("9.0.306"), emitter.ReceivedMessages[0].SdkVersion);
+            Assert.Equal(GetHashedFileExtension(sdkVersion), emitter.ReceivedMessages[0].SdkVersion);
         }
 
         [ConditionalFact(typeof(DotnetRuntimeOnly))]
@@ -242,8 +243,9 @@ namespace OmniSharp.MSBuild.Tests
 
             using var testProject = await TestAssets.Instance.GetTestProjectAsync("Net100Project");
             using var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory));
+            var sdkVersion = host.GetExport<IDotNetCliService>().GetVersion(testProject.Directory).Version.ToString();
             Assert.Single(emitter.ReceivedMessages);
-            Assert.Equal(GetHashedFileExtension("10.0.105"), emitter.ReceivedMessages[0].SdkVersion);
+            Assert.Equal(GetHashedFileExtension(sdkVersion), emitter.ReceivedMessages[0].SdkVersion);
         }
 
         private string GetHashedFileExtension(string fileExtension)
@@ -253,6 +255,23 @@ namespace OmniSharp.MSBuild.Tests
         private string GetHashedReference(string reference)
         {
             return _referenceHashingAlgorithm.HashInput(reference).Value;
+        }
+
+        private static async Task RestoreProject(ITestProject testProject)
+        {
+            var options = new OmniSharp.Options.DotNetCliOptions
+            {
+                LocationPaths = new[]
+                {
+                    Path.Combine(TestAssets.Instance.RootFolder, DotNetCliVersion.Current.GetFolderName())
+                }
+            };
+
+            await new DotNetCliService(
+                new LoggerFactory(),
+                OmniSharp.Eventing.NullEventEmitter.Instance,
+                Microsoft.Extensions.Options.Options.Create(options),
+                new OmniSharpEnvironment(testProject.Directory)).RestoreAsync(testProject.Directory);
         }
     }
 }

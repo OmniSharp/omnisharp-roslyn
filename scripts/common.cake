@@ -176,7 +176,7 @@ public class BuildEnvironment
         this.WorkingDirectory = context.Environment.WorkingDirectory.FullPath;
         this.Folders = new Folders(this.WorkingDirectory);
 
-        this.TargetFramework = "net8.0";
+        this.TargetFramework = "net10.0";
 
         this.DotNetCommand = useGlobalDotNetSdk
             ? "dotnet"

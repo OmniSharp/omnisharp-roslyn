@@ -2,6 +2,7 @@ using System.Composition;
 using Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.Options;
 using Microsoft.Extensions.Options;
 using OmniSharp.Options;
+using OmniSharp.Utilities;
 
 namespace OmniSharp
 {
@@ -22,12 +23,10 @@ namespace OmniSharp
                 : CreateFromOptions(_options.CurrentValue);
 
         internal static OmniSharpLineFormattingOptions CreateFromOptions(OmniSharpOptions options)
-            => new()
-            {
-                IndentationSize = options.FormattingOptions.IndentationSize,
-                TabSize = options.FormattingOptions.TabSize,
-                UseTabs = options.FormattingOptions.UseTabs,
-                NewLine = options.FormattingOptions.NewLine,
-            };
+            => new OmniSharpLineFormattingOptions()
+                .WithProperty(nameof(OmniSharpLineFormattingOptions.IndentationSize), options.FormattingOptions.IndentationSize)
+                .WithProperty(nameof(OmniSharpLineFormattingOptions.TabSize), options.FormattingOptions.TabSize)
+                .WithProperty(nameof(OmniSharpLineFormattingOptions.UseTabs), options.FormattingOptions.UseTabs)
+                .WithProperty(nameof(OmniSharpLineFormattingOptions.NewLine), options.FormattingOptions.NewLine);
     }
 }

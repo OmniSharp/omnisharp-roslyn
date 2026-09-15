@@ -6,7 +6,7 @@
 
         <OmniSharpExtensionsPackageVersion>0.19.9</OmniSharpExtensionsPackageVersion>
         <MicrosoftExtensionPackageVersion>10.0.1</MicrosoftExtensionPackageVersion>
-        <MicrosoftBaseCommonLibraryVersion>10.0.1</MicrosoftBaseCommonLibraryVersion>
+        <MicrosoftBaseCommonLibraryVersion>10.0.10</MicrosoftBaseCommonLibraryVersion>
         <MicrosoftTestPackageVersion>17.14.0-preview-25107-01</MicrosoftTestPackageVersion>
         <MSBuildPackageVersion>17.3.2</MSBuildPackageVersion>
         <NuGetPackageVersion>6.15.0-preview.1.86</NuGetPackageVersion>

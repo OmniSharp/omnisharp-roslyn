@@ -210,7 +210,7 @@ Task("PrepareTestAssets:CakeTestAssets")
             Prerelease = true,
             Verbosity = NuGetVerbosity.Quiet,
             Source = new[] {
-                "https://api.nuget.org/v3/index.json"
+                "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/index.json"
             }
         });
     });
@@ -254,7 +254,7 @@ void BuildWithDotNetCli(BuildEnvironment env, string configuration)
         .WithProperty("AssemblyVersion", env.VersionInfo.AssemblySemVer)
         .WithProperty("FileVersion", env.VersionInfo.AssemblySemVer)
         .WithProperty("InformationalVersion", env.VersionInfo.InformationalVersion)
-        .WithProperty("RuntimeFrameworkVersion", "8.0.0-rc.1.23371.2") // Set the minimum runtime to a .NET 8 prerelease so that prerelease SDKs will be considered during rollForward.
+        .WithProperty("RuntimeFrameworkVersion", "10.0.0")
         .WithProperty("RollForward", "LatestMajor");
 
     DotNetMSBuild("OmniSharp.sln", settings);
@@ -285,12 +285,6 @@ Task("Test")
     .Does(() =>
 {
     var testProjects = string.IsNullOrEmpty(testProjectArgument) ? buildPlan.TestProjects : testProjectArgument.Split(',');
-    var environment = new Dictionary<string, string>();
-
-    if (!useDotNetTest && Platform.Current.IsWindows)
-    {
-        environment.Add("DOTNET_PATH", env.Folders.DotNetSdk);
-    }
 
     foreach (var testProject in testProjects)
     {
@@ -437,7 +431,7 @@ string PublishBuild(string project, BuildEnvironment env, BuildPlan plan, string
                 .WithProperty("AssemblyVersion", env.VersionInfo.AssemblySemVer)
                 .WithProperty("FileVersion", env.VersionInfo.AssemblySemVer)
                 .WithProperty("InformationalVersion", env.VersionInfo.InformationalVersion)
-                .WithProperty("RuntimeFrameworkVersion", "8.0.0-rc.1.23371.2") // Set the minimum runtime to a .NET 6 prerelease so that prerelease SDKs will be considered during rollForward.
+                .WithProperty("RuntimeFrameworkVersion", "10.0.0")
                 .WithProperty("RollForward", "LatestMajor"),
             ToolPath = env.DotNetCommand,
             WorkingDirectory = env.WorkingDirectory,

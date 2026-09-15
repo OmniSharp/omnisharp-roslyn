@@ -1,7 +1,7 @@
 {
     "script": {
         "enableScriptNuGetReferences": true,
-        "defaultTargetFramework": "net8.0"
+        "defaultTargetFramework": "net10.0"
     },
     "FormattingOptions": {
         "enableEditorConfigSupport": true
