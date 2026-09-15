@@ -181,14 +181,18 @@ namespace OmniSharp.MSBuild.ProjectFile
             private static bool GetBooleanProjectProperty(string projectFilePath, string propertyName, bool defaultValue)
             {
                 var value = XDocument.Load(projectFilePath).Descendants()
-                    .LastOrDefault(element => element.Name.LocalName == propertyName)?.Value;
+                    .LastOrDefault(element =>
+                        element.Name.LocalName == propertyName &&
+                        element.Attribute("Condition") == null)?.Value;
                 return bool.TryParse(value, out var result) ? result : defaultValue;
             }
 
             private static Guid GetDeclaredProjectGuid(string projectFilePath)
             {
                 var value = XDocument.Load(projectFilePath).Descendants()
-                    .LastOrDefault(element => element.Name.LocalName == PropertyNames.ProjectGuid)?.Value;
+                    .LastOrDefault(element =>
+                        element.Name.LocalName == PropertyNames.ProjectGuid &&
+                        element.Attribute("Condition") == null)?.Value;
                 return Guid.TryParse(value, out var projectGuid) ? projectGuid : Guid.Empty;
             }
 
