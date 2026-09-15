@@ -151,7 +151,15 @@ namespace OmniSharp.MSBuild
             }
 
             _processLoopCancellation.Cancel();
+            try
+            {
+                _processLoopTask.GetAwaiter().GetResult();
+            }
+            catch (OperationCanceledException)
+            {
+            }
             _processLoopCancellation.Dispose();
+            _projectLoader.Dispose();
         }
 
         public IEnumerable<ProjectFileInfo> GetAllProjects() => _projectFiles.GetItems();

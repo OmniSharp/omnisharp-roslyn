@@ -16,7 +16,6 @@ using OmniSharp.Eventing;
 using OmniSharp.FileSystem;
 using OmniSharp.FileWatching;
 using OmniSharp.Mef;
-using OmniSharp.MSBuild.Discovery;
 using OmniSharp.Options;
 using OmniSharp.Roslyn;
 using OmniSharp.Roslyn.Utilities;
@@ -56,17 +55,7 @@ namespace OmniSharp
             var fileSystemWatcher = _serviceProvider.GetRequiredService<IFileSystemWatcher>();
             var logger = loggerFactory.CreateLogger<CompositionHostBuilder>();
 
-            // We must register an MSBuild instance before composing MEF to ensure that
-            // our AssemblyResolve event is hooked up first.
-            var msbuildLocator = _serviceProvider.GetRequiredService<IMSBuildLocator>();
             var dotNetInfo = dotNetCliService.GetInfo(workingDirectory);
-
-            // Don't register the default instance if an instance is already registered!
-            // This is for tests, where the MSBuild instance may be registered early.
-            if (msbuildLocator.RegisteredInstance == null)
-            {
-                msbuildLocator.RegisterDefaultInstance(logger, dotNetInfo);
-            }
 
             config = config
                 .WithProvider(MefValueProvider.From(_serviceProvider))
@@ -81,7 +70,6 @@ namespace OmniSharp
                 .WithProvider(MefValueProvider.From(assemblyLoader))
                 .WithProvider(MefValueProvider.From(analyzerAssemblyLoader))
                 .WithProvider(MefValueProvider.From(dotNetCliService))
-                .WithProvider(MefValueProvider.From(msbuildLocator))
                 .WithProvider(MefValueProvider.From(eventEmitter))
                 .WithProvider(MefValueProvider.From(dotNetInfo));
 
@@ -147,13 +135,6 @@ namespace OmniSharp
             services.AddSingleton<IConfiguration>(configuration);
 
             services.AddSingleton<IDotNetCliService, DotNetCliService>();
-
-            // MSBuild
-            services.AddSingleton<IMSBuildLocator>(sp =>
-                MSBuildLocator.CreateDefault(
-                    loggerFactory: sp.GetService<ILoggerFactory>(),
-                    assemblyLoader: sp.GetService<IAssemblyLoader>(),
-                    configuration: configuration));
 
             services.AddLogging(builder =>
             {

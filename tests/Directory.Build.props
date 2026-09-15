@@ -4,7 +4,6 @@
   <PropertyGroup>
     <NoWarn>$(NoWarn);MSB3277</NoWarn>
 
-    <SkipHostDlls>true</SkipHostDlls>
   </PropertyGroup>
 
   <!--

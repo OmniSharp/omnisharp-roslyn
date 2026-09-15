@@ -141,16 +141,18 @@ namespace OmniSharp.MSBuild.Tests
 
             var firstProject = workspaceInfo.Projects[0];
             Assert.Equal("App.csproj", Path.GetFileName(firstProject.Path));
+            Assert.Equal(new Guid("632DFE45-B56E-4158-8F27-45E2BA0BAFCF"), firstProject.ProjectGuid);
             Assert.Equal(".NETCoreApp,Version=v8.0", firstProject.TargetFramework);
             Assert.Equal("net8.0", firstProject.TargetFrameworks[0].ShortName);
 
             var secondProject = workspaceInfo.Projects[1];
             Assert.Equal("Lib.csproj", Path.GetFileName(secondProject.Path));
+            Assert.Equal(new Guid("CE41561B-5D13-4688-8686-EEFF744BE8B5"), secondProject.ProjectGuid);
             Assert.Equal(".NETStandard,Version=v2.0", secondProject.TargetFramework);
             Assert.Equal("netstandard2.0", secondProject.TargetFrameworks[0].ShortName);
         }
 
-        [Fact(Skip = "https://github.com/dotnet/msbuild/pull/7642")]
+        [Fact]
         public async Task TwoProjectsWithSolutionAndCustomConfigurations()
         {
             var configData = new Dictionary<string, string> { [$"MsBuild:{nameof(Options.MSBuildOptions.Configuration)}"] = "ReleaseSln" };
@@ -164,12 +166,14 @@ namespace OmniSharp.MSBuild.Tests
 
             var firstProject = workspaceInfo.Projects[0];
             Assert.Equal("App.csproj", Path.GetFileName(firstProject.Path));
+            Assert.Equal("Release1", firstProject.Configuration);
             Assert.Equal(".NETCoreApp,Version=v8.0", firstProject.TargetFramework);
             Assert.Equal("net8.0", firstProject.TargetFrameworks[0].ShortName);
 
             var secondProject = workspaceInfo.Projects[1];
             Assert.Equal("Lib.csproj", Path.GetFileName(secondProject.Path));
-            Assert.Equal(".NETStandard,Version=v1.5", secondProject.TargetFramework);
+            Assert.Equal("Release2", secondProject.Configuration);
+            Assert.Equal(".NETStandard,Version=v2.0", secondProject.TargetFramework);
             Assert.Equal("netstandard2.0", secondProject.TargetFrameworks[0].ShortName);
         }
 

@@ -11,7 +11,6 @@
         <!-- Always run on the latest runtime installed. -->
         <RuntimeFrameworkVersion>10.0.0</RuntimeFrameworkVersion>
         <RollForward>LatestMajor</RollForward>
-        <SkipHostDlls>true</SkipHostDlls>
     </PropertyGroup>
 
     <ItemGroup>

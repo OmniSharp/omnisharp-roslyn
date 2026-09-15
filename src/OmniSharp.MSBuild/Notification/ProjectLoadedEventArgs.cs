@@ -1,30 +1,33 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
 using OmniSharp.MSBuild.Logging;
-using MSB = Microsoft.Build;
+using OmniSharp.MSBuild.ProjectFile;
 
 namespace OmniSharp.MSBuild.Notification
 {
     public class ProjectLoadedEventArgs
     {
         public ProjectId Id { get; }
-        public MSB.Evaluation.Project Project { get; }
         public Guid SessionId { get; }
-        public MSB.Execution.ProjectInstance ProjectInstance { get; }
         public ImmutableArray<MSBuildDiagnostic> Diagnostics { get; }
         public bool IsReload { get; }
         public IEnumerable<string> References { get; }
         public ImmutableArray<string> SourceFiles { get; }
+        public ImmutableArray<string> ContentFiles { get; }
+        public ImmutableArray<string> TargetFrameworks { get; }
+        public ImmutableArray<string> ProjectCapabilities { get; }
+        public string ProjectFilePath { get; }
+        public OutputKind OutputKind { get; }
+        public bool IsSdkStyleProject { get; }
         public bool ProjectIdIsDefinedInSolution { get; }
         public SemanticVersion SdkVersion { get; }
 
-        public ProjectLoadedEventArgs(
+        internal ProjectLoadedEventArgs(
             ProjectId id,
-            MSB.Evaluation.Project project,
             Guid sessionId,
-            MSB.Execution.ProjectInstance projectInstance,
+            ProjectFileInfo project,
             ImmutableArray<MSBuildDiagnostic> diagnostics,
             bool isReload,
             bool projectIdIsDefinedInSolution,
@@ -33,15 +36,20 @@ namespace OmniSharp.MSBuild.Notification
             IEnumerable<string> references = null)
         {
             Id = id;
-            Project = project;
             SessionId = sessionId;
-            ProjectInstance = projectInstance;
             Diagnostics = diagnostics;
             IsReload = isReload;
             ProjectIdIsDefinedInSolution = projectIdIsDefinedInSolution;
             References = references;
             SourceFiles = sourceFiles;
             SdkVersion = sdkVersion;
+            ContentFiles = project.ContentFilePaths;
+            TargetFrameworks = project.TargetFrameworks;
+            ProjectCapabilities = project.ProjectCapabilities;
+            ProjectFilePath = project.FilePath;
+            OutputKind = project.OutputKind;
+            IsSdkStyleProject = project.TargetFrameworks.Length > 0 ||
+                project.ProjectCapabilities.Contains("CPS", StringComparer.OrdinalIgnoreCase);
         }
     }
 }
