@@ -1,8 +1,6 @@
 {
     "sdk": {
         "version": "10.0.105",
-        "rollForward": "latestMinor",
-        "paths": [".dotnet"],
-        "errorMessage": "The required repository-local .NET SDK was not found. Run ./build.sh to install it."
+        "rollForward": "latestMinor"
     }
 }
