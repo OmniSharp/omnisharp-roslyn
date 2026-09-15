@@ -19,6 +19,9 @@ namespace OmniSharp.MSBuild
         /// Project configurations as defined in solution.
         /// Keys are solution build configuration in '$(Configuration)|$(Platform)' format,
         /// values are according project configurations. Null if there is no solution.
+        /// The configuration string format is the one as would be in an .sln file. Both
+        /// .sln and .slnx are supported. For both, this string is reconstructed, not
+        /// directly read from the solution file.
         /// </summary>
         public IReadOnlyDictionary<string, string> SolutionConfiguration { get; set; }
     }

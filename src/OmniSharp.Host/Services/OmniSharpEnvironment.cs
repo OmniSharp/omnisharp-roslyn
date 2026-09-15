@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using OmniSharp.Utilities;
 using Microsoft.Extensions.Logging;
 
 namespace OmniSharp.Services
@@ -27,7 +28,10 @@ namespace OmniSharp.Services
             {
                 TargetDirectory = path;
             }
-            else if (File.Exists(path) && (Path.GetExtension(path).Equals(".sln", StringComparison.OrdinalIgnoreCase) || Path.GetExtension(path).Equals(".slnf", StringComparison.OrdinalIgnoreCase)))
+            else if (File.Exists(path) && Functional.Apply(path, x => {
+                var extension = Path.GetExtension(path);
+                return extension.Equals(".sln", StringComparison.OrdinalIgnoreCase) || Path.GetExtension(path).Equals(".slnf", StringComparison.OrdinalIgnoreCase) || extension.Equals(".slnx", StringComparison.OrdinalIgnoreCase);
+            }))
             {
                 SolutionFilePath = path;
                 TargetDirectory = Path.GetDirectoryName(path);
@@ -35,7 +39,7 @@ namespace OmniSharp.Services
 
             if (TargetDirectory == null)
             {
-                throw new ArgumentException("OmniSharp only supports being launched with a directory path or a path to a solution (.sln, .slnf) file.", nameof(path));
+                throw new ArgumentException("OmniSharp only supports being launched with a directory path or a path to a solution (.sln, .slnx, .slnf) file.", nameof(path));
             }
 
             if (TargetDirectory[TargetDirectory.Length - 1] != Path.DirectorySeparatorChar)

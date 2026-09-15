@@ -35,6 +35,8 @@
         <PackageVersion Include="Microsoft.Build.Tasks.Core" Version="$(MSBuildPackageVersion)" />
         <PackageVersion Include="Microsoft.Build.Utilities.Core" Version="$(MSBuildPackageVersion)" />
 
+        <PackageVersion Include="Microsoft.VisualStudio.SolutionPersistence" Version="1.0.52"/>
+
         <PackageVersion Include="Microsoft.CodeAnalysis.Common" Version="$(RoslynPackageVersion)" />
         <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="$(RoslynPackageVersion)" />
         <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Features" Version="$(RoslynPackageVersion)" />

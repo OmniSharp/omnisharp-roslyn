@@ -18,6 +18,7 @@
     <PackageReference Include="Microsoft.Build.Framework" ExcludeAssets="Runtime" PrivateAssets="all" />
     <PackageReference Include="Microsoft.Build.Tasks.Core" ExcludeAssets="Runtime" PrivateAssets="all" />
     <PackageReference Include="Microsoft.Build.Utilities.Core" ExcludeAssets="Runtime" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.VisualStudio.SolutionPersistence" />
     <PackageReference Include="Newtonsoft.Json" />
     <PackageReference Include="NuGet.ProjectModel" />
     <PackageReference Include="NuGet.Versioning" />
