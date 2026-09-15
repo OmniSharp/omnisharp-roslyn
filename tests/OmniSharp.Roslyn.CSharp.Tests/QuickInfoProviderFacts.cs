@@ -195,7 +195,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         {
             var response = await GetTypeLookUpResponse(line: 6, column: 35);
 
-            Assert.Equal("```csharp\nvoid Console.WriteLine(string? value) (+ 18 overloads)\n```", response.Markdown);
+            Assert.Equal("```csharp\nvoid Console.WriteLine(string? value) (+ 19 overloads)\n```", response.Markdown);
         }
 
         [Fact]

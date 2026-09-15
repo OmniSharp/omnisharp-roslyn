@@ -17,6 +17,7 @@ using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Helpers;
 using OmniSharp.Roslyn.RoslynInternals.InlayHints;
 using OmniSharp.Roslyn.Utilities;
+using OmniSharp.Utilities;
 
 #nullable enable
 
@@ -60,27 +61,25 @@ internal class InlayHintService :
         var mappedSpan = sourceText.GetSpanFromRange(request.Location.Range);
 
         var inlayHintsOptions = _omniSharpOptions.CurrentValue.RoslynExtensionsOptions.InlayHintsOptions;
-        var options = new OmniSharpInlineHintsOptions
-        {
-            ParameterOptions = new()
-            {
-                EnabledForParameters = inlayHintsOptions.EnableForParameters,
-                ForIndexerParameters = inlayHintsOptions.ForIndexerParameters,
-                ForLiteralParameters = inlayHintsOptions.ForLiteralParameters,
-                ForObjectCreationParameters = inlayHintsOptions.ForObjectCreationParameters,
-                ForOtherParameters = inlayHintsOptions.ForOtherParameters,
-                SuppressForParametersThatDifferOnlyBySuffix = inlayHintsOptions.SuppressForParametersThatDifferOnlyBySuffix,
-                SuppressForParametersThatMatchArgumentName = inlayHintsOptions.SuppressForParametersThatMatchArgumentName,
-                SuppressForParametersThatMatchMethodIntent = inlayHintsOptions.SuppressForParametersThatMatchMethodIntent,
-            },
-            TypeOptions = new()
-            {
-                EnabledForTypes = inlayHintsOptions.EnableForTypes,
-                ForImplicitObjectCreation = inlayHintsOptions.ForImplicitObjectCreation,
-                ForImplicitVariableTypes = inlayHintsOptions.ForImplicitVariableTypes,
-                ForLambdaParameterTypes = inlayHintsOptions.ForLambdaParameterTypes,
-            }
-        };
+        var parameterOptions = new OmniSharpInlineParameterHintsOptions()
+            .WithProperty(nameof(OmniSharpInlineParameterHintsOptions.EnabledForParameters), inlayHintsOptions.EnableForParameters)
+            .WithProperty(nameof(OmniSharpInlineParameterHintsOptions.ForIndexerParameters), inlayHintsOptions.ForIndexerParameters)
+            .WithProperty(nameof(OmniSharpInlineParameterHintsOptions.ForLiteralParameters), inlayHintsOptions.ForLiteralParameters)
+            .WithProperty(nameof(OmniSharpInlineParameterHintsOptions.ForObjectCreationParameters), inlayHintsOptions.ForObjectCreationParameters)
+            .WithProperty(nameof(OmniSharpInlineParameterHintsOptions.ForOtherParameters), inlayHintsOptions.ForOtherParameters)
+            .WithProperty(nameof(OmniSharpInlineParameterHintsOptions.SuppressForParametersThatDifferOnlyBySuffix), inlayHintsOptions.SuppressForParametersThatDifferOnlyBySuffix)
+            .WithProperty(nameof(OmniSharpInlineParameterHintsOptions.SuppressForParametersThatMatchArgumentName), inlayHintsOptions.SuppressForParametersThatMatchArgumentName)
+            .WithProperty(nameof(OmniSharpInlineParameterHintsOptions.SuppressForParametersThatMatchMethodIntent), inlayHintsOptions.SuppressForParametersThatMatchMethodIntent);
+
+        var typeOptions = new OmniSharpInlineTypeHintsOptions()
+            .WithProperty(nameof(OmniSharpInlineTypeHintsOptions.EnabledForTypes), inlayHintsOptions.EnableForTypes)
+            .WithProperty(nameof(OmniSharpInlineTypeHintsOptions.ForImplicitObjectCreation), inlayHintsOptions.ForImplicitObjectCreation)
+            .WithProperty(nameof(OmniSharpInlineTypeHintsOptions.ForImplicitVariableTypes), inlayHintsOptions.ForImplicitVariableTypes)
+            .WithProperty(nameof(OmniSharpInlineTypeHintsOptions.ForLambdaParameterTypes), inlayHintsOptions.ForLambdaParameterTypes);
+
+        var options = new OmniSharpInlineHintsOptions()
+            .WithProperty(nameof(OmniSharpInlineHintsOptions.ParameterOptions), parameterOptions)
+            .WithProperty(nameof(OmniSharpInlineHintsOptions.TypeOptions), typeOptions);
 
         var hints = await RoslynInlineHintsService.GetInlineHintsAsync(document, mappedSpan, options, CancellationToken.None);
 

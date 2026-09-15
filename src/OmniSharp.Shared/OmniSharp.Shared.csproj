@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
+        <TargetFramework>net10.0</TargetFramework>
         <PlatformTarget>AnyCPU</PlatformTarget>
         <RootNamespace>OmniSharp</RootNamespace>
         <IsPackable>true</IsPackable>
@@ -14,7 +14,6 @@
         <PackageReference Include="Microsoft.Extensions.FileProviders.Physical" />
         <PackageReference Include="Microsoft.Extensions.FileSystemGlobbing" />
         <PackageReference Include="Microsoft.Extensions.Logging" />
-        <PackageReference Include="System.Collections.Immutable" />
         <PackageReference Include="System.Composition" />
     </ItemGroup>
 
