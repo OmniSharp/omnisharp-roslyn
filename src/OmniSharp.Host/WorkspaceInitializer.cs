@@ -1,8 +1,6 @@
 using System;
 using System.Composition.Hosting;
 using System.Linq;
-using Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.ImplementType;
-using Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.Options;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -10,6 +8,9 @@ using Microsoft.Extensions.Options;
 using OmniSharp.Options;
 using OmniSharp.Roslyn;
 using OmniSharp.Roslyn.Options;
+using OmniSharp.Roslyn.RoslynInternals.Formatting;
+using OmniSharp.Roslyn.RoslynInternals.Options;
+using OmniSharp.Roslyn.Utilities;
 using OmniSharp.Services;
 using OmniSharp.Utilities;
 
@@ -111,7 +112,7 @@ namespace OmniSharp
             ILogger logger)
         {
             logger.LogInformation($"Updating the solution's fallback AnalyzerConfigOptions.");
-            OmniSharpSolutionAnalyzerConfigOptionsUpdater.UpdateOptions(workspace, ToOmniSharpEditorConfigOptions(options.CurrentValue));
+            RoslynSolutionAnalyzerConfigOptionsUpdater.UpdateOptions(workspace, ToOmniSharpEditorConfigOptions(options.CurrentValue));
         }
 
         private static OmniSharpEditorConfigOptions ToOmniSharpEditorConfigOptions(OmniSharpOptions options)

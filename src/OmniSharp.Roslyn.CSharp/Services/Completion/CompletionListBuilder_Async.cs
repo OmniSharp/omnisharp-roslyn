@@ -7,7 +7,8 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Completion;
-using Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.Completion;
+using OmniSharp.Roslyn.RoslynInternals.Completion;
+using OmniSharp.Roslyn.Utilities;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
 using OmniSharp.Models.v1.Completion;
@@ -55,7 +56,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
 
                     // The completion is somehow expensive. Currently, this one of two categories: import completion or override/partial completion.
                     Debug.Assert(completion.GetProviderName() is OverrideCompletionProvider or PartialMethodCompletionProvider
-                                                              or TypeImportCompletionProvider or ExtensionMethodImportCompletionProvider
+                                                              or TypeImportCompletionProvider or ExtensionMemberImportCompletionProvider
                                                               or AwaitCompletionProvider);
 
                     changeSpan = typedSpan;
@@ -70,7 +71,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                             hasAfterInsertStep = true;
                             break;
 
-                        default: // case TypeImportCompletionProvider or ExtensionMethodImportCompletionProvider:
+                        default: // case TypeImportCompletionProvider or ExtensionMemberImportCompletionProvider:
                             insertText = completion.DisplayText;
                             sortText = '1' + completion.SortText;
                             seenUnimportedCompletions = true;

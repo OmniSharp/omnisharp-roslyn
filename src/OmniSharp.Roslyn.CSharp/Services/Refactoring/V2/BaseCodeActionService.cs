@@ -11,8 +11,6 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CodeRefactorings;
-using Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.CodeActions;
-using Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.ImplementType;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Extensions;
@@ -24,6 +22,7 @@ using OmniSharp.Roslyn.CSharp.Helpers;
 using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
 using OmniSharp.Roslyn.CSharp.Workers.Diagnostics;
 using OmniSharp.Roslyn.Utilities;
+using OmniSharp.Roslyn.RoslynInternals.CodeActions;
 using OmniSharp.Services;
 using OmniSharp.Utilities;
 using FixAllScope = OmniSharp.Abstractions.Models.V1.FixAll.FixAllScope;
@@ -142,7 +141,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
                 if (fixableDiagnostics.Length > 0)
                 {
-                    var context = OmniSharpCodeFixContextFactory.CreateCodeFixContext(
+                    var context = RoslynCodeActionContextFactory.CreateCodeFixContext(
                         document,
                         span,
                         fixableDiagnostics,
@@ -186,7 +185,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             {
                 try
                 {
-                    var context = OmniSharpCodeFixContextFactory.CreateCodeRefactoringContext(
+                    var context = RoslynCodeActionContextFactory.CreateCodeRefactoringContext(
                         document,
                         span,
                         (a, _) =>

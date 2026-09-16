@@ -141,7 +141,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     }
                 }";
 
-            var response = await RunRefactoringAsync(code, "Generate Equals(object)...");
+            var response = await RunRefactoringAsync(code, "Generate Equals(...)...");
             AssertUtils.AssertIgnoringIndent(expected, ((ModifiedFileResponse)response.Changes.First()).Buffer);
         }
 

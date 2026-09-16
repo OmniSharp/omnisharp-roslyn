@@ -19,11 +19,12 @@ using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Extensions;
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
-using Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.Formatting;
-using Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.MetadataAsSource;
-using Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.CSharp.DocumentationComments;
+using OmniSharp.Roslyn.Utilities;
 using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Workers.Formatting;
+using OmniSharp.Roslyn.RoslynInternals.DocumentationComments;
+using OmniSharp.Roslyn.RoslynInternals.Formatting;
+using OmniSharp.Roslyn.RoslynInternals.MetadataAsSource;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Decompilation
 {
@@ -65,7 +66,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Decompilation
             // Apply formatting rules
 
             var options = await FormattingWorker.GetFormattingOptionsAsync(document, _omnisharpOptions).ConfigureAwait(false);
-            document = await OmniSharpFormatter.FormatAsync(document, new[] { node.FullSpan }, options, cancellationToken).ConfigureAwait(false);
+            document = await RoslynFormatter.FormatAsync(document, new[] { node.FullSpan }, options, cancellationToken).ConfigureAwait(false);
 
             return document;
         }
@@ -90,9 +91,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Decompilation
 
         private async Task<Document> AddAssemblyInfoRegionAsync(Document document, Microsoft.CodeAnalysis.ISymbol symbol, CancellationToken cancellationToken)
         {
-            var assemblyInfo = OmniSharpMetadataAsSourceHelpers.GetAssemblyInfo(symbol.ContainingAssembly);
+            var assemblyInfo = RoslynMetadataAsSourceHelpers.GetAssemblyInfo(symbol.ContainingAssembly);
             var compilation = await document.Project.GetCompilationAsync(cancellationToken).ConfigureAwait(false);
-            var assemblyPath = OmniSharpMetadataAsSourceHelpers.GetAssemblyDisplay(compilation, symbol.ContainingAssembly);
+            var assemblyPath = RoslynMetadataAsSourceHelpers.GetAssemblyDisplay(compilation, symbol.ContainingAssembly);
 
             var regionTrivia = SyntaxFactory.RegionDirectiveTrivia(true)
                 .WithTrailingTrivia(new[] { SyntaxFactory.Space, SyntaxFactory.PreprocessingMessage(assemblyInfo) });
@@ -119,7 +120,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Decompilation
         private async Task<Document> ConvertDocCommentsToRegularCommentsAsync(Document document, CancellationToken cancellationToken)
         {
             var syntaxRoot = await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
-            var newSyntaxRoot = OmniSharpDocCommentConverter.ConvertToRegularComments(syntaxRoot, document.Project, cancellationToken);
+            var newSyntaxRoot = RoslynDocCommentConverter.ConvertToRegularComments(syntaxRoot, document.Project, cancellationToken);
             return document.WithSyntaxRoot(newSyntaxRoot);
         }
 

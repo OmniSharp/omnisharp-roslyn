@@ -8,7 +8,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
-using Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.Analyzers;
+using OmniSharp.Roslyn.Utilities;
+using OmniSharp.Roslyn.RoslynInternals.Analyzers;
 using Microsoft.Extensions.Logging;
 using OmniSharp.FileSystem;
 using OmniSharp.Helpers;
@@ -219,7 +220,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
         }
 
         private AnalyzerOptions CreateAnalyzerOptions(Project project)
-            => OmniSharpWorkspaceAnalyzerOptionsFactory.Create(project.Solution, project.AnalyzerOptions);
+            => RoslynWorkspaceAnalyzerOptionsFactory.Create(project.Solution, project.AnalyzerOptions);
 
         public override async Task<IEnumerable<Diagnostic>> AnalyzeDocumentAsync(Document document, CancellationToken cancellationToken)
         {
