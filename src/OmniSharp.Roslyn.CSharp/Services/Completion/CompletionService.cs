@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Completion;
-using Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.Completion;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Extensions;
@@ -18,6 +17,7 @@ using OmniSharp.Models;
 using OmniSharp.Models.v1.Completion;
 using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Helpers;
+using OmniSharp.Roslyn.RoslynInternals.Completion;
 using OmniSharp.Roslyn.Utilities;
 using OmniSharp.Utilities;
 using Roslyn.Utilities;
@@ -86,13 +86,13 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                 ForceExpandedCompletionIndexCreation: forceExpandedCompletionIndexCreation);
 
             if (request.CompletionTrigger == CompletionTriggerKind.TriggerCharacter &&
-                !await OmniSharpCompletionService.ShouldTriggerCompletionAsync(completionService, document, position, trigger, roles: null, options, CancellationToken.None))
+                !await RoslynCompletionService.ShouldTriggerCompletionAsync(completionService, document, position, trigger, roles: null, options, CancellationToken.None))
             {
                 _logger.LogTrace("Should not insert completions here.");
                 return new CompletionResponse { Items = ImmutableArray<CompletionItem>.Empty };
             }
 
-            var completions = await OmniSharpCompletionService.GetCompletionsAsync(completionService, document, position, trigger, roles: null, options, CancellationToken.None);
+            var completions = await RoslynCompletionService.GetCompletionsAsync(completionService, document, position, trigger, roles: null, options, CancellationToken.None);
             _logger.LogTrace("Found {0} completions for {1}:{2},{3}",
                              completions.ItemsList.Count,
                              request.FileName,
@@ -194,7 +194,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
             var providerName = lastCompletionItem.GetProviderName();
             switch (providerName)
             {
-                case CompletionListBuilder.ExtensionMethodImportCompletionProvider:
+                case CompletionListBuilder.ExtensionMemberImportCompletionProvider:
                 case CompletionListBuilder.TypeImportCompletionProvider:
                     var sourceText = await document.GetTextAsync();
                     var change = await completionService.GetChangeAsync(document, lastCompletionItem);

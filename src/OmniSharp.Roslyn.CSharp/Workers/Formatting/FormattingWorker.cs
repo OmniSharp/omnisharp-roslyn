@@ -7,14 +7,12 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.CSharp.Formatting;
-using Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.DocumentationComments;
-using Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.Formatting;
-using Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.Options;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Extensions;
 using OmniSharp.Models;
 using OmniSharp.Options;
+using OmniSharp.Roslyn.RoslynInternals.DocumentationComments;
+using OmniSharp.Roslyn.RoslynInternals.Formatting;
 using OmniSharp.Roslyn.Utilities;
 
 namespace OmniSharp.Roslyn.CSharp.Workers.Formatting
@@ -103,11 +101,11 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Formatting
         {
             var spans = (textSpan != null) ? new[] { textSpan.Value } : null;
             var formattingOtions = await GetFormattingOptionsAsync(document, omnisharpOptions);
-            var newDocument = await OmniSharpFormatter.FormatAsync(document, spans, formattingOtions, CancellationToken.None);
+            var newDocument = await RoslynFormatter.FormatAsync(document, spans, formattingOtions, CancellationToken.None);
             if (omnisharpOptions.FormattingOptions.OrganizeImports)
             {
                 var organizeImportsOptions = await GetOrganizeImportsOptionsAsync(document, omnisharpOptions);
-                newDocument = await OmniSharpFormatter.OrganizeImportsAsync(newDocument, organizeImportsOptions, CancellationToken.None);
+                newDocument = await RoslynFormatter.OrganizeImportsAsync(newDocument, organizeImportsOptions, CancellationToken.None);
             }
 
             return newDocument;
@@ -240,8 +238,8 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Formatting
             var docCommentOptions = await GetDocumentationCommentOptionsAsync(document, omnisharpOptions).ConfigureAwait(false);
 
             var snippet = character == '\n' ?
-                OmniSharpDocumentationCommentsSnippetService.GetDocumentationCommentSnippetOnEnterTyped(document, syntaxTree!, text, position, docCommentOptions, CancellationToken.None) :
-                OmniSharpDocumentationCommentsSnippetService.GetDocumentationCommentSnippetOnCharacterTyped(document, syntaxTree!, text, position, docCommentOptions, CancellationToken.None);
+                RoslynDocumentationCommentsSnippetService.GetDocumentationCommentSnippetOnEnterTyped(document, syntaxTree!, text, position, docCommentOptions, CancellationToken.None) :
+                RoslynDocumentationCommentsSnippetService.GetDocumentationCommentSnippetOnCharacterTyped(document, syntaxTree!, text, position, docCommentOptions, CancellationToken.None);
 
             if (snippet == null)
             {

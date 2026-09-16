@@ -11,6 +11,7 @@ using Microsoft.CodeAnalysis.Host.Mef;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using OmniSharp.Options;
+using OmniSharp.Roslyn.Reflection;
 using OmniSharp.Services;
 
 namespace OmniSharp
@@ -60,7 +61,7 @@ namespace OmniSharp
                 }
             }
 
-            builder.Add(typeof(OmniSharpSymbolRenamedCodeActionOperationFactoryWorkspaceService).Assembly);
+            builder.Add(typeof(RoslynReflection).Assembly);
             _assemblies = builder.ToImmutableArray();
             _options = options;
         }

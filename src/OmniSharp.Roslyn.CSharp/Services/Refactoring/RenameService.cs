@@ -5,13 +5,13 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.ExternalAccess.OmniSharp;
 using Microsoft.CodeAnalysis.FindSymbols;
 using OmniSharp.Extensions;
 using OmniSharp.Mef;
 using OmniSharp.Models;
 using OmniSharp.Models.Rename;
 using OmniSharp.Options;
+using OmniSharp.Roslyn.RoslynInternals.Rename;
 using OmniSharp.Roslyn.Utilities;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
@@ -49,7 +49,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
                         RenameInStrings: _omniSharpOptions.RenameOptions.RenameInStrings,
                         RenameInComments: _omniSharpOptions.RenameOptions.RenameInComments);
 
-                    (solution, response.ErrorMessage) = await OmniSharpRenamer.RenameSymbolAsync(solution, symbol, request.RenameTo, options, nonConflictSymbols: null, CancellationToken.None);
+                    (solution, response.ErrorMessage) = await RoslynRenamer.RenameSymbolAsync(solution, symbol, request.RenameTo, options, nonConflictSymbols: null, CancellationToken.None);
 
                     if (response.ErrorMessage is not null)
                     {

@@ -9,7 +9,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeActions;
-using Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.CodeActions;
+using OmniSharp.Roslyn.Utilities;
+using OmniSharp.Roslyn.RoslynInternals.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Abstractions.Models.V1.FixAll;
@@ -140,7 +141,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
             _logger.LogTrace("{0} is still present in the document. Getting fixes.", diagnosticId);
 
             CodeAction action = null;
-            var context = OmniSharpCodeFixContextFactory.CreateCodeFixContext(
+            var context = RoslynCodeActionContextFactory.CreateCodeFixContext(
                 document,
                 primaryDiagnostic.Location.SourceSpan,
                 ImmutableArray.Create(primaryDiagnostic),
@@ -163,7 +164,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
                 _ => throw new InvalidOperationException()
             };
 
-            var fixAllContext = OmniSharpCodeFixContextFactory.CreateFixAllContext(
+            var fixAllContext = RoslynCodeActionContextFactory.CreateFixAllContext(
                 document,
                 primaryDiagnostic.Location.SourceSpan,
                 document.Project,

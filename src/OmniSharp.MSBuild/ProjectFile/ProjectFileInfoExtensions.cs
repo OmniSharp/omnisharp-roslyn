@@ -15,12 +15,30 @@ namespace OmniSharp.MSBuild.ProjectFile
     {
         public static CSharpCompilationOptions CreateCompilationOptions(this ProjectFileInfo projectFileInfo)
         {
+            if (projectFileInfo.BuildHostCompilationOptions != null)
+            {
+                var buildHostOptions = projectFileInfo.BuildHostCompilationOptions
+                    .WithAssemblyIdentityComparer(DesktopAssemblyIdentityComparer.Default)
+                    .WithSpecificDiagnosticOptions(projectFileInfo.GetDiagnosticOptions());
+                if (!string.IsNullOrWhiteSpace(projectFileInfo.DocumentationFile))
+                {
+                    buildHostOptions = buildHostOptions.WithXmlReferenceResolver(XmlFileResolver.Default);
+                }
+
+                return buildHostOptions;
+            }
+
             var compilationOptions = new CSharpCompilationOptions(projectFileInfo.OutputKind);
             return projectFileInfo.CreateCompilationOptions(compilationOptions);
         }
 
         public static CSharpCompilationOptions CreateCompilationOptions(this ProjectFileInfo projectFileInfo, CSharpCompilationOptions existingCompilationOptions)
         {
+            if (projectFileInfo.BuildHostCompilationOptions != null)
+            {
+                return projectFileInfo.CreateCompilationOptions();
+            }
+
             var compilationOptions = existingCompilationOptions.WithAssemblyIdentityComparer(DesktopAssemblyIdentityComparer.Default)
                         .WithSpecificDiagnosticOptions(projectFileInfo.GetDiagnosticOptions())
                         .WithOverflowChecks(projectFileInfo.CheckForOverflowUnderflow);
@@ -62,7 +80,9 @@ namespace OmniSharp.MSBuild.ProjectFile
         public static ImmutableDictionary<string, ReportDiagnostic> GetDiagnosticOptions(this ProjectFileInfo projectFileInfo)
         {
             var suppressions = CompilationOptionsHelper.GetDefaultSuppressedDiagnosticOptions(projectFileInfo.SuppressedDiagnosticIds);
-            var specificRules = projectFileInfo.RuleSet?.SpecificDiagnosticOptions ?? ImmutableDictionary<string, ReportDiagnostic>.Empty;
+            var specificRules = projectFileInfo.BuildHostCompilationOptions?.SpecificDiagnosticOptions ??
+                projectFileInfo.RuleSet?.SpecificDiagnosticOptions ??
+                ImmutableDictionary<string, ReportDiagnostic>.Empty;
 
             // suppressions capture NoWarn and they have the highest priority
             var combinedRules = specificRules.Concat(suppressions.Where(x => !specificRules.ContainsKey(x.Key))).ToDictionary(x => x.Key, x => x.Value);
@@ -113,6 +133,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 filePath: projectFileInfo.FilePath,
                 outputFilePath: projectFileInfo.TargetPath,
                 compilationOptions: projectFileInfo.CreateCompilationOptions(),
+                parseOptions: projectFileInfo.BuildHostParseOptions,
                 analyzerReferences: analyzerReferences).WithDefaultNamespace(projectFileInfo.DefaultNamespace);
         }
 

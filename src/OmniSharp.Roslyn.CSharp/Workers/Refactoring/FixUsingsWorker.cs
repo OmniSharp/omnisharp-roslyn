@@ -9,7 +9,8 @@ using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.CodeActions;
+using OmniSharp.Roslyn.Utilities;
+using OmniSharp.Roslyn.RoslynInternals.CodeActions;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
 using OmniSharp.Options;
@@ -242,7 +243,7 @@ namespace OmniSharp
             ImmutableArray<Diagnostic> diagnostics)
         {
             var codeFixes = new List<CodeAction>();
-            var context = OmniSharpCodeFixContextFactory.CreateCodeFixContext(
+            var context = RoslynCodeActionContextFactory.CreateCodeFixContext(
                 document, span, diagnostics,
                 registerCodeFix: (a, d) => codeFixes.Add(a),
                 cancellationToken: CancellationToken.None);
