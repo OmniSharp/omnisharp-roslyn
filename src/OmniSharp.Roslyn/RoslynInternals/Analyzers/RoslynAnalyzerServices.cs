@@ -14,6 +14,11 @@ namespace OmniSharp.Roslyn.RoslynInternals.Analyzers
         public static IAnalyzerAssemblyLoader CreateShadowCopyAnalyzerAssemblyLoader()
         {
             var type = RoslynReflection.GetType(RoslynReflection.CodeAnalysisAssembly, "Microsoft.CodeAnalysis.AnalyzerAssemblyLoader");
+            if (Type.GetType("Mono.Runtime") is not null)
+            {
+                return (IAnalyzerAssemblyLoader)Activator.CreateInstance(type, nonPublic: true)!;
+            }
+
             var clean = type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static)
                 .SingleOrDefault(m => m.Name == "CleanLegacyShadowCopyDirectoryIfNeeded" &&
                                       m.GetParameters().Length == 1);

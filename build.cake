@@ -541,7 +541,10 @@ Task("PublishNet10Builds")
                 PublishBuild(project, env, buildPlan, configuration, "linux-arm64", "net10.0");
                 PublishBuild(project, env, buildPlan, configuration, "linux-musl-x64", "net10.0");
                 PublishBuild(project, env, buildPlan, configuration, "linux-musl-arm64", "net10.0");
-                PublishBuild(project, env, buildPlan, configuration, "linux-bionic-arm64", "net10.0");
+                if (project == "OmniSharp.Stdio.Driver")
+                {
+                    PublishBuild(project, env, buildPlan, configuration, "linux-bionic-arm64", "net10.0");
+                }
             }
         }
         else if (Platform.Current.IsWindows)
@@ -587,6 +590,19 @@ string PublishBuild(string project, BuildEnvironment env, BuildPlan plan, string
 
     try
     {
+        var msBuildSettings = new DotNetMSBuildSettings()
+            .WithProperty("PackageVersion", env.VersionInfo.NuGetVersion)
+            .WithProperty("AssemblyVersion", env.VersionInfo.AssemblySemVer)
+            .WithProperty("FileVersion", env.VersionInfo.AssemblySemVer)
+            .WithProperty("InformationalVersion", env.VersionInfo.InformationalVersion)
+            .WithProperty("RuntimeFrameworkVersion", "10.0.0")
+            .WithProperty("RollForward", "LatestMajor");
+
+        if (framework == "net472")
+        {
+            msBuildSettings.WithProperty("UseRidGraph", "true");
+        }
+
         var publishSettings = new DotNetPublishSettings()
         {
             Framework = framework,
@@ -595,13 +611,7 @@ string PublishBuild(string project, BuildEnvironment env, BuildPlan plan, string
             SelfContained = false, // Since we are specifying a runtime identifier this defaults to true. We don't need to ship a runtime for net6 because we require the .NET SDK to be installed.
             Configuration = configuration,
             OutputDirectory = outputFolder,
-            MSBuildSettings = new DotNetMSBuildSettings()
-                .WithProperty("PackageVersion", env.VersionInfo.NuGetVersion)
-                .WithProperty("AssemblyVersion", env.VersionInfo.AssemblySemVer)
-                .WithProperty("FileVersion", env.VersionInfo.AssemblySemVer)
-                .WithProperty("InformationalVersion", env.VersionInfo.InformationalVersion)
-                .WithProperty("RuntimeFrameworkVersion", "10.0.0")
-                .WithProperty("RollForward", "LatestMajor"),
+            MSBuildSettings = msBuildSettings,
             ToolPath = env.DotNetCommand,
             WorkingDirectory = env.WorkingDirectory,
             Verbosity = DotNetVerbosity.Minimal,

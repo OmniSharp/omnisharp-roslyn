@@ -25,7 +25,7 @@ using System.Linq;
 namespace OmniSharp.MSBuild
 {
     [ExportProjectSystem(ProjectSystemNames.MSBuildProjectSystem), Shared]
-    internal class ProjectSystem : IProjectSystem
+    internal class ProjectSystem : IProjectSystem, IDisposable
     {
         private readonly IOmniSharpEnvironment _environment;
         private readonly OmniSharpWorkspace _workspace;
@@ -117,6 +117,22 @@ namespace OmniSharp.MSBuild
         }
 
         public Task WaitForIdleAsync() { return _manager.WaitForQueueEmptyAsync(); }
+
+        public void Dispose()
+        {
+            if (_manager != null)
+            {
+                _manager.Dispose();
+                _manager = null;
+            }
+            else
+            {
+                _loader?.Dispose();
+            }
+
+            _loader = null;
+            Initialized = false;
+        }
 
         private IEnumerable<(string, ProjectIdInfo)> GetInitialProjectPathsAndIds()
         {
