@@ -6,7 +6,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.InlineHints;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -16,6 +15,7 @@ using OmniSharp.Models;
 using OmniSharp.Models.v1.InlayHints;
 using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Helpers;
+using OmniSharp.Roslyn.RoslynInternals.InlayHints;
 using OmniSharp.Roslyn.Utilities;
 
 #nullable enable
@@ -82,7 +82,7 @@ internal class InlayHintService :
             }
         };
 
-        var hints = await OmniSharpInlineHintsService.GetInlineHintsAsync(document, mappedSpan, options, CancellationToken.None);
+        var hints = await RoslynInlineHintsService.GetInlineHintsAsync(document, mappedSpan, options, CancellationToken.None);
 
         var solutionVersion = _workspace.CurrentSolution.Version;
 

@@ -2,7 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.MetadataAsSource;
+using OmniSharp.Roslyn.RoslynInternals.MetadataAsSource;
 
 namespace OmniSharp.Roslyn
 {
@@ -25,6 +25,6 @@ namespace OmniSharp.Roslyn
         }
 
         public Task<Location> GetExternalSymbolLocation(ISymbol symbol, Document metadataDocument, CancellationToken cancellationToken = new CancellationToken())
-            => OmniSharpMetadataAsSourceHelpers.GetLocationInGeneratedSourceAsync(symbol, metadataDocument, cancellationToken);
+            => RoslynMetadataAsSourceHelpers.GetLocationInGeneratedSourceAsync(symbol, metadataDocument, cancellationToken);
     }
 }

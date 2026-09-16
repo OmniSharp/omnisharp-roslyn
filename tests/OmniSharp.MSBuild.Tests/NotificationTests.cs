@@ -53,7 +53,7 @@ namespace OmniSharp.MSBuild.Tests
                 var eventArgs = Assert.Single(allEventArgs);
                 Assert.Equal(
                     $"{testProject.Directory}/{testProject.Name}.csproj".EnsureForwardSlashes(),
-                    eventArgs.ProjectInstance.FullPath.EnsureForwardSlashes());
+                    eventArgs.ProjectFilePath.EnsureForwardSlashes());
             }
         }
     }

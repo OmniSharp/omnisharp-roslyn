@@ -3,8 +3,6 @@ using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.Build.Construction;
-using Microsoft.Build.Execution;
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Services;
@@ -25,65 +23,6 @@ namespace OmniSharp.MSBuild.Tests
             _referenceHashingAlgorithm = new VsReferenceHashingAlgorithm();
         }
 
-        [Fact]
-        public void GetTargetFramework_ReturnsTargetFramework()
-        {
-            // Arrange
-
-            const string targetFramework = "net461";
-            var projectInstance = new ProjectInstance(ProjectRootElement.Create());
-            projectInstance.SetProperty(ProjectLoadListener.TargetFramework, targetFramework);
-
-            // Act
-            var tfm = ProjectLoadListener.GetTargetFrameworks(projectInstance);
-
-            // Assert
-            Assert.Equal(targetFramework, tfm.First());
-        }
-
-        [Fact]
-        public void GetTargetFramework_NoTFM_ReturnsTargetFrameworkVersion()
-        {
-            // Arrange
-            const string targetFramework = "v4.6.1";
-            var projectInstance = new ProjectInstance(ProjectRootElement.Create());
-            projectInstance.SetProperty(ProjectLoadListener.TargetFrameworkVersion, targetFramework);
-
-            // Act
-            var tfm = ProjectLoadListener.GetTargetFrameworks(projectInstance);
-
-            // Assert
-            Assert.Equal(targetFramework, tfm.First());
-        }
-
-        [Fact]
-        public void GetTargetFramework_PrioritizesTargetFrameworkOverVersion()
-        {
-            // Arrange
-            const string targetFramework = "v4.6.1";
-            var projectInstance = new ProjectInstance(ProjectRootElement.Create());
-            projectInstance.SetProperty(ProjectLoadListener.TargetFramework, targetFramework);
-            projectInstance.SetProperty(ProjectLoadListener.TargetFrameworkVersion, "Unexpected");
-
-            // Act
-            var tfm = ProjectLoadListener.GetTargetFrameworks(projectInstance);
-
-            // Assert
-            Assert.Equal(targetFramework, tfm.First());
-        }
-
-        [Fact]
-        public void GetTargetFramework_NoTFM_ReturnsEmpty()
-        {
-            // Arrange
-            var projectInstance = new ProjectInstance(ProjectRootElement.Create());
-
-            // Act
-            var tfm = ProjectLoadListener.GetTargetFrameworks(projectInstance);
-
-            // Assert
-            Assert.Empty(tfm);
-        }
 
         [Fact]
         public async Task The_target_framework_is_emitted()
@@ -255,7 +194,7 @@ namespace OmniSharp.MSBuild.Tests
             using var testProject = await TestAssets.Instance.GetTestProjectAsync("Net100Project");
             using var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory));
             Assert.Single(emitter.ReceivedMessages);
-            Assert.Equal(GetHashedFileExtension("10.0.105"), emitter.ReceivedMessages[0].SdkVersion);
+            Assert.Equal(GetHashedFileExtension("10.0.400"), emitter.ReceivedMessages[0].SdkVersion);
         }
 
         private string GetHashedFileExtension(string fileExtension)
