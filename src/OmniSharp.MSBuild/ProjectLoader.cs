@@ -73,7 +73,9 @@ namespace OmniSharp.MSBuild
         }
 
         public (BuildHostProject project, ImmutableArray<MSBuildDiagnostic> diagnostics) BuildProject(
-            string filePath, IReadOnlyDictionary<string, string> configurationsInSolution)
+            string filePath,
+            IReadOnlyDictionary<string, string> configurationsInSolution,
+            bool forceReload = false)
         {
             var properties = GetProjectProperties(filePath, configurationsInSolution);
             var key = string.Join("\n", properties.OrderBy(pair => pair.Key, StringComparer.OrdinalIgnoreCase)
@@ -84,6 +86,11 @@ namespace OmniSharp.MSBuild
                 if (_disposed)
                 {
                     throw new ObjectDisposedException(GetType().FullName);
+                }
+                if (forceReload && _buildHosts.TryGetValue(key, out var existingBuildHost))
+                {
+                    _buildHosts.Remove(key);
+                    existingBuildHost.Dispose();
                 }
                 if (!_buildHosts.TryGetValue(key, out buildHost))
                 {

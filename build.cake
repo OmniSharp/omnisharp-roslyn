@@ -449,6 +449,12 @@ string PublishMonoBuild(string project, BuildEnvironment env, BuildPlan plan, st
     var buildFolder = CombinePaths(env.Folders.Bin, configuration, project, "net472");
 
     DirectoryHelper.Copy(buildFolder, outputFolder, copySubDirectories: false);
+    DirectoryHelper.Copy(
+        CombinePaths(buildFolder, "BuildHost-net472"),
+        CombinePaths(outputFolder, "BuildHost-net472"));
+    DirectoryHelper.Copy(
+        CombinePaths(buildFolder, "BuildHost-netcore"),
+        CombinePaths(outputFolder, "BuildHost-netcore"));
 
     CopyExtraDependencies(env, outputFolder);
     UpdateBindingRedirects(outputFolder);
