@@ -14,7 +14,6 @@ using Microsoft.VisualStudio.TestPlatform.PlatformAbstractions.Interfaces;
 using OmniSharp;
 using OmniSharp.Eventing;
 using OmniSharp.FileWatching;
-using OmniSharp.MSBuild.Discovery;
 using OmniSharp.Options;
 using OmniSharp.Roslyn.Utilities;
 using OmniSharp.Services;
@@ -37,7 +36,6 @@ namespace TestUtility
             IAssemblyLoader assemblyLoader,
             IAnalyzerAssemblyLoader analyzerAssemblyLoader,
             ISharedTextWriter sharedTextWriter,
-            IMSBuildLocator msbuildLocator,
             IEventEmitter eventEmitter,
             IDotNetCliService dotNetCliService,
             IConfigurationRoot configuration)
@@ -54,7 +52,6 @@ namespace TestUtility
                 .AddSingleton(loggerFactory)
                 .AddSingleton(assemblyLoader)
                 .AddSingleton(sharedTextWriter)
-                .AddSingleton(msbuildLocator)
                 .AddSingleton(eventEmitter)
                 .AddSingleton(dotNetCliService)
                 .AddSingleton(configuration)
@@ -85,13 +82,12 @@ namespace TestUtility
             var assemblyLoader = CreateAssemblyLoader(loggerFactory);
             var dotNetCliService = CreateDotNetCliService(dotNetCliVersion, loggerFactory, environment, eventEmitter);
             var configuration = CreateConfiguration(configurationData);
-            var msbuildLocator = CreateMSBuildLocator(loggerFactory, assemblyLoader, configurationData);
             var sharedTextWriter = CreateSharedTextWriter(testOutput);
             var analyzerAssemblyLoader = ShadowCopyAnalyzerAssemblyLoader.CreateShadowCopyLoader();
 
             return new TestServiceProvider(
                 environment, loggerFactory, assemblyLoader, analyzerAssemblyLoader, sharedTextWriter,
-                msbuildLocator, eventEmitter, dotNetCliService, configuration);
+                eventEmitter, dotNetCliService, configuration);
         }
 
         public static IServiceProvider Create(
@@ -100,7 +96,6 @@ namespace TestUtility
             ILoggerFactory loggerFactory,
             IAssemblyLoader assemblyLoader,
             IAnalyzerAssemblyLoader analyzerAssemblyLoader,
-            IMSBuildLocator msbuildLocator,
             IConfiguration configurationData = null,
             DotNetCliVersion dotNetCliVersion = DotNetCliVersion.Current,
             IEventEmitter eventEmitter = null)
@@ -113,7 +108,7 @@ namespace TestUtility
 
             return new TestServiceProvider(
                 environment, loggerFactory, assemblyLoader, analyzerAssemblyLoader, sharedTextWriter,
-                msbuildLocator, eventEmitter, dotNetCliService, configuration);
+                eventEmitter, dotNetCliService, configuration);
         }
 
         private static IAssemblyLoader CreateAssemblyLoader(ILoggerFactory loggerFactory)
@@ -127,19 +122,6 @@ namespace TestUtility
             {
                 builder.AddConfiguration(configurationData);
             }
-
-            // We need to set the "UseLegacySdkResolver" for tests because
-            // MSBuild's SDK resolver will not be able to locate the .NET Core SDKs
-            // that we install locally in the ".dotnet" directory.
-            // This property will cause the MSBuild project loader to set the
-            // MSBuildSDKsPath environment variable to the correct path "Sdks" folder
-            // within the appropriate .NET Core SDK.
-            var msbuildProperties = new Dictionary<string, string>()
-            {
-                [$"MSBuild:{nameof(MSBuildOptions.UseLegacySdkResolver)}"] = "true"
-            };
-
-            builder.AddInMemoryCollection(msbuildProperties);
 
             return builder.Build();
         }
@@ -164,11 +146,6 @@ namespace TestUtility
 
             return new DotNetCliService(loggerFactory, NullEventEmitter.Instance, Options.Create(options), environment);
         }
-
-        private static IMSBuildLocator CreateMSBuildLocator(ILoggerFactory loggerFactory,
-            IAssemblyLoader assemblyLoader,
-            IConfiguration configurationData = null)
-            => MSBuildLocator.CreateDefault(loggerFactory, assemblyLoader, configurationData);
 
         private static ISharedTextWriter CreateSharedTextWriter(ITestOutputHelper testOutput)
             => new TestSharedTextWriter(testOutput);

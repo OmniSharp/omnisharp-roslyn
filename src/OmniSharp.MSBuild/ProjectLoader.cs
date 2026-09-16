@@ -1,29 +1,32 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
+using System.Linq;
 using Microsoft.Extensions.Logging;
+using OmniSharp.MSBuild.BuildHost;
 using OmniSharp.MSBuild.Logging;
 using OmniSharp.MSBuild.ProjectFile;
 using OmniSharp.Options;
 
-using MSB = Microsoft.Build;
-
 namespace OmniSharp.MSBuild
 {
-    internal class ProjectLoader
+    internal class ProjectLoader : IDisposable
     {
         private readonly ILogger _logger;
+        private readonly ILoggerFactory _loggerFactory;
         private readonly Dictionary<string, string> _globalProperties;
-        private readonly MSBuildOptions _options;
-        private readonly SdksPathResolver _sdksPathResolver;
+        private readonly string _dotNetPath;
+        private readonly Dictionary<string, RoslynBuildHost> _buildHosts = new();
+        private readonly object _buildHostsGate = new();
+        private bool _disposed;
 
-        public ProjectLoader(MSBuildOptions options, string solutionDirectory, ImmutableDictionary<string, string> propertyOverrides, ILoggerFactory loggerFactory, SdksPathResolver sdksPathResolver)
+        public ProjectLoader(MSBuildOptions options, string solutionDirectory, ImmutableDictionary<string, string> propertyOverrides, ILoggerFactory loggerFactory, string dotNetPath)
         {
+            _loggerFactory = loggerFactory;
             _logger = loggerFactory.CreateLogger<ProjectLoader>();
-            _options = options ?? new MSBuildOptions();
-            _sdksPathResolver = sdksPathResolver ?? throw new ArgumentNullException(nameof(sdksPathResolver));
-            _globalProperties = CreateGlobalProperties(_options, solutionDirectory, propertyOverrides, _logger);
+            _dotNetPath = dotNetPath ?? throw new ArgumentNullException(nameof(dotNetPath));
+            _globalProperties = CreateGlobalProperties(options ?? new MSBuildOptions(), solutionDirectory, propertyOverrides, _logger);
         }
 
         private static Dictionary<string, string> CreateGlobalProperties(
@@ -37,11 +40,6 @@ namespace OmniSharp.MSBuild
                 { PropertyNames._ResolveReferenceDependencies, "true" },
                 { PropertyNames.SolutionDir, solutionDirectory + Path.DirectorySeparatorChar },
 
-                // Setting this property will cause any XAML markup compiler tasks to run in the
-                // current AppDomain, rather than creating a new one. This is important because
-                // our AppDomain.AssemblyResolve handler for MSBuild will not be connected to
-                // the XAML markup compiler's AppDomain, causing the task not to be able to find
-                // MSBuild.
                 { PropertyNames.AlwaysCompileMarkupFilesInSeparateDomain, "false" },
 
                 // This properties allow the design-time build to handle the Compile target without actually invoking the compiler.
@@ -53,79 +51,83 @@ namespace OmniSharp.MSBuild
                 { PropertyNames.UseAppHost, "false" },
             };
 
-            globalProperties.AddPropertyOverride(PropertyNames.MSBuildExtensionsPath, options.MSBuildExtensionsPath, propertyOverrides, logger);
-            globalProperties.AddPropertyOverride(PropertyNames.TargetFrameworkRootPath, options.TargetFrameworkRootPath, propertyOverrides, logger);
-            globalProperties.AddPropertyOverride(PropertyNames.RoslynTargetsPath, options.RoslynTargetsPath, propertyOverrides, logger);
-            globalProperties.AddPropertyOverride(PropertyNames.CscToolPath, options.CscToolPath, propertyOverrides, logger);
-            globalProperties.AddPropertyOverride(PropertyNames.CscToolExe, options.CscToolExe, propertyOverrides, logger);
-            globalProperties.AddPropertyOverride(PropertyNames.VisualStudioVersion, options.VisualStudioVersion, propertyOverrides, logger);
-            globalProperties.AddPropertyOverride(PropertyNames.Configuration, options.Configuration, propertyOverrides, logger);
-            globalProperties.AddPropertyOverride(PropertyNames.Platform, options.Platform, propertyOverrides, logger);
-
-            if (propertyOverrides.TryGetValue(PropertyNames.BypassFrameworkInstallChecks, out var value))
+            foreach (var propertyOverride in propertyOverrides)
             {
-                globalProperties.Add(PropertyNames.BypassFrameworkInstallChecks, value);
+                globalProperties[propertyOverride.Key] = propertyOverride.Value;
+                logger.LogDebug($"'{propertyOverride.Key}' set to '{propertyOverride.Value}'");
             }
+
+            SetOptionOverride(PropertyNames.Configuration, options.Configuration);
+            SetOptionOverride(PropertyNames.Platform, options.Platform);
 
             return globalProperties;
-        }
 
-        public (MSB.Execution.ProjectInstance projectInstance, MSB.Evaluation.Project project, ImmutableArray<MSBuildDiagnostic> diagnostics) BuildProject(
-            string filePath, IReadOnlyDictionary<string, string> configurationsInSolution)
-        {
-            using (_sdksPathResolver.SetSdksPathEnvironmentVariable(filePath))
+            void SetOptionOverride(string name, string value)
             {
-                var msbuildLogger = new MSBuildLogger(_logger);
-                var loggers = new List<MSB.Framework.ILogger>()
+                if (!string.IsNullOrEmpty(value))
                 {
-                    msbuildLogger
-                };
-
-                var evaluatedProject = EvaluateProjectFileCore(filePath, configurationsInSolution, loggers);
-
-                SetTargetFrameworkIfNeeded(evaluatedProject);
-
-                var projectInstance = evaluatedProject.CreateProjectInstance();
-
-                if (_options.GenerateBinaryLogs)
-                {
-                    var binlogPath = Path.ChangeExtension(projectInstance.FullPath, ".binlog");
-                    var binaryLogger = new MSB.Logging.BinaryLogger()
-                    {
-                        CollectProjectImports = MSB.Logging.BinaryLogger.ProjectImportsCollectionMode.Embed,
-                        Parameters = binlogPath
-                    };
-
-                    loggers.Add(binaryLogger);
+                    globalProperties[name] = value;
+                    logger.LogDebug($"'{name}' set to '{value}' (user override)");
                 }
-
-                var buildResult = projectInstance.Build(
-                    targets: new string[] { TargetNames.Compile, TargetNames.CoreCompile },
-                    loggers);
-
-                var diagnostics = msbuildLogger.GetDiagnostics();
-
-                return buildResult
-                    ? (projectInstance, evaluatedProject, diagnostics)
-                    : (null, null, diagnostics);
             }
         }
 
-        public MSB.Evaluation.Project EvaluateProjectFile(string filePath)
+        public (BuildHostProject project, ImmutableArray<MSBuildDiagnostic> diagnostics) BuildProject(
+            string filePath,
+            IReadOnlyDictionary<string, string> configurationsInSolution,
+            bool forceReload = false)
         {
-            using (_sdksPathResolver.SetSdksPathEnvironmentVariable(filePath))
+            var properties = GetProjectProperties(filePath, configurationsInSolution);
+            var key = string.Join("\n", properties.OrderBy(pair => pair.Key, StringComparer.OrdinalIgnoreCase)
+                .Select(pair => $"{pair.Key}={pair.Value}"));
+            RoslynBuildHost buildHost;
+            lock (_buildHostsGate)
             {
-                return EvaluateProjectFileCore(filePath);
+                if (_disposed)
+                {
+                    throw new ObjectDisposedException(GetType().FullName);
+                }
+                if (forceReload && _buildHosts.TryGetValue(key, out var existingBuildHost))
+                {
+                    _buildHosts.Remove(key);
+                    existingBuildHost.Dispose();
+                }
+                if (!_buildHosts.TryGetValue(key, out buildHost))
+                {
+                    buildHost = new RoslynBuildHost(properties, _dotNetPath, _loggerFactory);
+                    _buildHosts.Add(key, buildHost);
+                }
             }
+
+            var result = buildHost.LoadProject(filePath);
+            var diagnostics = result.Diagnostics.Select(diagnostic => MSBuildDiagnostic.Create(
+                diagnostic.IsError ? MSBuildDiagnosticSeverity.Error : MSBuildDiagnosticSeverity.Warning,
+                diagnostic.Message,
+                diagnostic.ProjectFilePath)).ToImmutableArray();
+            foreach (var diagnostic in result.Diagnostics)
+            {
+                if (diagnostic.IsError)
+                {
+                    _logger.LogError(diagnostic.Message);
+                }
+                else
+                {
+                    _logger.LogWarning(diagnostic.Message);
+                }
+            }
+
+            return (result.Project, diagnostics);
         }
 
-        private MSB.Evaluation.Project EvaluateProjectFileCore(string filePath, IReadOnlyDictionary<string, string> projectConfigurationsInSolution = null, IList<MSB.Framework.ILogger> loggers = null)
+        private Dictionary<string, string> GetProjectProperties(
+            string filePath,
+            IReadOnlyDictionary<string, string> projectConfigurationsInSolution)
         {
             var localProperties = new Dictionary<string, string>(_globalProperties);
-            if (projectConfigurationsInSolution != null
-                && localProperties.TryGetValue(PropertyNames.Configuration, out string solutionConfiguration))
+            if (projectConfigurationsInSolution != null &&
+                localProperties.TryGetValue(PropertyNames.Configuration, out var solutionConfiguration))
             {
-                if (!localProperties.TryGetValue(PropertyNames.Platform, out string solutionPlatform))
+                if (!localProperties.TryGetValue(PropertyNames.Platform, out var solutionPlatform))
                 {
                     solutionPlatform = "Any CPU";
                 }
@@ -133,101 +135,38 @@ namespace OmniSharp.MSBuild
                 var solutionSelector = $"{solutionConfiguration}|{solutionPlatform}.ActiveCfg";
                 _logger.LogDebug($"Found configuration `{solutionSelector}` in solution for '{filePath}'.");
 
-                if (projectConfigurationsInSolution.TryGetValue(solutionSelector, out string projectSelector))
+                if (projectConfigurationsInSolution.TryGetValue(solutionSelector, out var projectSelector))
                 {
-                    var splitted = projectSelector.Split('|');
-                    if (splitted.Length == 2)
+                    var parts = projectSelector.Split('|');
+                    if (parts.Length == 2)
                     {
-                        var projectConfiguration = splitted[0];
-                        localProperties[PropertyNames.Configuration] = projectConfiguration;
-                        // NOTE: Solution often defines configuration as `Any CPU` whereas project relies on `AnyCPU`
-                        var projectPlatform = splitted[1].Replace("Any CPU", "AnyCPU");
-                        localProperties[PropertyNames.Platform] = projectPlatform;
-                        _logger.LogDebug($"Using configuration from solution: `{projectConfiguration}|{projectPlatform}`");
+                        localProperties[PropertyNames.Configuration] = parts[0];
+                        localProperties[PropertyNames.Platform] = parts[1].Replace("Any CPU", "AnyCPU");
+                        _logger.LogDebug($"Using configuration from solution: `{parts[0]}|{localProperties[PropertyNames.Platform]}`");
                     }
                 }
             }
 
-            // Evaluate the MSBuild project
-            var projectCollection = new MSB.Evaluation.ProjectCollection(localProperties, loggers, Microsoft.Build.Evaluation.ToolsetDefinitionLocations.Default);
-
-            var toolsVersion = _options.ToolsVersion;
-            if (string.IsNullOrEmpty(toolsVersion) || Version.TryParse(toolsVersion, out _))
-            {
-                toolsVersion = projectCollection.DefaultToolsVersion;
-            }
-
-            toolsVersion = GetLegalToolsetVersion(toolsVersion, projectCollection.Toolsets);
-
-            var project = projectCollection.LoadProject(filePath, toolsVersion);
-
-            SetTargetFrameworkIfNeeded(project);
-
-            return project;
+            return localProperties;
         }
 
-        private static void SetTargetFrameworkIfNeeded(MSB.Evaluation.Project evaluatedProject)
+        public void Dispose()
         {
-            var targetFramework = evaluatedProject.GetPropertyValue(PropertyNames.TargetFramework);
-            var targetFrameworks = PropertyConverter.SplitList(evaluatedProject.GetPropertyValue(PropertyNames.TargetFrameworks), ';');
-
-            // If the project supports multiple target frameworks and specific framework isn't
-            // selected, we must pick one before execution. Otherwise, the ResolveReferences
-            // target might not be available to us.
-            if (string.IsNullOrWhiteSpace(targetFramework) && targetFrameworks.Length > 0)
+            lock (_buildHostsGate)
             {
-                // For now, we'll just pick the first target framework. Eventually, we'll need to
-                // do better and potentially allow OmniSharp hosts to select a target framework.
-                targetFramework = targetFrameworks[0];
-                evaluatedProject.SetGlobalProperty(PropertyNames.TargetFramework, targetFramework);
-                evaluatedProject.ReevaluateIfNecessary();
-            }
-        }
-
-        private string GetLegalToolsetVersion(string toolsVersion, ICollection<MSB.Evaluation.Toolset> toolsets)
-        {
-            // Does the expected tools version exist? If so, use it.
-            foreach (var toolset in toolsets)
-            {
-                if (toolset.ToolsVersion == toolsVersion)
+                if (_disposed)
                 {
-                    return toolsVersion;
+                    return;
                 }
-            }
 
-            // If not, try to find the highest version available and use that instead.
-
-            Version highestVersion = null;
-
-            var legalToolsets = new SortedList<Version, MSB.Evaluation.Toolset>(toolsets.Count);
-            foreach (var toolset in toolsets)
-            {
-                // Only consider this toolset if it has a legal version, we haven't seen it, and its path exists.
-                if (Version.TryParse(toolset.ToolsVersion, out var toolsetVersion) &&
-                    !legalToolsets.ContainsKey(toolsetVersion) &&
-                    Directory.Exists(toolset.ToolsPath))
+                _disposed = true;
+                foreach (var buildHost in _buildHosts.Values)
                 {
-                    legalToolsets.Add(toolsetVersion, toolset);
-
-                    if (highestVersion == null ||
-                        toolsetVersion > highestVersion)
-                    {
-                        highestVersion = toolsetVersion;
-                    }
+                    buildHost.Dispose();
                 }
+
+                _buildHosts.Clear();
             }
-
-            if (legalToolsets.Count == 0 || highestVersion == null)
-            {
-                _logger.LogError($"No legal MSBuild tools available, defaulting to {toolsVersion}.");
-                return toolsVersion;
-            }
-
-            var result = legalToolsets[highestVersion].ToolsVersion;
-
-            _logger.LogInformation($"Using MSBuild tools version: {result}");
-
-            return result;
         }
     }
 }
