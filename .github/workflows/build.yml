@@ -1,14 +1,6 @@
 name: "Build"
 env:
-  DotNetVersion: "10.0.400"
-  DotNetVersion2: "9.0.306"
-  DotNetVersion3: "8.0.415"
-  DotNetVersion4: "6.0.428"
-  DotNetVersion5: "6.0.203" # This is the last version Mono supports. It is used for our Mono CI tests.
-  NuGetVersion: "6.5.0"
-  MonoVersion: ""
   Artifacts: ${{ github.workspace }}/artifacts/
-  Coverage: ${{ github.workspace }}/coverage/
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: "true"
   CLR_OPENSSL_VERSION_OVERRIDE: 1.1
 defaults:
@@ -19,8 +11,6 @@ on:
     branches:
       - master
       - feature/*
-    tags:
-      - "*"
   workflow_dispatch:
 jobs:
   build:
@@ -32,82 +22,47 @@ jobs:
     name: "Build"
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v5
         with:
-          clean: "false"
           fetch-depth: "0"
 
-      - name: 🔨 Use .NET Core SDKs
-        uses: actions/setup-dotnet@v3
+      - name: Setup build environment
+        uses: ./.github/actions/setup-build
         with:
-          dotnet-version: |
-            ${{ env.DotNetVersion5 }}
-            ${{ env.DotNetVersion4 }}
-            ${{ env.DotNetVersion3 }}
-            ${{ env.DotNetVersion2 }}
-            ${{ env.DotNetVersion }}
+          install-mono: ${{ startsWith(matrix.os, 'macos-') }}
 
-      - name: Install boots (MacOS only)
-        if: matrix.os == 'macos-15-intel'
-        run: dotnet tool install -v:n boots --version 1.1.0.36 --global
-
-      - name: Install Mono (MacOS only)
-        if: matrix.os == 'macos-15-intel'
-        run: boots https://download.mono-project.com/archive/6.12.0/macos-10-universal/MonoFramework-MDK-6.12.0.188.macos10.xamarin.universal.pkg
-
-      - name: Setup NuGet.exe
-        uses: nuget/setup-nuget@v1
-        with:
-          nuget-version: ${{ env.NuGetVersion }}
-
-      - name: 🎁 nuget install
+      - name: Build and package
         run: |
-          nuget install tools/packages.config -ExcludeVersion -OutputDirectory tools
-
-      - name: 🎁 dotnet tool restore
-        run: |
-          dotnet tool restore
-
-      - name: 🍰 Run Cake
-        run: |
-          dotnet cake --configuration=Release --verbosity=Verbose --target=CI --publish-all --archive
+          dotnet cake --configuration=Release --verbosity=Verbose --target=CI --publish-all --archive --use-global-dotnet-sdk
 
       - name: ⬆ Publish Logs
         uses: actions/upload-artifact@v4
         continue-on-error: true
         if: ${{ always() }}
         with:
-          name: "logs - ${{ github.workflow }} ${{ matrix.os }}"
+          name: "logs-${{ github.workflow }}-${{ matrix.os }}"
           path: "${{ env.Artifacts }}/logs/"
 
       - name: ⬆ Publish Packages
         uses: actions/upload-artifact@v4
-        continue-on-error: true
-        if: ${{ always() }}
         with:
-          name: "packages"
+          name: "packages-${{ matrix.os }}"
           path: "${{ env.Artifacts }}/package/"
 
       - name: ⬆ Publish Deployment
         uses: actions/upload-artifact@v4
-        continue-on-error: true
-        if: ${{ always() }}
         with:
-          name: "deployment"
+          name: "deployment-${{ matrix.os }}"
           path: "${{ env.Artifacts }}/deployment/"
 
       - name: ⬆ Publish NuGet
         uses: actions/upload-artifact@v4
-        continue-on-error: true
-        if: ${{ always() }}
         with:
-          name: "nuget"
+          name: "nuget-${{ matrix.os }}"
           path: "${{ env.Artifacts }}/nuget/"
 
       - name: ⬆ Publish Scripts
         uses: actions/upload-artifact@v4
-        continue-on-error: true
-        if: ${{ always() }}
         with:
-          name: "scripts - ${{ matrix.os }}"
+          name: "scripts-${{ matrix.os }}"
           path: "${{ env.Artifacts }}/scripts/"

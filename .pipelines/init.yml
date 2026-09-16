@@ -1,8 +1,6 @@
 parameters:
   # Configuration: Release
   Verbosity: Normal
-  DotNetVersion: "10.0.400"
-  CakeVersion: "1.1.0"
   NuGetVersion: "5.7.0"
   MonoVersion: ""
 steps:
@@ -32,19 +30,11 @@ steps:
         displayName: Use Mono ${{ parameters.MonoVersion }}
         failOnStderr: false
   - task: UseDotNet@2
-    displayName: Install dotnet $(DotNetVersion)
+    displayName: Install .NET SDK
     inputs:
       packageType: "sdk"
-      version: ${{ parameters.DotNetVersion }}
-  - task: DotNetCoreCLI@2
-    displayName: "dotnet install cake"
-    inputs:
-      command: custom
-      custom: tool
-      arguments: "install -g Cake.Tool --version $(CakeVersion)"
-      workingDirectory: "$(Build.ArtifactStagingDirectory)"
-    env:
-      CakeVersion: ${{ parameters.CakeVersion }}
+      useGlobalJson: true
+      workingDirectory: "$(Build.SourcesDirectory)"
   - task: NuGetToolInstaller@0
     displayName: "Get NuGet"
     inputs:

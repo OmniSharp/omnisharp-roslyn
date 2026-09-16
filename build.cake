@@ -18,7 +18,12 @@ var installFolder = Argument("install-path",
 var publishAll = HasArgument("publish-all");
 var useGlobalDotNetSdk = HasArgument("use-global-dotnet-sdk");
 var testProjectArgument = Argument("test-project", "");
-var useDotNetTest = HasArgument("use-dotnet-test");
+var testFramework = Argument("test-framework", "net472");
+
+if (testFramework != "net10.0" && testFramework != "net472")
+{
+    throw new ArgumentException($"Unsupported test framework '{testFramework}'. Expected 'net10.0' or 'net472'.");
+}
 
 Log.Context = Context;
 
@@ -285,43 +290,65 @@ Task("Build")
     }
 });
 
-/// <summary>
-///  Run all tests.
-/// </summary>
-Task("Test")
+Task("PrepareTests")
     .IsDependentOn("Setup")
     .IsDependentOn("Build")
-    .IsDependentOn("PrepareTestAssets")
-    .Does(() =>
-{
-    var testTargetFramework = useDotNetTest ? "net10.0" : "net472";
-    var testProjects = string.IsNullOrEmpty(testProjectArgument) ? buildPlan.TestProjects : testProjectArgument.Split(',');
-    var environment = new Dictionary<string, string>();
+    .IsDependentOn("PrepareTestAssets");
 
-    if (!useDotNetTest && Platform.Current.IsWindows)
+string ResolveDotNetRoot()
+{
+    var executableName = Platform.Current.IsWindows ? "dotnet.exe" : "dotnet";
+    var configuredRoot = Environment.GetEnvironmentVariable("DOTNET_ROOT");
+    if (!string.IsNullOrEmpty(configuredRoot) &&
+        FileHelper.Exists(CombinePaths(configuredRoot, executableName)))
     {
-        environment.Add("DOTNET_PATH", env.Folders.DotNetSdk);
+        return configuredRoot;
+    }
+
+    var path = Environment.GetEnvironmentVariable("PATH");
+    if (!string.IsNullOrEmpty(path))
+    {
+        foreach (var directory in path.Split(System.IO.Path.PathSeparator))
+        {
+            if (!string.IsNullOrEmpty(directory) &&
+                FileHelper.Exists(CombinePaths(directory, executableName)))
+            {
+                return directory;
+            }
+        }
+    }
+
+    throw new InvalidOperationException("Unable to locate the global .NET SDK.");
+}
+
+void RunTests(string framework, string projectArgument)
+{
+    var testProjects = string.IsNullOrEmpty(projectArgument) ? buildPlan.TestProjects : projectArgument.Split(',');
+    var environment = new Dictionary<string, string>();
+    if (useGlobalDotNetSdk)
+    {
+        environment.Add("OMNISHARP_TEST_DOTNET_ROOT", ResolveDotNetRoot());
     }
 
     foreach (var testProject in testProjects)
     {
         PrintBlankLine();
-        var instanceFolder = CombinePaths(env.Folders.Bin, configuration, testProject, testTargetFramework);
+        var instanceFolder = CombinePaths(env.Folders.Bin, configuration, testProject, framework);
         var targetPath = CombinePaths(instanceFolder, $"{testProject}.dll");
 
-        if (useDotNetTest || Platform.Current.IsWindows)
+        if (framework == "net10.0" || Platform.Current.IsWindows)
         {
-            var logFile = CombinePaths(env.Folders.ArtifactsLogs, $"{testProject}-netsdk-result.xml");
+            var logFile = CombinePaths(env.Folders.ArtifactsLogs, $"{testProject}-{framework}-result.xml");
             var arguments = $"test \"{targetPath}\" --logger \"console;verbosity=normal\" --logger \"trx;LogFileName={logFile}\" --blame-hang-timeout 60sec";
 
             Console.WriteLine($"Executing: dotnet {arguments}");
 
             Run("dotnet", arguments, new RunOptions(workingDirectory: instanceFolder, environment: environment))
-                .ExceptionOnError($"Test {testProject} failed for {testTargetFramework}");
+                .ExceptionOnError($"Test {testProject} failed for {framework}");
         }
         else
         {
-            var logFile = CombinePaths(env.Folders.ArtifactsLogs, $"{testProject}-desktop-result.xml");
+            var logFile = CombinePaths(env.Folders.ArtifactsLogs, $"{testProject}-{framework}-result.xml");
 
             // Copy xunit executable to test folder to solve path errors
             var xunitToolsFolder = CombinePaths(env.Folders.Tools, "xunit.runner.console", "tools", "net472");
@@ -330,22 +357,31 @@ Task("Test")
             FileHelper.Copy(CombinePaths(xunitToolsFolder, "xunit.runner.utility.net452.dll"), CombinePaths(instanceFolder, "xunit.runner.utility.net452.dll"), overwrite: true);
             var arguments = $"\"{targetPath}\" -noshadow -parallel none -xml \"{logFile}\" -notrait category=failing";
 
-            if (Platform.Current.IsWindows)
-            {
-                Run(xunitInstancePath, arguments, instanceFolder)
-                    .ExceptionOnError($"Test {testProject} failed for {testTargetFramework}");
-            }
-            else
-            {
-                // Copy the Mono-built Microsoft.Build.* binaries to the test folder.
-                // This is necessary to work around a Mono bug that is exasperated by xUnit.
-                CopyMonoMSBuildBinaries(instanceFolder);
+            // Copy the Mono-built Microsoft.Build.* binaries to the test folder.
+            // This is necessary to work around a Mono bug that is exasperated by xUnit.
+            CopyMonoMSBuildBinaries(instanceFolder);
 
-                Run("mono", $"\"{xunitInstancePath}\" {arguments}", instanceFolder)
-                    .ExceptionOnError($"Test {testProject} failed for net472");
-            }
+            Run("mono", $"\"{xunitInstancePath}\" {arguments}", instanceFolder)
+                .ExceptionOnError($"Test {testProject} failed for net472");
         }
     }
+}
+
+Task("RunTests")
+    .IsDependentOn("InstallDotNetSdk")
+    .Does(() =>
+{
+    RunTests(testFramework, testProjectArgument);
+});
+
+/// <summary>
+///  Build and run all tests.
+/// </summary>
+Task("Test")
+    .IsDependentOn("PrepareTests")
+    .Does(() =>
+{
+    RunTests(testFramework, testProjectArgument);
 });
 
 void CopyMonoMSBuildBinaries(string outputFolder)

@@ -17,8 +17,6 @@ resources:
 
 variables:
   Verbosity: Diagnostic
-  DotNetVersion: "10.0.400"
-  CakeVersion: "4.2.0"
   NuGetVersion: "6.5.0"
   GitVersionVersion: "5.0.1"
   MonoVersion: "6.12.0"
@@ -57,8 +55,6 @@ stages:
           - template: ./.pipelines/init.yml
             parameters:
               Verbosity: $(Verbosity)
-              CakeVersion: $(CakeVersion)
-              DotNetVersion: $(DotNetVersion)
               NuGetVersion: $(NuGetVersion)
           - script: |
               git tag v$(Build.BuildNumber)
@@ -97,14 +93,12 @@ stages:
           - template: ./.pipelines/init.yml
             parameters:
               Verbosity: $(Verbosity)
-              CakeVersion: $(CakeVersion)
-              DotNetVersion: $(DotNetVersion)
               NuGetVersion: $(NuGetVersion)
               MonoVersion: $(MonoVersion)
           - script: |
               echo $PATH
               chmod 755 ./build.sh
-              ./build.sh --configuration Release --verbosity Verbose --target CI --publish-all --archive
+              ./build.sh --configuration Release --verbosity Verbose --target CI --publish-all --archive --use-global-dotnet-sdk
             displayName: "Build"
           - template: ./.pipelines/artifacts.yml
             parameters:
@@ -120,12 +114,10 @@ stages:
           - template: ./.pipelines/init.yml
             parameters:
               Verbosity: $(Verbosity)
-              CakeVersion: $(CakeVersion)
-              DotNetVersion: $(DotNetVersion)
               NuGetVersion: $(NuGetVersion)
           - script: |
               chmod 755 ./build.sh
-              ./build.sh --configuration Release --verbosity Verbose --target CI --publish-all --archive
+              ./build.sh --configuration Release --verbosity Verbose --target CI --publish-all --archive --use-global-dotnet-sdk
             displayName: "Build"
           - template: ./.pipelines/artifacts.yml
             parameters:
@@ -139,10 +131,8 @@ stages:
           - template: ./.pipelines/init.yml
             parameters:
               Verbosity: $(Verbosity)
-              CakeVersion: $(CakeVersion)
-              DotNetVersion: $(DotNetVersion)
               NuGetVersion: $(NuGetVersion)
-          - powershell: .\build.ps1 -configuration Release -verbosity Verbose -target CI --publish-all --archive
+          - powershell: .\build.ps1 -configuration Release -verbosity Verbose -target CI --publish-all --archive --use-global-dotnet-sdk
             displayName: "Build"
           - template: ./.pipelines/artifacts.yml
             parameters:
@@ -159,8 +149,6 @@ stages:
           - template: ./.pipelines/init.yml
             parameters:
               Verbosity: $(Verbosity)
-              CakeVersion: $(CakeVersion)
-              DotNetVersion: $(DotNetVersion)
               NuGetVersion: $(NuGetVersion)
           - task: DownloadBuildArtifacts@0
             displayName: Download Packages

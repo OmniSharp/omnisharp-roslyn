@@ -1,0 +1,71 @@
+name: Setup build environment
+description: Install the SDKs and tools required to build OmniSharp
+
+inputs:
+  compatibility-sdks:
+    description: Install all SDKs required by compatibility test assets
+    required: false
+    default: "false"
+  install-mono:
+    description: Install Mono on macOS
+    required: false
+    default: "false"
+
+runs:
+  using: composite
+  steps:
+    - name: Resolve .NET SDK version
+      if: inputs.compatibility-sdks != 'true'
+      id: sdk-version
+      shell: pwsh
+      run: |
+        $version = (Get-Content global.json | ConvertFrom-Json).sdk.version
+        "version=$version" >> $env:GITHUB_OUTPUT
+
+    - name: Use .NET SDK
+      if: inputs.compatibility-sdks != 'true'
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ steps.sdk-version.outputs.version }}
+
+    - name: Install compatibility .NET SDKs
+      if: inputs.compatibility-sdks == 'true'
+      shell: pwsh
+      run: |
+        $plan = Get-Content build.json | ConvertFrom-Json
+        $installDirectory = Join-Path $env:GITHUB_WORKSPACE ".dotnet"
+        $installScript = Join-Path $env:RUNNER_TEMP "dotnet-install.ps1"
+        Invoke-WebRequest "$($plan.DotNetInstallScriptURL)/dotnet-install.ps1" -OutFile $installScript
+
+        foreach ($version in $plan.DotNetVersions) {
+          & $installScript -Version $version -InstallDir $installDirectory -NoPath
+          if ($LASTEXITCODE -ne 0) {
+            exit $LASTEXITCODE
+          }
+        }
+
+        $installDirectory >> $env:GITHUB_PATH
+        "DOTNET_ROOT=$installDirectory" >> $env:GITHUB_ENV
+
+    - name: Install boots
+      if: runner.os == 'macOS' && inputs.install-mono == 'true'
+      shell: pwsh
+      run: dotnet tool install -v:n boots --version 1.1.0.36 --global
+
+    - name: Install Mono
+      if: runner.os == 'macOS' && inputs.install-mono == 'true'
+      shell: pwsh
+      run: boots https://download.mono-project.com/archive/6.12.0/macos-10-universal/MonoFramework-MDK-6.12.0.188.macos10.xamarin.universal.pkg
+
+    - name: Setup NuGet.exe
+      uses: nuget/setup-nuget@v1
+      with:
+        nuget-version: "6.5.0"
+
+    - name: Restore packaging tools
+      shell: pwsh
+      run: nuget install tools/packages.config -ExcludeVersion -OutputDirectory tools
+
+    - name: Restore .NET tools
+      shell: pwsh
+      run: dotnet tool restore

@@ -21,8 +21,8 @@ The build script target to run.
 The build configuration to use.
 .PARAMETER Verbosity
 Specifies the amount of information to be displayed.
-.PARAMETER UseDotNetTest
-Run tests against the .NET SDK build of OmniSharp
+.PARAMETER TestFramework
+Target framework to use when running tests
 .PARAMETER ScriptArgs
 Remaining arguments are added here.
 
@@ -39,7 +39,8 @@ Param(
     [string]$Configuration,
     [ValidateSet("Quiet", "Minimal", "Normal", "Verbose", "Diagnostic")]
     [string]$Verbosity,
-    [switch]$UseDotNetTest,
+    [ValidateSet("net10.0", "net472")]
+    [string]$TestFramework,
     [Parameter(Position = 0, Mandatory = $false, ValueFromRemainingArguments = $true)]
     [string[]]$ScriptArgs
 )
@@ -162,7 +163,7 @@ $cakeArguments = @("$Script");
 if ($Target) { $cakeArguments += "--target=$Target" }
 if ($Configuration) { $cakeArguments += "--configuration=$Configuration" }
 if ($Verbosity) { $cakeArguments += "--verbosity=$Verbosity" }
-if ($UseDotNetTest) { $cakeArguments += "--use-dotnet-test" }
+if ($TestFramework) { $cakeArguments += "--test-framework=$TestFramework" }
 $cakeArguments += $ScriptArgs
 
 # Start Cake

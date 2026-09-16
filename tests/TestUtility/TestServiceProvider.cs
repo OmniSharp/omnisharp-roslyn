@@ -132,9 +132,7 @@ namespace TestUtility
             IOmniSharpEnvironment environment,
             IEventEmitter eventEmitter)
         {
-            var dotnetPath = Path.Combine(
-                TestAssets.Instance.RootFolder,
-                dotNetCliVersion.GetFolderName());
+            var dotnetPath = dotNetCliVersion.GetPath(TestAssets.Instance.RootFolder);
 
             var options = new DotNetCliOptions { LocationPaths = new[] { dotnetPath } };
 

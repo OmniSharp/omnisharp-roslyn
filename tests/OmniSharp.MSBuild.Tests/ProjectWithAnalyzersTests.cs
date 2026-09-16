@@ -343,7 +343,7 @@ dotnet_diagnostic.IDE0005.severity = none
             {
                 LocationPaths = new[]
                 {
-                    Path.Combine(TestAssets.Instance.RootFolder, DotNetCliVersion.Current.GetFolderName())
+                    DotNetCliVersion.Current.GetPath(TestAssets.Instance.RootFolder)
                 }
             };
             await new DotNetCliService(new LoggerFactory(), NullEventEmitter.Instance, Microsoft.Extensions.Options.Options.Create(options), new OmniSharpEnvironment(testProject.Directory)).RestoreAsync(testProject.Directory);
