@@ -263,7 +263,7 @@ jobs:
           name: release-packages-${{ matrix.artifact }}
           path: ${{ env.Artifacts }}/package/
           if-no-files-found: error
-          retention-days: 14
+          retention-days: 1
 
       - name: Upload NuGet packages
         if: runner.os == 'Linux'
@@ -282,7 +282,7 @@ jobs:
           name: release-logs-${{ matrix.artifact }}
           path: ${{ env.Artifacts }}/logs/
           if-no-files-found: warn
-          retention-days: 14
+          retention-days: 7
 
   assemble:
     name: Assemble release
@@ -313,7 +313,7 @@ jobs:
           name: release-candidate
           path: release-output/
           if-no-files-found: error
-          retention-days: 30
+          retention-days: 7
 
   publish:
     name: Publish GitHub release
@@ -385,3 +385,54 @@ jobs:
 
           $url = (gh release view $env:RELEASE_TAG --repo $env:GITHUB_REPOSITORY --json url --jq .url).Trim()
           "url=$url" >> $env:GITHUB_OUTPUT
+
+  cleanup:
+    name: Clean up intermediate artifacts
+    if: always()
+    needs:
+      - version
+      - assemble
+      - publish
+    runs-on: ubuntu-22.04
+    permissions:
+      actions: write
+      contents: read
+    steps:
+      - name: Delete intermediate artifacts
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ASSEMBLE_RESULT: ${{ needs.assemble.result }}
+          PUBLISH_RESULT: ${{ needs.publish.result }}
+        run: |
+          $artifactNames = @()
+          if ($env:ASSEMBLE_RESULT -eq "success") {
+            $artifactNames += @(
+              "release-packages-linux",
+              "release-packages-windows",
+              "release-packages-macos"
+            )
+          }
+          if ($env:PUBLISH_RESULT -eq "success") {
+            $artifactNames += "release-candidate"
+          }
+
+          if ($artifactNames.Count -eq 0) {
+            Write-Host "No intermediate artifacts are eligible for cleanup."
+            exit 0
+          }
+
+          $responseJson = gh api "repos/$env:GITHUB_REPOSITORY/actions/runs/$env:GITHUB_RUN_ID/artifacts?per_page=100"
+          if ($LASTEXITCODE -ne 0) {
+            throw "Failed to list workflow artifacts."
+          }
+          $response = $responseJson | ConvertFrom-Json
+
+          foreach ($artifact in $response.artifacts | Where-Object name -In $artifactNames) {
+            Write-Host "Deleting intermediate artifact '$($artifact.name)'."
+            gh api --method DELETE "repos/$env:GITHUB_REPOSITORY/actions/artifacts/$($artifact.id)"
+            if ($LASTEXITCODE -ne 0) {
+              throw "Failed to delete artifact '$($artifact.name)'."
+            }
+          }
