@@ -1,0 +1,43 @@
+{
+  "packages": {
+    "omnisharp": [
+      "win-x86-net10.0",
+      "win-x64-net10.0",
+      "win-arm64-net10.0",
+      "osx-x64-net10.0",
+      "osx-arm64-net10.0",
+      "linux-x64-net10.0",
+      "linux-arm64-net10.0",
+      "linux-musl-x64-net10.0",
+      "linux-musl-arm64-net10.0",
+      "linux-bionic-arm64-net10.0",
+      "win-x86",
+      "win-x64",
+      "win-arm64",
+      "mono",
+      "osx",
+      "linux-x86",
+      "linux-x64",
+      "linux-arm64"
+    ],
+    "omnisharp.http": [
+      "win-x86-net10.0",
+      "win-x64-net10.0",
+      "win-arm64-net10.0",
+      "osx-x64-net10.0",
+      "osx-arm64-net10.0",
+      "linux-x64-net10.0",
+      "linux-arm64-net10.0",
+      "linux-musl-x64-net10.0",
+      "linux-musl-arm64-net10.0",
+      "win-x86",
+      "win-x64",
+      "win-arm64",
+      "mono",
+      "osx",
+      "linux-x86",
+      "linux-x64",
+      "linux-arm64"
+    ]
+  }
+}
