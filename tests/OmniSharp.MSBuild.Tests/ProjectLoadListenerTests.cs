@@ -194,7 +194,7 @@ namespace OmniSharp.MSBuild.Tests
             using var testProject = await TestAssets.Instance.GetTestProjectAsync("Net100Project");
             using var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory));
             Assert.Single(emitter.ReceivedMessages);
-            Assert.Equal(GetHashedFileExtension("10.0.105"), emitter.ReceivedMessages[0].SdkVersion);
+            Assert.Equal(GetHashedFileExtension("10.0.400"), emitter.ReceivedMessages[0].SdkVersion);
         }
 
         private string GetHashedFileExtension(string fileExtension)
