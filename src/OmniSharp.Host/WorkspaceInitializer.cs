@@ -117,19 +117,25 @@ namespace OmniSharp
 
         private static OmniSharpEditorConfigOptions ToOmniSharpEditorConfigOptions(OmniSharpOptions options)
         {
-            var lineFormattingOptions = new OmniSharpLineFormattingOptions()
-                .WithProperty(nameof(OmniSharpLineFormattingOptions.NewLine), options.FormattingOptions.NewLine)
-                .WithProperty(nameof(OmniSharpLineFormattingOptions.UseTabs), options.FormattingOptions.UseTabs)
-                .WithProperty(nameof(OmniSharpLineFormattingOptions.TabSize), options.FormattingOptions.TabSize)
-                .WithProperty(nameof(OmniSharpLineFormattingOptions.IndentationSize), options.FormattingOptions.IndentationSize);
+            var lineFormattingOptions = new OmniSharpLineFormattingOptions
+            {
+                NewLine = options.FormattingOptions.NewLine,
+                UseTabs = options.FormattingOptions.UseTabs,
+                TabSize = options.FormattingOptions.TabSize,
+                IndentationSize = options.FormattingOptions.IndentationSize,
+            };
 
-            var implementTypeOptions = new OmniSharpImplementTypeOptions()
-                .WithProperty(nameof(OmniSharpImplementTypeOptions.InsertionBehavior), ToOmniSharpInsertionBehavior(options.ImplementTypeOptions.InsertionBehavior))
-                .WithProperty(nameof(OmniSharpImplementTypeOptions.PropertyGenerationBehavior), ToOmniSharpPropertyGenerationBehavior(options.ImplementTypeOptions.PropertyGenerationBehavior));
+            var implementTypeOptions = new OmniSharpImplementTypeOptions
+            {
+                InsertionBehavior = ToOmniSharpInsertionBehavior(options.ImplementTypeOptions.InsertionBehavior),
+                PropertyGenerationBehavior = ToOmniSharpPropertyGenerationBehavior(options.ImplementTypeOptions.PropertyGenerationBehavior),
+            };
 
-            return ExternalAccessOptionsExtensions.Create<OmniSharpEditorConfigOptions>()
-                .WithProperty(nameof(OmniSharpEditorConfigOptions.LineFormattingOptions), lineFormattingOptions)
-                .WithProperty(nameof(OmniSharpEditorConfigOptions.ImplementTypeOptions), implementTypeOptions);
+            return new OmniSharpEditorConfigOptions
+            {
+                LineFormattingOptions = lineFormattingOptions,
+                ImplementTypeOptions = implementTypeOptions,
+            };
 
             static OmniSharpImplementTypeInsertionBehavior ToOmniSharpInsertionBehavior(ImplementTypeInsertionBehavior insertionBehavior)
                 => insertionBehavior switch

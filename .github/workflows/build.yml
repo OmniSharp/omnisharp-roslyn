@@ -1,6 +1,6 @@
 name: "Build"
 env:
-  DotNetVersion: "10.0.105"
+  DotNetVersion: "10.0.400"
   DotNetVersion2: "9.0.306"
   DotNetVersion3: "8.0.415"
   Artifacts: ${{ github.workspace }}/artifacts/
@@ -15,8 +15,6 @@ on:
     branches:
       - master
       - feature/*
-    tags:
-      - "*"
   workflow_dispatch:
 jobs:
   build:
@@ -28,13 +26,13 @@ jobs:
     name: "Build"
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           clean: "false"
           fetch-depth: "0"
 
       - name: 🔨 Use .NET Core SDKs
-        uses: actions/setup-dotnet@v3
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: |
             ${{ env.DotNetVersion3 }}

@@ -57,12 +57,11 @@ infrastructure automatically run this mode.
 ## Release Assets
 
 Expected release filenames are declared in
-[`.github/release-assets.json`](/.github/release-assets.json). Linux owns the
-generic Mono packages so that Linux and macOS cannot upload competing assets
-with the same names. The assembly job rejects missing, unexpected, or duplicate
-files and adds a `SHA256SUMS` file to every release. GitVersion metadata is
-calculated once before the platform jobs and exported before invoking Cake, so
-every platform embeds the same version as the release tag.
+[`.github/release-assets.json`](/.github/release-assets.json). The assembly job
+rejects missing, unexpected, or duplicate files and adds a `SHA256SUMS` file to
+every release. GitVersion metadata is calculated once before the platform jobs
+and exported before invoking Cake, so every platform embeds the same version as
+the release tag.
 
 After publishing all assets, the workflow commits the published version without
 the `v` prefix to `latestVersion.txt` on the `version` branch.

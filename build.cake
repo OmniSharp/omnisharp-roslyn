@@ -371,7 +371,7 @@ XmlElement CreateBindingRedirect(XmlDocument document, AssemblyName assemblyName
     return dependentAssembly;
 }
 
-Task("PublishNet6Builds")
+Task("PublishNet10Builds")
     .IsDependentOn("Setup")
     .Does(() =>
 {
@@ -423,7 +423,7 @@ string PublishBuild(string project, BuildEnvironment env, BuildPlan plan, string
             Framework = framework,
             Runtime = rid, // TODO: With everything today do we need to publish this with a rid?  This appears to be legacy bit when we used to push for all supported dotnet core rids.
             PublishReadyToRun = true, // Improve startup performance by applying some AOT compilation
-            SelfContained = false, // Since we are specifying a runtime identifier this defaults to true. We don't need to ship a runtime for net6 because we require the .NET SDK to be installed.
+            SelfContained = false, // Since we are specifying a runtime identifier this defaults to true. We don't need to ship a runtime because we require the .NET SDK to be installed.
             Configuration = configuration,
             OutputDirectory = outputFolder,
             MSBuildSettings = new DotNetMSBuildSettings()
@@ -473,7 +473,7 @@ Task("PublishNuGet")
 
 Task("Publish")
     .IsDependentOn("Build")
-    .IsDependentOn("PublishNet6Builds")
+    .IsDependentOn("PublishNet10Builds")
     .IsDependentOn("PublishNuGet");
 
 /// <summary>

@@ -19,7 +19,6 @@
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Features" />
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" />
-        <PackageReference Include="Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.CSharp" />
     </ItemGroup>
 
     <ItemGroup>
