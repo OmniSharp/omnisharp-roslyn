@@ -4,17 +4,20 @@ param(
     [string]$ExpectedVersion,
 
     [Parameter(Mandatory = $true)]
+    [string]$VersionFile,
+
+    [Parameter(Mandatory = $true)]
     [string]$EnvironmentFile
 )
 
 $ErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
 
-$json = & dotnet tool run dotnet-gitversion /output json
-if ($LASTEXITCODE -ne 0) {
-    throw "GitVersion failed with exit code $LASTEXITCODE."
+if (-not (Test-Path $VersionFile -PathType Leaf)) {
+    throw "GitVersion metadata file '$VersionFile' does not exist."
 }
 
+$json = Get-Content $VersionFile -Raw
 $version = $json | ConvertFrom-Json
 if ($version.SemVer -ne $ExpectedVersion) {
     throw "Expected GitVersion '$ExpectedVersion', but the checkout produced '$($version.SemVer)'."
