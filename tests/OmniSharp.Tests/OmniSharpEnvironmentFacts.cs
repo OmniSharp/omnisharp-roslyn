@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System.IO;
+using Microsoft.Extensions.Logging;
 using OmniSharp.Services;
 using TestUtility;
 using Xunit;
@@ -26,6 +27,25 @@ namespace OmniSharp.Tests
             var environment = new OmniSharpEnvironment(TestAssets.Instance.RootFolder, 1000, LogLevel.Information, null);
 
             Assert.Null(environment.SolutionFilePath);
+        }
+
+        [Fact]
+        public void OmnisharpEnvironmentAcceptsSlnxPath()
+        {
+            var directory = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+            Directory.CreateDirectory(directory);
+            var solutionPath = Path.Combine(directory, "Test.slnx");
+            File.WriteAllText(solutionPath, "<Solution />");
+
+            try
+            {
+                var environment = new OmniSharpEnvironment(solutionPath, 1000, LogLevel.Information, null);
+                Assert.Equal(solutionPath, environment.SolutionFilePath);
+            }
+            finally
+            {
+                Directory.Delete(directory, recursive: true);
+            }
         }
     }
 }

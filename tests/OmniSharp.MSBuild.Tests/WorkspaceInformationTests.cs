@@ -45,6 +45,20 @@ namespace OmniSharp.MSBuild.Tests
         }
 
         [Fact]
+        public async Task SlnxSolutionIsDiscoveredAndLoaded()
+        {
+            using var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectAndSolutionX");
+            using var host = CreateMSBuildTestHost(testProject.Directory);
+            var workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
+
+            Assert.Equal("ProjectAndSolutionX.slnx", Path.GetFileName(workspaceInfo.SolutionPath));
+            var project = Assert.Single(workspaceInfo.Projects);
+            Assert.Equal("ProjectAndSolutionX", project.AssemblyName);
+            Assert.Equal("ProjectAndSolutionX.csproj", Path.GetFileName(project.Path));
+            Assert.Equal(".NETCoreApp,Version=v8.0", project.TargetFramework);
+        }
+
+        [Fact]
         public async Task TestProjectAndSolutionFilter()
         {
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectAndSolutionFilter"))

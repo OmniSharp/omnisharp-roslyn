@@ -25,6 +25,7 @@
         "XunitTestProject",
         "MSTestProject",
         "ProjectAndSolution",
+        "ProjectAndSolutionX",
         "ProjectAndSolutionWithGlobs",
         "ProjectAndSolutionWithProjectSection",
         "TwoProjectsWithSolution",
