@@ -154,8 +154,12 @@ jobs:
           RELEASE_TAG: ${{ needs.version.outputs.tag }}
           TARGET_SHA: ${{ needs.version.outputs.target-sha }}
         run: |
-          $existingTag = (git ls-remote --tags origin "refs/tags/$env:RELEASE_TAG").Trim()
-          if ($existingTag) {
+          $existingTag = @(git ls-remote --tags origin "refs/tags/$env:RELEASE_TAG")
+          if ($LASTEXITCODE -ne 0) {
+            throw "Failed to query tag '$env:RELEASE_TAG'."
+          }
+
+          if ($existingTag.Count -ne 0) {
             git fetch --force origin "refs/tags/$($env:RELEASE_TAG):refs/tags/$($env:RELEASE_TAG)"
             $tagSha = (git rev-list -n 1 $env:RELEASE_TAG).Trim()
             if ($tagSha -ne $env:TARGET_SHA) {
