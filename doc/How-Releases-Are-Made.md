@@ -13,22 +13,24 @@ rolling beta releases automatically.
 ## Rolling Beta Builds
 
 Every merge into `master` calculates the next GitVersion beta version, creates
-an annotated `vX.Y.Z-beta.N` tag, builds all release packages, and publishes a
-GitHub prerelease. Release runs are serialized, so a newer merge cannot publish
-at the same time as another release.
+release metadata once, builds all release packages, creates an annotated
+`vX.Y.Z-beta.N` tag after package validation, and publishes a GitHub prerelease.
+Release runs are serialized, so a newer merge cannot publish at the same time
+as another release.
 
 ```mermaid
 sequenceDiagram
   autonumber
   Maintainer ->> GitHub: Merges a pull request into `master`
   GitHub ->> GitHub Actions: Starts the Release workflow
-  note over GitHub Actions: Calculates the beta version and creates the tag
+  note over GitHub Actions: Calculates the beta version and metadata
   par Build release packages
     GitHub Actions ->> GitHub Actions: Build Windows packages
     GitHub Actions ->> GitHub Actions: Build Linux packages
     GitHub Actions ->> GitHub Actions: Build macOS packages
   end
   note over GitHub Actions: Validates the asset manifest and SHA-256 checksums
+  GitHub Actions ->> GitHub: Creates the version tag
   GitHub Actions ->> GitHub: Publishes the prerelease and assets
 ```
 
@@ -59,8 +61,8 @@ Expected release filenames are declared in
 generic Mono packages so that Linux and macOS cannot upload competing assets
 with the same names. The assembly job rejects missing, unexpected, or duplicate
 files and adds a `SHA256SUMS` file to every release. GitVersion metadata is
-exported before invoking Cake so every platform embeds the same version as the
-release tag.
+calculated once before the platform jobs and exported before invoking Cake, so
+every platform embeds the same version as the release tag.
 
 NuGet packages are retained as a GitHub Actions artifact. They are not currently
 published to nuget.org or another package feed.

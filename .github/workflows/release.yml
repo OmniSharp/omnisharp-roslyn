@@ -56,7 +56,6 @@ jobs:
     outputs:
       version: ${{ steps.version.outputs.version }}
       tag: ${{ steps.version.outputs.tag }}
-      ref: ${{ steps.version.outputs.ref }}
       target-sha: ${{ steps.version.outputs.target-sha }}
       publish: ${{ steps.version.outputs.publish }}
       prerelease: ${{ steps.version.outputs.prerelease }}
@@ -79,7 +78,6 @@ jobs:
         id: version
         env:
           EVENT_NAME: ${{ github.event_name }}
-          EVENT_REF: ${{ github.ref }}
           RELEASE_TYPE: ${{ inputs.release-type || 'dry-run' }}
           REQUESTED_VERSION: ${{ inputs.version }}
         run: |
@@ -88,15 +86,16 @@ jobs:
             git checkout -B master $targetSha
           }
 
-          $computedVersion = (& dotnet tool run dotnet-gitversion /showvariable SemVer).Trim()
-          if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($computedVersion)) {
-            throw "GitVersion did not produce a release version."
+          $versionJson = & dotnet tool run dotnet-gitversion /output json
+          if ($LASTEXITCODE -ne 0) {
+            throw "GitVersion failed with exit code $LASTEXITCODE."
           }
+          $versionData = $versionJson | ConvertFrom-Json
+          $computedVersion = $versionData.SemVer
 
           $publish = $false
           $prerelease = $false
           $tag = ""
-          $ref = if ([string]::IsNullOrWhiteSpace($env:EVENT_REF)) { $targetSha } else { $env:EVENT_REF }
           $version = $computedVersion
 
           if ($env:EVENT_NAME -eq "push") {
@@ -107,7 +106,6 @@ jobs:
             $publish = $true
             $prerelease = $true
             $tag = "v$computedVersion"
-            $ref = $tag
           }
           elseif ($env:EVENT_NAME -eq "workflow_dispatch" -and $env:RELEASE_TYPE -eq "stable") {
             $version = $env:REQUESTED_VERSION.Trim().TrimStart("v")
@@ -123,19 +121,54 @@ jobs:
 
             $publish = $true
             $tag = "v$version"
-            $ref = $tag
+
+            $versionParts = $version.Split(".")
+            $versionData.Major = [int]$versionParts[0]
+            $versionData.Minor = [int]$versionParts[1]
+            $versionData.Patch = [int]$versionParts[2]
+            $versionData.PreReleaseTag = ""
+            $versionData.PreReleaseTagWithDash = ""
+            $versionData.PreReleaseLabel = ""
+            $versionData.PreReleaseNumber = $null
+            $versionData.MajorMinorPatch = $version
+            $versionData.SemVer = $version
+            $versionData.LegacySemVer = $version
+            $versionData.LegacySemVerPadded = $version
+            $versionData.AssemblySemVer = "$($versionParts[0]).$($versionParts[1]).0.0"
+            $versionData.FullSemVer = $version
+            $versionData.InformationalVersion = if ([string]::IsNullOrWhiteSpace($versionData.FullBuildMetaData)) {
+              $version
+            } else {
+              "$version+$($versionData.FullBuildMetaData)"
+            }
+            $versionData.NuGetVersion = $version
           }
+
+          $versionDirectory = Join-Path $env:RUNNER_TEMP "release-version"
+          New-Item $versionDirectory -ItemType Directory -Force | Out-Null
+          $versionData |
+            ConvertTo-Json -Depth 10 |
+            Set-Content (Join-Path $versionDirectory "gitversion.json") -Encoding utf8
 
           "version=$version" >> $env:GITHUB_OUTPUT
           "tag=$tag" >> $env:GITHUB_OUTPUT
-          "ref=$ref" >> $env:GITHUB_OUTPUT
           "target-sha=$targetSha" >> $env:GITHUB_OUTPUT
           "publish=$($publish.ToString().ToLowerInvariant())" >> $env:GITHUB_OUTPUT
           "prerelease=$($prerelease.ToString().ToLowerInvariant())" >> $env:GITHUB_OUTPUT
 
+      - name: Upload release version
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-version
+          path: ${{ runner.temp }}/release-version/gitversion.json
+          if-no-files-found: error
+          retention-days: 1
+
   tag:
     name: Create release tag
-    needs: version
+    needs:
+      - version
+      - assemble
     runs-on: ubuntu-22.04
     permissions:
       contents: write
@@ -177,9 +210,7 @@ jobs:
 
   build:
     name: Build release packages (${{ matrix.name }})
-    needs:
-      - version
-      - tag
+    needs: version
     strategy:
       fail-fast: false
       matrix:
@@ -198,7 +229,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
         with:
-          ref: ${{ needs.version.outputs.ref }}
+          ref: ${{ needs.version.outputs.target-sha }}
           fetch-depth: 0
           fetch-tags: true
 
@@ -226,10 +257,17 @@ jobs:
       - name: Restore .NET tools
         run: dotnet tool restore
 
+      - name: Download release version
+        uses: actions/download-artifact@v5
+        with:
+          name: release-version
+          path: release-version
+
       - name: Export GitVersion variables
         run: |
           ./scripts/export-gitversion.ps1 `
             -ExpectedVersion '${{ needs.version.outputs.version }}' `
+            -VersionFile release-version/gitversion.json `
             -EnvironmentFile $env:GITHUB_ENV
 
       - name: Build and package
@@ -325,6 +363,7 @@ jobs:
     needs:
       - version
       - assemble
+      - tag
     runs-on: ubuntu-22.04
     permissions:
       contents: write
@@ -413,6 +452,7 @@ jobs:
           $artifactNames = @()
           if ($env:ASSEMBLE_RESULT -eq "success") {
             $artifactNames += @(
+              "release-version",
               "release-packages-linux",
               "release-packages-windows",
               "release-packages-macos"
