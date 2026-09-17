@@ -429,6 +429,43 @@ jobs:
           $url = (gh release view $env:RELEASE_TAG --repo $env:GITHUB_REPOSITORY --json url --jq .url).Trim()
           "url=$url" >> $env:GITHUB_OUTPUT
 
+      - name: Update latest published version
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_VERSION: ${{ needs.version.outputs.version }}
+        run: |
+          $fileJson = gh api "repos/$env:GITHUB_REPOSITORY/contents/latestVersion.txt?ref=version"
+          if ($LASTEXITCODE -ne 0) {
+            throw "Failed to read latestVersion.txt from the version branch."
+          }
+
+          $file = $fileJson | ConvertFrom-Json
+          $currentContent = [Text.Encoding]::UTF8.GetString(
+            [Convert]::FromBase64String(($file.content -replace '\s', ''))
+          )
+          if ($currentContent -eq $env:RELEASE_VERSION) {
+            Write-Host "The version branch already contains '$env:RELEASE_VERSION'."
+            exit 0
+          }
+
+          $encodedVersion = [Convert]::ToBase64String(
+            [Text.Encoding]::UTF8.GetBytes($env:RELEASE_VERSION)
+          )
+          $request = @{
+            message = "Update latest version to $($env:RELEASE_VERSION)"
+            content = $encodedVersion
+            branch = "version"
+            sha = $file.sha
+          } | ConvertTo-Json
+
+          $request | gh api `
+            --method PUT `
+            "repos/$env:GITHUB_REPOSITORY/contents/latestVersion.txt" `
+            --input -
+          if ($LASTEXITCODE -ne 0) {
+            throw "Failed to update latestVersion.txt on the version branch."
+          }
+
   cleanup:
     name: Clean up intermediate artifacts
     if: always()

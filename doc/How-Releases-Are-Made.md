@@ -64,5 +64,8 @@ files and adds a `SHA256SUMS` file to every release. GitVersion metadata is
 calculated once before the platform jobs and exported before invoking Cake, so
 every platform embeds the same version as the release tag.
 
+After publishing all assets, the workflow commits the published version without
+the `v` prefix to `latestVersion.txt` on the `version` branch.
+
 NuGet packages are retained as a GitHub Actions artifact. They are not currently
 published to nuget.org or another package feed.
