@@ -47,6 +47,7 @@ namespace OmniSharp.Cake.Services
                 UseShellExecute = false,
                 WorkingDirectory = workingDirectory,
             };
+            startInfo.Environment["DOTNET_ROLL_FORWARD"] = "LatestMajor";
 
             _logger.LogDebug("Starting \"{fileName}\" with arguments \"{arguments}\"", startInfo.FileName, startInfo.Arguments);
             _process = Process.Start(startInfo);
@@ -66,6 +67,11 @@ namespace OmniSharp.Cake.Services
                 }
             };
             _process.BeginOutputReadLine();
+
+            if (_process.WaitForExit(100))
+            {
+                throw new InvalidOperationException($"Cake.Bakery exited during startup with exit code {_process.ExitCode}.");
+            }
         }
 
         public string ServerExecutablePath { get; set; }

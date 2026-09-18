@@ -238,22 +238,6 @@ jobs:
         with:
           global-json-file: global.json
 
-      - name: Install boots
-        if: runner.os == 'macOS'
-        run: dotnet tool install --global boots --version 1.1.0.36
-
-      - name: Install Mono
-        if: runner.os == 'macOS'
-        run: boots https://download.mono-project.com/archive/6.12.0/macos-10-universal/MonoFramework-MDK-6.12.0.188.macos10.xamarin.universal.pkg
-
-      - name: Setup NuGet.exe
-        uses: nuget/setup-nuget@v1
-        with:
-          nuget-version: "6.5.0"
-
-      - name: Restore packaging tools
-        run: nuget install tools/packages.config -ExcludeVersion -OutputDirectory tools
-
       - name: Restore .NET tools
         run: dotnet tool restore
 
@@ -291,13 +275,6 @@ jobs:
           if ($packages.Count -eq 0) {
             throw "The build did not produce any release packages."
           }
-
-      - name: Remove duplicate generic Mono packages
-        if: runner.os == 'macOS'
-        run: |
-          Get-ChildItem (Join-Path $env:Artifacts "package") -File |
-            Where-Object Name -Match '^omnisharp(\.http)?-mono\.(zip|tar\.gz)$' |
-            Remove-Item
 
       - name: Upload release packages
         uses: actions/upload-artifact@v4

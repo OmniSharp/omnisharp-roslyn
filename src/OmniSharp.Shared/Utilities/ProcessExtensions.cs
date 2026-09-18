@@ -7,78 +7,16 @@ namespace OmniSharp.Utilities
 {
     public static class ProcessExtensions
     {
-        private static Thread s_backgroundWatcher;
-        private static List<(Process process, Action action)> s_watchedProcesses;
-
         public static void OnExit(this Process process, Action action)
         {
-            var gate = new object();
-
-            void CleanUpProcesses()
+            process.Exited += (sender, e) =>
             {
-                lock (gate)
-                {
-                    for (int i = s_watchedProcesses.Count - 1; i >= 0; --i)
-                    {
-                        var (p, a) = s_watchedProcesses[i];
-                        if (p.HasExited)
-                        {
-                            s_watchedProcesses.RemoveAt(i);
-                            a();
-                        }
-                    }
-                }
-            }
-
-            void Watcher()
-            {
-                while (true)
-                {
-                    CleanUpProcesses();
-
-                    // REVIEW: Configurable?
-                    Thread.Sleep(2000);
-                }
-            }
-
-            if (PlatformHelper.IsMono)
-            {
-                // In mono 3.10, the Exited event fires immediately, we're going to poll instead
-                lock (gate)
-                {
-                    if (s_watchedProcesses == null)
-                    {
-                        s_watchedProcesses = new List<(Process process, Action action)>();
-                    }
-
-                    s_watchedProcesses.Add((process, action));
-
-                    if (s_backgroundWatcher == null)
-                    {
-                        s_backgroundWatcher = new Thread(Watcher) { IsBackground = true };
-                        s_backgroundWatcher.Start();
-                    }
-                }
-            }
-            else
-            {
-                process.Exited += (sender, e) =>
-                {
-                    action();
-                };
-            }
+                action();
+            };
         }
 
         public static void KillChildrenAndThis(this Process process)
         {
-            if (PlatformHelper.IsMono)
-            {
-                foreach (var childProcess in GetChildProcesses(process.Id))
-                {
-                    childProcess.Kill();
-                }
-            }
-
             process.Kill();
         }
 

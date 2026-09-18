@@ -10,6 +10,7 @@ public sealed class Platform
 
     public Version Version { get; }
     public string DistroName { get; }
+    public bool IsMusl { get; }
 
     public bool IsWindows => _os == "Windows";
     public bool IsMacOS => _os == "MacOS";
@@ -19,13 +20,22 @@ public sealed class Platform
     public bool IsX64 => _architecture == "x64";
     public bool IsArm64 => _architecture == "arm64";
 
-    private Platform(string os, string architecture, Version version, string distroName = null)
+    private Platform(string os, string architecture, Version version, string distroName = null, bool isMusl = false)
     {
         _os = os;
         _architecture = architecture;
         this.Version = version;
         this.DistroName = distroName;
+        this.IsMusl = isMusl;
     }
+
+    public string RID => _os switch
+    {
+        "Windows" =>  $"win-{_architecture}",
+        "MacOS" => $"osx-{_architecture}",
+        "Linux" => $"linux{(IsMusl ? "-musl" : "")}-{_architecture}",
+        _ => throw new ArgumentException(nameof(_os))
+    };
 
     public override string ToString() => $"{DistroName ?? _os} {Version} ({_architecture})";
 
@@ -57,7 +67,7 @@ public sealed class Platform
         else
         {
             // If this is not Windows, run 'uname' to get the OS name and architecture.
-            var output = RunAndCaptureOutput("uname", "-s -m");
+            var output = RunAndCaptureOutput("uname", "-s -m").Output;
             var values = output.Split(' ');
             var osName = values[0];
             var osArch = values[1];
@@ -90,16 +100,27 @@ public sealed class Platform
             case "Windows":
                 return new Platform(os, architecture, Environment.OSVersion.Version);
             case "MacOS":
-                var versionText = RunAndCaptureOutput("sw_vers", "-productVersion");
+                var versionText = RunAndCaptureOutput("sw_vers", "-productVersion").Output;
                 return new Platform(os, architecture, new Version(versionText));
             case "Linux":
-                string distroName;
-                Version version;
-                ReadDistroNameAndVersion(out distroName, out version);
-
-                return new Platform(os, architecture, version, distroName);
+                ReadDistroNameAndVersion(out string distroName, out Version version);
+                var isMusl = GetIsMusl();
+                return new Platform(os, architecture, version, distroName, isMusl);
             default:
                 throw new ArgumentException(nameof(os));
+        }
+    }
+
+    private static bool GetIsMusl()
+    {
+        try
+        {
+            var result = RunAndCaptureOutput("ldd", "--version");
+            return result.Output.Contains("musl") || result.Error.Contains("musl");
+        }
+        catch
+        {
+            return false;
         }
     }
 
@@ -144,7 +165,7 @@ public sealed class Platform
                     }
                     version = new Version(value);
                 }
-                
+
                 if (distroName != null && version != null)
                 {
                     break;
@@ -153,7 +174,7 @@ public sealed class Platform
         }
     }
 
-    private static string RunAndCaptureOutput(string fileName, string arguments, string workingDirectory = null)
+    private static (string Output, string Error) RunAndCaptureOutput(string fileName, string arguments, string workingDirectory = null)
     {
         var startInfo = new ProcessStartInfo(fileName, arguments)
         {
@@ -169,9 +190,10 @@ public sealed class Platform
             var process = Process.Start(startInfo);
 
             var output = process.StandardOutput.ReadToEnd();
+            var error = process.StandardError.ReadToEnd();
             process.WaitForExit();
 
-            return output.Trim();
+            return (output.Trim(), error.Trim());
         }
         catch (Exception ex)
         {

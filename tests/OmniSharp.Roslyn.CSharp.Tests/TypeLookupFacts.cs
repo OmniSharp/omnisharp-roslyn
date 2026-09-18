@@ -170,11 +170,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         {
             var response = await GetTypeLookUpResponse(line: 6, column: 35);
 
-#if NETCOREAPP
             Assert.Equal("void Console.WriteLine(string? value)", response.Type);
-#else
-            Assert.Equal("void Console.WriteLine(string value)", response.Type);
-#endif
         }
 
         [Fact]

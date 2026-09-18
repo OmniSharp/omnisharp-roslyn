@@ -50,7 +50,7 @@ public string GetScriptPath(string scriptFolder, string name)
 
 private string GetOmniSharpPath(string outputRoot)
 {
-    return CombinePaths(PathHelper.GetFullPath(outputRoot), "OmniSharp.exe");
+    return CombinePaths(PathHelper.GetFullPath(outputRoot), "OmniSharp.dll");
 }
 
 private string[] GetScriptContent(string omniSharpPath)
@@ -68,6 +68,15 @@ private string[] GetScriptContent(string omniSharpPath)
 
     lines.Add("");
 
+    if (Platform.Current.IsWindows)
+    {
+        lines.Add("SET DOTNET_ROLL_FORWARD_TO_PRERELEASE=1");
+    }
+    else
+    {
+        lines.Add("export DOTNET_ROLL_FORWARD_TO_PRERELEASE=1");
+    }
+
     var arguments = Platform.Current.IsWindows
         ? "%*"
         : "\"$@\"";
@@ -78,7 +87,7 @@ private string[] GetScriptContent(string omniSharpPath)
     }
     else
     {
-        lines.Add($"mono --assembly-loader=strict \"{omniSharpPath}\" {arguments}");
+        lines.Add($"dotnet --roll-forward LatestMajor \"{omniSharpPath}\" {arguments}");
     }
 
     return lines.ToArray();
