@@ -172,70 +172,33 @@ namespace OmniSharp.MSBuild
             if (SolutionFilterReader.IsSolutionFilterFilename(solutionOrFilterFilePath) &&
                 !SolutionFilterReader.TryRead(solutionOrFilterFilePath, out solutionFilePath, out projectFilter))
             {
-                throw new InvalidSolutionFileException($"Solution filter file was invalid.");
+                throw new InvalidSolutionFileException("Solution filter file was invalid.");
             }
 
-            var solutionFolder = Path.GetDirectoryName(solutionFilePath);
-            var solutionFile = SolutionFile.ParseFile(solutionFilePath);
+            if (!SolutionFileReader.TryRead(solutionFilePath, projectFilter, out var projects))
+            {
+                throw new InvalidSolutionFileException("Solution file was invalid.");
+            }
+
             var processedProjects = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             var result = new List<(string, ProjectIdInfo)>();
-
-            var solutionConfigurations = new Dictionary<ProjectId, Dictionary<string, string>>();
-            foreach (var globalSection in solutionFile.GlobalSections)
+            foreach (var project in projects)
             {
-                // Try parse project configurations if they are remapped in solution file
-                if (globalSection.Name == "ProjectConfigurationPlatforms")
-                {
-                    _logger.LogDebug($"Parsing ProjectConfigurationPlatforms of '{solutionFilePath}'.");
-                    foreach (var entry in globalSection.Properties)
-                    {
-                        var guid = Guid.Parse(entry.Name.Substring(0, 38));
-                        var projId = ProjectId.CreateFromSerialized(guid);
-                        var solutionConfig = entry.Name.Substring(39);
-
-                        if (!solutionConfigurations.TryGetValue(projId, out var dict))
-                        {
-                            dict = new Dictionary<string, string>();
-                            solutionConfigurations.Add(projId, dict);
-                        }
-                        dict.Add(solutionConfig, entry.Value);
-                    }
-                }
-            }
-
-            foreach (var project in solutionFile.Projects)
-            {
-                if (project.IsNotSupported)
+                if (!processedProjects.Add(project.ProjectPath))
                 {
                     continue;
                 }
 
-                // Solution files contain relative paths to project files with Windows-style slashes.
-                var relativeProjectfilePath = project.RelativePath.Replace('\\', Path.DirectorySeparatorChar);
-                var projectFilePath = Path.GetFullPath(Path.Combine(solutionFolder, relativeProjectfilePath));
-                if (!projectFilter.IsEmpty &&
-                    !projectFilter.Contains(projectFilePath))
+                if (!string.Equals(Path.GetExtension(project.ProjectPath), ".csproj", StringComparison.OrdinalIgnoreCase))
                 {
                     continue;
                 }
 
-                // Have we seen this project? If so, move on.
-                if (processedProjects.Contains(projectFilePath))
+                var projectIdInfo = new ProjectIdInfo(ProjectId.CreateFromSerialized(new Guid(project.ProjectGuid)), true)
                 {
-                    continue;
-                }
-
-                if (string.Equals(Path.GetExtension(projectFilePath), ".csproj", StringComparison.OrdinalIgnoreCase))
-                {
-                    var projectIdInfo = new ProjectIdInfo(ProjectId.CreateFromSerialized(new Guid(project.ProjectGuid)), true);
-                    if (solutionConfigurations.TryGetValue(projectIdInfo.Id, out var configurations))
-                    {
-                        projectIdInfo.SolutionConfiguration = configurations;
-                    }
-                    result.Add((projectFilePath, projectIdInfo));
-                }
-
-                processedProjects.Add(projectFilePath);
+                    SolutionConfiguration = project.SolutionConfigurations
+                };
+                result.Add((project.ProjectPath, projectIdInfo));
             }
 
             return result;
@@ -243,11 +206,10 @@ namespace OmniSharp.MSBuild
 
         private static string FindSolutionFilePath(string rootPath, ILogger logger)
         {
-            // currently, Directory.GetFiles on Windows collects files that the file extension has 'sln' prefix, while
-            // GetFiles on Mono looks for an exact match. Use an approach that works for both.
-            // see https://docs.microsoft.com/en-us/dotnet/api/system.io.directory.getfiles?view=netframework-4.7.2 ('Note' description)
-            var solutionsFilePaths = Directory.GetFiles(rootPath, "*.sln").Where(x => Path.GetExtension(x).Equals(".sln", StringComparison.OrdinalIgnoreCase)).ToArray();
-            var solutionFiltersFilePaths = Directory.GetFiles(rootPath, "*.slnf").Where(x => Path.GetExtension(x).Equals(".slnf", StringComparison.OrdinalIgnoreCase)).ToArray();
+            var solutionsFilePaths = Directory.EnumerateFiles(rootPath)
+                .Where(SolutionFileReader.IsSolutionFileFilename);
+            var solutionFiltersFilePaths = Directory.EnumerateFiles(rootPath)
+                .Where(SolutionFilterReader.IsSolutionFilterFilename);
             var result = SolutionSelector.Pick(solutionsFilePaths.Concat(solutionFiltersFilePaths).ToArray(), rootPath);
 
             if (result.Message != null)

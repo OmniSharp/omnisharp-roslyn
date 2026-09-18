@@ -1,15 +1,13 @@
 name: "Tests"
 env:
-  DotNetVersion: "10.0.400"
-  DotNetVersion2: "9.0.306"
-  DotNetVersion3: "8.0.415"
-  DotNetVersion4: "6.0.428"
-  DotNetVersion5: "6.0.203" # This is the last version Mono supports. It is used for our Mono CI tests.
-  NuGetVersion: "6.5.0"
-  MonoVersion: "6.12.0"
+  DotNetVersion: "10.0.401"
+  DotNetVersion2: "9.0.318"
+  DotNetVersion3: "8.0.425"
+  DotNetVersion4: "11.0.100-rc.1.26425.128"
   Artifacts: ${{ github.workspace }}/artifacts/
   Coverage: ${{ github.workspace }}/coverage/
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: "true"
+  VSTEST_TESTHOST_SHUTDOWN_TIMEOUT: "1000"
 defaults:
   run:
     shell: pwsh
@@ -18,8 +16,6 @@ on:
     branches:
       - master
       - feature/*
-    tags:
-      - "*"
   workflow_dispatch:
 jobs:
   build:
@@ -27,44 +23,26 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04, windows-latest, macos-15-intel]
+        os: [ubuntu-22.04, windows-latest, macos-latest]
         testProjects:
           - OmniSharp.MSBuild.Tests,OmniSharp.Roslyn.CSharp.Tests,OmniSharp.DotNetTest.Tests,OmniSharp.Cake.Tests
           - OmniSharp.Lsp.Tests,OmniSharp.Script.Tests,OmniSharp.Tests,OmniSharp.Stdio.Tests,OmniSharp.Http.Tests
     name: "Test"
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           clean: "false"
           fetch-depth: "0"
 
       - name: 🔨 Use .NET Core SDKs
-        uses: actions/setup-dotnet@v3
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: |
-            ${{ env.DotNetVersion5 }}
-            ${{ env.DotNetVersion4 }}
             ${{ env.DotNetVersion3 }}
             ${{ env.DotNetVersion2 }}
             ${{ env.DotNetVersion }}
-
-      - name: Install boots (MacOS only)
-        if: matrix.os == 'macos-15-intel'
-        run: dotnet tool install -v:n boots --version 1.1.0.36 --global
-
-      - name: Install Mono (MacOS only)
-        if: matrix.os == 'macos-15-intel'
-        run: boots https://download.mono-project.com/archive/6.12.0/macos-10-universal/MonoFramework-MDK-6.12.0.188.macos10.xamarin.universal.pkg
-
-      - name: Setup NuGet.exe
-        uses: nuget/setup-nuget@v1
-        with:
-          nuget-version: ${{ env.NuGetVersion }}
-
-      - name: 🎁 nuget install
-        run: |
-          nuget install tools/packages.config -ExcludeVersion -OutputDirectory tools
+            ${{ env.DotNetVersion4 }}
 
       - name: 🎁 dotnet tool restore
         run: |

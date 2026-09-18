@@ -5,7 +5,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
-using OmniSharp.Services;
 using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
@@ -28,7 +27,7 @@ namespace OmniSharp.MSBuild.Tests
         public async Task The_target_framework_is_emitted()
         {
             // Arrange
-            var expectedTFM = "net6.0";
+            var expectedTFM = "net8.0";
             var emitter = new ProjectLoadTestEventEmitter();
 
             using var testProject = await TestAssets.Instance.GetTestProjectAsync("HelloWorld");
@@ -65,16 +64,14 @@ namespace OmniSharp.MSBuild.Tests
         }
 
         [Fact]
-        public async Task Given_a_restored_project_the_references_are_emitted()
+        public async Task Given_a_project_with_a_package_reference_the_references_are_emitted()
         {
             var emitter = new ProjectLoadTestEventEmitter();
 
-            using var testProject = await TestAssets.Instance.GetTestProjectAsync("HelloWorld");
+            using var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithWildcardPackageReference");
             using var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory));
-            var dotnetCliService = host.GetExport<IDotNetCliService>();
-            await dotnetCliService.RestoreAsync(testProject.Directory);
             Assert.Single(emitter.ReceivedMessages);
-            Assert.Contains(emitter.ReceivedMessages[0].References, reference => reference == GetHashedReference("system.core"));
+            Assert.Contains(emitter.ReceivedMessages[0].References, reference => reference == GetHashedReference("newtonsoft.json"));
         }
 
 
@@ -111,7 +108,7 @@ namespace OmniSharp.MSBuild.Tests
             // Arrange
             var emitter = new ProjectLoadTestEventEmitter();
 
-            using var testProject = await TestAssets.Instance.GetTestProjectAsync("Net60Project");
+            using var testProject = await TestAssets.Instance.GetTestProjectAsync("Net80Project");
             using var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory));
             Assert.Single(emitter.ReceivedMessages);
             Assert.Equal((int)OutputKind.ConsoleApplication, emitter.ReceivedMessages[0].OutputKind);
@@ -142,23 +139,11 @@ namespace OmniSharp.MSBuild.Tests
                     "Pack",
                 };
 
-            using var testProject = await TestAssets.Instance.GetTestProjectAsync("Net60Project");
+            using var testProject = await TestAssets.Instance.GetTestProjectAsync("Net80Project");
             using var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory));
             Assert.Single(emitter.ReceivedMessages);
 
             Assert.ProperSuperset(expectedCapabilities, emitter.ReceivedMessages[0].ProjectCapabilities.ToHashSet());
-        }
-
-        [ConditionalFact(typeof(NonMonoRuntimeOnly))]
-        public async Task The_correct_sdk_version_is_emitted_NET6()
-        {
-            // Arrange
-            var emitter = new ProjectLoadTestEventEmitter();
-
-            using var testProject = await TestAssets.Instance.GetTestProjectAsync("Net60Project");
-            using var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory));
-            Assert.Single(emitter.ReceivedMessages);
-            Assert.Equal(GetHashedFileExtension("6.0.203"), emitter.ReceivedMessages[0].SdkVersion);
         }
 
         [ConditionalFact(typeof(DotnetRuntimeOnly))]
@@ -170,7 +155,7 @@ namespace OmniSharp.MSBuild.Tests
             using var testProject = await TestAssets.Instance.GetTestProjectAsync("Net80Project");
             using var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory));
             Assert.Single(emitter.ReceivedMessages);
-            Assert.Equal(GetHashedFileExtension("8.0.415"), emitter.ReceivedMessages[0].SdkVersion);
+            Assert.Equal(GetHashedFileExtension("8.0.425"), emitter.ReceivedMessages[0].SdkVersion);
         }
 
         [ConditionalFact(typeof(DotnetRuntimeOnly))]
@@ -182,7 +167,7 @@ namespace OmniSharp.MSBuild.Tests
             using var testProject = await TestAssets.Instance.GetTestProjectAsync("Net90Project");
             using var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory));
             Assert.Single(emitter.ReceivedMessages);
-            Assert.Equal(GetHashedFileExtension("9.0.306"), emitter.ReceivedMessages[0].SdkVersion);
+            Assert.Equal(GetHashedFileExtension("9.0.318"), emitter.ReceivedMessages[0].SdkVersion);
         }
 
         [ConditionalFact(typeof(DotnetRuntimeOnly))]
@@ -194,7 +179,19 @@ namespace OmniSharp.MSBuild.Tests
             using var testProject = await TestAssets.Instance.GetTestProjectAsync("Net100Project");
             using var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory));
             Assert.Single(emitter.ReceivedMessages);
-            Assert.Equal(GetHashedFileExtension("10.0.400"), emitter.ReceivedMessages[0].SdkVersion);
+            Assert.Equal(GetHashedFileExtension("10.0.401"), emitter.ReceivedMessages[0].SdkVersion);
+        }
+
+        [ConditionalFact(typeof(DotnetRuntimeOnly))]
+        public async Task The_correct_sdk_version_is_emitted_NET11()
+        {
+            // Arrange
+            var emitter = new ProjectLoadTestEventEmitter();
+
+            using var testProject = await TestAssets.Instance.GetTestProjectAsync("Net110Project");
+            using var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory));
+            Assert.Single(emitter.ReceivedMessages);
+            Assert.Equal(GetHashedFileExtension("11.0.100-rc.1.26425.128"), emitter.ReceivedMessages[0].SdkVersion);
         }
 
         private string GetHashedFileExtension(string fileExtension)

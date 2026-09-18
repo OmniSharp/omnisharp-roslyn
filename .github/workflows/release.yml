@@ -1,0 +1,496 @@
+name: Release
+
+on:
+  pull_request:
+    branches:
+      - master
+    paths:
+      - .config/dotnet-tools.json
+      - .github/release-assets.json
+      - .github/workflows/release.yml
+      - build.cake
+      - build.json
+      - global.json
+      - scripts/archiving.cake
+      - scripts/assemble-release.ps1
+      - scripts/common.cake
+      - scripts/export-gitversion.ps1
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+    inputs:
+      release-type:
+        description: Create a stable release or only build and validate the packages
+        required: true
+        default: dry-run
+        type: choice
+        options:
+          - dry-run
+          - stable
+      version:
+        description: Stable version without the v prefix, for example 1.40.0
+        required: false
+        type: string
+
+concurrency:
+  group: ${{ github.event_name == 'pull_request' && format('release-pr-{0}', github.event.pull_request.number) || 'release-publisher' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+env:
+  Artifacts: ${{ github.workspace }}/artifacts/
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: "true"
+  CLR_OPENSSL_VERSION_OVERRIDE: "1.1"
+
+defaults:
+  run:
+    shell: pwsh
+
+jobs:
+  version:
+    name: Resolve release version
+    runs-on: ubuntu-22.04
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
+      target-sha: ${{ steps.version.outputs.target-sha }}
+      publish: ${{ steps.version.outputs.publish }}
+      prerelease: ${{ steps.version.outputs.prerelease }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Use .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restore .NET tools
+        run: dotnet tool restore
+
+      - name: Resolve version
+        id: version
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          RELEASE_TYPE: ${{ inputs.release-type || 'dry-run' }}
+          REQUESTED_VERSION: ${{ inputs.version }}
+        run: |
+          $targetSha = (git rev-parse HEAD).Trim()
+          if ($env:EVENT_NAME -eq "push") {
+            git checkout -B master $targetSha
+          }
+
+          $versionJson = & dotnet tool run dotnet-gitversion /output json
+          if ($LASTEXITCODE -ne 0) {
+            throw "GitVersion failed with exit code $LASTEXITCODE."
+          }
+          $versionData = $versionJson | ConvertFrom-Json
+          $computedVersion = $versionData.SemVer
+
+          $publish = $false
+          $prerelease = $false
+          $tag = ""
+          $version = $computedVersion
+
+          if ($env:EVENT_NAME -eq "push") {
+            if ($computedVersion -notmatch '^\d+\.\d+\.\d+-beta\.\d+$') {
+              throw "Expected a beta version for master, but GitVersion produced '$computedVersion'."
+            }
+
+            $publish = $true
+            $prerelease = $true
+            $tag = "v$computedVersion"
+          }
+          elseif ($env:EVENT_NAME -eq "workflow_dispatch" -and $env:RELEASE_TYPE -eq "stable") {
+            $version = $env:REQUESTED_VERSION.Trim().TrimStart("v")
+            if ($version -notmatch '^\d+\.\d+\.\d+$') {
+              throw "Stable releases require a version in the form X.Y.Z."
+            }
+
+            git fetch origin master
+            git merge-base --is-ancestor $targetSha origin/master
+            if ($LASTEXITCODE -ne 0) {
+              throw "Stable releases must target a commit on master."
+            }
+
+            $publish = $true
+            $tag = "v$version"
+
+            $versionParts = $version.Split(".")
+            $versionData.Major = [int]$versionParts[0]
+            $versionData.Minor = [int]$versionParts[1]
+            $versionData.Patch = [int]$versionParts[2]
+            $versionData.PreReleaseTag = ""
+            $versionData.PreReleaseTagWithDash = ""
+            $versionData.PreReleaseLabel = ""
+            $versionData.PreReleaseNumber = $null
+            $versionData.MajorMinorPatch = $version
+            $versionData.SemVer = $version
+            $versionData.LegacySemVer = $version
+            $versionData.LegacySemVerPadded = $version
+            $versionData.AssemblySemVer = "$($versionParts[0]).$($versionParts[1]).0.0"
+            $versionData.FullSemVer = $version
+            $versionData.InformationalVersion = if ([string]::IsNullOrWhiteSpace($versionData.FullBuildMetaData)) {
+              $version
+            } else {
+              "$version+$($versionData.FullBuildMetaData)"
+            }
+            $versionData.NuGetVersion = $version
+          }
+
+          $versionDirectory = Join-Path $env:RUNNER_TEMP "release-version"
+          New-Item $versionDirectory -ItemType Directory -Force | Out-Null
+          $versionData |
+            ConvertTo-Json -Depth 10 |
+            Set-Content (Join-Path $versionDirectory "gitversion.json") -Encoding utf8
+
+          "version=$version" >> $env:GITHUB_OUTPUT
+          "tag=$tag" >> $env:GITHUB_OUTPUT
+          "target-sha=$targetSha" >> $env:GITHUB_OUTPUT
+          "publish=$($publish.ToString().ToLowerInvariant())" >> $env:GITHUB_OUTPUT
+          "prerelease=$($prerelease.ToString().ToLowerInvariant())" >> $env:GITHUB_OUTPUT
+
+      - name: Upload release version
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-version
+          path: ${{ runner.temp }}/release-version/gitversion.json
+          if-no-files-found: error
+          retention-days: 1
+
+  tag:
+    name: Create release tag
+    needs:
+      - version
+      - assemble
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        if: needs.version.outputs.publish == 'true'
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ needs.version.outputs.target-sha }}
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Create or verify tag
+        if: needs.version.outputs.publish == 'true'
+        env:
+          RELEASE_TAG: ${{ needs.version.outputs.tag }}
+          TARGET_SHA: ${{ needs.version.outputs.target-sha }}
+        run: |
+          $existingTag = @(git ls-remote --tags origin "refs/tags/$env:RELEASE_TAG")
+          if ($LASTEXITCODE -ne 0) {
+            throw "Failed to query tag '$env:RELEASE_TAG'."
+          }
+
+          if ($existingTag.Count -ne 0) {
+            git fetch --force origin "refs/tags/$($env:RELEASE_TAG):refs/tags/$($env:RELEASE_TAG)"
+            $tagSha = (git rev-list -n 1 $env:RELEASE_TAG).Trim()
+            if ($tagSha -ne $env:TARGET_SHA) {
+              throw "Tag '$env:RELEASE_TAG' points to '$tagSha', not '$env:TARGET_SHA'."
+            }
+
+            Write-Host "Tag '$env:RELEASE_TAG' already points to the requested commit."
+            exit 0
+          }
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag --annotate $env:RELEASE_TAG --message $env:RELEASE_TAG $env:TARGET_SHA
+          git push origin "refs/tags/$($env:RELEASE_TAG)"
+
+  build:
+    name: Build release packages (${{ matrix.name }})
+    needs: version
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Linux
+            os: ubuntu-22.04
+            artifact: linux
+          - name: Windows
+            os: windows-latest
+            artifact: windows
+          - name: macOS
+            os: macos-15-intel
+            artifact: macos
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ needs.version.outputs.target-sha }}
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Use .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restore .NET tools
+        run: dotnet tool restore
+
+      - name: Download release version
+        uses: actions/download-artifact@v5
+        with:
+          name: release-version
+          path: release-version
+
+      - name: Export GitVersion variables
+        run: |
+          ./scripts/export-gitversion.ps1 `
+            -ExpectedVersion '${{ needs.version.outputs.version }}' `
+            -VersionFile release-version/gitversion.json `
+            -EnvironmentFile $env:GITHUB_ENV
+
+      - name: Build and package
+        run: dotnet cake --configuration=Release --verbosity=Verbose --target=CI --publish-all --archive
+
+      - name: Validate package version
+        env:
+          EXPECTED_VERSION: ${{ needs.version.outputs.version }}
+        run: |
+          $versionFile = Join-Path $env:Artifacts "deployment/versioninfo.txt"
+          if (-not (Test-Path $versionFile)) {
+            throw "The build did not produce '$versionFile'."
+          }
+
+          $actualVersion = (Get-Content $versionFile -Raw).Trim()
+          if ($actualVersion -ne $env:EXPECTED_VERSION) {
+            throw "Expected package version '$env:EXPECTED_VERSION', but the build produced '$actualVersion'."
+          }
+
+          $packages = @(Get-ChildItem (Join-Path $env:Artifacts "package") -File)
+          if ($packages.Count -eq 0) {
+            throw "The build did not produce any release packages."
+          }
+
+      - name: Upload release packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-packages-${{ matrix.artifact }}
+          path: ${{ env.Artifacts }}/package/
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Upload NuGet packages
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuget-packages
+          path: ${{ env.Artifacts }}/nuget/
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload logs
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-logs-${{ matrix.artifact }}
+          path: ${{ env.Artifacts }}/logs/
+          if-no-files-found: warn
+          retention-days: 7
+
+  assemble:
+    name: Assemble release
+    needs:
+      - version
+      - build
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Download release packages
+        uses: actions/download-artifact@v5
+        with:
+          pattern: release-packages-*
+          path: release-input
+
+      - name: Validate release assets
+        run: |
+          ./scripts/assemble-release.ps1 `
+            -ArtifactRoot release-input `
+            -ManifestPath .github/release-assets.json `
+            -OutputDirectory release-output
+
+      - name: Upload release candidate
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-candidate
+          path: release-output/
+          if-no-files-found: error
+          retention-days: 7
+
+  publish:
+    name: Publish GitHub release
+    if: needs.version.outputs.publish == 'true'
+    needs:
+      - version
+      - assemble
+      - tag
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+    environment:
+      name: ${{ needs.version.outputs.prerelease == 'true' && 'beta-release' || 'production-release' }}
+      url: ${{ steps.publish.outputs.url }}
+    steps:
+      - name: Download release candidate
+        uses: actions/download-artifact@v5
+        with:
+          name: release-candidate
+          path: release-output
+
+      - name: Create and publish release
+        id: publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ needs.version.outputs.tag }}
+          PRERELEASE: ${{ needs.version.outputs.prerelease }}
+        run: |
+          gh release view $env:RELEASE_TAG --repo $env:GITHUB_REPOSITORY *> $null
+          if ($LASTEXITCODE -ne 0) {
+            $createArguments = @(
+              "release", "create", $env:RELEASE_TAG,
+              "--repo", $env:GITHUB_REPOSITORY,
+              "--verify-tag",
+              "--draft",
+              "--title", $env:RELEASE_TAG,
+              "--generate-notes"
+            )
+            if ($env:PRERELEASE -eq "true") {
+              $createArguments += "--prerelease"
+            }
+
+            & gh @createArguments
+            if ($LASTEXITCODE -ne 0) {
+              throw "Failed to create release '$env:RELEASE_TAG'."
+            }
+          }
+
+          $assets = @(Get-ChildItem release-output -File | ForEach-Object FullName)
+          & gh release upload $env:RELEASE_TAG @assets --clobber --repo $env:GITHUB_REPOSITORY
+          if ($LASTEXITCODE -ne 0) {
+            throw "Failed to upload assets for '$env:RELEASE_TAG'."
+          }
+
+          $editArguments = @(
+            "release", "edit", $env:RELEASE_TAG,
+            "--repo", $env:GITHUB_REPOSITORY,
+            "--title", $env:RELEASE_TAG,
+            "--draft=false",
+            "--prerelease=$env:PRERELEASE"
+          )
+          if ($env:PRERELEASE -ne "true") {
+            $editArguments += "--latest"
+          }
+
+          & gh @editArguments
+          if ($LASTEXITCODE -ne 0) {
+            throw "Failed to publish release '$env:RELEASE_TAG'."
+          }
+
+          $url = (gh release view $env:RELEASE_TAG --repo $env:GITHUB_REPOSITORY --json url --jq .url).Trim()
+          "url=$url" >> $env:GITHUB_OUTPUT
+
+      - name: Update latest published version
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_VERSION: ${{ needs.version.outputs.version }}
+        run: |
+          $fileJson = gh api "repos/$env:GITHUB_REPOSITORY/contents/latestVersion.txt?ref=version"
+          if ($LASTEXITCODE -ne 0) {
+            throw "Failed to read latestVersion.txt from the version branch."
+          }
+
+          $file = $fileJson | ConvertFrom-Json
+          $currentContent = [Text.Encoding]::UTF8.GetString(
+            [Convert]::FromBase64String(($file.content -replace '\s', ''))
+          )
+          if ($currentContent -eq $env:RELEASE_VERSION) {
+            Write-Host "The version branch already contains '$env:RELEASE_VERSION'."
+            exit 0
+          }
+
+          $encodedVersion = [Convert]::ToBase64String(
+            [Text.Encoding]::UTF8.GetBytes($env:RELEASE_VERSION)
+          )
+          $request = @{
+            message = "Update latest version to $($env:RELEASE_VERSION)"
+            content = $encodedVersion
+            branch = "version"
+            sha = $file.sha
+          } | ConvertTo-Json
+
+          $request | gh api `
+            --method PUT `
+            "repos/$env:GITHUB_REPOSITORY/contents/latestVersion.txt" `
+            --input -
+          if ($LASTEXITCODE -ne 0) {
+            throw "Failed to update latestVersion.txt on the version branch."
+          }
+
+  cleanup:
+    name: Clean up intermediate artifacts
+    if: always()
+    needs:
+      - version
+      - assemble
+      - publish
+    runs-on: ubuntu-22.04
+    permissions:
+      actions: write
+      contents: read
+    steps:
+      - name: Delete intermediate artifacts
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ASSEMBLE_RESULT: ${{ needs.assemble.result }}
+          PUBLISH_RESULT: ${{ needs.publish.result }}
+        run: |
+          $artifactNames = @()
+          if ($env:ASSEMBLE_RESULT -eq "success") {
+            $artifactNames += @(
+              "release-version",
+              "release-packages-linux",
+              "release-packages-windows",
+              "release-packages-macos"
+            )
+          }
+          if ($env:PUBLISH_RESULT -eq "success") {
+            $artifactNames += "release-candidate"
+          }
+
+          if ($artifactNames.Count -eq 0) {
+            Write-Host "No intermediate artifacts are eligible for cleanup."
+            exit 0
+          }
+
+          $responseJson = gh api "repos/$env:GITHUB_REPOSITORY/actions/runs/$env:GITHUB_RUN_ID/artifacts?per_page=100"
+          if ($LASTEXITCODE -ne 0) {
+            throw "Failed to list workflow artifacts."
+          }
+          $response = $responseJson | ConvertFrom-Json
+
+          foreach ($artifact in $response.artifacts | Where-Object name -In $artifactNames) {
+            Write-Host "Deleting intermediate artifact '$($artifact.name)'."
+            gh api --method DELETE "repos/$env:GITHUB_REPOSITORY/actions/artifacts/$($artifact.id)"
+            if ($LASTEXITCODE -ne 0) {
+              throw "Failed to delete artifact '$($artifact.name)'."
+            }
+          }

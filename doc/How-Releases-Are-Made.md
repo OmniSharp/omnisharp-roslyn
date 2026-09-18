@@ -1,41 +1,70 @@
 # How O# Releases Are Made
 
-The OmniSharp [release pipeline](https://dev.azure.com/omnisharp/Builds/_build?definitionId=2) runs from the OmniSharp Azure DevOps instance. It is defined in [azure-pipelines.yml](/azure-pipelines.yml).
+OmniSharp releases are built and published by the
+[Release workflow](/.github/workflows/release.yml). The workflow builds the
+Windows, Linux, and macOS packages from one commit, validates the complete
+release asset set, and publishes the GitHub Release only after every platform
+has succeeded.
+
+The `production-release` GitHub environment should require maintainer approval.
+The `beta-release` environment may remain unprotected so merges can publish
+rolling beta releases automatically.
 
 ## Rolling Beta Builds
 
-Merges into the master branch generate an empty draft GitHub release with a beta version tag. The tag created for the release then causes a build that uploads the packages.
+Every merge into `master` calculates the next GitVersion beta version, creates
+release metadata once, builds all release packages, creates an annotated
+`vX.Y.Z-beta.N` tag after package validation, and publishes a GitHub prerelease.
+Release runs are serialized, so a newer merge cannot publish at the same time
+as another release.
 
 ```mermaid
 sequenceDiagram
   autonumber
-  Maintainer ->> GitHub: Merges PR into the `master` branch
-  GitHub --) OmniSharp ADO: Merge to `master` triggers pipeline
-  activate OmniSharp ADO
-  OmniSharp ADO ->> GitHub: Pulls source for omnisharp-roslyn
-  note over OmniSharp ADO: Calculates a build version
-  OmniSharp ADO ->> GitHub: Creates a draft release and `v#35;.#35;.#35;-beta.#35;` tag
-  deactivate OmniSharp ADO
-  GitHub --) OmniSharp ADO: `v*` tag creation triggers pipeline
-  activate OmniSharp ADO
-  OmniSharp ADO ->> GitHub: Pulls source for omnisharp-roslyn
-  note over OmniSharp ADO: Builds packages for various platforms
-  OmniSharp ADO ->> GitHub: Adds packages to release and unmark as draft
-  deactivate OmniSharp ADO
+  Maintainer ->> GitHub: Merges a pull request into `master`
+  GitHub ->> GitHub Actions: Starts the Release workflow
+  note over GitHub Actions: Calculates the beta version and metadata
+  par Build release packages
+    GitHub Actions ->> GitHub Actions: Build Windows packages
+    GitHub Actions ->> GitHub Actions: Build Linux packages
+    GitHub Actions ->> GitHub Actions: Build macOS packages
+  end
+  note over GitHub Actions: Validates the asset manifest and SHA-256 checksums
+  GitHub Actions ->> GitHub: Creates the version tag
+  GitHub Actions ->> GitHub: Publishes the prerelease and assets
 ```
+
+If a run fails after creating its tag, rerun the failed workflow. The workflow
+will reuse the tag only when it still points to the expected commit.
 
 ## Official Builds
 
-A maintainer creates an empty draft GitHub release with the appropriate version tag. The tag created for the release then causes a build that uploads the packages.
+Official releases are started from the GitHub Actions page:
 
-```mermaid
-sequenceDiagram
-  autonumber
-  Maintainer ->> GitHub: Creates draft release with a`v#35;.#35;.#35;` tag
-  GitHub --) OmniSharp ADO: `v*` tag creation triggers pipeline
-  activate OmniSharp ADO
-  OmniSharp ADO ->> GitHub: Pulls source for omnisharp-roslyn
-  note over OmniSharp ADO: Builds packages for various platforms
-  OmniSharp ADO ->> GitHub: Adds packages to release and unmark as draft
-  deactivate OmniSharp ADO
-```
+1. Select the **Release** workflow and choose **Run workflow** on `master`.
+2. Set **release-type** to `stable`.
+3. Enter the version without a `v` prefix, for example `1.40.0`.
+4. Approve the `production-release` deployment when prompted.
+
+The workflow verifies that the selected commit belongs to `master`, creates the
+version tag, builds and validates every package, and then publishes the release
+as the latest stable version.
+
+Use the `dry-run` release type to build and validate all packages without
+creating a tag or GitHub Release. Pull requests that change release
+infrastructure automatically run this mode.
+
+## Release Assets
+
+Expected release filenames are declared in
+[`.github/release-assets.json`](/.github/release-assets.json). The assembly job
+rejects missing, unexpected, or duplicate files and adds a `SHA256SUMS` file to
+every release. GitVersion metadata is calculated once before the platform jobs
+and exported before invoking Cake, so every platform embeds the same version as
+the release tag.
+
+After publishing all assets, the workflow commits the published version without
+the `v` prefix to `latestVersion.txt` on the `version` branch.
+
+NuGet packages are retained as a GitHub Actions artifact. They are not currently
+published to nuget.org or another package feed.

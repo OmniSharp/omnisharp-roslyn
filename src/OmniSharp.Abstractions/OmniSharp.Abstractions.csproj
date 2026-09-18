@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net10.0;net472;netstandard2.0</TargetFrameworks>
+    <TargetFramework>net10.0</TargetFramework>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <RootNamespace>OmniSharp</RootNamespace>
     <IsPackable>true</IsPackable>
@@ -12,7 +12,6 @@
     <PackageReference Include="Microsoft.Extensions.Configuration" />
     <PackageReference Include="Microsoft.Extensions.Logging" />
     <PackageReference Include="Newtonsoft.Json" />
-    <PackageReference Include="System.Collections.Immutable" />
     <PackageReference Include="System.Composition" />
     <PackageReference Include="SQLitePCLRaw.bundle_green" PrivateAssets="all" />
   </ItemGroup>
