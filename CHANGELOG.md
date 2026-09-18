@@ -1,6 +1,10 @@
 # Changelog
 All changes to the project will be documented in this file.
 
+## [2.0.0] - 2026-09-17
+* Remove .NET Framework and Mono code (PR: [#2721](https://github.com/OmniSharp/omnisharp-roslyn/pull/2721))
+* Support .slnx solution files (PR: [#2721](https://github.com/OmniSharp/omnisharp-roslyn/pull/2721))
+
 ## [1.40.0] - 2026-09-17
 * Update Roslyn to 5.6.0-2.26173.1 (PR: [#2702](https://github.com/OmniSharp/omnisharp-roslyn/pull/2702))
 * Use Roslyn BuildHost for project loading and remove direct Microsoft.Build dependencies (PR: [#2714](https://github.com/OmniSharp/omnisharp-roslyn/pull/2714))
