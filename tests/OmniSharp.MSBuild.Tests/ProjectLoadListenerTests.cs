@@ -155,7 +155,7 @@ namespace OmniSharp.MSBuild.Tests
             using var testProject = await TestAssets.Instance.GetTestProjectAsync("Net80Project");
             using var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory));
             Assert.Single(emitter.ReceivedMessages);
-            Assert.Equal(GetHashedFileExtension("8.0.415"), emitter.ReceivedMessages[0].SdkVersion);
+            Assert.Equal(GetHashedFileExtension("8.0.425"), emitter.ReceivedMessages[0].SdkVersion);
         }
 
         [ConditionalFact(typeof(DotnetRuntimeOnly))]
@@ -167,7 +167,7 @@ namespace OmniSharp.MSBuild.Tests
             using var testProject = await TestAssets.Instance.GetTestProjectAsync("Net90Project");
             using var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory));
             Assert.Single(emitter.ReceivedMessages);
-            Assert.Equal(GetHashedFileExtension("9.0.306"), emitter.ReceivedMessages[0].SdkVersion);
+            Assert.Equal(GetHashedFileExtension("9.0.318"), emitter.ReceivedMessages[0].SdkVersion);
         }
 
         [ConditionalFact(typeof(DotnetRuntimeOnly))]
@@ -179,7 +179,7 @@ namespace OmniSharp.MSBuild.Tests
             using var testProject = await TestAssets.Instance.GetTestProjectAsync("Net100Project");
             using var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory));
             Assert.Single(emitter.ReceivedMessages);
-            Assert.Equal(GetHashedFileExtension("10.0.400"), emitter.ReceivedMessages[0].SdkVersion);
+            Assert.Equal(GetHashedFileExtension("10.0.401"), emitter.ReceivedMessages[0].SdkVersion);
         }
 
         [ConditionalFact(typeof(DotnetRuntimeOnly))]

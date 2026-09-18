@@ -1,8 +1,8 @@
 name: "Tests"
 env:
-  DotNetVersion: "10.0.400"
-  DotNetVersion2: "9.0.306"
-  DotNetVersion3: "8.0.415"
+  DotNetVersion: "10.0.401"
+  DotNetVersion2: "9.0.318"
+  DotNetVersion3: "8.0.425"
   DotNetVersion4: "11.0.100-rc.1.26425.128"
   Artifacts: ${{ github.workspace }}/artifacts/
   Coverage: ${{ github.workspace }}/coverage/
