@@ -81,7 +81,7 @@ namespace OmniSharp.MSBuild
             _dotNetInfo = dotNetInfo;
         }
 
-        public void Initalize(IConfiguration configuration)
+        public void Initialize(IConfiguration configuration)
         {
             if (Initialized) return;
 
