@@ -25,9 +25,9 @@ namespace TestUtility
 
         protected AbstractTestFixture(ITestOutputHelper output, SharedOmniSharpHostFixture sharedOmniSharpHostFixture)
         {
-            TestOutput = output;
+            TestOutput = sharedOmniSharpHostFixture.SetTestOutput(output);
             LoggerFactory = new LoggerFactory()
-                .AddXunit(output);
+                .AddXunit(TestOutput);
 
             if (sharedOmniSharpHostFixture.OmniSharpTestHost == null)
             {
