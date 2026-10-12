@@ -15,13 +15,100 @@ using Xunit;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
-    public abstract class AbstractGoToDefinitionFacts<TGotoDefinitionService, TGotoDefinitionRequest, TGotoDefinitionResponse> : AbstractSingleRequestHandlerTestFixture<TGotoDefinitionService>
+    public abstract class AbstractGoToDefinitionTestBase<TGotoDefinitionService, TGotoDefinitionRequest, TGotoDefinitionResponse> : AbstractSingleRequestHandlerTestFixture<TGotoDefinitionService>
         where TGotoDefinitionService : IRequestHandler<TGotoDefinitionRequest, TGotoDefinitionResponse>
     {
-        protected AbstractGoToDefinitionFacts(ITestOutputHelper testOutput, SharedOmniSharpHostFixture sharedOmniSharpHostFixture) : base(testOutput, sharedOmniSharpHostFixture)
+        protected AbstractGoToDefinitionTestBase(ITestOutputHelper testOutput, SharedOmniSharpHostFixture sharedOmniSharpHostFixture)
+            : base(testOutput, sharedOmniSharpHostFixture)
         {
         }
 
+        protected async Task TestGoToSourceAsync(params TestFile[] testFiles)
+        {
+            var response = await GetResponseAsync(testFiles, wantMetadata: false);
+
+            var targets =
+                from tf in testFiles
+                from span in tf.Content.GetSpans("def")
+                select (tf, span);
+
+            var info = GetInfo(response);
+
+            if (targets.Any())
+            {
+                foreach (var (file, definitionSpan) in targets)
+                {
+                    var definitionRange = file.Content.GetRangeFromSpan(definitionSpan);
+
+                    Assert.Contains(info,
+                        def => file.FileName == def.FileName
+                               && definitionRange.Start.Line == def.Line
+                               && definitionRange.Start.Offset == def.Column);
+                }
+            }
+            else
+            {
+                Assert.Empty(info);
+            }
+        }
+
+        protected async Task TestDecompilationAsync(TestFile testFile, string expectedAssemblyName, string expectedTypeName)
+        {
+            using var host = CreateOmniSharpHost(new[] { testFile }, new Dictionary<string, string>
+            {
+                ["RoslynExtensionsOptions:EnableDecompilationSupport"] = "true"
+            });
+
+            var response = await GetResponseAsync(new[] { testFile }, wantMetadata: true);
+            var metadataSource = GetMetadataSource(response);
+
+            Assert.NotNull(metadataSource);
+            Assert.NotEmpty(GetInfo(response));
+            Assert.Equal(expectedAssemblyName, metadataSource.AssemblyName);
+            Assert.Equal(expectedTypeName, metadataSource.TypeName);
+        }
+
+        protected async Task TestGoToMetadataAsync(TestFile testFile, string expectedAssemblyName, string expectedTypeName)
+        {
+            var response = await GetResponseAsync(new[] { testFile }, wantMetadata: true);
+            var metadataSource = GetMetadataSource(response);
+
+            var responseInfo = GetInfo(response);
+            Assert.NotNull(metadataSource);
+            Assert.NotEmpty(responseInfo);
+            Assert.Equal(expectedAssemblyName, metadataSource.AssemblyName);
+            Assert.Equal(expectedTypeName, metadataSource.TypeName);
+
+            // We probably shouldn't hard code metadata locations (they could change randomly)
+            Assert.NotEqual(0, responseInfo.Single().Line);
+            Assert.NotEqual(0, responseInfo.Single().Column);
+        }
+
+        protected async Task<TGotoDefinitionResponse> GetResponseAsync(TestFile[] testFiles, bool wantMetadata)
+        {
+            SharedOmniSharpTestHost.AddFilesToWorkspace(testFiles);
+            var source = testFiles.Single(tf => tf.Content.HasPosition);
+            var point = source.Content.GetPointFromPosition();
+
+            var request = CreateRequest(source.FileName, point.Line, point.Offset, timeout: 60000, wantMetadata: wantMetadata);
+
+            var requestHandler = GetRequestHandler(SharedOmniSharpTestHost);
+            return await requestHandler.Handle(request);
+        }
+
+        protected abstract TGotoDefinitionRequest CreateRequest(string fileName, int line, int column, bool wantMetadata, int timeout = 60000);
+        protected abstract MetadataSource GetMetadataSource(TGotoDefinitionResponse response);
+        protected abstract IEnumerable<(int Line, int Column, string FileName, SourceGeneratedFileInfo SourceGeneratorInfo)> GetInfo(TGotoDefinitionResponse response);
+
+    }
+
+    public abstract class AbstractGoToDefinitionFacts<TGotoDefinitionService, TGotoDefinitionRequest, TGotoDefinitionResponse> : AbstractGoToDefinitionTestBase<TGotoDefinitionService, TGotoDefinitionRequest, TGotoDefinitionResponse>
+        where TGotoDefinitionService : IRequestHandler<TGotoDefinitionRequest, TGotoDefinitionResponse>
+    {
+        protected AbstractGoToDefinitionFacts(ITestOutputHelper testOutput, SharedOmniSharpHostFixture sharedOmniSharpHostFixture)
+            : base(testOutput, sharedOmniSharpHostFixture)
+        {
+        }
 
         [Theory]
         [InlineData("foo.cs")]
@@ -209,6 +296,79 @@ class Bar {
 }");
 
             await TestGoToSourceAsync(testFile1, testFile2);
+        }
+
+        [Fact]
+        public async Task ReturnsNoResultsButDoesNotThrowForNamespaces()
+        {
+            var testFile = new TestFile("foo.cs", "namespace F$$oo {}");
+            var response = await GetResponseAsync(new[] { testFile }, wantMetadata: false);
+            Assert.Empty(GetInfo(response));
+        }
+
+        [Fact]
+        public async Task ReturnsResultsForSourceGenerators()
+        {
+            const string Source = @"
+public class {|generatedClassName:Generated|}
+{
+    public int {|propertyName:Property|} { get; set; }
+}
+";
+            const string FileName = "real.cs";
+            TestFile generatedTestFile = new("GeneratedFile.cs", Source);
+            var testFile = new TestFile(FileName, @"
+class C
+{
+    public void M(Generated g)
+    {
+        _ = g.P$$roperty;
+    }
+}
+");
+
+            TestHelpers.AddProjectToWorkspace(SharedOmniSharpTestHost.Workspace,
+                "project.csproj",
+                new[] { "net8.0" },
+                new[] { testFile },
+                analyzerRefs: ImmutableArray.Create<AnalyzerReference>(new TestGeneratorReference(
+                    context => context.AddSource("GeneratedFile", generatedTestFile.Content.Code))));
+
+            var point = testFile.Content.GetPointFromPosition();
+
+            var gotoDefRequest = CreateRequest(FileName, point.Line, point.Offset, wantMetadata: true);
+            var gotoDefHandler = GetRequestHandler(SharedOmniSharpTestHost);
+            var response = await gotoDefHandler.Handle(gotoDefRequest);
+            var info = GetInfo(response).Single();
+
+            Assert.NotNull(info.SourceGeneratorInfo);
+
+            var expectedSpan = generatedTestFile.Content.GetSpans("propertyName").Single();
+            var expectedRange = generatedTestFile.Content.GetRangeFromSpan(expectedSpan);
+
+            Assert.Equal(expectedRange.Start.Line, info.Line);
+            Assert.Equal(expectedRange.Start.Offset, info.Column);
+
+            var sourceGeneratedFileHandler = SharedOmniSharpTestHost.GetRequestHandler<SourceGeneratedFileService>(OmniSharpEndpoints.SourceGeneratedFile);
+            var sourceGeneratedRequest = new SourceGeneratedFileRequest
+            {
+                DocumentGuid = info.SourceGeneratorInfo.DocumentGuid,
+                ProjectGuid = info.SourceGeneratorInfo.ProjectGuid
+            };
+
+            var sourceGeneratedFileResponse = await sourceGeneratedFileHandler.Handle(sourceGeneratedRequest);
+            Assert.NotNull(sourceGeneratedFileResponse);
+            Assert.Equal(generatedTestFile.Content.Code, sourceGeneratedFileResponse.Source);
+            Assert.Equal(@"OmniSharp.Roslyn.CSharp.Tests\OmniSharp.Roslyn.CSharp.Tests.TestSourceGenerator\GeneratedFile.cs", sourceGeneratedFileResponse.SourceName.Replace("/", @"\"));
+        }
+    }
+
+    public abstract class AbstractGoToDefinitionMetadataFacts<TGotoDefinitionService, TGotoDefinitionRequest, TGotoDefinitionResponse> : AbstractGoToDefinitionTestBase<TGotoDefinitionService, TGotoDefinitionRequest, TGotoDefinitionResponse>
+        where TGotoDefinitionService : IRequestHandler<TGotoDefinitionRequest, TGotoDefinitionResponse>
+    {
+        protected AbstractGoToDefinitionMetadataFacts(ITestOutputHelper testOutput, SharedOmniSharpHostFixture sharedOmniSharpHostFixture)
+            : base(testOutput, sharedOmniSharpHostFixture)
+        {
         }
 
         [Theory]
@@ -500,146 +660,5 @@ class Bar {
             Assert.NotEqual(0, metadataNavigationInfo.Single().Line);
             Assert.NotEqual(0, metadataNavigationInfo.Single().Column);
         }
-
-        [Fact]
-        public async Task ReturnsNoResultsButDoesNotThrowForNamespaces()
-        {
-            var testFile = new TestFile("foo.cs", "namespace F$$oo {}");
-            var response = await GetResponseAsync(new[] { testFile }, wantMetadata: false);
-            Assert.Empty(GetInfo(response));
-        }
-
-        [Fact]
-        public async Task ReturnsResultsForSourceGenerators()
-        {
-            const string Source = @"
-public class {|generatedClassName:Generated|}
-{
-    public int {|propertyName:Property|} { get; set; }
-}
-";
-            const string FileName = "real.cs";
-            TestFile generatedTestFile = new("GeneratedFile.cs", Source);
-            var testFile = new TestFile(FileName, @"
-class C
-{
-    public void M(Generated g)
-    {
-        _ = g.P$$roperty;
-    }
-}
-");
-
-            TestHelpers.AddProjectToWorkspace(SharedOmniSharpTestHost.Workspace,
-                "project.csproj",
-                new[] { "net8.0" },
-                new[] { testFile },
-                analyzerRefs: ImmutableArray.Create<AnalyzerReference>(new TestGeneratorReference(
-                    context => context.AddSource("GeneratedFile", generatedTestFile.Content.Code))));
-
-            var point = testFile.Content.GetPointFromPosition();
-
-            var gotoDefRequest = CreateRequest(FileName, point.Line, point.Offset, wantMetadata: true);
-            var gotoDefHandler = GetRequestHandler(SharedOmniSharpTestHost);
-            var response = await gotoDefHandler.Handle(gotoDefRequest);
-            var info = GetInfo(response).Single();
-
-            Assert.NotNull(info.SourceGeneratorInfo);
-
-            var expectedSpan = generatedTestFile.Content.GetSpans("propertyName").Single();
-            var expectedRange = generatedTestFile.Content.GetRangeFromSpan(expectedSpan);
-
-            Assert.Equal(expectedRange.Start.Line, info.Line);
-            Assert.Equal(expectedRange.Start.Offset, info.Column);
-
-            var sourceGeneratedFileHandler = SharedOmniSharpTestHost.GetRequestHandler<SourceGeneratedFileService>(OmniSharpEndpoints.SourceGeneratedFile);
-            var sourceGeneratedRequest = new SourceGeneratedFileRequest
-            {
-                DocumentGuid = info.SourceGeneratorInfo.DocumentGuid,
-                ProjectGuid = info.SourceGeneratorInfo.ProjectGuid
-            };
-
-            var sourceGeneratedFileResponse = await sourceGeneratedFileHandler.Handle(sourceGeneratedRequest);
-            Assert.NotNull(sourceGeneratedFileResponse);
-            Assert.Equal(generatedTestFile.Content.Code, sourceGeneratedFileResponse.Source);
-            Assert.Equal(@"OmniSharp.Roslyn.CSharp.Tests\OmniSharp.Roslyn.CSharp.Tests.TestSourceGenerator\GeneratedFile.cs", sourceGeneratedFileResponse.SourceName.Replace("/", @"\"));
-        }
-
-        protected async Task TestGoToSourceAsync(params TestFile[] testFiles)
-        {
-            var response = await GetResponseAsync(testFiles, wantMetadata: false);
-
-            var targets =
-                from tf in testFiles
-                from span in tf.Content.GetSpans("def")
-                select (tf, span);
-
-            var info = GetInfo(response);
-
-            if (targets.Any())
-            {
-                foreach (var (file, definitionSpan) in targets)
-                {
-                    var definitionRange = file.Content.GetRangeFromSpan(definitionSpan);
-
-                    Assert.Contains(info,
-                        def => file.FileName == def.FileName
-                               && definitionRange.Start.Line == def.Line
-                               && definitionRange.Start.Offset == def.Column);
-                }
-            }
-            else
-            {
-                Assert.Empty(info);
-            }
-        }
-
-        protected async Task TestDecompilationAsync(TestFile testFile, string expectedAssemblyName, string expectedTypeName)
-        {
-            using var host = CreateOmniSharpHost(new[] { testFile }, new Dictionary<string, string>
-            {
-                ["RoslynExtensionsOptions:EnableDecompilationSupport"] = "true"
-            });
-
-            var response = await GetResponseAsync(new[] { testFile }, wantMetadata: true);
-            var metadataSource = GetMetadataSource(response);
-
-            Assert.NotNull(metadataSource);
-            Assert.NotEmpty(GetInfo(response));
-            Assert.Equal(expectedAssemblyName, metadataSource.AssemblyName);
-            Assert.Equal(expectedTypeName, metadataSource.TypeName);
-        }
-
-        protected async Task TestGoToMetadataAsync(TestFile testFile, string expectedAssemblyName, string expectedTypeName)
-        {
-            var response = await GetResponseAsync(new[] { testFile }, wantMetadata: true);
-            var metadataSource = GetMetadataSource(response);
-
-            var responseInfo = GetInfo(response);
-            Assert.NotNull(metadataSource);
-            Assert.NotEmpty(responseInfo);
-            Assert.Equal(expectedAssemblyName, metadataSource.AssemblyName);
-            Assert.Equal(expectedTypeName, metadataSource.TypeName);
-
-            // We probably shouldn't hard code metadata locations (they could change randomly)
-            Assert.NotEqual(0, responseInfo.Single().Line);
-            Assert.NotEqual(0, responseInfo.Single().Column);
-        }
-
-        protected async Task<TGotoDefinitionResponse> GetResponseAsync(TestFile[] testFiles, bool wantMetadata)
-        {
-            SharedOmniSharpTestHost.AddFilesToWorkspace(testFiles);
-            var source = testFiles.Single(tf => tf.Content.HasPosition);
-            var point = source.Content.GetPointFromPosition();
-
-            var request = CreateRequest(source.FileName, point.Line, point.Offset, timeout: 60000, wantMetadata: wantMetadata);
-
-            var requestHandler = GetRequestHandler(SharedOmniSharpTestHost);
-            return await requestHandler.Handle(request);
-        }
-
-        protected abstract TGotoDefinitionRequest CreateRequest(string fileName, int line, int column, bool wantMetadata, int timeout = 60000);
-        protected abstract MetadataSource GetMetadataSource(TGotoDefinitionResponse response);
-        protected abstract IEnumerable<(int Line, int Column, string FileName, SourceGeneratedFileInfo SourceGeneratorInfo)> GetInfo(TGotoDefinitionResponse response);
     }
 }
