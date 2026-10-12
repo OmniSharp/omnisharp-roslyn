@@ -9,9 +9,9 @@ using Xunit;
 
 namespace OmniSharp.DotNetTest.Tests
 {
-    public class RunTestsInContextTests : AbstractTestFixture
+    public abstract class RunTestsInContextTestBase : AbstractTestFixture
     {
-        public RunTestsInContextTests(ITestOutputHelper testOutput)
+        protected RunTestsInContextTestBase(ITestOutputHelper testOutput)
             : base(testOutput)
         {
         }
@@ -58,6 +58,14 @@ namespace OmniSharp.DotNetTest.Tests
 
                 return response;
             }
+        }
+    }
+
+    public class RunTestsInContextMethodTests : RunTestsInContextTestBase
+    {
+        public RunTestsInContextMethodTests(ITestOutputHelper testOutput)
+            : base(testOutput)
+        {
         }
 
         [Theory]
@@ -123,6 +131,14 @@ namespace OmniSharp.DotNetTest.Tests
             Assert.Equal("passed", response.Results[0].Outcome);
             Assert.Equal("Main.Test.MainTest.Test", response.Results[0].MethodName);
         }
+    }
+
+    public class RunParameterizedTestsInContextTests : RunTestsInContextTestBase
+    {
+        public RunParameterizedTestsInContextTests(ITestOutputHelper testOutput)
+            : base(testOutput)
+        {
+        }
 
         [Theory]
         [InlineData(18, 24, XunitTestProject, 2)]
@@ -149,6 +165,14 @@ namespace OmniSharp.DotNetTest.Tests
 
             Assert.StartsWith("Main.Test.MainTest.DataDrivenTest1", response.Results[0].MethodName);
             Assert.StartsWith("Main.Test.MainTest.DataDrivenTest1", response.Results[1].MethodName);
+        }
+    }
+
+    public class RunTestClassInContextTests : RunTestsInContextTestBase
+    {
+        public RunTestClassInContextTests(ITestOutputHelper testOutput)
+            : base(testOutput)
+        {
         }
 
         [Theory]
@@ -227,6 +251,14 @@ namespace OmniSharp.DotNetTest.Tests
                 targetFrameworkVersion: ".NETCoreApp,Version=v8.0.0");
 
             Assert.Equal(expectedNumTests, response.Results.Length);
+        }
+    }
+
+    public class RunSpecialTestsInContextTests : RunTestsInContextTestBase
+    {
+        public RunSpecialTestsInContextTests(ITestOutputHelper testOutput)
+            : base(testOutput)
+        {
         }
 
         [Fact]

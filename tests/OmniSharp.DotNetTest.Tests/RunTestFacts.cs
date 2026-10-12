@@ -7,9 +7,9 @@ using Xunit;
 
 namespace OmniSharp.DotNetTest.Tests
 {
-    public class RunTestFacts : AbstractTestFixture
+    public abstract class RunTestFactsBase : AbstractTestFixture
     {
-        public RunTestFacts(ITestOutputHelper testOutput)
+        protected RunTestFactsBase(ITestOutputHelper testOutput)
             : base(testOutput)
         {
         }
@@ -55,6 +55,14 @@ namespace OmniSharp.DotNetTest.Tests
 
                 return response;
             }
+        }
+    }
+
+    public class RunXunitTestFacts : RunTestFactsBase
+    {
+        public RunXunitTestFacts(ITestOutputHelper testOutput)
+            : base(testOutput)
+        {
         }
 
         [Fact]
@@ -141,6 +149,14 @@ namespace OmniSharp.DotNetTest.Tests
 
             Assert.Single(response.Results);
             Assert.NotEmpty(response.Results[0].StandardOutput);
+        }
+    }
+
+    public class RunNunitTestFacts : RunTestFactsBase
+    {
+        public RunNunitTestFacts(ITestOutputHelper testOutput)
+            : base(testOutput)
+        {
         }
 
         [Fact]
@@ -232,6 +248,14 @@ namespace OmniSharp.DotNetTest.Tests
                 shouldPass: true);
 
             Assert.Single(response.Results);
+        }
+    }
+
+    public class RunMSTestFacts : RunTestFactsBase
+    {
+        public RunMSTestFacts(ITestOutputHelper testOutput)
+            : base(testOutput)
+        {
         }
 
         [Fact]
