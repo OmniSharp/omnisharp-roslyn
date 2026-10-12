@@ -1,7 +1,6 @@
 using System.Threading.Tasks;
 using TestUtility;
 using Xunit;
-using Xunit.Abstractions;
 using OmniSharp.DotNetTest.Models;
 
 namespace OmniSharp.DotNetTest.Tests

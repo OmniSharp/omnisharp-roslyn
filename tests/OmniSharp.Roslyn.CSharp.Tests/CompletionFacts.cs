@@ -11,7 +11,6 @@ using OmniSharp.Models.v1.Completion;
 using OmniSharp.Roslyn.CSharp.Services.Completion;
 using TestUtility;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {

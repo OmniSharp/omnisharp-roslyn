@@ -6,7 +6,6 @@ using OmniSharp.Mef;
 using OmniSharp.MSBuild.Notification;
 using TestUtility;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace OmniSharp.MSBuild.Tests
 {

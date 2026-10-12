@@ -6,7 +6,6 @@ using OmniSharp.Models.FilesChanged;
 using OmniSharp.Roslyn.CSharp.Services.Files;
 using TestUtility;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {

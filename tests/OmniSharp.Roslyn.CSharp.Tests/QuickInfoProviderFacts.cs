@@ -5,7 +5,6 @@ using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Services;
 using TestUtility;
 using Xunit;
-using Xunit.Abstractions;
 
 #nullable enable
 

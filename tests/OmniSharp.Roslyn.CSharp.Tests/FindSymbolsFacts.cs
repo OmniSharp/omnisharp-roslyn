@@ -6,7 +6,6 @@ using OmniSharp.Roslyn.CSharp.Services.Navigation;
 using Microsoft.CodeAnalysis;
 using TestUtility;
 using Xunit;
-using Xunit.Abstractions;
 using System.Collections.Immutable;
 using Microsoft.CodeAnalysis.Diagnostics;
 using System;

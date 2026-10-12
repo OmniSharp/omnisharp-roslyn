@@ -6,7 +6,6 @@ using OmniSharp.Models;
 using OmniSharp.Models.FindSymbols;
 using TestUtility;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace OmniSharp.Cake.Tests
 {

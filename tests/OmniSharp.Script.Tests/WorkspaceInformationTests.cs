@@ -11,7 +11,6 @@ using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.Roslyn.CSharp.Services.Files;
 using TestUtility;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace OmniSharp.Script.Tests
 {
@@ -95,7 +94,7 @@ namespace OmniSharp.Script.Tests
                 });
 
                 // back off for 2 seconds to let the watcher and workspace process new projects
-                await Task.Delay(2000);
+                await Task.Delay(2000, TestContext.Current.CancellationToken);
 
                 workspaceInfo = await GetWorkspaceInfoAsync(host);
                 var project = Assert.Single(workspaceInfo.Projects);

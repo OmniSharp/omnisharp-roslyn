@@ -18,7 +18,8 @@
 
   <ItemGroup>
     <PackageReference Include="DiffPlex" />
-    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.v3.assert" />
+    <PackageReference Include="xunit.v3.extensibility.core" />
   </ItemGroup>
 
 </Project>

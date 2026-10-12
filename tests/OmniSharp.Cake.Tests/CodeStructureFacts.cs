@@ -10,7 +10,6 @@ using OmniSharp.Models.V2;
 using OmniSharp.Models.V2.CodeStructure;
 using TestUtility;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace OmniSharp.Cake.Tests
 {

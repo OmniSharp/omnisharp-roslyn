@@ -5,7 +5,6 @@ using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
 using TestUtility;
 using Xunit;
-using Xunit.Abstractions;
 using System;
 using System.Threading;
 

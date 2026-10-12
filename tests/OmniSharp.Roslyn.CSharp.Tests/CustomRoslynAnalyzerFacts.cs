@@ -9,7 +9,6 @@ using Microsoft.CodeAnalysis.Diagnostics;
 using OmniSharp.Models.Diagnostics;
 using TestUtility;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {

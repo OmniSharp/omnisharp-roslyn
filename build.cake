@@ -301,10 +301,10 @@ Task("Test")
     {
         PrintBlankLine();
         var instanceFolder = CombinePaths(env.Folders.Bin, configuration, testProject, env.TargetFramework);
-        var targetPath = CombinePaths(instanceFolder, $"{testProject}.dll");
+        var targetPath = $"{testProject}.dll";
 
-        var logFile = CombinePaths(env.Folders.ArtifactsLogs, $"{testProject}-netsdk-result.xml");
-        var arguments = $"test \"{targetPath}\" --logger \"console;verbosity=normal\" --logger \"trx;LogFileName={logFile}\" --blame-hang-timeout 60sec";
+        var logFileName = $"{testProject}-netsdk-result.trx";
+        var arguments = $"test --test-modules \"{targetPath}\" --no-build --results-directory \"{env.Folders.ArtifactsLogs}\" --report-xunit-trx --report-xunit-trx-filename \"{logFileName}\" --hangdump --hangdump-timeout 60s";
 
         Console.WriteLine($"Executing: dotnet {arguments}");
 

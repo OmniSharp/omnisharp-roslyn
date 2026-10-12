@@ -5,7 +5,6 @@ using OmniSharp.Models.Highlight;
 using OmniSharp.Roslyn.CSharp.Services.Highlighting;
 using TestUtility;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {

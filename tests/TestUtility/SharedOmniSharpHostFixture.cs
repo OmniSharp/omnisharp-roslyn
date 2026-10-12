@@ -1,5 +1,5 @@
 ﻿using System;
-using Xunit.Abstractions;
+using Xunit;
 
 namespace TestUtility
 {
@@ -19,13 +19,13 @@ namespace TestUtility
 
         public void Dispose()
         {
-            _testOutput.Output = null;
+            _testOutput.Target = null;
             OmniSharpTestHost?.Dispose();
         }
 
         public ITestOutputHelper SetTestOutput(ITestOutputHelper output)
         {
-            _testOutput.Output = output;
+            _testOutput.Target = output;
             return _testOutput;
         }
 
@@ -33,30 +33,22 @@ namespace TestUtility
 
         private sealed class DelegatingTestOutputHelper : ITestOutputHelper
         {
-            public ITestOutputHelper Output { get; set; }
+            public ITestOutputHelper Target { get; set; }
+
+            public string Output => Target?.Output ?? string.Empty;
+
+            public void Write(string message)
+                => Target?.Write(message);
+
+            public void Write(string format, params object[] args)
+                => Target?.Write(format, args);
 
             // Background host logging can race with xUnit ending the current test.
             public void WriteLine(string message)
-            {
-                try
-                {
-                    Output?.WriteLine(message);
-                }
-                catch (InvalidOperationException exception) when (exception.Message == NoActiveTestMessage)
-                {
-                }
-            }
+                => Target?.WriteLine(message);
 
             public void WriteLine(string format, params object[] args)
-            {
-                try
-                {
-                    Output?.WriteLine(format, args);
-                }
-                catch (InvalidOperationException exception) when (exception.Message == NoActiveTestMessage)
-                {
-                }
-            }
+                => Target?.WriteLine(format, args);
         }
     }
 }

@@ -11,7 +11,6 @@ using OmniSharp.Extensions.LanguageServer.Protocol.Workspace;
 using OmniSharp.Models.V2;
 using TestUtility;
 using Xunit;
-using Xunit.Abstractions;
 using Xunit.Sdk;
 using Range = OmniSharp.Extensions.LanguageServer.Protocol.Models.Range;
 

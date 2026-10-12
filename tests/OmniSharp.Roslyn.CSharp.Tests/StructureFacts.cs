@@ -4,7 +4,6 @@ using Microsoft.CodeAnalysis.CSharp;
 using OmniSharp.Models.MembersTree;
 using TestUtility;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace OmniSharp.Tests
 {

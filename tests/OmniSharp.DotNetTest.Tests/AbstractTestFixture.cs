@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using TestUtility;
-using Xunit.Abstractions;
+using Xunit;
 
 namespace OmniSharp.DotNetTest.Tests
 {

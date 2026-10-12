@@ -8,7 +8,6 @@ using OmniSharp.Models.CodeCheck;
 using OmniSharp.Models.UpdateBuffer;
 using TestUtility;
 using Xunit;
-using Xunit.Abstractions;
 using Xunit.Sdk;
 
 namespace OmniSharp.Cake.Tests

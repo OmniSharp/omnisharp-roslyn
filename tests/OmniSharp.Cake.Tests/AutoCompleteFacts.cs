@@ -9,7 +9,6 @@ using OmniSharp.Models.AutoComplete;
 using OmniSharp.Models.UpdateBuffer;
 using TestUtility;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace OmniSharp.Cake.Tests
 {

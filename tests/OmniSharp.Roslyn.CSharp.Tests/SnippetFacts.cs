@@ -6,7 +6,6 @@ using Microsoft.Extensions.Logging;
 using OmniSharp.Models.AutoComplete;
 using TestUtility;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {

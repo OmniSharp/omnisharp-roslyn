@@ -8,7 +8,6 @@ using OmniSharp.Models.Events;
 using OmniSharp.Roslyn.CSharp.Services.Refactoring;
 using TestUtility;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {

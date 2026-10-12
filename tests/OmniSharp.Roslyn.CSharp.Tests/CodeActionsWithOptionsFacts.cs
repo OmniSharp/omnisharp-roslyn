@@ -5,7 +5,6 @@ using OmniSharp.Models;
 using OmniSharp.Models.V2.CodeActions;
 using TestUtility;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {

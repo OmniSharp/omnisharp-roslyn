@@ -12,7 +12,6 @@ using OmniSharp.Roslyn.CSharp.Services.Navigation;
 using Roslyn.Test.Utilities;
 using TestUtility;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {

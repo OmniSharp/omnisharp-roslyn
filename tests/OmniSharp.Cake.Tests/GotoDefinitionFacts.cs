@@ -4,7 +4,6 @@ using OmniSharp.Cake.Services.RequestHandlers.Navigation;
 using OmniSharp.Models.GotoDefinition;
 using TestUtility;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace OmniSharp.Cake.Tests
 {

@@ -13,7 +13,6 @@ using OmniSharp.Models.V2.CodeActions;
 using Roslyn.Test.Utilities;
 using TestUtility;
 using Xunit;
-using Xunit.Abstractions;
 using Range = OmniSharp.Models.V2.Range;
 
 namespace OmniSharp.Cake.Tests

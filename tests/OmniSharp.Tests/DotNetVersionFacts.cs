@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using OmniSharp.Services;
 using TestUtility;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace OmniSharp.Tests
 {

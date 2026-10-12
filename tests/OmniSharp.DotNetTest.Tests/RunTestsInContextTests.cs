@@ -6,7 +6,6 @@ using OmniSharp.DotNetTest.Models;
 using OmniSharp.DotNetTest.Services;
 using TestUtility;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace OmniSharp.DotNetTest.Tests
 {

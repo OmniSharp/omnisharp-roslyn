@@ -5,7 +5,6 @@ using OmniSharp.Models.SignatureHelp;
 using OmniSharp.Roslyn.CSharp.Services.Signatures;
 using TestUtility;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {

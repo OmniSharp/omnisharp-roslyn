@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using OmniSharp.Models.Diagnostics;
 using TestUtility;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace OmniSharp.MSBuild.Tests
 {

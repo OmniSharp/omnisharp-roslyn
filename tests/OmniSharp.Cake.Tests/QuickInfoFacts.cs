@@ -11,7 +11,6 @@ using OmniSharp.Models.UpdateBuffer;
 using OmniSharp.Models.v1.Completion;
 using TestUtility;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace OmniSharp.Cake.Tests
 {

@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using OmniSharp.Models.AutoComplete;
 using OmniSharp.Roslyn.CSharp.Services.Intellisense;
 using TestUtility;
-using Xunit.Abstractions;
+using Xunit;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {

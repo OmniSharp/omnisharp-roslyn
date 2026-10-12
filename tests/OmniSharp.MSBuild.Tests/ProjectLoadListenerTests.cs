@@ -7,7 +7,6 @@ using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 using TestUtility;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace OmniSharp.MSBuild.Tests
 {

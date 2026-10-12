@@ -13,7 +13,6 @@ using OmniSharp.Options;
 using OmniSharp.Services;
 using TestUtility;
 using Xunit;
-using Xunit.Abstractions;
 using static OmniSharp.MSBuild.Tests.ProjectLoadListenerTests;
 
 namespace OmniSharp.MSBuild.Tests

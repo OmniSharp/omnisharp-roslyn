@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Logging;
-using Xunit.Abstractions;
+using Xunit;
 
 namespace TestUtility.Logging
 {

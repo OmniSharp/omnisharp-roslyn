@@ -2,7 +2,7 @@
 using OmniSharp.Roslyn.CSharp.Services.Navigation;
 using OmniSharp.Models.Metadata;
 using TestUtility;
-using Xunit.Abstractions;
+using Xunit;
 using System.Collections.Generic;
 using OmniSharp.Models.v1.SourceGeneratedFile;
 

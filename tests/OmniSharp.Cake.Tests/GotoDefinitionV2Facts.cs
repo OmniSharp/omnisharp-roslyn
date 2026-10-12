@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using TestUtility;
 
 using Xunit;
-using Xunit.Abstractions;
 
 namespace OmniSharp.Cake.Tests
 {
