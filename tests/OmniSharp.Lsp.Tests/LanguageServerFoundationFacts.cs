@@ -55,57 +55,80 @@ namespace OmniSharp.Lsp.Tests
         /// <summary>
         /// This ensures the server has registered all handlers
         /// </summary>
-        /// <param name="method"></param>
-        [Theory]
-        [ClassData(typeof(RegistersAllKnownOmniSharpHandlersData))]
-        public void Registers_all_known_OmniSharp_handlers(string method)
+        [Fact]
+        public void Registers_all_known_OmniSharp_handlers()
         {
-            var descriptor = Server.GetRequiredService<IHandlersManager>().Descriptors
-                .FirstOrDefault(z => z.Method == $"o#{method}".ToLowerInvariant());
-            Assert.NotNull(descriptor);
+            var descriptors = Server.GetRequiredService<IHandlersManager>().Descriptors;
+
+            foreach (var method in RegistersAllKnownOmniSharpHandlersData.Methods)
+            {
+                var descriptor = descriptors.FirstOrDefault(z => z.Method == $"o#{method}".ToLowerInvariant());
+                Assert.True(descriptor is not null, $"Expected handler '{method}' to be registered.");
+            }
         }
 
         /// <summary>
         /// This ensures that the client can call the methods (the server has properly registered it)
         /// </summary>
-        /// <param name="method"></param>
+        /// <param name="methods"></param>
         /// <returns></returns>
         [Theory]
-        [ClassData(typeof(RegistersAllKnownOmniSharpHandlersData))]
-        public async Task All_known_OmniSharp_handlers_are_callable(string method)
+        [ClassData(typeof(CallableOmniSharpHandlerBatchesData))]
+        public async Task All_known_OmniSharp_handlers_are_callable(string[] methods)
         {
-            try
+            foreach (var method in methods)
             {
-                var cts = CancellationTokenSource.CreateLinkedTokenSource(CancellationToken);
-                cts.CancelAfter(TimeSpan.FromSeconds(1));
-                await Client.SendRequest($"o#{method}".ToLowerInvariant(), new object()).ReturningVoid(cts.Token);
-            }
-            catch (MethodNotSupportedException)
-            {
-                Assert.Fail("Method should be supported!");
-            }
-            catch (Exception e)
-            {
-                Logger.LogWarning(e, "got exception");
+                try
+                {
+                    using var cts = CancellationTokenSource.CreateLinkedTokenSource(CancellationToken);
+                    cts.CancelAfter(TimeSpan.FromSeconds(1));
+                    await Client.SendRequest($"o#{method}".ToLowerInvariant(), new object()).ReturningVoid(cts.Token);
+                }
+                catch (MethodNotSupportedException)
+                {
+                    Assert.Fail($"Method '{method}' should be supported.");
+                }
+                catch (Exception e)
+                {
+                    Logger.LogWarning(e, "Got exception calling {Method}", method);
+                }
             }
         }
 
-        class RegistersAllKnownOmniSharpHandlersData : TheoryData<string>
+        private static class RegistersAllKnownOmniSharpHandlersData
         {
-            public RegistersAllKnownOmniSharpHandlersData()
+            public static IReadOnlyList<string> Methods { get; } = GetMethods();
+
+            private static IReadOnlyList<string> GetMethods()
             {
+                var methods = new List<string>();
                 var v1Fields = typeof(OmniSharpEndpoints).GetFields(BindingFlags.Public | BindingFlags.Static)
                     .Where(z => z.FieldType == typeof(string));
                 foreach (var field in v1Fields)
                 {
-                    Add(field.GetValue(null) as string);
+                    methods.Add(field.GetValue(null) as string);
                 }
 
                 var v2Fields = typeof(OmniSharpEndpoints.V2).GetFields(BindingFlags.Public | BindingFlags.Static)
                     .Where(z => z.FieldType == typeof(string));
                 foreach (var field in v2Fields)
                 {
-                    Add(field.GetValue(null) as string);
+                    methods.Add(field.GetValue(null) as string);
+                }
+
+                return methods;
+            }
+        }
+
+        private sealed class CallableOmniSharpHandlerBatchesData : TheoryData<string[]>
+        {
+            private const int BatchSize = 9;
+
+            public CallableOmniSharpHandlerBatchesData()
+            {
+                foreach (var batch in RegistersAllKnownOmniSharpHandlersData.Methods.Chunk(BatchSize))
+                {
+                    Add(batch);
                 }
             }
         }
