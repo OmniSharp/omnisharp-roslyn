@@ -286,14 +286,7 @@ Task("Build")
     }
 });
 
-/// <summary>
-///  Run all tests.
-/// </summary>
-Task("Test")
-    .IsDependentOn("Setup")
-    .IsDependentOn("Build")
-    .IsDependentOn("PrepareTestAssets")
-    .Does(() =>
+void RunTests()
 {
     var testProjects = string.IsNullOrEmpty(testProjectArgument) ? buildPlan.TestProjects : testProjectArgument.Split(',');
 
@@ -311,7 +304,22 @@ Task("Test")
         Run("dotnet", arguments, instanceFolder)
             .ExceptionOnError($"Test {testProject} failed for {env.TargetFramework}");
     }
-});
+}
+
+/// <summary>
+///  Run all tests after building the solution and preparing test assets.
+/// </summary>
+Task("Test")
+    .IsDependentOn("Build")
+    .IsDependentOn("PrepareTestAssets")
+    .Does(RunTests);
+
+/// <summary>
+///  Run tests from previously built outputs after preparing test assets.
+/// </summary>
+Task("TestFromBuild")
+    .IsDependentOn("PrepareTestAssets")
+    .Does(RunTests);
 
 void CopyExtraDependencies(BuildEnvironment env, string outputFolder)
 {

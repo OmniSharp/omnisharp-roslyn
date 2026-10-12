@@ -23,8 +23,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04, windows-latest, macos-15-intel]
-    name: "Build"
+        include:
+          - platform: linux
+            os: ubuntu-22.04
+          - platform: windows
+            os: windows-latest
+          - platform: macos
+            os: macos-15-intel
+    name: "Build (${{ matrix.platform }})"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -48,6 +54,14 @@ jobs:
       - name: 🍰 Run Cake
         run: |
           dotnet cake --configuration=Release --verbosity=Verbose --target=CI --publish-all --archive
+
+      - name: ⬆ Publish test modules
+        uses: actions/upload-artifact@v4
+        with:
+          name: "test-modules-${{ matrix.platform }}"
+          path: bin/Release/*.Tests/net10.0/
+          if-no-files-found: error
+          retention-days: 1
 
       - name: ⬆ Publish Logs
         uses: actions/upload-artifact@v4
@@ -88,3 +102,68 @@ jobs:
         with:
           name: "scripts - ${{ matrix.os }}"
           path: "${{ env.Artifacts }}/scripts/"
+
+  test:
+    name: "Test (${{ matrix.runner.platform }}, ${{ matrix.shard.name }})"
+    needs: build
+    runs-on: ${{ matrix.runner.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        runner:
+          - platform: linux
+            os: ubuntu-22.04
+          - platform: windows
+            os: windows-latest
+          - platform: macos
+            os: macos-15-intel
+        shard:
+          - name: shard1
+            testProjects: OmniSharp.Lsp.Tests,OmniSharp.MSBuild.Tests,OmniSharp.Script.Tests,OmniSharp.Tests,OmniSharp.Stdio.Tests,OmniSharp.Http.Tests
+          - name: shard2
+            testProjects: OmniSharp.Roslyn.CSharp.Tests,OmniSharp.DotNetTest.Tests,OmniSharp.Cake.Tests
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: "1"
+          fetch-tags: "false"
+
+      - name: 🔨 Use .NET Core SDKs
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            ${{ env.DotNetVersion3 }}
+            ${{ env.DotNetVersion2 }}
+            ${{ env.DotNetVersion }}
+            ${{ env.DotNetVersion4 }}
+
+      - name: 🎁 dotnet tool restore
+        run: |
+          dotnet tool restore
+
+      - name: ⬇ Download test modules
+        uses: actions/download-artifact@v4
+        with:
+          name: "test-modules-${{ matrix.runner.platform }}"
+          path: bin/Release/
+
+      - name: 🍰 Run tests
+        uses: nick-invision/retry@v2
+        with:
+          shell: bash
+          timeout_minutes: 40
+          max_attempts: 3
+          retry_on: error
+          command: |
+            dotnet cake --configuration=Release --verbosity=Verbose --target=TestFromBuild --test-project="$TEST_PROJECT" --use-global-dotnet-sdk
+        env:
+          TEST_PROJECT: ${{ matrix.shard.testProjects }}
+
+      - name: ⬆ Publish test logs
+        uses: actions/upload-artifact@v4
+        continue-on-error: true
+        if: ${{ always() }}
+        with:
+          name: "test-logs-${{ matrix.runner.platform }}-${{ matrix.shard.name }}"
+          path: "${{ env.Artifacts }}/logs/"
