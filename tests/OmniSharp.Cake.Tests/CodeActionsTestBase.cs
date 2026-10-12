@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -17,116 +17,14 @@ using Range = OmniSharp.Models.V2.Range;
 
 namespace OmniSharp.Cake.Tests
 {
-    public class CodeActionsV2Facts : AbstractTestFixture
+    public abstract class CodeActionsTestBase : AbstractTestFixture
     {
-        public CodeActionsV2Facts(ITestOutputHelper output)
+        protected CodeActionsTestBase(ITestOutputHelper output)
             : base(output)
         {
         }
 
-        [Fact]
-        public async Task Can_get_code_actions_from_roslyn()
-        {
-            const string code = "var regex = new Reg[||]ex();";
-
-            var refactorings = await FindRefactoringNamesAsync(code);
-            Assert.Contains(("using System.Text.RegularExpressions;", CodeActionKind.QuickFix), refactorings);
-        }
-
-        [Fact]
-        public async Task Can_get_ranged_code_action()
-        {
-            const string code =
-                @"public class Class1
-                {
-                    public void Whatever()
-                    {
-                        [|Console.Write(""should be using System;"");|]
-                    }
-                }";
-
-            var refactorings = await FindRefactoringNamesAsync(code);
-            Assert.Contains(("Extract method", CodeActionKind.RefactorExtract), refactorings);
-        }
-
-        [Fact]
-        public async Task Returns_ordered_code_actions()
-        {
-            const string code =
-                @"public class Class1
-                {
-                    public void Whatever()
-                    {
-                        [|Regex.Match(""foo"", ""bar"");|]
-                    }
-                }";
-
-            var refactorings = await FindRefactoringNamesAsync(code);
-            var expected = new List<(string, string CodeActionKind)>
-            {
-                ("using System.Text.RegularExpressions;", CodeActionKind.QuickFix),
-                ("System.Text.RegularExpressions.Regex", CodeActionKind.QuickFix),
-                ("Extract method", CodeActionKind.RefactorExtract),
-                ("Extract local function", CodeActionKind.RefactorExtract),
-                ("Use expression body for method", CodeActionKind.Refactor),
-                ("Introduce local for 'Regex.Match(\"foo\", \"bar\")'", CodeActionKind.Refactor),
-                ("Introduce parameter for 'Regex.Match(\"foo\", \"bar\")' -> and update call sites directly", CodeActionKind.Refactor),
-                ("Introduce parameter for 'Regex.Match(\"foo\", \"bar\")' -> into extracted method to invoke at call sites", CodeActionKind.Refactor),
-                ("Introduce parameter for 'Regex.Match(\"foo\", \"bar\")' -> into new overload", CodeActionKind.Refactor),
-                ("Introduce parameter for all occurrences of 'Regex.Match(\"foo\", \"bar\")' -> and update call sites directly", CodeActionKind.Refactor),
-                ("Introduce parameter for all occurrences of 'Regex.Match(\"foo\", \"bar\")' -> into extracted method to invoke at call sites", CodeActionKind.Refactor),
-                ("Introduce parameter for all occurrences of 'Regex.Match(\"foo\", \"bar\")' -> into new overload", CodeActionKind.Refactor)
-            };
-            AssertEx.Equal(expected, refactorings);
-        }
-
-        [Fact]
-        public async Task Can_extract_method()
-        {
-            const string code =
-@"public class Class1
-{
-    public void Whatever()
-    {
-        [|Console.Write(""should be using System;"");|]
-    }
-}";
-
-            var expected = new LinePositionSpanTextChange
-            {
-                NewText = "NewMethod();\n    }\n\n    private static void NewMethod()\n    {\n        ",
-                StartLine = 4,
-                StartColumn = 8,
-                EndLine = 4,
-                EndColumn = 8
-            };
-
-            var response = await RunRefactoringAsync(code, "Extract method");
-            var modifiedFile = response.Changes.FirstOrDefault() as ModifiedFileResponse;
-
-            Assert.Single(response.Changes);
-            Assert.NotNull(modifiedFile);
-            Assert.Single(modifiedFile.Changes);
-            Assert.Equal(expected, modifiedFile.Changes.FirstOrDefault());
-        }
-
-        [Fact]
-        public async Task Should_Not_Find_Rename_File()
-        {
-            const string code =
-                @"public class Class[||]1
-                {
-                    public void Whatever()
-                    {
-                        Console.Write(""should be using System;"");
-                    }
-                }";
-
-            var refactorings = await FindRefactoringNamesAsync(code);
-            Assert.DoesNotContain(refactorings, x => x.Name.StartsWith("Rename file to"));
-        }
-
-        private async Task<RunCodeActionResponse> RunRefactoringAsync(string code, string refactoringName)
+        protected async Task<RunCodeActionResponse> RunRefactoringAsync(string code, string refactoringName)
         {
             var refactorings = await FindRefactoringsAsync(code);
             Assert.Contains(refactoringName, refactorings.Select(x => x.Name), StringComparer.OrdinalIgnoreCase);
@@ -135,14 +33,14 @@ namespace OmniSharp.Cake.Tests
             return await RunRefactoringsAsync(code, identifier);
         }
 
-        private async Task<IEnumerable<(string Name, string CodeActionKind)>> FindRefactoringNamesAsync(string code)
+        protected async Task<IEnumerable<(string Name, string CodeActionKind)>> FindRefactoringNamesAsync(string code)
         {
             var codeActions = await FindRefactoringsAsync(code);
 
             return codeActions.Select(a => (a.Name, a.CodeActionKind));
         }
 
-        private async Task<IEnumerable<OmniSharpCodeAction>> FindRefactoringsAsync(string code)
+        protected async Task<IEnumerable<OmniSharpCodeAction>> FindRefactoringsAsync(string code)
         {
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("CakeProject", shadowCopy: false))
             using (var host = CreateOmniSharpHost(testProject.Directory))
@@ -179,7 +77,7 @@ namespace OmniSharp.Cake.Tests
             }
         }
 
-        private async Task<RunCodeActionResponse> RunRefactoringsAsync(string code, string identifier)
+        protected async Task<RunCodeActionResponse> RunRefactoringsAsync(string code, string identifier)
         {
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("CakeProject", shadowCopy: false))
             using (var host = CreateOmniSharpHost(testProject.Directory))
@@ -217,7 +115,7 @@ namespace OmniSharp.Cake.Tests
             }
         }
 
-        private static Range GetSelection(TextRange range)
+        protected static Range GetSelection(TextRange range)
         {
             if (range.IsEmpty)
             {
@@ -250,5 +148,6 @@ namespace OmniSharp.Cake.Tests
         {
             return host.GetRequestHandler<TRequestHandler>(endpoint, Constants.LanguageNames.Cake);
         }
+
     }
 }
