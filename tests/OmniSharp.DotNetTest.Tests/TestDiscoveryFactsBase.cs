@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using OmniSharp.Models.MembersTree;
@@ -10,19 +10,19 @@ using Xunit;
 
 namespace OmniSharp.DotNetTest.Tests
 {
-    public class TestDiscoveryFacts : AbstractTestFixture
+    public abstract class TestDiscoveryFactsBase : AbstractTestFixture
     {
-        private const string xunit = nameof(xunit);
-        private const string XunitTestMethod = "XunitTestMethod";
+        protected const string xunit = nameof(xunit);
+        protected const string XunitTestMethod = "XunitTestMethod";
 
-        private const string nunit = nameof(nunit);
-        private const string NUnitTestMethod = "NUnitTestMethod";
+        protected const string nunit = nameof(nunit);
+        protected const string NUnitTestMethod = "NUnitTestMethod";
 
-        private const string TestProgram = "TestProgram.cs";
+        protected const string TestProgram = "TestProgram.cs";
 
         private readonly TestAssets _testAssets;
 
-        public TestDiscoveryFacts(ITestOutputHelper output)
+        protected TestDiscoveryFactsBase(ITestOutputHelper output)
             : base(output)
         {
             this._testAssets = TestAssets.Instance;
@@ -30,21 +30,7 @@ namespace OmniSharp.DotNetTest.Tests
 
         public override DotNetCliVersion DotNetCliVersion { get; } = 0;
 
-        [Theory]
-        [InlineData(XunitTestProject, TestProgram, 8, 20, true, xunit, XunitTestMethod, "Main.Test.MainTest.Test")]
-        [InlineData(XunitTestProject, TestProgram, 16, 20, true, xunit, XunitTestMethod, "Main.Test.MainTest.DataDrivenTest1")]
-        [InlineData(XunitTestProject, TestProgram, 24, 20, true, xunit, XunitTestMethod, "Main.Test.MainTest.DataDrivenTest2")]
-        [InlineData(XunitTestProject, TestProgram, 53, 20, true, xunit, XunitTestMethod, "Main.Test.MainTest.FailingTest")]
-        [InlineData(XunitTestProject, TestProgram, 59, 20, true, xunit, XunitTestMethod, "Main.Test.MainTest.CheckStandardOutput")]
-        [InlineData(XunitTestProject, TestProgram, 29, 21, false, "", "", "")]
-        [InlineData(NUnitTestProject, TestProgram, 8, 20, true, nunit, NUnitTestMethod, "Main.Test.MainTest.Test")]
-        [InlineData(NUnitTestProject, TestProgram, 15, 20, true, nunit, NUnitTestMethod, "Main.Test.MainTest.DataDrivenTest1")]
-        [InlineData(NUnitTestProject, TestProgram, 22, 20, true, nunit, NUnitTestMethod, "Main.Test.MainTest.DataDrivenTest2")]
-        [InlineData(NUnitTestProject, TestProgram, 28, 20, true, nunit, NUnitTestMethod, "Main.Test.MainTest.SourceDataDrivenTest")]
-        [InlineData(NUnitTestProject, TestProgram, 34, 20, true, nunit, NUnitTestMethod, "Main.Test.MainTest.FailingTest")]
-        [InlineData(NUnitTestProject, TestProgram, 47, 20, false, "", "", "")]
-        [InlineData(NUnitTestProject, TestProgram, 60, 20, true, nunit, NUnitTestMethod, "Main.Test.GenericTest`1.TypedTest")]
-        public async Task FindTestMethods(string projectName, string fileName, int line, int column, bool expectToFind, string expectedTestFramework, string expectedFeatureName, string expectedMethodName)
+        protected async Task AssertTestMethodAsync(string projectName, string fileName, int line, int column, bool expectToFind, string expectedTestFramework, string expectedFeatureName, string expectedMethodName)
         {
             using (var testProject = await this._testAssets.GetTestProjectAsync(projectName))
             using (var host = CreateOmniSharpHost(testProject.Directory, null, DotNetCliVersion.Current))

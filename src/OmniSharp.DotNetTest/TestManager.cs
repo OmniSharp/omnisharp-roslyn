@@ -115,11 +115,10 @@ namespace OmniSharp.DotNetTest
                 return;
             }
 
-            var port = FindFreePort();
-
-            var listener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            listener.Bind(new IPEndPoint(IPAddress.Loopback, port));
+            using var listener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            listener.Bind(new IPEndPoint(IPAddress.Loopback, 0));
             listener.Listen(1);
+            var port = ((IPEndPoint)listener.LocalEndPoint).Port;
 
             var currentProcess = Process.GetCurrentProcess();
             _process = DotNetCli.Start(GetCliTestArguments(port, currentProcess.Id), WorkingDirectory);
@@ -194,15 +193,6 @@ namespace OmniSharp.DotNetTest
             }
 
             _isConnected = false;
-        }
-
-        private static int FindFreePort()
-        {
-            using (var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp))
-            {
-                socket.Bind(new IPEndPoint(IPAddress.Loopback, 0));
-                return ((IPEndPoint)socket.LocalEndPoint).Port;
-            }
         }
 
         protected void EmitTestComletedEvent(DotNetTestResult result)
