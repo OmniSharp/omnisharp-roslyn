@@ -30,7 +30,8 @@ namespace OmniSharp.DotNetTest.Tests
                     FileName = Path.Combine(testProject.Directory, fileName),
                     Line = line,
                     Column = column,
-                    TargetFrameworkVersion = targetFrameworkVersion
+                    TargetFrameworkVersion = targetFrameworkVersion,
+                    NoBuild = true
                 };
 
                 if (useRunSettings)

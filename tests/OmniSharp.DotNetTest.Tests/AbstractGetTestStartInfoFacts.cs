@@ -34,7 +34,8 @@ namespace OmniSharp.DotNetTest.Tests
                     FileName = Path.Combine(testProject.Directory, "TestProgram.cs"),
                     MethodName = methodName,
                     TestFrameworkName = testFramework,
-                    TargetFrameworkVersion = targetFrameworkVersion
+                    TargetFrameworkVersion = targetFrameworkVersion,
+                    NoBuild = true
                 };
 
                 var response = await service.Handle(request);
