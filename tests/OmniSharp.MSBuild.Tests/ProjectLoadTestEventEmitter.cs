@@ -11,36 +11,33 @@ using System.Threading;
 
 namespace OmniSharp.MSBuild.Tests
 {
-    public partial class ProjectLoadListenerTests
+    public class ProjectLoadTestEventEmitter : IEventEmitter
     {
-        public class ProjectLoadTestEventEmitter : IEventEmitter
+        public ImmutableArray<ProjectConfigurationMessage> ReceivedMessages { get; private set; } = ImmutableArray<ProjectConfigurationMessage>.Empty;
+        private readonly ManualResetEvent _messageEvent = new ManualResetEvent(false);
+
+        public void WaitForProjectUpdate()
         {
-            public ImmutableArray<ProjectConfigurationMessage> ReceivedMessages { get; private set; } = ImmutableArray<ProjectConfigurationMessage>.Empty;
-            private readonly ManualResetEvent _messageEvent = new ManualResetEvent(false);
+            _messageEvent.Reset();
+            _messageEvent.WaitOne(TimeSpan.FromSeconds(5));
+        }
 
-            public void WaitForProjectUpdate()
+        public ExportDescriptorProvider[] AsExportDescriptionProvider(ILoggerFactory loggerFactory)
+        {
+            var listener = new ProjectLoadListener(loggerFactory, this);
+
+            return new ExportDescriptorProvider[]
             {
-                _messageEvent.Reset();
-                _messageEvent.WaitOne(TimeSpan.FromSeconds(5));
-            }
+                MefValueProvider.From<IMSBuildEventSink>(listener)
+            };
+        }
 
-            public ExportDescriptorProvider[] AsExportDescriptionProvider(ILoggerFactory loggerFactory)
+        public void Emit(string kind, object args)
+        {
+            if(args is ProjectConfigurationMessage)
             {
-                var listener = new ProjectLoadListener(loggerFactory, this);
-
-                return new ExportDescriptorProvider[]
-                {
-                    MefValueProvider.From<IMSBuildEventSink>(listener)
-                };
-            }
-
-            public void Emit(string kind, object args)
-            {
-                if(args is ProjectConfigurationMessage)
-                {
-                    ReceivedMessages = ReceivedMessages.Add((ProjectConfigurationMessage)args);
-                    _messageEvent.Set();
-                }
+                ReceivedMessages = ReceivedMessages.Add((ProjectConfigurationMessage)args);
+                _messageEvent.Set();
             }
         }
     }
