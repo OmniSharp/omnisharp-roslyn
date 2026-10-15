@@ -46,6 +46,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Decompilation
             throw new NotSupportedException();
         }
 
+        public IDisposable BeginSnapshot() => null;
+
         public MetadataFile Resolve(IAssemblyReference name)
         {
             Log("Resolving: {0}", name.FullName);
