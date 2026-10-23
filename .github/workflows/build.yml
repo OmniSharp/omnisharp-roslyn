@@ -128,7 +128,7 @@ jobs:
           max_attempts: 3
           retry_on: error
           command: |
-            dotnet cake --configuration=Release --verbosity=Verbose --target=TestFromBuild --test-project="$TEST_PROJECT" --use-global-dotnet-sdk
+            dotnet cake --configuration=Release --verbosity=Verbose --target=TestFromBuild --test-project="$TEST_PROJECT"
         env:
           TEST_PROJECT: ${{ matrix.shard.testProjects }}
 
