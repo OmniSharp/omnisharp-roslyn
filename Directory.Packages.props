@@ -4,26 +4,26 @@
         <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
         <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
 
-        <OmniSharpExtensionsPackageVersion>0.19.9</OmniSharpExtensionsPackageVersion>
-        <MicrosoftExtensionPackageVersion>10.0.10</MicrosoftExtensionPackageVersion>
-        <MicrosoftBaseCommonLibraryVersion>10.0.10</MicrosoftBaseCommonLibraryVersion>
-        <MicrosoftTestPackageVersion>17.14.0-preview-25107-01</MicrosoftTestPackageVersion>
-        <NuGetPackageVersion>6.15.0-preview.1.86</NuGetPackageVersion>
-        <RoslynPackageVersion>5.12.0-1.26463.1</RoslynPackageVersion>
-        <XunitPackageVersion>2.8.1</XunitPackageVersion>
+        <OmniSharpExtensionsPackageVersion>0.19.11</OmniSharpExtensionsPackageVersion>
+        <MicrosoftExtensionPackageVersion>10.0.12</MicrosoftExtensionPackageVersion>
+        <MicrosoftBaseCommonLibraryVersion>10.0.12</MicrosoftBaseCommonLibraryVersion>
+        <MicrosoftTestPackageVersion>17.14.1</MicrosoftTestPackageVersion>
+        <NuGetPackageVersion>6.14.3</NuGetPackageVersion>
+        <RoslynPackageVersion>5.13.0-1.26509.4</RoslynPackageVersion>
+        <XunitPackageVersion>2.9.3</XunitPackageVersion>
     </PropertyGroup>
 
     <ItemGroup>
         <PackageVersion Include="Cake.Scripting.Transport" Version="0.16.0" />
 
-        <PackageVersion Include="DiffPlex" Version="1.8.0" />
+        <PackageVersion Include="DiffPlex" Version="1.9.0" />
 
-        <PackageVersion Include="Dotnet.Script.DependencyModel" Version="1.5.0" />
-        <PackageVersion Include="Dotnet.Script.DependencyModel.NuGet" Version="1.5.0" />
+        <PackageVersion Include="Dotnet.Script.DependencyModel" Version="2.0.1" />
+        <PackageVersion Include="Dotnet.Script.DependencyModel.NuGet" Version="2.0.1" />
 
-        <PackageVersion Include="ICSharpCode.Decompiler" Version="9.1.0.7988" />
+        <PackageVersion Include="ICSharpCode.Decompiler" Version="11.1.0.9782" />
 
-        <PackageVersion Include="McMaster.Extensions.CommandLineUtils" Version="4.1.0" />
+        <PackageVersion Include="McMaster.Extensions.CommandLineUtils" Version="5.1.0" />
 
         <PackageVersion Include="Microsoft.VisualStudio.SolutionPersistence" Version="1.0.52" />
 
@@ -59,7 +59,7 @@
         <PackageVersion Include="Microsoft.TestPlatform.TranslationLayer" Version="$(MicrosoftTestPackageVersion)" />
         <PackageVersion Include="Microsoft.TestPlatform.ObjectModel" Version="$(MicrosoftTestPackageVersion)" />
 
-        <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
+        <PackageVersion Include="Newtonsoft.Json" Version="13.0.4" />
 
         <PackageVersion Include="NuGet.Common" Version="$(NuGetPackageVersion)" />
         <PackageVersion Include="NuGet.Configuration" Version="$(NuGetPackageVersion)" />
@@ -88,14 +88,14 @@
         <PackageVersion Include="System.Threading.Tasks.Dataflow" Version="$(MicrosoftBaseCommonLibraryVersion)" />
         <PackageVersion Include="System.ValueTuple" Version="4.6.2" />
 
-        <PackageVersion Include="System.Reactive" Version="6.0.1" />
+        <PackageVersion Include="System.Reactive" Version="7.0.0" />
         <PackageVersion Include="System.Reflection.Emit" Version="4.7.0" />
 
         <PackageVersion Include="xunit.abstractions" Version="2.0.3" />
-        <PackageVersion Include="xunit.runner.visualstudio" Version="2.8.2" />
+        <PackageVersion Include="xunit.runner.visualstudio" Version="4.0.1" />
         <PackageVersion Include="xunit" Version="$(XunitPackageVersion)" />
     </ItemGroup>
     <ItemGroup>
-        <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
+        <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="10.0.401" PrivateAssets="All" />
     </ItemGroup>
 </Project>

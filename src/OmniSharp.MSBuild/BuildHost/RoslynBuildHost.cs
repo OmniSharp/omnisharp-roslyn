@@ -31,7 +31,7 @@ namespace OmniSharp.MSBuild.BuildHost
             var assembly = Assembly.Load(AssemblyName);
             _managerType = RequireType(assembly, ManagerTypeName);
             _buildHostKindType = RequireType(assembly, "Microsoft.CodeAnalysis.MSBuild.BuildHostProcessKind");
-            var constructor = _managerType.GetConstructors(InstanceMembers).SingleOrDefault(c => c.GetParameters().Length == 5)
+            var constructor = _managerType.GetConstructors(InstanceMembers).SingleOrDefault(c => c.GetParameters().Length == 6)
                 ?? throw MissingApi($"{ManagerTypeName} constructor");
             _manager = constructor.Invoke(new object[]
             {
@@ -39,7 +39,8 @@ namespace OmniSharp.MSBuild.BuildHost
                 _globalProperties,
                 null,
                 null,
-                loggerFactory
+                loggerFactory,
+                null
             });
         }
 
