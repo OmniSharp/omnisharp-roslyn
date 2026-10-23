@@ -53,7 +53,7 @@ jobs:
 
       - name: 🍰 Run Cake
         run: |
-          dotnet cake --configuration=Release --verbosity=Verbose --target=CI --publish-all --archive
+          dotnet cake --configuration=Release --verbosity=Verbose --target=Build
 
       - name: ⬆ Publish test modules
         uses: actions/upload-artifact@v4
@@ -71,37 +71,9 @@ jobs:
           name: "logs - ${{ github.workflow }} ${{ matrix.os }}"
           path: "${{ env.Artifacts }}/logs/"
 
-      - name: ⬆ Publish Packages
-        uses: actions/upload-artifact@v4
-        continue-on-error: true
-        if: ${{ always() }}
-        with:
-          name: "packages"
-          path: "${{ env.Artifacts }}/package/"
-
-      - name: ⬆ Publish Deployment
-        uses: actions/upload-artifact@v4
-        continue-on-error: true
-        if: ${{ always() }}
-        with:
-          name: "deployment"
-          path: "${{ env.Artifacts }}/deployment/"
-
-      - name: ⬆ Publish NuGet
-        uses: actions/upload-artifact@v4
-        continue-on-error: true
-        if: ${{ always() }}
-        with:
-          name: "nuget"
-          path: "${{ env.Artifacts }}/nuget/"
-
-      - name: ⬆ Publish Scripts
-        uses: actions/upload-artifact@v4
-        continue-on-error: true
-        if: ${{ always() }}
-        with:
-          name: "scripts - ${{ matrix.os }}"
-          path: "${{ env.Artifacts }}/scripts/"
+  packaging:
+    name: Packaging
+    uses: ./.github/workflows/package.yml
 
   test:
     name: "Test (${{ matrix.runner.platform }}, ${{ matrix.shard.name }})"
