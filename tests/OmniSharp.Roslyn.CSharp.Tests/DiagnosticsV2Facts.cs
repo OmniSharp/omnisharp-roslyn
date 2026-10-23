@@ -7,7 +7,6 @@ using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
 using OmniSharp.Services;
 using TestUtility;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {

@@ -22,7 +22,7 @@ using OmniSharp.Roslyn.CSharp.Services;
 using OmniSharp.Script;
 using OmniSharp.Services;
 using OmniSharp.Utilities;
-using Xunit.Abstractions;
+using Xunit;
 
 namespace TestUtility
 {

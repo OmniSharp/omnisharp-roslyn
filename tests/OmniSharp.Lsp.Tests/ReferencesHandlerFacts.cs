@@ -10,7 +10,6 @@ using OmniSharp.Models.FindUsages;
 using OmniSharp.Roslyn.CSharp.Services.Navigation;
 using TestUtility;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace OmniSharp.Lsp.Tests
 {

@@ -19,7 +19,7 @@ using OmniSharp.Roslyn.Utilities;
 using OmniSharp.Services;
 using OmniSharp.Utilities;
 using TestUtility.Logging;
-using Xunit.Abstractions;
+using Xunit;
 using ConfigurationBuilder = Microsoft.Extensions.Configuration.ConfigurationBuilder;
 
 namespace TestUtility

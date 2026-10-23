@@ -5,7 +5,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using TestUtility.Logging;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace TestUtility
 {

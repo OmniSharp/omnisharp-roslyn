@@ -7,7 +7,6 @@ using OmniSharp.Services;
 using OmniSharp.Utilities;
 using TestUtility;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace OmniSharp.DotNetTest.Tests
 {
@@ -35,7 +34,8 @@ namespace OmniSharp.DotNetTest.Tests
                     FileName = Path.Combine(testProject.Directory, "TestProgram.cs"),
                     MethodName = methodName,
                     TestFrameworkName = testFramework,
-                    TargetFrameworkVersion = targetFrameworkVersion
+                    TargetFrameworkVersion = targetFrameworkVersion,
+                    NoBuild = true
                 };
 
                 var response = await service.Handle(request);

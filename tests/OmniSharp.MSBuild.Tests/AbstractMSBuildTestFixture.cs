@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 using OmniSharp.Roslyn.Utilities;
 using OmniSharp.Services;
 using TestUtility;
-using Xunit.Abstractions;
+using Xunit;
 
 namespace OmniSharp.MSBuild.Tests
 {

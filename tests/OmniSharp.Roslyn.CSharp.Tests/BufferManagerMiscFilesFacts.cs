@@ -14,7 +14,6 @@ using OmniSharp.Roslyn.CSharp.Services.Files;
 using OmniSharp.Roslyn.CSharp.Services.Types;
 using TestUtility;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace OmniSharp.Tests
 {

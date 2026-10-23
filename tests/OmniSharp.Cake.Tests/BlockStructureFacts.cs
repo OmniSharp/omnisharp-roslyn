@@ -6,7 +6,6 @@ using OmniSharp.Models.UpdateBuffer;
 using OmniSharp.Models.V2;
 using TestUtility;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace OmniSharp.Cake.Tests
 {

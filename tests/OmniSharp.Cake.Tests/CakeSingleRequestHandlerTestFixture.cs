@@ -1,7 +1,7 @@
 ﻿using OmniSharp.Cake.Services.RequestHandlers.Buffer;
 using OmniSharp.Mef;
 using TestUtility;
-using Xunit.Abstractions;
+using Xunit;
 
 namespace OmniSharp.Cake.Tests
 {

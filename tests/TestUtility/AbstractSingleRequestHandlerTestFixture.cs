@@ -1,5 +1,5 @@
 ﻿using OmniSharp.Mef;
-using Xunit.Abstractions;
+using Xunit;
 
 namespace TestUtility
 {

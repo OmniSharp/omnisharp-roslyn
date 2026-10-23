@@ -4,7 +4,6 @@ using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Roslyn.Utilities;
 using TestUtility;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace OmniSharp.Tests
 {

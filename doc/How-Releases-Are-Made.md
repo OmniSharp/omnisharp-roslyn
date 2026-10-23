@@ -51,8 +51,21 @@ version tag, builds and validates every package, and then publishes the release
 as the latest stable version.
 
 Use the `dry-run` release type to build and validate all packages without
-creating a tag or GitHub Release. Pull requests that change release
-infrastructure automatically run this mode.
+creating a tag or GitHub Release.
+
+## Pull Request Validation
+
+The [Build workflow](/.github/workflows/build.yml) compiles the solution and runs
+the test shards on pull requests targeting `master` or `feature/*`. A separate
+packaging job runs independently of build and test, using the reusable
+[Package workflow](/.github/workflows/package.yml) to publish every supported
+runtime, create archives, smoke-test startup, and validate the complete asset
+manifest and checksums.
+
+The Release workflow uses the same Package workflow with its resolved release
+version and commit. Pull request packaging resolves GitVersion metadata once
+and shares it across platforms, but never creates tags or publishes a release.
+Packaging still builds its own inputs; it does not reuse the test build outputs.
 
 ## Release Assets
 

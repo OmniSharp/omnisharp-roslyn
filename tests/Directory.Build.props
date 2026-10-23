@@ -2,9 +2,10 @@
   <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
 
   <PropertyGroup>
-    <NoWarn>$(NoWarn);MSB3277</NoWarn>
+    <NoWarn>$(NoWarn);MSB3277;xUnit1051</NoWarn>
 
     <SkipHostDlls>true</SkipHostDlls>
+    <OutputType Condition="'$(MSBuildProjectName)' != 'TestUtility'">Exe</OutputType>
   </PropertyGroup>
 
   <!--

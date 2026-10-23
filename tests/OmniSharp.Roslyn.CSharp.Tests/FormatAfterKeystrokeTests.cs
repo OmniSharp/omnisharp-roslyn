@@ -10,7 +10,6 @@ using OmniSharp.Roslyn.CSharp.Services.Buffer;
 using OmniSharp.Roslyn.CSharp.Services.Formatting;
 using TestUtility;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {

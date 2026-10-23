@@ -7,7 +7,6 @@ using OmniSharp.Models.V2;
 using OmniSharp.Roslyn.CSharp.Services.SemanticHighlight;
 using TestUtility;
 using Xunit;
-using Xunit.Abstractions;
 using Range = OmniSharp.Models.V2.Range;
 
 namespace OmniSharp.Roslyn.CSharp.Tests

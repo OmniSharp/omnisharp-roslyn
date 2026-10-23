@@ -13,7 +13,6 @@ using OmniSharp.Roslyn.CSharp.Workers.Formatting;
 using OmniSharp.Services;
 using TestUtility;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {

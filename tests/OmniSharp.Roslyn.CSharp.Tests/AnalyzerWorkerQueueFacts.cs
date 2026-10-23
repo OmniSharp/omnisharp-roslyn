@@ -103,16 +103,15 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         private static DateTime PassOverThrotlingPeriod(DateTime now) => now.AddSeconds(30);
 
         [Fact]
-        public void WhenForegroundWorkIsAddedThenWaitNextIterationOfItReady()
+        public async Task WhenForegroundWorkIsAddedThenWaitNextIterationOfItReady()
         {
             var now = DateTime.UtcNow;
-            var queue = new AnalyzerWorkQueue(new LoggerFactory(), utcNow: () => now, timeoutForPendingWorkMs: 500);
+            var queue = new AnalyzerWorkQueue(new LoggerFactory(), utcNow: () => now, timeoutForPendingWorkMs: 10 * 1000);
             var document = CreateTestDocumentId();
 
             queue.PutWork(new[] { document }, AnalyzerWorkType.Foreground);
 
             var pendingTask = queue.WaitForegroundWorkComplete();
-            pendingTask.Wait(TimeSpan.FromMilliseconds(50));
 
             Assert.False(pendingTask.IsCompleted);
 
@@ -120,15 +119,15 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             var work = queue.TakeWork(AnalyzerWorkType.Foreground);
             queue.WorkComplete(AnalyzerWorkType.Foreground);
-            pendingTask.Wait(TimeSpan.FromMilliseconds(50));
+            await pendingTask.WaitAsync(TimeSpan.FromSeconds(5));
             Assert.True(pendingTask.IsCompleted);
         }
 
         [Fact]
-        public void WhenForegroundWorkIsUnderAnalysisOutFromQueueThenWaitUntilNextIterationOfItIsReady()
+        public async Task WhenForegroundWorkIsUnderAnalysisOutFromQueueThenWaitUntilNextIterationOfItIsReady()
         {
             var now = DateTime.UtcNow;
-            var queue = new AnalyzerWorkQueue(new LoggerFactory(), utcNow: () => now, timeoutForPendingWorkMs: 500);
+            var queue = new AnalyzerWorkQueue(new LoggerFactory(), utcNow: () => now, timeoutForPendingWorkMs: 10 * 1000);
             var document = CreateTestDocumentId();
 
             queue.PutWork(new[] { document }, AnalyzerWorkType.Foreground);
@@ -138,11 +137,9 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var work = queue.TakeWork(AnalyzerWorkType.Foreground);
 
             var pendingTask = queue.WaitForegroundWorkComplete();
-            pendingTask.Wait(TimeSpan.FromMilliseconds(50));
-
             Assert.False(pendingTask.IsCompleted);
             queue.WorkComplete(AnalyzerWorkType.Foreground);
-            pendingTask.Wait(TimeSpan.FromMilliseconds(50));
+            await pendingTask.WaitAsync(TimeSpan.FromSeconds(5));
             Assert.True(pendingTask.IsCompleted);
         }
 

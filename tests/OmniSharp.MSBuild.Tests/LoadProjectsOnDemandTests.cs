@@ -10,7 +10,6 @@ using OmniSharp.Roslyn.CSharp.Services.Refactoring.V2;
 using OmniSharp.Roslyn.CSharp.Services.Structure;
 using TestUtility;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace OmniSharp.MSBuild.Tests
 {

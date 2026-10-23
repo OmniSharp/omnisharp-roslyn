@@ -8,7 +8,6 @@ using OmniSharp.Roslyn.CSharp.Services.Refactoring.V2;
 using Roslyn.Test.Utilities;
 using TestUtility;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {

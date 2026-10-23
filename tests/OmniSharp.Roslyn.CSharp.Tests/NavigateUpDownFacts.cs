@@ -5,7 +5,6 @@ using OmniSharp.Roslyn.CSharp.Services.Navigation;
 using OmniSharp.Roslyn.Utilities;
 using TestUtility;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {

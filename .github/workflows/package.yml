@@ -1,0 +1,216 @@
+name: Package
+
+on:
+  workflow_call:
+    inputs:
+      target-sha:
+        description: Commit to package; defaults to the caller's commit
+        type: string
+        required: false
+        default: ""
+      expected-version:
+        description: Release version to use from the release-version artifact
+        type: string
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+env:
+  Artifacts: ${{ github.workspace }}/artifacts/
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: "true"
+  CLR_OPENSSL_VERSION_OVERRIDE: "1.1"
+
+defaults:
+  run:
+    shell: pwsh
+
+jobs:
+  version:
+    name: Resolve package version
+    runs-on: ubuntu-22.04
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.target-sha }}
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Use .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restore .NET tools
+        if: inputs.expected-version == ''
+        run: dotnet tool restore
+
+      - name: Download release version
+        if: inputs.expected-version != ''
+        uses: actions/download-artifact@v5
+        with:
+          name: release-version
+          path: package-version
+
+      - name: Resolve version
+        id: version
+        env:
+          EXPECTED_VERSION: ${{ inputs.expected-version }}
+        run: |
+          if ([string]::IsNullOrEmpty($env:EXPECTED_VERSION)) {
+            $versionJson = & dotnet tool run dotnet-gitversion /output json
+            if ($LASTEXITCODE -ne 0) {
+              throw "GitVersion failed with exit code $LASTEXITCODE."
+            }
+            New-Item package-version -ItemType Directory -Force | Out-Null
+            $versionJson | Set-Content package-version/gitversion.json -Encoding utf8
+          }
+
+          $versionData = Get-Content package-version/gitversion.json -Raw | ConvertFrom-Json
+          if ([string]::IsNullOrWhiteSpace($versionData.SemVer)) {
+            throw "GitVersion metadata does not contain a package version."
+          }
+          if ($env:EXPECTED_VERSION -and $versionData.SemVer -ne $env:EXPECTED_VERSION) {
+            throw "Expected version '$env:EXPECTED_VERSION', but metadata contains '$($versionData.SemVer)'."
+          }
+          "version=$($versionData.SemVer)" >> $env:GITHUB_OUTPUT
+
+      - name: Upload package version
+        uses: actions/upload-artifact@v4
+        with:
+          name: package-version
+          path: package-version/gitversion.json
+          if-no-files-found: error
+          retention-days: 1
+
+  build:
+    name: Build packages (${{ matrix.name }})
+    needs: version
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Linux
+            os: ubuntu-22.04
+            artifact: linux
+          - name: Windows
+            os: windows-latest
+            artifact: windows
+          - name: macOS
+            os: macos-15-intel
+            artifact: macos
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.target-sha }}
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Use .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restore .NET tools
+        run: dotnet tool restore
+
+      - name: Download package version
+        uses: actions/download-artifact@v5
+        with:
+          name: package-version
+          path: package-version
+
+      - name: Export GitVersion variables
+        env:
+          EXPECTED_VERSION: ${{ needs.version.outputs.version }}
+        run: |
+          ./scripts/export-gitversion.ps1 `
+            -ExpectedVersion $env:EXPECTED_VERSION `
+            -VersionFile package-version/gitversion.json `
+            -EnvironmentFile $env:GITHUB_ENV
+
+      - name: Build and package
+        run: dotnet cake --configuration=Release --verbosity=Verbose --target=CI --publish-all --archive
+
+      - name: Validate package version
+        env:
+          EXPECTED_VERSION: ${{ needs.version.outputs.version }}
+        run: |
+          $versionFile = Join-Path $env:Artifacts "deployment/versioninfo.txt"
+          if (-not (Test-Path $versionFile)) {
+            throw "The build did not produce '$versionFile'."
+          }
+
+          $actualVersion = (Get-Content $versionFile -Raw).Trim()
+          if ($actualVersion -ne $env:EXPECTED_VERSION) {
+            throw "Expected package version '$env:EXPECTED_VERSION', but the build produced '$actualVersion'."
+          }
+
+          $packages = @(Get-ChildItem (Join-Path $env:Artifacts "package") -File)
+          if ($packages.Count -eq 0) {
+            throw "The build did not produce any release packages."
+          }
+
+      - name: Upload release packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-packages-${{ matrix.artifact }}
+          path: ${{ env.Artifacts }}/package/
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Upload NuGet packages
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuget-packages
+          path: ${{ env.Artifacts }}/nuget/
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload logs
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-logs-${{ matrix.artifact }}
+          path: ${{ env.Artifacts }}/logs/
+          if-no-files-found: warn
+          retention-days: 7
+
+  validate:
+    name: Validate package assets
+    needs: build
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.target-sha }}
+
+      - name: Download release packages
+        uses: actions/download-artifact@v5
+        with:
+          pattern: release-packages-*
+          path: release-input
+
+      - name: Validate release assets
+        run: |
+          ./scripts/assemble-release.ps1 `
+            -ArtifactRoot release-input `
+            -ManifestPath .github/release-assets.json `
+            -OutputDirectory release-output
+
+      - name: Upload release candidate
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-candidate
+          path: release-output/
+          if-no-files-found: error
+          retention-days: 7

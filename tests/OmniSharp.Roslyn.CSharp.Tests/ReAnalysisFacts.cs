@@ -8,7 +8,6 @@ using OmniSharp.Roslyn.CSharp.Services.Buffer;
 using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
 using TestUtility;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
@@ -51,6 +50,11 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 });
 
                 await reAnalyzeHandler.Handle(new ReAnalyzeRequest());
+
+                await TestHelpers.WaitUntil(async () =>
+                    (await host.RequestCodeCheckAsync("a.cs")).QuickFixes
+                        .OfType<DiagnosticLocation>().Any(x => x.Id == "CS0246"),
+                    frequency: 100, timeout: 10000);
 
                 var quickFixes = await host.RequestCodeCheckAsync("a.cs");
 

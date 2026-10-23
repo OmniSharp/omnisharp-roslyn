@@ -32,7 +32,6 @@ using OmniSharp.Models.UpdateBuffer;
 using TestUtility;
 using TestUtility.Logging;
 using Xunit;
-using Xunit.Abstractions;
 using Diagnostic = OmniSharp.Extensions.LanguageServer.Protocol.Models.Diagnostic;
 
 namespace OmniSharp.Lsp.Tests
@@ -121,7 +120,7 @@ namespace OmniSharp.Lsp.Tests
             await InitializeAsync();
         }
 
-        public async Task InitializeAsync()
+        public async ValueTask InitializeAsync()
         {
             var (client, configurationProvider) = await InitializeClientWithConfiguration(x =>
             {
@@ -245,11 +244,11 @@ namespace OmniSharp.Lsp.Tests
             Configuration = new ConfigurationProvider(Server, Client, configurationProvider, CancellationToken);
         }
 
-        public Task DisposeAsync()
+        public ValueTask DisposeAsync()
         {
             _host.Dispose();
             OmniSharpTestHost.Dispose();
-            return Task.CompletedTask;
+            return ValueTask.CompletedTask;
         }
 
         protected async Task<Project> AddProjectToWorkspace(ITestProject testProject)
