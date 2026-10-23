@@ -18,7 +18,6 @@ namespace OmniSharp.MSBuild.Tests
             : base(output)
         {
             _assemblyLoader = new AssemblyLoader(this.LoggerFactory);
-
         }
 
         protected OmniSharpTestHost CreateMSBuildTestHost(string path, IEnumerable<ExportDescriptorProvider> additionalExports = null,
