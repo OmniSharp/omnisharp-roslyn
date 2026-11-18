@@ -44,17 +44,6 @@ Task("Cleanup")
     DirectoryHelper.Create(env.Folders.ArtifactsScripts);
 });
 
-Task("GitVersion")
-    .WithCriteria(!BuildSystem.IsLocalBuild)
-    .WithCriteria(!AzurePipelines.IsRunningOnAzurePipelines)
-    .Does(() =>
-    {
-        GitVersion(new GitVersionSettings
-        {
-            OutputType = GitVersionOutput.BuildServer
-        });
-    });
-
 /// <summary>
 ///  Pre-build setup tasks.
 /// </summary>

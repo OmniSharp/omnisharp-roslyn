@@ -62,7 +62,7 @@ jobs:
           EXPECTED_VERSION: ${{ inputs.expected-version }}
         run: |
           if ([string]::IsNullOrEmpty($env:EXPECTED_VERSION)) {
-            $versionJson = & dotnet tool run dotnet-gitversion /output json
+            $versionJson = & dotnet tool run dotnet-gitversion --output json
             if ($LASTEXITCODE -ne 0) {
               throw "GitVersion failed with exit code $LASTEXITCODE."
             }

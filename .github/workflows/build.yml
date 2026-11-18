@@ -55,7 +55,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: "test-modules-${{ matrix.platform }}"
-          path: bin/Release/*.Tests/net10.0/
+          path: bin/Release/*.Tests/net11.0/
           if-no-files-found: error
           retention-days: 1
 
