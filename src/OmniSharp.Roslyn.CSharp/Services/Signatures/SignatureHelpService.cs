@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Composition;
 using System.Linq;
@@ -5,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Extensions;
 using OmniSharp.Mef;
 using OmniSharp.Models;
@@ -103,8 +105,17 @@ namespace OmniSharp.Roslyn.CSharp.Services.Signatures
 
         private async Task<InvocationContext> GetInvocation(Document document, Request request)
         {
-            var sourceText = await document.GetTextAsync();
-            var position = sourceText.GetTextPosition(request);
+            SourceText sourceText;
+            int position;
+            try
+            {
+                sourceText = await document.GetTextAsync();
+                position = sourceText.GetTextPosition(request);
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                return null;
+            }
             var tree = await document.GetSyntaxTreeAsync();
             var root = await tree.GetRootAsync();
             var node = root.FindToken(position).Parent;
