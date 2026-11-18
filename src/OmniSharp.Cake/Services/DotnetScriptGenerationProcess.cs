@@ -1,5 +1,4 @@
-﻿#if NET6_0_OR_GREATER
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.IO;
 using Cake.Scripting.Transport.Tcp.Client;
@@ -77,4 +76,3 @@ namespace OmniSharp.Cake.Services
         public string ServerExecutablePath { get; set; }
     }
 }
-#endif

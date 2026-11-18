@@ -17,9 +17,13 @@ OmniSharp ships in two flavors:
 -   Stdio server
 -   HTTP server
 
+### Prerequisites
+
+-   [.NET 11.0 Runtime](https://dotnet.microsoft.com/en-us/download/dotnet/11.0)
+
 ### Downloading OmniSharp
 
-When using OmniSharp with an editor extension (for example, Vim, Emacs, or VS Code), the extension will download or bundle OmniSharp automatically. To download OmniSharp manually, follow the steps below.
+When using OmniSharp with an editor extension (for example, Vim or Emacs), the extension will download or bundle OmniSharp automatically. To download OmniSharp manually, follow the steps below.
 
 #### Releases
 
@@ -44,27 +48,6 @@ You can find the output under `artifacts/publish/OmniSharp/<runtime id>/`.
 The executable is either `OmniSharp.exe` or `OmniSharp`.
 
 For more details, see [Build](https://github.com/OmniSharp/omnisharp-roslyn/blob/master/BUILD.md).
-
-### VS Code
-
-The C# extension for VS Code uses the Roslyn language server by default. To use a local OmniSharp build instead, disable C# Dev Kit and add the following to your [user or workspace settings](https://code.visualstudio.com/docs/configure/settings):
-
-```json
-{
-  "dotnet.server.useOmnisharp": true,
-  "dotnet.server.path": "<absolute path to the OmniSharp executable>"
-}
-```
-
-To attach a debugger when the server starts, add the following setting:
-
-```json
-{
-  "dotnet.server.waitForDebugger": true
-}
-```
-
-This will print the OmniSharp process ID in the VS Code OmniSharp output panel and pause the start of the server until a debugger is attached to this process. This is equivalent to launching OmniSharp from a command line with the `--debug` flag.
 
 ### Configuration
 

@@ -176,7 +176,7 @@ public class BuildEnvironment
         this.WorkingDirectory = context.Environment.WorkingDirectory.FullPath;
         this.Folders = new Folders(this.WorkingDirectory);
 
-        this.TargetFramework = "net10.0";
+        this.TargetFramework = GetTargetFramework(this.WorkingDirectory);
 
         this.DotNetCommand = useGlobalDotNetSdk
             ? "dotnet"
@@ -188,6 +188,20 @@ public class BuildEnvironment
         this.ShellScriptFileExtension = Platform.Current.IsWindows ? "ps1" : "sh";
 
         VersionInfo = GetGitVersionFromEnvironment(context);
+    }
+
+    private static string GetTargetFramework(string workingDirectory)
+    {
+        var settingsFile = PathHelper.Combine(workingDirectory, "build", "Settings.props");
+        var document = new System.Xml.XmlDocument();
+        document.Load(settingsFile);
+
+        var namespaces = new System.Xml.XmlNamespaceManager(document.NameTable);
+        namespaces.AddNamespace("msbuild", "http://schemas.microsoft.com/developer/msbuild/2003");
+        var targetFramework = document.SelectSingleNode("/msbuild:Project/msbuild:PropertyGroup/msbuild:TargetFramework", namespaces);
+
+        return targetFramework?.InnerText
+            ?? throw new Exception($"TargetFramework was not found in '{settingsFile}'.");
     }
 
     private static bool HasGitVer(ICakeContext context)

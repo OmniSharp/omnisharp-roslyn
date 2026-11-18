@@ -10,12 +10,10 @@
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release1|AnyCPU'">
     <OutputType>Exe</OutputType>
-    <TargetFramework>net8.0</TargetFramework>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug1|AnyCPU'">
     <OutputType>Exe</OutputType>
-    <TargetFramework>net8.0</TargetFramework>
   </PropertyGroup>
 
 </Project>

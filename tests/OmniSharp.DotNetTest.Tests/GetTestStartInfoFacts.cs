@@ -22,7 +22,7 @@ namespace OmniSharp.DotNetTest.Tests
                 XunitTestProject,
                 methodName: "Main.Test.MainTest.Test",
                 testFramework: "xunit",
-                targetFrameworkVersion: ".NETCoreApp,Version=v8.0",
+                targetFrameworkVersion: ".NETCoreApp,Version=v11.0",
                 assert: AssertCorrectness);
         }
 
@@ -33,7 +33,7 @@ namespace OmniSharp.DotNetTest.Tests
                 NUnitTestProject,
                 methodName: "Main.Test.MainTest.Test",
                 testFramework: "nunit",
-                targetFrameworkVersion: ".NETCoreApp,Version=v8.0",
+                targetFrameworkVersion: ".NETCoreApp,Version=v11.0",
                 assert: AssertCorrectness);
         }
 
@@ -44,7 +44,7 @@ namespace OmniSharp.DotNetTest.Tests
                 MSTestProject,
                 methodName: "Main.Test.MainTest.Test",
                 testFramework: "mstest",
-                targetFrameworkVersion: ".NETCoreApp,Version=v8.0",
+                targetFrameworkVersion: ".NETCoreApp,Version=v11.0",
                 assert: AssertCorrectness);
         }
 

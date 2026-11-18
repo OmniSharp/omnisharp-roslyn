@@ -90,7 +90,7 @@ namespace OmniSharp.Services
 
                 _logger.LogInformation($"Begin dotnet restore in '{workingDirectory}'");
 
-                var exitStatus = new ProcessExitStatus(-1);
+                var exitStatus = new Utilities.ProcessExitStatus(-1);
                 _eventEmitter.RestoreStarted(workingDirectory);
                 _semaphore.Wait();
                 try
