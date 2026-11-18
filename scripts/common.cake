@@ -1,6 +1,4 @@
-#addin "nuget:?package=Newtonsoft.Json&version=11.0.2"
-#tool "nuget:?package=GitVersion.Tool&version=5.12.0"
-
+#addin "nuget:?package=Newtonsoft.Json&version=13.0.4"
 #load "platform.cake"
 
 using Newtonsoft.Json;
@@ -169,14 +167,15 @@ public class BuildEnvironment
     public string ShellArgument { get; }
     public string ShellScriptFileExtension { get; }
 
-    public GitVersion VersionInfo { get; }
+    private readonly Lazy<GitVersion> _versionInfo;
+    public GitVersion VersionInfo => _versionInfo.Value;
 
     public BuildEnvironment(bool useGlobalDotNetSdk, ICakeContext context)
     {
         this.WorkingDirectory = context.Environment.WorkingDirectory.FullPath;
         this.Folders = new Folders(this.WorkingDirectory);
 
-        this.TargetFramework = "net10.0";
+        this.TargetFramework = GetTargetFramework(this.WorkingDirectory);
 
         this.DotNetCommand = useGlobalDotNetSdk
             ? "dotnet"
@@ -187,7 +186,21 @@ public class BuildEnvironment
         this.ShellArgument = Platform.Current.IsWindows ? "-NoProfile -ExecutionPolicy Bypass /Command" : "-C";
         this.ShellScriptFileExtension = Platform.Current.IsWindows ? "ps1" : "sh";
 
-        VersionInfo = GetGitVersionFromEnvironment(context);
+        _versionInfo = new Lazy<GitVersion>(() => GetGitVersionFromEnvironment(context));
+    }
+
+    private static string GetTargetFramework(string workingDirectory)
+    {
+        var settingsFile = PathHelper.Combine(workingDirectory, "build", "Settings.props");
+        var document = new System.Xml.XmlDocument();
+        document.Load(settingsFile);
+
+        var namespaces = new System.Xml.XmlNamespaceManager(document.NameTable);
+        namespaces.AddNamespace("msbuild", "http://schemas.microsoft.com/developer/msbuild/2003");
+        var targetFramework = document.SelectSingleNode("/msbuild:Project/msbuild:PropertyGroup/msbuild:TargetFramework", namespaces);
+
+        return targetFramework?.InnerText
+            ?? throw new Exception($"TargetFramework was not found in '{settingsFile}'.");
     }
 
     private static bool HasGitVer(ICakeContext context)
@@ -211,12 +224,9 @@ public class BuildEnvironment
                 PreReleaseLabel = GetGitVersionValue(environmentVariables, "PreReleaseLabel"),
                 PreReleaseNumber = GetGitVersionNullableInt(environmentVariables, "PreReleaseNumber"),
                 BuildMetaData = GetGitVersionValue(environmentVariables, "BuildMetaData"),
-                BuildMetaDataPadded = GetGitVersionValue(environmentVariables, "BuildMetaDataPadded"),
                 FullBuildMetaData = GetGitVersionValue(environmentVariables, "FullBuildMetaData"),
                 MajorMinorPatch = GetGitVersionValue(environmentVariables, "MajorMinorPatch"),
                 SemVer = GetGitVersionValue(environmentVariables, "SemVer"),
-                LegacySemVer = GetGitVersionValue(environmentVariables, "LegacySemVer"),
-                LegacySemVerPadded = GetGitVersionValue(environmentVariables, "LegacySemVerPadded"),
                 AssemblySemVer = GetGitVersionValue(environmentVariables, "AssemblySemVer"),
                 FullSemVer = GetGitVersionValue(environmentVariables, "FullSemVer"),
                 InformationalVersion = GetGitVersionValue(environmentVariables, "InformationalVersion"),
@@ -224,28 +234,70 @@ public class BuildEnvironment
                 Sha = GetGitVersionValue(environmentVariables, "Sha"),
                 NuGetVersion = GetGitVersionValue(environmentVariables, "NuGetVersion"),
                 CommitsSinceVersionSource = GetGitVersionNullableInt(environmentVariables, "CommitsSinceVersionSource"),
-                CommitsSinceVersionSourcePadded = GetGitVersionValue(environmentVariables, "CommitsSinceVersionSourcePadded"),
                 CommitDate = GetGitVersionValue(environmentVariables, "CommitDate"),
             };
         }
         else
         {
-            try
-            {
-                return context.GitVersion();
-            }
-            catch
-            {
-                context.Warning("GitVersion failed. Setting default version 0.0.1-local");
+            return GetGitVersionFromTool(context);
+        }
+    }
 
-                return new GitVersion
-                {
-                    NuGetVersion = "0.0.1-local",
-                    AssemblySemVer = "0.0.1.0",
-                    InformationalVersion = "0.0.1-local",
-                    SemVer = "0.0.1-local"
-                };
+    private static GitVersion GetGitVersionFromTool(ICakeContext context)
+    {
+        var startInfo = new System.Diagnostics.ProcessStartInfo
+        {
+            FileName = "dotnet",
+            Arguments = "tool run dotnet-gitversion --output json",
+            WorkingDirectory = context.Environment.WorkingDirectory.FullPath,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false
+        };
+
+        using (var process = new System.Diagnostics.Process { StartInfo = startInfo })
+        {
+            process.Start();
+            var outputTask = process.StandardOutput.ReadToEndAsync();
+            var errorTask = process.StandardError.ReadToEndAsync();
+            process.WaitForExit();
+
+            var output = outputTask.GetAwaiter().GetResult();
+            var error = errorTask.GetAwaiter().GetResult();
+            if (process.ExitCode != 0)
+            {
+                throw new Exception($"GitVersion failed with exit code {process.ExitCode}: {error}");
             }
+
+            var version = JObject.Parse(output);
+            var semVer = (string)version["SemVer"];
+            if (string.IsNullOrWhiteSpace(semVer))
+            {
+                throw new Exception("GitVersion metadata does not contain a package version.");
+            }
+
+            return new GitVersion
+            {
+                Major = (int)version["Major"],
+                Minor = (int)version["Minor"],
+                Patch = (int)version["Patch"],
+                PreReleaseTag = (string)(version["PreReleaseTag"] ?? version["PreReleaseLabel"]),
+                PreReleaseTagWithDash = (string)(version["PreReleaseTagWithDash"] ?? version["PreReleaseLabelWithDash"]),
+                PreReleaseLabel = (string)(version["PreReleaseLabelName"] ?? version["PreReleaseLabel"]),
+                PreReleaseNumber = (int?)version["PreReleaseNumber"],
+                BuildMetaData = (string)version["BuildMetaData"],
+                FullBuildMetaData = (string)version["FullBuildMetaData"],
+                MajorMinorPatch = (string)version["MajorMinorPatch"],
+                SemVer = semVer,
+                AssemblySemVer = (string)version["AssemblySemVer"],
+                FullSemVer = (string)version["FullSemVer"],
+                InformationalVersion = (string)version["InformationalVersion"],
+                BranchName = (string)version["BranchName"],
+                Sha = (string)version["Sha"],
+                NuGetVersion = (string)(version["NuGetVersion"] ?? version["SemVer"]),
+                CommitsSinceVersionSource = (int?)(version["CommitsSinceVersionSource"] ?? version["VersionSourceDistance"]),
+                CommitDate = (string)version["CommitDate"]
+            };
         }
     }
 
@@ -270,12 +322,9 @@ public class BuildEnvironment
         "GITVERSION_PRERELEASELABEL",
         "GITVERSION_PRERELEASENUMBER",
         "GITVERSION_BUILDMETADATA",
-        "GITVERSION_BUILDMETADATAPADDED",
         "GITVERSION_FULLBUILDMETADATA",
         "GITVERSION_MAJORMINORPATCH",
         "GITVERSION_SEMVER",
-        "GITVERSION_LEGACYSEMVER",
-        "GITVERSION_LEGACYSEMVERPADDED",
         "GITVERSION_ASSEMBLYSEMVER",
         "GITVERSION_FULLSEMVER",
         "GITVERSION_INFORMATIONALVERSION",
@@ -283,7 +332,6 @@ public class BuildEnvironment
         "GITVERSION_SHA",
         "GITVERSION_NUGETVERSION",
         "GITVERSION_COMMITSSINCEVERSIONSOURCE",
-        "GITVERSION_COMMITSSINCEVERSIONSOURCEPADDED",
         "GITVERSION_COMMITDATE",
     };
 }

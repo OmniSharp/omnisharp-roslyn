@@ -27,7 +27,7 @@ namespace OmniSharp.DotNetTest.Tests
                 line: 62,
                 column: 0,
                 shouldPass: true,
-                targetFrameworkVersion: ".NETCoreApp,Version=v8.0.0");
+                targetFrameworkVersion: ".NETCoreApp,Version=v11.0.0");
 
             Assert.Equal(2, response.Results.Length);
 
@@ -36,7 +36,7 @@ namespace OmniSharp.DotNetTest.Tests
                 64,
                 0,
                 shouldPass: false,
-                targetFrameworkVersion: ".NETCoreApp,Version=v8.0.0");
+                targetFrameworkVersion: ".NETCoreApp,Version=v11.0.0");
 
             Assert.Equal(4, response.Results.Length);
         }

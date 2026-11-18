@@ -34,22 +34,38 @@ namespace OmniSharp.Lsp.Tests
             var options = OmniSharpTestHost.ServiceProvider.GetRequiredService<IOptionsMonitor<OmniSharpOptions>>();
 
             var originalIndentationSize = options.CurrentValue.FormattingOptions.IndentationSize;
+            var originalRenameOverloads = options.CurrentValue.RenameOptions.RenameOverloads;
 
+            var expectedIndentationSize = 12;
+            var expectedRenameOverloads = !originalRenameOverloads;
+
+            // Watch option change and wait for both settings to be updated.
+            var configurationChanged = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            using var subscription = options.OnChange(updatedOptions =>
+            {
+                if (updatedOptions.FormattingOptions.IndentationSize != originalIndentationSize &&
+                    updatedOptions.RenameOptions.RenameOverloads != originalRenameOverloads)
+                {
+                    configurationChanged.TrySetResult();
+                }
+            });
+
+            // Update settings and wait for them to be applied.
             await Task.WhenAll(
                 Configuration.Update("csharp", new Dictionary<string, string>()
                 {
-                    ["FormattingOptions:IndentationSize"] = "12",
+                    ["FormattingOptions:IndentationSize"] = expectedIndentationSize.ToString(),
                 }),
                 Configuration.Update("omnisharp", new Dictionary<string, string>()
                 {
-                    ["RenameOptions:RenameOverloads"] = "true",
+                    ["RenameOptions:RenameOverloads"] = expectedRenameOverloads.ToString(),
                 }),
-                options.WaitForChange(CancellationToken)
+                configurationChanged.Task.WaitAsync(CancellationToken)
             );
 
-            Assert.NotEqual(originalIndentationSize, options.CurrentValue.FormattingOptions.IndentationSize);
-            Assert.Equal(12, options.CurrentValue.FormattingOptions.IndentationSize);
-            Assert.True(options.CurrentValue.RenameOptions.RenameOverloads);
+            // Validate updated settings match the expected values.
+            Assert.Equal(expectedIndentationSize, options.CurrentValue.FormattingOptions.IndentationSize);
+            Assert.Equal(expectedRenameOverloads, options.CurrentValue.RenameOptions.RenameOverloads);
         }
 
         /// <summary>

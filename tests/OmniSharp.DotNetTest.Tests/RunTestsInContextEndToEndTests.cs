@@ -27,7 +27,7 @@ namespace OmniSharp.DotNetTest.Tests
                 line: 10,
                 column: 20,
                 shouldPass: true,
-                targetFrameworkVersion: ".NETCoreApp,Version=v8.0.0");
+                targetFrameworkVersion: ".NETCoreApp,Version=v11.0.0");
 
             var result = Assert.Single(response.Results);
             Assert.Equal("passed", result.Outcome);
@@ -42,7 +42,7 @@ namespace OmniSharp.DotNetTest.Tests
                 line: 12,
                 column: 26,
                 shouldPass: false,
-                targetFrameworkVersion: ".NETCoreApp,Version=v8.0.0");
+                targetFrameworkVersion: ".NETCoreApp,Version=v11.0.0");
 
             Assert.Equal(2, response.Results.Length);
             Assert.All(response.Results, result => Assert.StartsWith("Main.Test.MainTest.DataDrivenTest1", result.MethodName));
@@ -56,7 +56,7 @@ namespace OmniSharp.DotNetTest.Tests
                 line: 6,
                 column: 4,
                 shouldPass: false,
-                targetFrameworkVersion: ".NETCoreApp,Version=v8.0.0");
+                targetFrameworkVersion: ".NETCoreApp,Version=v11.0.0");
 
             Assert.Equal(8, response.Results.Length);
         }

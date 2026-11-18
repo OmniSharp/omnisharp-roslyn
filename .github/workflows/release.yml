@@ -72,7 +72,7 @@ jobs:
             git checkout -B master $targetSha
           }
 
-          $versionJson = & dotnet tool run dotnet-gitversion /output json
+          $versionJson = & dotnet tool run dotnet-gitversion --output json
           if ($LASTEXITCODE -ne 0) {
             throw "GitVersion failed with exit code $LASTEXITCODE."
           }
@@ -112,14 +112,13 @@ jobs:
             $versionData.Major = [int]$versionParts[0]
             $versionData.Minor = [int]$versionParts[1]
             $versionData.Patch = [int]$versionParts[2]
-            $versionData.PreReleaseTag = ""
-            $versionData.PreReleaseTagWithDash = ""
             $versionData.PreReleaseLabel = ""
+            $versionData.PreReleaseLabelWithDash = ""
+            $versionData.PreReleaseLabelName = ""
+            $versionData.PreReleaseLabelNameWithDash = ""
             $versionData.PreReleaseNumber = $null
             $versionData.MajorMinorPatch = $version
             $versionData.SemVer = $version
-            $versionData.LegacySemVer = $version
-            $versionData.LegacySemVerPadded = $version
             $versionData.AssemblySemVer = "$($versionParts[0]).$($versionParts[1]).0.0"
             $versionData.FullSemVer = $version
             $versionData.InformationalVersion = if ([string]::IsNullOrWhiteSpace($versionData.FullBuildMetaData)) {
@@ -127,7 +126,6 @@ jobs:
             } else {
               "$version+$($versionData.FullBuildMetaData)"
             }
-            $versionData.NuGetVersion = $version
           }
 
           $versionDirectory = Join-Path $env:RUNNER_TEMP "release-version"

@@ -44,17 +44,6 @@ Task("Cleanup")
     DirectoryHelper.Create(env.Folders.ArtifactsScripts);
 });
 
-Task("GitVersion")
-    .WithCriteria(!BuildSystem.IsLocalBuild)
-    .WithCriteria(!AzurePipelines.IsRunningOnAzurePipelines)
-    .Does(() =>
-    {
-        GitVersion(new GitVersionSettings
-        {
-            OutputType = GitVersionOutput.BuildServer
-        });
-    });
-
 /// <summary>
 ///  Pre-build setup tasks.
 /// </summary>
@@ -265,7 +254,6 @@ void BuildWithDotNetCli(BuildEnvironment env, string configuration)
         .WithProperty("AssemblyVersion", env.VersionInfo.AssemblySemVer)
         .WithProperty("FileVersion", env.VersionInfo.AssemblySemVer)
         .WithProperty("InformationalVersion", env.VersionInfo.InformationalVersion)
-        .WithProperty("RuntimeFrameworkVersion", "10.0.0")
         .WithProperty("RollForward", "LatestMajor");
 
     DotNetMSBuild("OmniSharp.sln", settings);
@@ -454,7 +442,6 @@ string PublishBuild(string project, BuildEnvironment env, BuildPlan plan, string
                 .WithProperty("AssemblyVersion", env.VersionInfo.AssemblySemVer)
                 .WithProperty("FileVersion", env.VersionInfo.AssemblySemVer)
                 .WithProperty("InformationalVersion", env.VersionInfo.InformationalVersion)
-                .WithProperty("RuntimeFrameworkVersion", "10.0.0")
                 .WithProperty("RollForward", "LatestMajor"),
             ToolPath = env.DotNetCommand,
             WorkingDirectory = env.WorkingDirectory,

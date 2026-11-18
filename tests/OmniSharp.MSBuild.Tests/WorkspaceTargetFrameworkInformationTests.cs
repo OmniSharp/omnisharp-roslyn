@@ -32,20 +32,6 @@ namespace OmniSharp.MSBuild.Tests
         }
 
         [ConditionalFact(typeof(NonMonoRuntimeOnly))]
-        public async Task Net90Project()
-        {
-            using var testProject = await TestAssets.Instance.GetTestProjectAsync("Net90Project");
-            using var host = CreateMSBuildTestHost(testProject.Directory);
-            var workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
-
-            Assert.NotNull(workspaceInfo.Projects);
-            var project = Assert.Single(workspaceInfo.Projects);
-            Assert.Equal("Net90Project", project.AssemblyName);
-            Assert.Equal(".NETCoreApp,Version=v9.0", project.TargetFramework);
-            Assert.Contains(project.TargetFrameworks[0].ShortName, new[] { "net90", "net9.0" });
-        }
-
-        [ConditionalFact(typeof(NonMonoRuntimeOnly))]
         public async Task Net100Project()
         {
             using var testProject = await TestAssets.Instance.GetTestProjectAsync("Net100Project");

@@ -1,9 +1,7 @@
 using System;
 using System.Diagnostics;
 using Microsoft.AspNetCore.Hosting;
-#if NETCOREAPP
 using Microsoft.Extensions.Hosting;
-#endif
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using OmniSharp.Eventing;
@@ -41,7 +39,6 @@ namespace OmniSharp.Http
                 .AddCommandLine(new[] { "--server.urls", $"http://{_serverInterface}:{_serverPort}" });
             var configurationResult = new ConfigurationBuilder(_environment).Build();
 
-#if NETCOREAPP
             using (var app = Microsoft.Extensions.Hosting.Host.CreateDefaultBuilder()
                 .ConfigureWebHost(builder => builder
                     .UseKestrel(config =>
@@ -63,33 +60,10 @@ namespace OmniSharp.Http
                     .UseEnvironment("OmniSharp")
                     .UseStartup(typeof(Startup)))
                 .Build())
-#else
-            using (var app = new WebHostBuilder()
-                .UseKestrel()
-                .ConfigureServices(serviceCollection =>
-                {
-                    serviceCollection.AddSingleton(_environment);
-                    serviceCollection.AddSingleton(_sharedTextWriter);
-                    serviceCollection.AddSingleton(NullEventEmitter.Instance);
-                    serviceCollection.AddSingleton(_commandLinePlugins);
-                    serviceCollection.AddSingleton(new HttpEnvironment { Port = _serverPort });
-                    serviceCollection.AddSingleton(configurationResult);
-                    Startup.AddOmniSharpServices(serviceCollection, _environment, NullEventEmitter.Instance, configurationResult);
-                })
-                .UseUrls($"http://{_serverInterface}:{_serverPort}")
-                .UseConfiguration(config.Build())
-                .UseEnvironment("OmniSharp")
-                .UseStartup(typeof(Startup))
-                .Build())
-#endif
             {
                 app.Start();
 
-#if NETCOREAPP
                 var appLifeTime = app.Services.GetRequiredService<IHostApplicationLifetime>();
-#else
-                var appLifeTime = app.Services.GetRequiredService<IApplicationLifetime>();
-#endif
 
                 Console.CancelKeyPress += (sender, e) =>
                 {
